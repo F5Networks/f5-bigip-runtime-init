@@ -22,7 +22,7 @@ logger() {
 
 logger "Version: ${VERSION}"
 
-# determine cloud we are running in
+# determine environment we are in
 
 # install package
 # - f5-cloud-onboarder-azure
