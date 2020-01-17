@@ -1,0 +1,14 @@
+image: node:8
+
+stages:
+    - lint
+
+# test package
+test_package:
+    stage: test
+    script:
+        - apt-get update && apt-get install -y jq && npm install
+        # linter
+        - npm run lint
+    tags:
+        - cm-official-docker-executor
