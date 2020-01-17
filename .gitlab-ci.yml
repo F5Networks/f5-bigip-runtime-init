@@ -1,13 +1,27 @@
 image: node:8
 
 stages:
+    - build
     - lint
 
-# test package
-test_package:
-    stage: test
+# build package
+build_package:
+    stage: build
     script:
-        - apt-get update && apt-get install -y jq && npm install
+        # install dependencies
+        - npm install
+    tags:
+        - cm-official-docker-executor
+    artifacts:
+        name: node-modules
+        paths:
+            - node_modules
+        expire_in: 1 week
+
+# lint package
+lint_package:
+    stage: lint
+    script:
         # linter
         - npm run lint
     tags:
