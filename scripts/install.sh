@@ -12,15 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MAINDIR="$(dirname $0)/.."
-VERSION=$(cat ${MAINDIR}/package.json | jq .version -r)
+# catch 22, don't have package.json during remote install
+#
+# MAINDIR="$(dirname $0)/.."
+# NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
+# VERSION=$(cat ${MAINDIR}/package.json | jq .version -r)
+#
+# TODO: figure out alternate mechanism to avoid version drift
+
+NAME="f5-cloud-onboarder"
+VERSION="0.9.0"
 
 # usage: logger "log message"
 logger() {
     echo "${1}"
 }
 
-logger "Version: ${VERSION}"
+logger "Package name: ${NAME}"
+logger "Package version: ${VERSION}"
+
+download_location="/tmp/${NAME}.tar.gz"
+install_location="/tmp/${NAME}"
+
+mkdir -p ${install_location}
 
 # determine environment we are in
 
@@ -29,4 +43,8 @@ logger "Version: ${VERSION}"
 # - f5-cloud-onboarder-aws
 # - f5-cloud-onboarder-gcp
 
-# create alias
+curl --location https://github.com/jsevedge/${NAME}/releases/download/v${VERSION}/${NAME}.tar.gz --output ${download_location}
+tar xvfz ${download_location} --directory ${install_location}
+
+# create alias - this will only work for this session
+alias f5-onboarder="node ${install_location}/src/index.js"

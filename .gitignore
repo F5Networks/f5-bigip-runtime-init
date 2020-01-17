@@ -6,3 +6,6 @@ dist/
 
 # local test files
 test.yaml
+
+# misc
+.DS_Store
