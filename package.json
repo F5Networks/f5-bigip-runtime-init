@@ -1,11 +1,12 @@
 {
     "name": "f5-cloud-onboarder",
-    "version": "1.0.0",
+    "version": "0.9.0",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "James Sevedge",
     "license": "Apache 2.0",
     "scripts": {
         "cli": "node ./src/index.js",
+        "build": "bash scripts/build_package.sh",
         "lint": "eslint src"
     },
     "dependencies": {

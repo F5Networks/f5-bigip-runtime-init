@@ -1,5 +1,8 @@
 # node modules
 node_modules/
 
+# artifacts
+dist/
+
 # local test files
 test.yaml

@@ -10,12 +10,15 @@ build_package:
     script:
         # install dependencies
         - npm install
+        # build package artifact
+        - npm run build
     tags:
         - cm-official-docker-executor
     artifacts:
-        name: node-modules
+        name: package
         paths:
             - node_modules
+            - dist
         expire_in: 1 week
 
 # lint package
