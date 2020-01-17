@@ -8,7 +8,10 @@ stages:
 build_package:
     stage: build
     script:
-        # install dependencies
+        # install packages: jq
+        - apt-get update
+        - apt-get install -y jq
+        # install node dependencies
         - npm install
         # build package artifact
         - npm run build
