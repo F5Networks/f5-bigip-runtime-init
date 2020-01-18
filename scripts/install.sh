@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# USAGE: url https://raw.githubusercontent.com/<org>/<repo>/v0.9.0/scripts/install.sh | bash
+# USAGE: curl https://raw.githubusercontent.com/<org>/<repo>/v0.9.0/scripts/install.sh | bash
 
-# catch 22, we do not have package.json prior to install from remote
+# catch 22, we do not have package.json prior to install from remote so we cannot do below
+# TODO: figure out alternate mechanism to avoid version drift
 #
 # MAINDIR="$(dirname $0)/.."
 # NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
 # VERSION=$(cat ${MAINDIR}/package.json | jq .version -r)
-#
-# TODO: figure out alternate mechanism to avoid version drift
 
 NAME="f5-cloud-onboarder"
 VERSION="0.9.0"
@@ -46,10 +45,9 @@ logger "Package version: ${VERSION}"
 
 download_location="/tmp/${NAME}.tar.gz"
 install_location="/tmp/${NAME}"
-
 mkdir -p ${install_location}
 
-# determine environment we are in
+# TODO: determine environment we are in
 
 # download package (TODO: based on environment)
 # - f5-cloud-onboarder-azure

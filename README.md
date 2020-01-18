@@ -1,6 +1,6 @@
 # f5-cloud-onboarder
 
-F5 Cloud Onboarder (prototype)
+The "Onboarder" installs and configures BIG-IP Toolchain components, while also providing runtime rendering of entities such as secrets, metadata values, etc. into the Toolchain declarations resulting in a complete overlay deployment tool for configuring a BIG-IP.
 
 ## Usage
 
