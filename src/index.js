@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 /**
  * Copyright 2020 F5 Networks, Inc.
  *
@@ -22,19 +23,51 @@ const yaml = require('js-yaml');
 
 const logger = require('./logger.js');
 const constants = require('./contants.js');
+const toolchain = require('./toolchain.js');
 
-program
-    .version(constants.VERSION)
-    .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
+async function cli() {
+    // eslint-disable no-await-in-loop
+    program
+        .version(constants.VERSION)
+        .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
 
-program.parse(process.argv);
+    program.parse(process.argv);
 
-logger.info(program.configFile);
+    logger.info(`Configuration file: ${program.configFile}`);
+    // load configuration file
+    let config;
+    try {
+        config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
+    } catch (e) {
+        logger.info(`Error: ${e}`);
+    }
 
-let config;
-try {
-    config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
-    logger.info(config);
-} catch (e) {
-    logger.info(`Error: ${e}`);
+    // perform install operations
+    const installOperations = config.extension_packages.install_operations;
+    for (let i = 0; i < installOperations.length; i += 1) {
+        const toolchainPackage = new toolchain.Package(
+            installOperations[i].extensionType,
+            {
+                version: installOperations[i].extensionVersion
+            }
+        );
+        await toolchainPackage.install();
+    }
+
+    // perform service operations
+    const serviceOperations = config.extension_services.service_operations;
+    for (let i = 0; i < serviceOperations.length; i += 1) {
+        const toolchainService = new toolchain.Service(
+            serviceOperations[i].extensionType,
+            {
+                version: serviceOperations[i].extensionVersion
+            }
+        );
+        // TODO: type/value should be resolved, rendered and then declaration passed to create()
+        await toolchainService.create({});
+    }
+
+    return { message: 'success' };
 }
+
+cli();

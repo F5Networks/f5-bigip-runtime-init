@@ -22,7 +22,11 @@
     "eslintConfig": {
         "extends": "@f5devcentral/eslint-config-f5-atg",
         "rules": {
-            "func-names": "off"
+            "func-names": "off",
+            "max-classes-per-file": [2, 5]
+        },
+        "parserOptions": {
+            "ecmaVersion": 8
         }
     }
 }
