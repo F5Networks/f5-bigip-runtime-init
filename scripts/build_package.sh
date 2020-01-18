@@ -13,5 +13,5 @@ mkdir -p dist
 npm install --production
 
 # tar and zip
-tar -C ${MAINDIR} --exclude=${PWD##*/}/dist -cf dist/${NAME}.tar src node_modules
+tar -C ${MAINDIR} --exclude=${PWD##*/}/dist -cf dist/${NAME}.tar src node_modules package.json
 gzip -nf dist/${NAME}.tar

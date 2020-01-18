@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# catch 22, don't have package.json during remote install
+# USAGE: url https://raw.githubusercontent.com/<org>/<repo>/v0.9.0/scripts/install.sh | bash
+
+# catch 22, we do not have package.json prior to install from remote
 #
 # MAINDIR="$(dirname $0)/.."
 # NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
@@ -22,6 +24,7 @@
 
 NAME="f5-cloud-onboarder"
 VERSION="0.9.0"
+SVC_ACCOUNT="jsevedge"
 
 # usage: logger "log message"
 logger() {
@@ -38,13 +41,23 @@ mkdir -p ${install_location}
 
 # determine environment we are in
 
-# install package
+# download package (TODO: based on environment)
 # - f5-cloud-onboarder-azure
 # - f5-cloud-onboarder-aws
 # - f5-cloud-onboarder-gcp
+curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${VERSION}/${NAME}.tar.gz --output ${download_location}
 
-curl --location https://github.com/jsevedge/${NAME}/releases/download/v${VERSION}/${NAME}.tar.gz --output ${download_location}
-tar xvfz ${download_location} --directory ${install_location}
+# unzip package
+tar xfz ${download_location} --directory ${install_location}
 
-# create alias - this will only work for this session
-alias f5-onboarder="node ${install_location}/src/index.js"
+# create command line utility - alias only works for this session
+utility_location="/usr/local/bin/${NAME}"
+node_cmd="f5-rest-node"
+if [[ $(command -v ${node_cmd}) != 0 ]]; then
+    node_cmd="node"
+fi
+
+echo $node_cmd
+
+echo "${node_cmd} ${install_location}/src/index.js \"\$@\"" > ${utility_location}
+chmod 744 ${utility_location}
