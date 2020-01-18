@@ -31,6 +31,16 @@ logger() {
     echo "${1}"
 }
 
+# usage: platform_check 
+# returns: LINUX|BIGIP
+platform_check() {
+    platform="LINUX"
+    if [ -f "/VERSION" ]; then
+        platform="BIGIP"
+    fi
+    echo ${platform}
+}
+
 logger "Package name: ${NAME}"
 logger "Package version: ${VERSION}"
 
@@ -50,14 +60,14 @@ curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${V
 # unzip package
 tar xfz ${download_location} --directory ${install_location}
 
-# create command line utility - alias only works for this session
+# create command line utility
 utility_location="/usr/local/bin/${NAME}"
-node_cmd="f5-rest-node"
-if [[ $(command -v ${node_cmd}) != 0 ]]; then
-    node_cmd="node"
+if [[ "$(platform_check)" == "LINUX" ]]; then
+    echo "node ${install_location}/src/index.js \"\$@\"" > ${utility_location}
+    chmod 744 ${utility_location}
+else
+    mount -o remount,rw /usr
+    echo "f5-rest-node ${install_location}/src/index.js \"\$@\"" > ${utility_location}
+    chmod 744 ${utility_location}
+    mount -o remount,ro /usr
 fi
-
-echo $node_cmd
-
-echo "${node_cmd} ${install_location}/src/index.js \"\$@\"" > ${utility_location}
-chmod 744 ${utility_location}
