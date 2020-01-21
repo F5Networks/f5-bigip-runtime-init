@@ -22,7 +22,7 @@ const program = require('commander');
 const yaml = require('js-yaml');
 
 const logger = require('./logger.js');
-const constants = require('./contants.js');
+const constants = require('./constants.js');
 const toolchain = require('./toolchain.js');
 
 async function cli() {
