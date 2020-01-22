@@ -11,7 +11,8 @@
     },
     "dependencies": {
         "commander": "^4.1.0",
-        "js-yaml": "^3.13.1"
+        "js-yaml": "^3.13.1",
+        "request": "^2.88.0"
     },
     "devDependencies": {
         "eslint": "^6.8.0",
@@ -23,7 +24,10 @@
         "extends": "@f5devcentral/eslint-config-f5-atg",
         "rules": {
             "func-names": "off",
-            "max-classes-per-file": [2, 5]
+            "max-classes-per-file": [
+                2,
+                5
+            ]
         },
         "parserOptions": {
             "ecmaVersion": 8

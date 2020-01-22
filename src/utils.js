@@ -17,8 +17,60 @@
 
 'use strict';
 
+const fs = require('fs');
+const request = require('request');
+
 module.exports = {
+    /**
+     * Stringify an object
+     *
+     * @param {Object} data - data
+     *
+     * @returns {String} Stringified data
+     */
     stringify(data) {
         return JSON.stringify(data);
+    },
+
+    /**
+     * Download HTTP payload to file
+     *
+     * @param {String} url  - url
+     * @param {String} file - file where data should end up
+     *
+     * @returns {Promise} Resolved on download completion
+     */
+    downloadToFile(url, file) {
+        return new Promise(((resolve, reject) => {
+            request(url)
+                .on('error', (err) => {
+                    reject(err);
+                })
+                .pipe(fs.createWriteStream(file))
+                .on('error', (err) => {
+                    reject(err);
+                })
+                .on('finish', resolve);
+        }))
+            .catch(err => Promise.reject(err));
+    },
+
+    /**
+     * Base64 encoder/decoder
+     *
+     * @param {String} action - decode|encode
+     * @param {String} data - data to process
+     *
+     * @returns {String} Returns processed data as a string
+     */
+    base64(action, data) {
+        // support decode|encode actions
+        if (action === 'decode') {
+            return Buffer.from(data, 'base64').toString().trim();
+        }
+        if (action === 'encode') {
+            return Buffer.from(data).toString('base64');
+        }
+        throw new Error('Unsupported action, try one of these: decode, encode');
     }
 };

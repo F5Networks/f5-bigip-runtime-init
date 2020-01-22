@@ -19,5 +19,6 @@
 const packageInfo = require('../package.json');
 
 module.exports = {
-    VERSION: packageInfo.version
+    VERSION: packageInfo.version,
+    TMP_DIR: '/tmp'
 };
