@@ -84,4 +84,4 @@ async function cli() {
 }
 
 cli()
-    .catch((err) => logger.info(err));
+    .catch(err => logger.info(err));
