@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 /**
  * Copyright 2020 F5 Networks, Inc.
  *
@@ -17,68 +16,4 @@
 
 'use strict';
 
-const fs = require('fs');
-const program = require('commander');
-const yaml = require('js-yaml');
-
-const logger = require('./logger.js');
-const constants = require('./constants.js');
-const connection = require('./connection.js');
-const toolchain = require('./toolchain.js');
-
-async function cli() {
-    // eslint-disable no-await-in-loop
-    program
-        .version(constants.VERSION)
-        .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
-
-    program.parse(process.argv);
-
-    logger.info(`Configuration file: ${program.configFile}`);
-    // load configuration file
-    let config;
-    try {
-        config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
-    } catch (e) {
-        logger.info(`Error: ${e}`);
-    }
-
-    // set connection info
-    const host = config.host || {};
-    connection.setInfo({
-        address: host.address,
-        port: host.port,
-        protocol: host.protocol,
-        username: host.username,
-        password: host.password
-    });
-
-    // perform install operations
-    const installOperations = config.extension_packages.install_operations;
-    for (let i = 0; i < installOperations.length; i += 1) {
-        const toolchainPackage = new toolchain.PackageClient(
-            installOperations[i].extensionType,
-            {
-                version: installOperations[i].extensionVersion
-            }
-        );
-        await toolchainPackage.install();
-    }
-
-    // perform service operations
-    const serviceOperations = config.extension_services.service_operations;
-    for (let i = 0; i < serviceOperations.length; i += 1) {
-        const toolchainService = new toolchain.ServiceClient(
-            serviceOperations[i].extensionType,
-            {
-                version: serviceOperations[i].extensionVersion
-            }
-        );
-        // TODO: type/value should be resolved, rendered and then declaration passed to create()
-        await toolchainService.create({ foo: 'bar' });
-    }
-
-    return { message: 'success' };
-}
-
-cli();
+module.exports = {};

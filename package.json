@@ -5,7 +5,7 @@
     "author": "James Sevedge",
     "license": "Apache 2.0",
     "scripts": {
-        "cli": "node ./src/index.js",
+        "cli": "node ./src/cli.js",
         "build": "bash scripts/build_package.sh",
         "lint": "eslint src"
     },

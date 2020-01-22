@@ -61,11 +61,11 @@ tar xfz ${download_location} --directory ${install_location}
 # create command line utility
 utility_location="/usr/local/bin/${NAME}"
 if [[ "$(platform_check)" == "LINUX" ]]; then
-    echo "node ${install_location}/src/index.js \"\$@\"" > ${utility_location}
+    echo "node ${install_location}/src/cli.js \"\$@\"" > ${utility_location}
     chmod 744 ${utility_location}
 else
     mount -o remount,rw /usr
-    echo "f5-rest-node ${install_location}/src/index.js \"\$@\"" > ${utility_location}
+    echo "f5-rest-node ${install_location}/src/cli.js \"\$@\"" > ${utility_location}
     chmod 744 ${utility_location}
     mount -o remount,ro /usr
 fi

@@ -20,7 +20,7 @@ const fs = require('fs');
 const request = require('request');
 
 const logger = require('./logger.js');
-const constants = require('./constants.js');
+const constants = require('../constants.js');
 const utils = require('./utils.js');
 const connection = require('./connection.js');
 
@@ -138,9 +138,9 @@ class PackageClient {
             if (response.status === 'FINISHED') {
                 i = maxCount;
             } else if (response.status === 'FAILED') {
-                throw new Error(`RPM Installation failed: ${response.errorMessage}`);
+                return Promise.reject(new Error(`RPM installation failed: ${response.errorMessage}`));
             } else if (i > maxCount) {
-                throw new Error(`Max count exceeded, last response: ${response.errorMessage}`);
+                return Promise.reject(Error(`Max count exceeded, last response: ${response.errorMessage}`));
             }
 
             await new Promise(resolve => setTimeout(resolve, '2000'));
