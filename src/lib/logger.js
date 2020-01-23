@@ -16,12 +16,20 @@
 
 'use strict';
 
+/** Logger class */
 class Logger {
+    /**
+     * Log info message
+     * 
+     * @param {string} message [message to log]
+     * @returns {void}
+     */
     info(message) {
         console.log(message); // eslint-disable-line no-console
     }
 }
 
+/** Logger instance class (singleton) */
 class LoggerInstance {
     constructor() {
         if (!LoggerInstance.instance) {

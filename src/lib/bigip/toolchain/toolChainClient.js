@@ -24,7 +24,15 @@ const utils = require('../../utils.js');
 
 const PKG_MGMT_URI = '/mgmt/shared/iapp/package-management-tasks';
 
+/** Metadata client class */
 class MetadataClient {
+    /**
+     *
+     * @param {string} component         [toolchain component]
+     * @param {string} version           [toolchain component version]
+     *
+     * @returns {void}
+     */
     constructor(component, version) {
         this.component = component;
         this.version = version;
@@ -39,25 +47,53 @@ class MetadataClient {
         return this.metadata.components[this.component].versions[this.version];
     }
 
+    /**
+     * Get component name
+     *
+     * @returns {string} component name
+     */
     getComponentName() {
         return this.component;
     }
 
+    /**
+     * Get component version
+     *
+     * @returns {string} component version
+     */
     getComponentVersion() {
         return this.version;
     }
 
+    /**
+     * Get component metadata
+     *
+     * @returns {object} component metadata
+     */
     getDownloadUrl() {
         return this._getComponentMetadata().downloadUrl;
     }
 
+    /**
+     * Get download package
+     *
+     * @returns {string} download package name
+     */
     getDownloadPackageName() {
         const downloadUrlSplit = this.getDownloadUrl().split('/');
         return downloadUrlSplit[downloadUrlSplit.length - 1];
     }
 }
 
+/** Package client class */
 class PackageClient {
+    /**
+     *
+     * @param {class} mgmtClient     [management client]
+     * @param {class} metadataClient [metadata client]
+     *
+     * @returns {void}
+     */
     constructor(mgmtClient, metadataClient) {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
@@ -143,6 +179,11 @@ class PackageClient {
         await this._checkRpmTaskStatus(response.body.id);
     }
 
+    /**
+     * Install
+     *
+     * @returns {promise} { 'component': '', 'version': '', 'installed': true }
+     */
     async install() {
         logger.info(`Installing - ${this.component} ${this.version}`);
 
@@ -163,7 +204,15 @@ class PackageClient {
     }
 }
 
+/** Service client class */
 class ServiceClient {
+    /**
+     *
+     * @param {string} component         [toolchain component]
+     * @param {string} version           [toolchain component version]
+     *
+     * @returns {void}
+     */
     constructor(mgmtClient, metadataClient) {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
@@ -172,15 +221,45 @@ class ServiceClient {
         this.version = this._metadataClient.getComponentVersion();
     }
 
+    /**
+     * Create
+     * 
+     * @param {object} options          [function options]
+     * @param {string} [options.config] [configuration]
+     *
+     * @returns {promise} HTTP response
+     */
     async create(options) {
         options = options || {};
-        const body = options.body;
+        const config = options.config;
 
-        logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(body)}`);
+        logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
     }
 }
 
+/**
+ * Toolchain client class
+ * 
+ * @example
+ * 
+ * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
+ * const toolchainClient = new ToolChainClient(mgmtClient, 'as3', { version: '1.0.0' });
+ * 
+ * async toolchainClient.package.install();
+ * 
+ * @example
+ * 
+ * async toolchainClient.service.create({ config: {} });
+ */
 class ToolChainClient {
+    /**
+     *
+     * @param {class} mgmtClient [management client]
+     * @param {string} component [toolchain component]
+     * @param {string} version   [toolchain component version]
+     *
+     * @returns {void}
+     */
     constructor(mgmtClient, component, options) {
         this._mgmtClient = mgmtClient;
         this.component = component;

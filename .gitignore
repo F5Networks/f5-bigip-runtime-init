@@ -3,6 +3,7 @@ node_modules/
 
 # artifacts
 dist/
+code-docs/
 
 # local test files
 test.yaml

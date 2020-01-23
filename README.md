@@ -28,3 +28,9 @@ host:
   username: admin
   password: admin
 ```
+
+## Documentation Artifacts
+
+- Code Documentation
+  - Build: `npm run build-code-docs`
+  - View: `code-docs/index.html`

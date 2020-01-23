@@ -21,7 +21,27 @@ const request = require('request');
 const logger = require('../logger.js');
 const utils = require('../utils.js');
 
+/**
+ * Management client class
+ * 
+ * @example
+ * 
+ * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
+ *
+ * async mgmtClient.makeRequest('/foo/bar');
+ */
 class ManagementClient {
+    /**
+     *
+     * @param {object} options            [function options]
+     * @param {string} [options.host]     [host]
+     * @param {integer} [options.port]    [host port]
+     * @param {string} [options.user]     [host user]
+     * @param {string} [options.password] [host password]
+     * @param {boolean} [options.useTls]  [use TLS]
+     *
+     * @returns {void}
+     */
     constructor(options) {
         options = options || {};
 
@@ -37,12 +57,12 @@ class ManagementClient {
     /**
      * Make request (HTTP)
      *
-     * @param {String} uri                       - uri
-     * @param {Object} options                   - function options
-     * @param {String} [options.method]          - HTTP method, defaults to 'GET'
-     * @param {Object} [options.headers]         - HTTP headers
-     * @param {Object|Stream} [options.body]     - HTTP body
-     * @param {Object|Stream} [options.bodyType] - body type, such as 'raw'
+     * @param {string} uri                   [uri]
+     * @param {object} options               [function options]
+     * @param {string} [options.method]      [HTTP method, defaults to 'GET']
+     * @param {object} [options.headers]     [HTTP headers]
+     * @param {object|stream} [options.body] [HTTP body]
+     * @param {string} [options.bodyType]    [body type, such as 'raw']
      *
      * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
      */

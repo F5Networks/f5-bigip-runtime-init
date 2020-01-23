@@ -7,6 +7,7 @@
     "scripts": {
         "cli": "node ./src/cli.js",
         "build": "bash scripts/build_package.sh",
+        "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
         "lint": "eslint src"
     },
     "dependencies": {
@@ -15,10 +16,11 @@
         "request": "^2.88.0"
     },
     "devDependencies": {
+        "@f5devcentral/eslint-config-f5-atg": "^0.1.1",
         "eslint": "^6.8.0",
         "eslint-config-airbnb-base": "^14.0.0",
         "eslint-plugin-import": "^2.20.0",
-        "@f5devcentral/eslint-config-f5-atg": "^0.1.1"
+        "jsdoc": "^3.6.3"
     },
     "eslintConfig": {
         "extends": "@f5devcentral/eslint-config-f5-atg",
