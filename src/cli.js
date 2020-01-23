@@ -22,8 +22,9 @@ const yaml = require('js-yaml');
 
 const logger = require('./lib/logger.js');
 const constants = require('./constants.js');
-const connection = require('./lib/connection.js');
-const toolchain = require('./lib/toolchain.js');
+
+const ManagementClient = require('./lib/bigip/managementClient.js');
+const ToolchainClient = require('./lib/bigip/toolchain/toolChainClient.js');
 
 async function cli() {
     program
@@ -41,27 +42,30 @@ async function cli() {
         logger.info(`Configuration load error: ${e}`);
     }
 
-    // set connection info
+    // create management client
     const host = config.host || {};
-    connection.setInfo({
-        address: host.address,
-        port: host.port,
-        protocol: host.protocol,
-        username: host.username,
-        password: host.password
-    });
+    const mgmtClient = new ManagementClient(
+        {
+            host: host.address,
+            port: host.port,
+            user: host.username,
+            password: host.password,
+            useTls: host.protocol !== 'http'
+        }
+    );
 
     // perform install operations
     const installOperations = config.extension_packages.install_operations;
     if (installOperations.length) {
         for (let i = 0; i < installOperations.length; i += 1) {
-            const toolchainPackage = new toolchain.PackageClient(
+            const toolchainClient = new ToolchainClient(
+                mgmtClient,
                 installOperations[i].extensionType,
                 {
                     version: installOperations[i].extensionVersion
                 }
             );
-            await toolchainPackage.install(); // eslint-disable-line no-await-in-loop
+            await toolchainClient.package.install(); // eslint-disable-line no-await-in-loop
         }
     }
 
@@ -69,14 +73,15 @@ async function cli() {
     const serviceOperations = config.extension_services.service_operations;
     if (serviceOperations.length) {
         for (let i = 0; i < serviceOperations.length; i += 1) {
-            const toolchainService = new toolchain.ServiceClient(
+            const toolchainClient = new ToolchainClient(
+                mgmtClient,
                 serviceOperations[i].extensionType,
                 {
                     version: serviceOperations[i].extensionVersion
                 }
             );
             // TODO: type/value should be resolved, rendered and then declaration passed to create()
-            await toolchainService.create({ foo: 'bar' }); // eslint-disable-line no-await-in-loop
+            await toolchainClient.service.create({ config: { foo: 'bar' } }); // eslint-disable-line no-await-in-loop
         }
     }
 
