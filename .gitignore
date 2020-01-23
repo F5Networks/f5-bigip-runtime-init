@@ -8,5 +8,9 @@ code-docs/
 # local test files
 test.yaml
 
+# local terraform files
+.terraform/
+*.tfstate*
+
 # misc
 .DS_Store

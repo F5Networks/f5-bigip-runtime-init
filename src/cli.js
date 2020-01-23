@@ -85,8 +85,11 @@ async function cli() {
         }
     }
 
-    return { message: 'success' };
+    return { message: 'All operations finished successfully' };
 }
 
 cli()
+    .then((message) => {
+        logger.info(message);
+    })
     .catch(err => logger.info(err));
