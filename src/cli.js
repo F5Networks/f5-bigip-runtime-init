@@ -50,7 +50,7 @@ async function cli() {
             port: host.port,
             user: host.username,
             password: host.password,
-            useTls: host.protocol !== 'http'
+            useTls: host.protocol === 'https'
         }
     );
 
