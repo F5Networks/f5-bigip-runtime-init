@@ -9,7 +9,21 @@ The "Onboarder" installs and configures BIG-IP Toolchain components, while also 
 
 ## Configuration Files
 
-Installs DO and AS3 on a remote BIG-IP.
+Installs toolchain components (DO, AS3) on a local BIG-IP.
+
+```yaml
+runtime_parameters: []
+extension_packages:
+    install_operations:
+        - extensionType: do
+          extensionVersion: 1.5.0
+        - extensionType: as3
+          extensionVersion: 3.13.0
+extension_services:
+    service_operations: []
+```
+
+Installs toolchain components (DO, AS3) on a remote BIG-IP.
 
 ```yaml
 runtime_parameters: []
