@@ -23,9 +23,9 @@ const utils = require('../utils.js');
 
 /**
  * Management client class
- * 
+ *
  * @example
- * 
+ *
  * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
  *
  * async mgmtClient.makeRequest('/foo/bar');
@@ -49,7 +49,7 @@ class ManagementClient {
         this.port = options.port || 8100;
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
-        this.useTls = options.useTls || true;
+        this.useTls = options.useTls || false;
 
         this._protocol = this.useTls === false ? 'http' : 'https';
     }

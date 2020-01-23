@@ -20,7 +20,7 @@
 class Logger {
     /**
      * Log info message
-     * 
+     *
      * @param {string} message [message to log]
      * @returns {void}
      */

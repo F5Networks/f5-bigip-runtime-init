@@ -223,7 +223,7 @@ class ServiceClient {
 
     /**
      * Create
-     * 
+     *
      * @param {object} options          [function options]
      * @param {string} [options.config] [configuration]
      *
@@ -239,16 +239,16 @@ class ServiceClient {
 
 /**
  * Toolchain client class
- * 
+ *
  * @example
- * 
+ *
  * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
  * const toolchainClient = new ToolChainClient(mgmtClient, 'as3', { version: '1.0.0' });
- * 
+ *
  * async toolchainClient.package.install();
- * 
+ *
  * @example
- * 
+ *
  * async toolchainClient.service.create({ config: {} });
  */
 class ToolChainClient {
