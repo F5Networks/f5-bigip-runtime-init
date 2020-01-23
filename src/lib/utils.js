@@ -20,13 +20,15 @@
 const fs = require('fs');
 const request = require('request');
 
+const constants = require('../constants.js');
+
 module.exports = {
     /**
      * Stringify an object
      *
-     * @param {Object} data - data
+     * @param {object} data - data
      *
-     * @returns {String} Stringified data
+     * @returns {string} Stringified data
      */
     stringify(data) {
         return JSON.stringify(data);
@@ -35,10 +37,10 @@ module.exports = {
     /**
      * Download HTTP payload to file
      *
-     * @param {String} url  - url
-     * @param {String} file - file where data should end up
+     * @param {string} url  - url
+     * @param {string} file - file where data should end up
      *
-     * @returns {Promise} Resolved on download completion
+     * @returns {promise} Resolved on download completion
      */
     downloadToFile(url, file) {
         return new Promise(((resolve, reject) => {
@@ -58,10 +60,10 @@ module.exports = {
     /**
      * Base64 encoder/decoder
      *
-     * @param {String} action - decode|encode
-     * @param {String} data - data to process
+     * @param {string} action - decode|encode
+     * @param {string} data - data to process
      *
-     * @returns {String} Returns processed data as a string
+     * @returns {string} Returns processed data as a string
      */
     base64(action, data) {
         // support decode|encode actions
@@ -72,5 +74,45 @@ module.exports = {
             return Buffer.from(data).toString('base64');
         }
         throw new Error('Unsupported action, try one of these: decode, encode');
+    },
+
+    /**
+     * Function retrier
+     *
+     * @param {function} func                 - function to execute
+     * @param {function} args                 - function args to provide
+     * @param {options} options               - function options
+     * @param {options} [options.thisContext] - this arg to provide
+     *
+     * @returns {promise} Returns processed data as a string
+     */
+    async retrier(func, args, options) {
+        /* eslint-disable no-await-in-loop, no-loop-func */
+        options = options || {};
+        const thisContext = options.thisContext || this;
+
+        let i = 0;
+        let response;
+        let error;
+        while (i < constants.RETRY.DEFAULT_COUNT) {
+            error = null;
+            try {
+                response = await func.apply(thisContext, args);
+            } catch (err) {
+                error = err;
+            }
+
+            if (error === null) {
+                i = constants.RETRY.DEFAULT_COUNT;
+            } else {
+                await new Promise(resolve => setTimeout(resolve, constants.RETRY.DELAY_IN_MS));
+                i += 1;
+            }
+        }
+
+        if (error !== null) {
+            return Promise.reject(error);
+        }
+        return response;
     }
 };

@@ -29,6 +29,10 @@ const utils = require('../utils.js');
  * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
  *
  * async mgmtClient.makeRequest('/foo/bar');
+ *
+ * @example
+ *
+ * async mgmtClient.isReady();
  */
 class ManagementClient {
     /**
@@ -100,7 +104,42 @@ class ManagementClient {
             });
         }));
 
+        logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
+
         return { code: response.code, body: response.body };
+    }
+
+    /**
+     * Is device ready check
+     *
+     * @returns {Promise} Resolves on ready check passing
+     */
+    async _isReadyCheck() {
+        const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
+
+        const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
+            .nestedStats.entries;
+
+        let isReady = true;
+        Object.keys(entries).forEach((entry) => {
+            if (entries[entry].description !== 'yes') {
+                isReady = false;
+            }
+        });
+
+        if (isReady) {
+            return Promise.resolve(true);
+        }
+        return Promise.reject(new Error('Ready check failed'));
+    }
+
+    /**
+     * Is ready (with retrier)
+     *
+     * @returns {Promise} Resolves on ready check passing
+     */
+    async isReady() {
+        await utils.retrier(this._isReadyCheck, [], { thisContext: this });
     }
 }
 

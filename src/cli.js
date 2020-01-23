@@ -54,6 +54,9 @@ async function cli() {
         }
     );
 
+    // perform ready check
+    await mgmtClient.isReady();
+
     // perform install operations
     const installOperations = config.extension_packages.install_operations;
     if (installOperations.length) {

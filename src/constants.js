@@ -20,5 +20,9 @@ const packageInfo = require('../package.json');
 
 module.exports = {
     VERSION: packageInfo.version,
-    TMP_DIR: '/tmp'
+    TMP_DIR: '/tmp',
+    RETRY: {
+        DEFAULT_COUNT: 50,
+        DELAY_IN_MS: 3000
+    }
 };
