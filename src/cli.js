@@ -92,6 +92,7 @@ async function cli() {
                 }
             );
             // TODO: declaration should be rendered using runtime parameters
+            await toolchainClient.service.isAvailable();
             await toolchainClient.service.create({ config: loadedConfig });
         }
     }

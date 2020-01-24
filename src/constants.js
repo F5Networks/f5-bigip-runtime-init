@@ -24,5 +24,9 @@ module.exports = {
     RETRY: {
         DEFAULT_COUNT: 50,
         DELAY_IN_MS: 3000
+    },
+    HTTP_STATUS_CODES: {
+        OK: 200,
+        ACCEPTED: 202
     }
 };

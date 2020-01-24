@@ -236,6 +236,63 @@ class ServiceClient {
     }
 
     /**
+     * Check if task state passed
+     *
+     * @param {string} taskUri [task URI]
+     *
+     * @returns {promise} Task response
+     */
+    async _checkTaskState(taskUri) {
+        const taskResponse = await this._mgmtClient.makeRequest(taskUri);
+
+        if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
+            return Promise.resolve(taskResponse);
+        }
+        return Promise.reject(new Error(`Task state has not passed: ${taskResponse.code}`));
+    }
+
+    /**
+     * Wait for task
+     *
+     * Note: Certain toolchain components support async task behavior,
+     * where a 202 response on the initial POST is returned along
+     * with a self link to query.  The self link will return 202 until
+     * the task is complete, at which time it will return 200.
+     *
+     * @param {string} taskUri [task URI]
+     *
+     * @returns {promise} Task response
+     */
+    async _waitForTask(taskUri) {
+        await utils.retrier(this._checkTaskState, [taskUri], { thisContext: this });
+    }
+
+    /**
+     * Is available check
+     *
+     * @returns {boolean}
+     */
+    async _isAvailableCheck() {
+        const response = await this._mgmtClient.makeRequest(
+            this._metadataClient.getConfigurationEndpoint().endpoint
+        );
+
+        if (response.code !== constants.HTTP_STATUS_CODES.OK) {
+            return Promise.reject(new Error(`Is available check failed ${response.code}`));
+        }
+        return true;
+    }
+
+    /**
+     * Is available (retries)
+     *
+     * @returns {boolean}
+     */
+    async isAvailable() {
+        await utils.retrier(this._isAvailableCheck, [], { thisContext: this });
+    }
+
+    /**
      * Create
      *
      * @param {object} options          [function options]
@@ -256,6 +313,10 @@ class ServiceClient {
                 body: config
             }
         );
+
+        if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED) {
+            await this._waitForTask(response.body.selfLink.split('https://localhost')[1]);
+        }
 
         return response;
     }
