@@ -22,11 +22,13 @@ const yaml = require('js-yaml');
 
 const logger = require('./lib/logger.js');
 const constants = require('./constants.js');
+const utils = require('./lib/utils.js');
 
 const ManagementClient = require('./lib/bigip/managementClient.js');
 const ToolchainClient = require('./lib/bigip/toolchain/toolChainClient.js');
 
 async function cli() {
+    /* eslint-disable no-await-in-loop */
     program
         .version(constants.VERSION)
         .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
@@ -68,7 +70,7 @@ async function cli() {
                     version: installOperations[i].extensionVersion
                 }
             );
-            await toolchainClient.package.install(); // eslint-disable-line no-await-in-loop
+            await toolchainClient.package.install();
         }
     }
 
@@ -83,8 +85,14 @@ async function cli() {
                     version: serviceOperations[i].extensionVersion
                 }
             );
-            // TODO: type/value should be resolved, rendered and then declaration passed to create()
-            await toolchainClient.service.create({ config: { foo: 'bar' } }); // eslint-disable-line no-await-in-loop
+            const loadedConfig = await utils.loadData(
+                serviceOperations[i].value,
+                {
+                    locationType: serviceOperations[i].type
+                }
+            );
+            // TODO: declaration should be rendered using runtime parameters
+            await toolchainClient.service.create({ config: loadedConfig });
         }
     }
 

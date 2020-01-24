@@ -44,6 +44,10 @@ class MetadataClient {
     }
 
     _getComponentMetadata() {
+        return this.metadata.components[this.component];
+    }
+
+    _getComponentVersionMetadata() {
         return this.metadata.components[this.component].versions[this.version];
     }
 
@@ -71,7 +75,7 @@ class MetadataClient {
      * @returns {object} component metadata
      */
     getDownloadUrl() {
-        return this._getComponentMetadata().downloadUrl;
+        return this._getComponentVersionMetadata().downloadUrl;
     }
 
     /**
@@ -82,6 +86,16 @@ class MetadataClient {
     getDownloadPackageName() {
         const downloadUrlSplit = this.getDownloadUrl().split('/');
         return downloadUrlSplit[downloadUrlSplit.length - 1];
+    }
+
+    /**
+     * Get configuration endpoint
+     *
+     * @returns {object} { endpoint: '/', methods: ['GET'] }
+     */
+    getConfigurationEndpoint() {
+        const configure = this._getComponentMetadata().endpoints.configure;
+        return { endpoint: configure.uri, methods: configure.methods };
     }
 }
 
@@ -234,6 +248,16 @@ class ServiceClient {
         const config = options.config;
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
+
+        const response = await this._mgmtClient.makeRequest(
+            this._metadataClient.getConfigurationEndpoint().endpoint,
+            {
+                method: 'POST',
+                body: config
+            }
+        );
+
+        return response;
     }
 }
 

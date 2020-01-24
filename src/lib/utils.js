@@ -114,5 +114,37 @@ module.exports = {
             return Promise.reject(error);
         }
         return response;
+    },
+
+    /**
+     * Load data
+     *
+     * @param {function} location              - data location
+     * @param {options} options                - function options
+     * @param {options} [options.locationType] - location type, file|url
+     *
+     * @returns {promise} Returns loaded data
+     */
+    async loadData(location, options) {
+        options = options || {};
+
+        const locationType = options.locationType || 'file';
+
+        if (locationType === 'file') {
+            return Promise.resolve(JSON.parse(fs.readFileSync(location, 'utf8')));
+        }
+        if (locationType === 'url') {
+            return new Promise(((resolve, reject) => {
+                request(location, (error, resp, body) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(JSON.parse(body));
+                    }
+                });
+            }))
+                .catch(err => Promise.reject(err));
+        }
+        return Promise.reject(new Error(`Unknown location type: ${locationType}`));
     }
 };
