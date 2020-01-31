@@ -13,7 +13,32 @@
     "dependencies": {
         "commander": "^4.1.0",
         "js-yaml": "^3.13.1",
-        "request": "^2.88.0"
+        "mustache": "^4.0.0",
+        "request": "^2.88.0",
+        "google-auth-library": "^5.9.2",
+        "@google-cloud/secret-manager": "^1.1.2",
+        "aws-sdk": "^2.610.0",
+        "@azure/keyvault-secrets": "^4.0.2",
+        "@azure/ms-rest-nodeauth": "^3.0.3"
+    },
+    "dependencyMap": {
+        "common": {
+            "commander": "^4.1.0",
+            "js-yaml": "^3.13.1",
+            "mustache": "^4.0.0",
+            "request": "^2.88.0"
+        },
+        "gcp": {
+            "google-auth-library": "^5.9.2",
+            "@google-cloud/secret-manager": "^1.1.2"
+        },
+        "aws": {
+            "aws-sdk": "^2.610.0"
+        },
+        "azure": {
+            "@azure/keyvault-secrets": "^4.0.2",
+            "@azure/ms-rest-nodeauth": "^3.0.3"
+        }
     },
     "devDependencies": {
         "@f5devcentral/eslint-config-f5-atg": "^0.1.1",

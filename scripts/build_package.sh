@@ -2,16 +2,40 @@
 
 MAINDIR="$(dirname $0)/.."
 NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
+CLOUDS=(azure aws gcp all)
+COMMON_DEPENDENCIES=$(cat ${MAINDIR}/package.json | jq -r ".dependencyMap.common")
+
+# delete dist if it exists
+rm -r dist/
 
 # set permissions
-chmod -R 744 scripts/*
+chmod -R 744 ${MAINDIR}/scripts/*
 
-# create artifact directory
-mkdir -p dist
+for cloud in "${CLOUDS[@]}"; do
+    # create artifact directory
+    mkdir -p dist/${cloud}
 
-# install dependencies
-npm install --production
+    # build cloud-specific package.json
+    if [[ ${cloud} == "all" ]]; then
+        cp ${MAINDIR}/package.json ${MAINDIR}/environments/${cloud}
+    else
+        cloud_dependencies=$(cat ${MAINDIR}/package.json | jq -r ".dependencyMap.${cloud}")
+        final_dependencies=$(jq --argjson common "${COMMON_DEPENDENCIES}" --argjson cloud "${cloud_dependencies}" -n '$common + $cloud')
+        jq --argjson final "${final_dependencies}" '.dependencies = $final' ${MAINDIR}/package.json > ${MAINDIR}/environments/${cloud}/package.json
+    fi
 
-# tar and zip
-tar -C ${MAINDIR} --exclude=${PWD##*/}/dist -cf dist/${NAME}.tar src node_modules package.json
-gzip -nf dist/${NAME}.tar
+    # install cloud-specific dependencies 
+    npm install --prefix ${MAINDIR}/environments/${cloud} --production
+
+    # copy src
+    cp -r ${MAINDIR}/src ${MAINDIR}/environments/${cloud}
+
+    # tar and zip
+    tar -C ${MAINDIR}/environments/${cloud} --exclude=${PWD##*/}/dist -cf dist/${cloud}/${NAME}-${cloud}.tar src node_modules package.json
+    gzip -nf dist/${cloud}/${NAME}-${cloud}.tar
+
+    # clean up
+    rm ${MAINDIR}/environments/${cloud}/package.json
+    rm -r ${MAINDIR}/environments/${cloud}/node_modules
+    rm -r ${MAINDIR}/environments/${cloud}/src
+done
