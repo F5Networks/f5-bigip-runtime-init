@@ -1,0 +1,11 @@
+# node modules
+node_modules/
+
+# source
+src/
+
+# package lock files
+package-lock.json
+
+# misc
+.DS_Store

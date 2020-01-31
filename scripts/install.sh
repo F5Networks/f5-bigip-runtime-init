@@ -47,13 +47,38 @@ download_location="/tmp/${NAME}.tar.gz"
 install_location="/tmp/${NAME}"
 mkdir -p ${install_location}
 
-# TODO: determine environment we are in
+# discover cloud environment from instance metadata availability
+declare -A CLOUD_MAP=( [azure]='http://169.254.169.254/metadata/instance?api-version=2019-06-01 -H Metadata:true' \
+[aws]='http://169.254.169.254/latest/meta-data/' \
+[gcp]='http://metadata.google.internal/computeMetadata/v1/instance/ -H Metadata-Flavor: Google' )
 
-# download package (TODO: based on environment)
-# - f5-cloud-onboarder-azure
-# - f5-cloud-onboarder-aws
-# - f5-cloud-onboarder-gcp
-curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${VERSION}/${NAME}.tar.gz --output ${download_location}
+# loop until we find a cloud or time out and give up
+COUNTER=0
+until [[ -n ${CLOUD} ]] || [[ ${COUNTER} -gt 12 ]]; do
+    for KEY in "${!CLOUD_MAP[@]}"; do
+        echo $KEY is ${CLOUD_MAP[$KEY]};
+        VALUE=${CLOUD_MAP[$KEY]}
+        RESPONSE=$(curl -s -o /dev/null -w '%{http_code}' ${VALUE} | grep 200)
+        if [[ $RESPONSE == "200" ]]; then
+            echo "FOUND CLOUD: ${KEY}"
+            CLOUD=$KEY
+            break
+        fi
+    done
+    ((COUNTER++))
+    sleep 5
+done
+
+# write environment to file for use by onboarder
+if [[ -z ${CLOUD} ]]; then
+    echo "Could not find a cloud, install all libraries."
+    CLOUD="all"
+else 
+    echo ${CLOUD} > /config/cloud/environment
+fi
+
+CLOUD_PACKAGE_NAME=${NAME}-${CLOUD}
+curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${VERSION}/${CLOUD_PACKAGE_NAME}.tar.gz --output ${download_location}
 
 # unzip package
 tar xfz ${download_location} --directory ${install_location}
