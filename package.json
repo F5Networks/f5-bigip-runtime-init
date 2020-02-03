@@ -3,12 +3,19 @@
     "version": "0.9.0",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "James Sevedge",
-    "license": "Apache 2.0",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/F5Networks/f5-cloud-onboarder.git"
+    },
     "scripts": {
         "cli": "node ./src/cli.js",
         "build": "bash scripts/build_package.sh",
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
-        "lint": "eslint src"
+        "lint": "eslint src tests",
+        "unit-tests": "mocha --recursive \"./tests/unit/**/*.js\"",
+        "test": "nyc npm run unit-tests",
+        "check-test-coverage": "nyc check-coverage"
     },
     "dependencies": {
         "commander": "^4.1.0",
@@ -45,7 +52,30 @@
         "eslint": "^6.8.0",
         "eslint-config-airbnb-base": "^14.0.0",
         "eslint-plugin-import": "^2.20.0",
-        "jsdoc": "^3.6.3"
+        "jsdoc": "^3.6.3",
+        "mocha": "^7.0.1",
+        "sinon": "^8.1.1",
+        "nock": "^11.7.2",
+        "nyc": "^14.1.1"
+    },
+    "mocha": {
+        "timeout": 5000,
+        "exit": true
+    },
+    "nyc": {
+        "exclude": [
+            "tests/**"
+        ],
+        "check-coverage": true,
+        "statements": 65,
+        "branches": 45,
+        "functions": 55,
+        "lines": 65,
+        "reporter": [
+            "html",
+            "text"
+        ],
+        "cache": false
     },
     "eslintConfig": {
         "extends": "@f5devcentral/eslint-config-f5-atg",

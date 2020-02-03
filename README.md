@@ -51,3 +51,7 @@ host:
 - Code Documentation
   - Build: `npm run build-code-docs`
   - View: `code-docs/index.html`
+
+## Testing
+
+Tests exist for this project, see the [test readme](tests/README.md) for more details.

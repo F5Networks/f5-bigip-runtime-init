@@ -8,6 +8,10 @@ code-docs/
 # local test files
 test.yaml
 
+# local test output
+.nyc_output/
+coverage/
+
 # local terraform files
 .terraform/
 *.tfstate*

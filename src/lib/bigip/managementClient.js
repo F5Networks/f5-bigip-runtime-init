@@ -112,7 +112,7 @@ class ManagementClient {
     /**
      * Is device ready check
      *
-     * @returns {Promise} Resolves on ready check passing
+     * @returns {Promise} Resolves true on ready check passing
      */
     async _isReadyCheck() {
         const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
@@ -136,10 +136,10 @@ class ManagementClient {
     /**
      * Is ready (with retrier)
      *
-     * @returns {Promise} Resolves on ready check passing
+     * @returns {Promise} Resolves true on ready check passing
      */
     async isReady() {
-        await utils.retrier(this._isReadyCheck, [], { thisContext: this });
+        return utils.retrier(this._isReadyCheck, [], { thisContext: this });
     }
 }
 
