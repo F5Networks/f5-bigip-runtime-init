@@ -12,5 +12,5 @@ extension_services:
     service_operations: []
 EOF
 
-curl https://raw.githubusercontent.com/jsevedge/f5-cloud-onboarder/v0.9.0/scripts/install.sh | bash
-f5-cloud-onboarder --config-file /config/onboard_config.yaml
+curl https://raw.githubusercontent.com/jsevedge/f5-bigip-runtime-init/v0.9.0/scripts/install.sh | bash
+f5-bigip-runtime-init --config-file /config/onboard_config.yaml

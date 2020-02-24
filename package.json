@@ -1,12 +1,12 @@
 {
-    "name": "f5-cloud-onboarder",
+    "name": "f5-bigip-runtime-init",
     "version": "0.9.0",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "James Sevedge",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/F5Networks/f5-cloud-onboarder.git"
+        "url": "git+https://github.com/F5Networks/f5-bigip-runtime-init.git"
     },
     "scripts": {
         "cli": "node ./src/cli.js",
