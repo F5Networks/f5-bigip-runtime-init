@@ -19,7 +19,6 @@
 
 const fs = require('fs');
 const request = require('request');
-
 const constants = require('../constants.js');
 
 module.exports = {

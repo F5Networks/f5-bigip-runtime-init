@@ -1,11 +1,11 @@
 # f5-bigip-runtime-init
 
-The "Onboarder" installs and configures BIG-IP Toolchain components, while also providing runtime rendering of entities such as secrets, metadata values, etc. into the Toolchain declarations resulting in a complete overlay deployment tool for configuring a BIG-IP.
+F5 BIG-IP runtime init installs and configures BIG-IP Toolchain components, while also providing runtime rendering of entities such as secrets, metadata values, etc. into the Toolchain declarations resulting in a complete overlay deployment tool for configuring a BIG-IP.
 
 ## Usage
 
-- Install Onboarder: ```curl https://raw.githubusercontent.com/jsevedge/f5-bigip-runtime-init/v0.9.0/scripts/install.sh | bash```
-- Use Onboarder: ```f5-bigip-runtime-init --config-file test.yaml```
+- Install F5 BIG-IP runtime init: ```curl https://raw.githubusercontent.com/jsevedge/f5-bigip-runtime-init/v0.9.0/scripts/install.sh | bash```
+- Use F5 BIG-IP runtime init: ```f5-bigip-runtime-init --config-file test.yaml```
 
 ## Configuration Files
 
