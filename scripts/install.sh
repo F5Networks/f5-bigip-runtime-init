@@ -21,7 +21,7 @@
 # NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
 # VERSION=$(cat ${MAINDIR}/package.json | jq .version -r)
 
-NAME="f5-cloud-onboarder"
+NAME="f5-bigip-runtime-init"
 VERSION="0.9.0"
 SVC_ACCOUNT="jsevedge"
 
