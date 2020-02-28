@@ -23,7 +23,7 @@
 
 NAME="f5-bigip-runtime-init"
 VERSION="0.9.0"
-SVC_ACCOUNT="edwoodjrjr"
+SVC_ACCOUNT="f5devcentral"
 
 # usage: logger "log message"
 logger() {
