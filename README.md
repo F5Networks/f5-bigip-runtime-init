@@ -2,14 +2,51 @@
 
 F5 BIG-IP runtime init installs and configures BIG-IP Toolchain components, while also providing runtime rendering of entities such as secrets, metadata values, etc. into the Toolchain declarations resulting in a complete overlay deployment tool for configuring a BIG-IP.
 
+## Value
+
+The F5 BIG-IP runtime init package will eliminate the need for inscrutable, inflexible, and error-prone custom scripting in our cloud templates. It will allow us to easily extend our popular solutions for use with other provisioning tools, such as Terraform and Ansible, as well as any new cloud environments we may choose support in the future. It will also provide a mechanism for rendering secrets and other runtime variables (such as hostname and license key) into Automation Toolchain declaration files, removing the need to encrypt and store sensitive information locally on BIG-IP.
+
+![F5 BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init.gif)
+
+## Requirements
+
+This repository includes both the F5 BIG-IP runtime init source code and an installer script for onboarding the main package.
+
+The installer script will do the following:
+
+- Determine the cloud environment where the script is running
+- Download the appropriate cloud-specific source archive (or the all-inclusive package if cloud is not detected)
+- Install the source archive and create a command alias for f5-bigip-runtime-init
+
+Based on the content of the provided cloud_config.yaml file, F5 BIG-IP runtime init will do the following:
+
+- Download, verify, and install F5 Automation Toolchain components (DO, AS3, TS, CFE)
+- Accept Automation Toolchain declarations in the form of URLs and/or local files
+- Get secrets from cloud provider secret management APIs (Azure KeyVault, AWS Secret Manager, GCP Secrets Manager)
+- Render valid Automation Toolchain declarations based on rendered runtime variables (such as secrets above) and provided declarations
+- POST rendered declarations to Automation Toolchain endpoints and verify success or failure
+
+## Pre-requisites
+
+- Node.js v6.0.0 or later (to run locally)
+- BIG-IP 15.0 or later
+- A mechanism to copy the configuration file to the BIG-IP instance (cloud-init, custom data)
+- Internet access for downloading installer script and runtime init package
+
 ## Usage
 
-- Install F5 BIG-IP runtime init: ```curl https://raw.githubusercontent.com/jsevedge/f5-bigip-runtime-init/v0.9.0/scripts/install.sh | bash```
-- Use F5 BIG-IP runtime init: ```f5-bigip-runtime-init --config-file test.yaml```
+- Install F5 BIG-IP runtime init: ```curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/scripts/install.sh | bash```
+- Use F5 BIG-IP runtime init: ```f5-bigip-runtime-init --config-file /config/cloud/cloud_config.yaml```
+- Compare this with the current code for onboarding a BIG-IP HA pair in Azure:
+```json
+"commandToExecute": "[concat('function cp_logs() { cd /var/lib/waagent/custom-script/download && cp `ls -r | head -1`/std* /var/log/cloud/azure; cd /var/log/cloud/azure && cat stdout stderr > install.log; }; CLOUD_LIB_DIR=/config/cloud/azure/node_modules/@f5devcentral; mkdir -p $CLOUD_LIB_DIR && cp f5-cloud-libs*.tar.gz* /config/cloud; mkdir -p /var/config/rest/downloads && cp ', variables('f5AS3Build'), ' /var/config/rest/downloads; mkdir -p /var/log/cloud/azure; /usr/bin/install -m 400 /dev/null /config/cloud/.passwd; /usr/bin/install -m 400 /dev/null /config/cloud/.azCredentials; /usr/bin/install -b -m 755 /dev/null /config/verifyHash; /usr/bin/install -b -m 755 /dev/null /config/installCloudLibs.sh; /usr/bin/install -b -m 755 /dev/null /config/cloud/managedRoutes; IFS=', variables('singleQuote'), '%', variables('singleQuote'), '; echo -e ', variables('verifyHash'), ' > /config/verifyHash; echo -e ', variables('installCloudLibs'), ' > /config/installCloudLibs.sh; echo -e ', variables('appScript'), ' | /usr/bin/base64 -d > /config/cloud/deploy_app.sh; chmod +x /config/cloud/deploy_app.sh; echo -e ', variables('installCustomConfig'), ' >> /config/customConfig.sh; echo -e ', parameters('managedRoutes'), ' > /config/cloud/managedRoutes; unset IFS; bash /config/installCloudLibs.sh; source $CLOUD_LIB_DIR/f5-cloud-libs/scripts/util.sh; encrypt_secret ', variables('singleQuote'), '{\"clientId\": \"', parameters('clientId'), '\", \"tenantId\": \"', parameters('tenantId'), '\", \"secret\": \"', parameters('servicePrincipalSecret'), '\", \"subscriptionId\": \"', variables('subscriptionID'), '\", \"storageAccount\": \"', variables('newDataStorageAccountName'), '\", \"storageKey\": \"', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('newDataStorageAccountName')), variables('storageApiVersion')).keys[0].value, '\", \"resourceGroupName\": \"', variables('resourceGroupName'), '\", \"uniqueLabel\": \"', variables('dnsLabel'), '\", \"location\": \"', variables('location'), '\"}', variables('singleQuote'), ' \"/config/cloud/.azCredentials\" \"\" true; encrypt_secret ', variables('singleQuote'), variables('adminPasswordOrKey'), variables('singleQuote'), ' \"/config/cloud/.passwd\" true; $CLOUD_LIB_DIR/f5-cloud-libs/scripts/createUser.sh --user svc_user --password-file /config/cloud/.passwd --password-encrypted; ', variables('allowUsageAnalytics')[parameters('allowUsageAnalytics')].hashCmd, '; /usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs/scripts/onboard.js --no-reboot --output /var/log/cloud/azure/onboard.log --signal ONBOARD_DONE --log-level info --cloud azure --install-ilx-package file:///var/config/rest/downloads/', variables('f5AS3Build'), ' --host ', variables('mgmtSubnetPrivateAddress'), ' --port ', variables('bigIpMgmtPort'), ' --ssl-port ', variables('bigIpMgmtPort'), ' -u svc_user --password-url file:///config/cloud/.passwd --password-encrypted --hostname ', concat(variables('instanceName'), '0.', variables('location'), '.cloudapp.azure.com'), ' --license ', parameters('licenseKey1'), ' --ntp ', parameters('ntpServer'), ' --tz ', parameters('timeZone'), ' --modules ', parameters('bigIpModules'), ' --db tmm.maxremoteloglength:2048', variables('allowUsageAnalytics')[parameters('allowUsageAnalytics')].metricsCmd, '; /usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs/scripts/network.js --output /var/log/cloud/azure/network.log --wait-for ONBOARD_DONE --host ', variables('mgmtSubnetPrivateAddress'), ' --port ', variables('bigIpMgmtPort'), ' -u svc_user --password-url file:///config/cloud/.passwd --password-encrypted --default-gw ', variables('tmmRouteGw'), ' --vlan name:external,nic:1.1 --vlan name:internal,nic:1.2 ', variables('netCmd'), ' --self-ip name:self_2nic,address:', variables('extSubnetPrivateAddress'), ',vlan:external --self-ip name:self_3nic,address:', variables('intSubnetPrivateAddress'), ',vlan:internal --log-level info; echo \"/usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs-azure/scripts/failoverProvider.js\" >> /config/failover/tgactive; echo \"/usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs-azure/scripts/failoverProvider.js\" >> /config/failover/tgrefresh; tmsh modify cm device ', concat(variables('instanceName'), '0.', variables('location'), '.cloudapp.azure.com'), ' unicast-address { { ip ', variables('intSubnetPrivateAddress'), ' port 1026 } } mirror-ip ', variables('intSubnetPrivateAddress'), '; ', variables('failoverCmdArray')[parameters('bigIpVersion')], '; /usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs/scripts/cluster.js --output /var/log/cloud/azure/cluster.log --log-level info --host ', variables('mgmtSubnetPrivateAddress'), ' --port ', variables('bigIpMgmtPort'), ' -u svc_user --password-url file:///config/cloud/.passwd --password-encrypted --config-sync-ip ', variables('intSubnetPrivateAddress'), ' --create-group --device-group Sync --sync-type sync-failover --device ', concat(variables('instanceName'), '0.', variables('location'), '.cloudapp.azure.com'), ' --network-failover --auto-sync --save-on-auto-sync; bash /config/cloud/deploy_app.sh ', variables('commandArgs'), '; if [[ $? == 0 ]]; then tmsh load sys application template f5.service_discovery.tmpl; tmsh load sys application template f5.cloud_logger.v1.0.0.tmpl; base=', variables('extSubnetPrivateAddressPrefix'), variables('extSubnetPrivateAddressSuffixInt'), '; f3=$(echo $base | cut -d. -f1-3); last=$(echo $base | cut -d. -f4); for i in $(seq 1 ', variables('numberOfExternalIps'), '); do addr=${f3}.${last}; last=$((last+1)); tmsh create ltm virtual-address $addr address $addr; done; ', variables('routeCmd'), '; echo -e ', variables('routeCmd'), ' >> /config/startup; $(nohup bash /config/failover/tgactive &>/dev/null &); bash /config/customConfig.sh; $(cp_logs); else $(cp_logs); exit 1; fi', '; if grep -i \"PUT failed\" /var/log/waagent.log -q; then echo \"Killing waagent exthandler, daemon should restart it\"; pkill -f \"python -u /usr/sbin/waagent -run-exthandlers\"; fi')]"
+```
 
 ## Configuration Files
+- Config examples and schema: ./examples/config
+- Declaration examples: ./examples/declarations
 
-Installs toolchain components (DO, AS3) on a local BIG-IP and then configures AS3.
+Example 1: Installs toolchain components (DO, AS3) on a local BIG-IP and then configures AS3 from a local declaration file.
 
 ```yaml
 runtime_parameters: []
@@ -26,7 +63,7 @@ extension_services:
         value: ./examples/declarations/as3.json
 ```
 
-Installs toolchain components (DO, AS3) on a remote BIG-IP.
+Example 2: Installs toolchain components (DO, AS3) on a remote BIG-IP.
 
 ```yaml
 runtime_parameters: []
@@ -45,6 +82,102 @@ host:
   username: admin
   password: admin
 ```
+
+Example 3: Installs toolchain components (DO, AS3) on a local BIG-IP and renders Azure service principal into AS3 service discovery declaration downloaded from a URL.
+
+```yaml
+runtime_parameters:
+  - name: AZURE_SERVICE_PRINCIPAL
+    type: secret
+    secretProvider: 
+      type: KeyVault
+      environment: azure
+      vault: my-keyvault.vault.azure.net
+    secretName: my_azure_secret
+extension_packages:
+    install_operations:
+        - extensionType: do
+          extensionVersion: 1.5.0
+        - extensionType: as3
+          extensionVersion: 3.13.0
+extension_services:
+    service_operations:
+      - extensionType: do
+        type: url
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/autoscale_bigip/do.json
+      - extensionType: as3
+        type: url
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/autoscale_bigip/s3.json
+```
+
+Contents of AS3 declaration:
+
+```json
+{
+    "class": "AS3",
+    "action": "deploy",
+    "persist": true,
+    "declaration": {
+      "class": "ADC",
+      "schemaVersion": "3.0.0",
+      "label": "Sample 1",
+      "remark": "HTTP with custom persistence",
+      "Sample_http_01": {
+        "class": "Tenant",
+        "A1": {
+          "class": "Application",
+          "template": "http",
+          "serviceMain": {
+            "class": "Service_HTTP",
+            "virtualAddresses": [
+              "10.1.0.4"
+            ],
+            "pool": "webPool",
+            "policyWAF": {
+                "use": "My_ASM_Policy"
+            }
+          },
+          "webPool": {
+            "class": "Pool",
+            "monitors": [
+                "http"
+            ],
+            "members": [
+                {
+                    "servicePort": 80,
+                    "addressDiscovery": "azure",
+                    "updateInterval": 10,
+                    "tagKey": "foo",
+                    "tagValue": "bar",
+                    "addressRealm": "private",
+                    "resourceGroup": "shimkus",
+                    "subscriptionId": "d18b486a-112d-4402-add2-7fb1006f943a",
+                    "directoryId": "d106871e-7b91-4733-8423-f98586303b68",
+                    "applicationId": "d40aad56-b0bd-466d-a6c4-6c9c4d0f9aa7",
+                    "apiAccessKey": "{{AZURE_SERVICE_PRINCIPAL}}",
+                    "credentialUpdate": true
+                }
+            ]
+          },
+          "My_ASM_Policy": {
+            "class": "WAF_Policy",
+            "url": "https://cdn.f5.com/product/cloudsolutions/solution-scripts/asm-policy-linux/asm-policy-linux-medium.xml",
+            "ignoreChanges": true
+          }
+        }
+      }
+    }
+  }
+```
+
+## Build Artifacts
+
+- Create artifacts: `npm run build`
+- Outputs:
+  * Google: dist/gcp/f5-bigip-runtime-init-gcp.tar.gz
+  * AWS: dist/aws/f5-bigip-runtime-init-aws.tar.gz
+  * Azure: dist/azure/f5-bigip-runtime-init-azure.tar.gz
+  * All clouds: dist/all/f5-bigip-runtime-init-all.tar.gz
 
 ## Documentation Artifacts
 
