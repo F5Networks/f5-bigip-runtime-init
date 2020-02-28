@@ -151,10 +151,10 @@ Contents of AS3 declaration:
                     "tagKey": "foo",
                     "tagValue": "bar",
                     "addressRealm": "private",
-                    "resourceGroup": "shimkus",
-                    "subscriptionId": "d18b486a-112d-4402-add2-7fb1006f943a",
-                    "directoryId": "d106871e-7b91-4733-8423-f98586303b68",
-                    "applicationId": "d40aad56-b0bd-466d-a6c4-6c9c4d0f9aa7",
+                    "resourceGroup": "myResourceGroup",
+                    "subscriptionId": "7fb1006f943a",
+                    "directoryId": "f98586303b68",
+                    "applicationId": "c9c4d0f9aa7",
                     "apiAccessKey": "{{AZURE_SERVICE_PRINCIPAL}}",
                     "credentialUpdate": true
                 }
