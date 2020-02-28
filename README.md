@@ -105,10 +105,10 @@ extension_services:
     service_operations:
       - extensionType: do
         type: url
-        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/autoscale_bigip/do.json
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
       - extensionType: as3
         type: url
-        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/autoscale_bigip/s3.json
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
 ```
 
 Contents of AS3 declaration:
