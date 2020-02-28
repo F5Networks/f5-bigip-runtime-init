@@ -97,6 +97,16 @@ class MetadataClient {
         const configure = this._getComponentMetadata().endpoints.configure;
         return { endpoint: configure.uri, methods: configure.methods };
     }
+
+    /**
+     * Get info endpoint
+     *
+     * @returns {object} { endpoint: '/', methods: ['GET'] }
+     */
+    getInfoEndpoint() {
+        const info = this._getComponentMetadata().endpoints.info;
+        return { endpoint: info.uri, methods: info.methods };
+    }
 }
 
 /** Package client class */
@@ -274,7 +284,7 @@ class ServiceClient {
      */
     async _isAvailableCheck() {
         const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getConfigurationEndpoint().endpoint
+            this._metadataClient.getInfoEndpoint().endpoint
         );
 
         if (response.code !== constants.HTTP_STATUS_CODES.OK) {
