@@ -23,7 +23,7 @@
 
 NAME="f5-bigip-runtime-init"
 VERSION="0.9.0"
-SVC_ACCOUNT="jsevedge"
+SVC_ACCOUNT="edwoodjrjr"
 
 # usage: logger "log message"
 logger() {
@@ -82,6 +82,19 @@ curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${V
 
 # unzip package
 tar xfz ${download_location} --directory ${install_location}
+
+# try to get the latest metadata
+curl --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
+cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')
+    if [[ $diff == "true" ]]; then
+        cp toolchain_metadata_tmp.json ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json
+        rm toolchain_metadata_tmp.json
+    fi
+else
+    echo "Couldn't get the latest toolchain metadata, using local copy."
+fi
 
 # create command line utility
 utility_location="/usr/local/bin/${NAME}"

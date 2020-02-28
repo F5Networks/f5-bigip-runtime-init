@@ -1,0 +1,33 @@
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "bigip1.example.com",
+        "myDns": {
+            "class": "DNS",
+            "nameServers": [
+                "8.8.8.8"
+            ]
+        },
+        "myNtp": {
+            "class": "NTP",
+            "servers": [
+                "0.pool.ntp.org"
+            ],
+            "timezone": "UTC"
+        },
+        "myProvisioning": {
+            "class": "Provision",
+            "ltm": "nominal",
+            "asm": "nominal"
+        },
+        "dbvars": {
+        	"class": "DbVariables",
+        	"provision.extramb": 500,
+        	"restjavad.useextramb": true
+        }
+    }
+}

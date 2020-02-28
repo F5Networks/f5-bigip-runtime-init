@@ -1,0 +1,15 @@
+runtime_parameters: []
+extension_packages:
+    install_operations:
+        - extensionType: do
+          extensionVersion: 1.5.0
+        - extensionType: as3
+          extensionVersion: 3.13.0
+extension_services:
+    service_operations: []
+host:
+  address: 192.0.2.1
+  port: 443
+  protocol: 'https'
+  username: admin
+  password: admin
