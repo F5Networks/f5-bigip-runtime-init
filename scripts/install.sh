@@ -50,7 +50,7 @@ mkdir -p ${install_location}
 # discover cloud environment from instance metadata availability
 declare -A CLOUD_MAP=( [azure]='http://169.254.169.254/metadata/instance?api-version=2019-06-01 -H Metadata:true' \
 [aws]='http://169.254.169.254/latest/meta-data/' \
-[gcp]='http://metadata.google.internal/computeMetadata/v1/instance/ -H Metadata-Flavor: Google' )
+[gcp]='http://metadata.google.internal/computeMetadata/v1/instance/ -H Metadata-Flavor:Google' )
 
 # loop until we find a cloud or time out and give up
 COUNTER=0
