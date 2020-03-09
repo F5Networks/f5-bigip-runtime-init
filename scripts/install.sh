@@ -74,6 +74,7 @@ if [[ -z ${CLOUD} ]]; then
     echo "Could not find a cloud, install all libraries."
     CLOUD="all"
 else 
+    mkdir -p /config/cloud/
     echo ${CLOUD} > /config/cloud/environment
 fi
 
