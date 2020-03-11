@@ -18,6 +18,7 @@
 'use strict';
 
 const fs = require('fs');
+const crypto = require('crypto');
 const request = require('request');
 const Mustache = require('mustache');
 const constants = require('../constants.js');
@@ -55,6 +56,25 @@ module.exports = {
                 .on('finish', resolve);
         }))
             .catch(err => Promise.reject(err));
+    },
+
+    /**
+     * Verify file against provided hash
+     *
+     * @param {string} file - file we are verifying
+     * @param {string} hash - file hash provided by user (SHA256sum)
+     *
+     * @returns {promise} Resolved on successful verification
+     */
+    verifyHash(file, extensionHash) {
+        const createHash = crypto.createHash('sha256');
+        const input = fs.readFileSync(file);
+        createHash.update(input);
+        const computedHash = createHash.digest('hex');
+        if (extensionHash === computedHash) {
+            return true;
+        }
+        throw new Error('File verification failed.');
     },
 
     /**

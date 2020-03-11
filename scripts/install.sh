@@ -43,7 +43,6 @@ platform_check() {
 logger "Package name: ${NAME}"
 logger "Package version: ${VERSION}"
 
-download_location="/tmp/${NAME}.tar.gz"
 install_location="/tmp/${NAME}"
 mkdir -p ${install_location}
 
@@ -73,12 +72,23 @@ done
 if [[ -z ${CLOUD} ]]; then
     echo "Could not find a cloud, install all libraries."
     CLOUD="all"
-else 
-    echo ${CLOUD} > /config/cloud/environment
-fi
+fi 
+echo ${CLOUD} > /config/cloud/environment
+
+download_location="/tmp/${NAME}-${CLOUD}.tar.gz"
 
 CLOUD_PACKAGE_NAME=${NAME}-${CLOUD}
 curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${VERSION}/${CLOUD_PACKAGE_NAME}.tar.gz --output ${download_location}
+curl --location https://github.com/${SVC_ACCOUNT}/${NAME}/releases/download/v${VERSION}/${CLOUD_PACKAGE_NAME}.tar.gz.sha256 --output ${download_location}.sha256
+
+# verify package 
+dir=$(pwd)
+cd /tmp && cat ${download_location}.sha256 | sha256sum -c | grep OK
+if [[ $? -ne 0 ]]; then
+    echo "Couldn't verify the f5-bigip-runtime-init package, exiting."
+    exit 1
+fi
+cd $dir
 
 # unzip package
 tar xfz ${download_location} --directory ${install_location}

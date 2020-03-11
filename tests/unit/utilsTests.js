@@ -10,6 +10,7 @@
 
 const assert = require('assert');
 const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
+const mock = require('mock-fs');
 
 /* eslint-disable global-require */
 
@@ -56,6 +57,37 @@ describe('Util', () => {
             const response = util.renderData('{{ TEST_VALUE }} - TRUE',
                 { TEST_VALUE: 'TRUE' });
             assert.strictEqual(response, 'TRUE - TRUE');
+        });
+    });
+
+    describe('verifyHash', () => {
+        it('should return true with correct inputs', () => {
+            mock({
+                'fake/dir': {
+                    'fake.txt': '12345'
+                }
+            });
+
+            const file = 'fake/dir/fake.txt';
+            const extensionHash = '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5';
+            const response = util.verifyHash(file, extensionHash);
+
+            assert.strictEqual(response, true);
+            mock.restore();
+        });
+
+        it('should throw an error with incorrect inputs', () => {
+            mock({
+                'fake/dir': {
+                    'fake.txt': '12345'
+                }
+            });
+
+            const file = 'fake/dir/fake.txt';
+            const extensionHash = 'abc';
+
+            assert.throws(() => util.verifyHash(file, extensionHash), Error, 'File verification failed.');
+            mock.restore();
         });
     });
 });

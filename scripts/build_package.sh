@@ -34,8 +34,17 @@ for cloud in "${CLOUDS[@]}"; do
     tar -C ${MAINDIR}/environments/${cloud} --exclude=${PWD##*/}/dist -cf dist/${cloud}/${NAME}-${cloud}.tar src node_modules package.json
     gzip -nf dist/${cloud}/${NAME}-${cloud}.tar
 
+    # create sha256 hash
+    dir=$(pwd)
+    cd dist/${cloud}/
+    sha256sum ${NAME}-${cloud}.tar.gz > ${NAME}-${cloud}.tar.gz.sha256
+    cd $dir
+
     # clean up
     rm ${MAINDIR}/environments/${cloud}/package.json
     rm -r ${MAINDIR}/environments/${cloud}/node_modules
     rm -r ${MAINDIR}/environments/${cloud}/src
 done
+
+# create sha256 of install.sh
+sha256sum scripts/install.sh > dist/install.sh.sha256
