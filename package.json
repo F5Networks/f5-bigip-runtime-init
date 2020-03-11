@@ -54,9 +54,9 @@
         "eslint-plugin-import": "^2.20.0",
         "jsdoc": "^3.6.3",
         "mocha": "^7.0.1",
-        "sinon": "^8.1.1",
         "nock": "^11.7.2",
-        "nyc": "^14.1.1"
+        "nyc": "^14.1.1",
+        "sinon": "^8.1.1"
     },
     "mocha": {
         "timeout": 5000,

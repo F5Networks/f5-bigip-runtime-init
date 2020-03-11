@@ -16,22 +16,36 @@
 
 'use strict';
 
-const packageInfo = require('../package.json');
+const Logger = require('../../logger.js');
+
+
+/**
+ * Abstract Cloud class - defines cloud agnostic properties and methods
+ *
+ * @class
+ */
+
+class AbstractCloudClient {
+    constructor(name, options) {
+        this.environment = name;
+
+        const logger = options ? options.logger : Logger;
+        if (logger) {
+            this.logger = logger;
+        }
+    }
+
+
+    /**
+     * Gets secret
+     *
+     * @param {Object} options - function options
+     */
+    getSecret() {
+        throw new Error('getSecret method must be implemented in child class!');
+    }
+}
 
 module.exports = {
-    VERSION: packageInfo.version,
-    TMP_DIR: '/tmp',
-    RETRY: {
-        DEFAULT_COUNT: 50,
-        DELAY_IN_MS: 3000
-    },
-    HTTP_STATUS_CODES: {
-        OK: 200,
-        ACCEPTED: 202
-    },
-    CLOUDS: {
-        AWS: 'aws',
-        AZURE: 'azure',
-        GCP: 'gcp'
-    }
+    AbstractCloudClient
 };

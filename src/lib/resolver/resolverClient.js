@@ -18,21 +18,85 @@
 'use strict';
 
 const logger = require('../logger.js');
-const constants = require('../../constants.js');
-const utils = require('../utils.js');
-
-/** Metadata client class */
-
-/** Cloud client class */
+const CloudFactory = require('../cloud/cloudFactory.js');
 
 /** Resolver class */
 class ResolverClient {
     /**
+     * Resolves runtime parameters
      *
-     * @param {class} cloudClient [cloud client]
+     * @param {Array} runtimeParameters       - list of runtime parameters
      *
-     * @returns {void}
+     *
+     * @returns {Promise}                     - resolves with map of runtime parameters
      */
+    async resolveRuntimeParameters(runtimeParameters) {
+        const results = {};
+        const secrets = [];
+        const promises = [];
+        for (let i = 0; i < runtimeParameters.length; i += 1) {
+            if (runtimeParameters[i].type === 'static') {
+                results[runtimeParameters[i].name] = runtimeParameters[i].value;
+            } else if (runtimeParameters[i].type === 'secret') {
+                promises.push(this._resolveHelper(
+                    runtimeParameters[i].name,
+                    this._resolveSecret(runtimeParameters[i])
+                ));
+            } else {
+                throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
+            }
+        }
+        if (promises.length > 0) {
+            const resolvedParams = await Promise.all(promises);
+
+            resolvedParams.forEach((item) => {
+                if (item.value && item.value !== '') {
+                    results[item.name] = item.value;
+                }
+            });
+        }
+        return results;
+    }
+
+    /**
+     * Helper function to resolve Promise
+     *
+     * @param {string} name                 - list of runtime parameters
+     * @param {Promise} name                - Promise to resolve
+     *
+     *
+     * @returns {Object}                    - object which includes { name, value }
+     */
+    async _resolveHelper(name, promise) {
+        return Promise.resolve(promise)
+            .then((data) => {
+                const object = {};
+                object.name = name;
+                object.value = data;
+                return object;
+            });
+    }
+
+    /**
+     * Resolves secret using cloud client
+     *
+     * @param {Object} secretMetadata          - list of runtime parameters
+     *
+     *
+     * @returns {Promise}                      - resolves with secret value
+     */
+    async _resolveSecret(secretMetadata) {
+        const _cloudClient = CloudFactory.getCloudProvider(
+            secretMetadata.secretProvider.environment,
+            { logger }
+        );
+        await _cloudClient.init();
+        const secretValue = await _cloudClient.getSecret(
+            secretMetadata.secretProvider.secretId,
+            secretMetadata.secretProvider
+        );
+        return secretValue;
+    }
 }
 
 module.exports = ResolverClient;

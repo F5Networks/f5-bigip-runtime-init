@@ -3,6 +3,7 @@ image: node:8
 stages:
     - build
     - lint
+    - unittests
 
 # build package
 build_package:
@@ -30,5 +31,13 @@ lint_package:
     script:
         # linter
         - npm run lint
+    tags:
+        - cm-official-docker-executor
+
+# run unit tests
+unit_tests:
+    stage: unittests
+    script:
+        - npm run test
     tags:
         - cm-official-docker-executor

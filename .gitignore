@@ -18,3 +18,10 @@ coverage/
 
 # misc
 .DS_Store
+
+# JetBrains artifacts
+.idea/
+
+# Python VENV
+*/venv/
+venv/

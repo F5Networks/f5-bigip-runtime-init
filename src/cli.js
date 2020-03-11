@@ -24,6 +24,7 @@ const logger = require('./lib/logger.js');
 const constants = require('./constants.js');
 const utils = require('./lib/utils.js');
 
+const Resolver = require('./lib/resolver/resolverClient.js');
 const ManagementClient = require('./lib/bigip/managementClient.js');
 const ToolchainClient = require('./lib/bigip/toolchain/toolChainClient.js');
 
@@ -59,6 +60,9 @@ async function cli() {
     // perform ready check
     await mgmtClient.isReady();
 
+    const resolver = new Resolver();
+    const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
+
     // perform install operations
     const installOperations = config.extension_packages.install_operations;
     if (installOperations.length) {
@@ -85,13 +89,14 @@ async function cli() {
                     version: serviceOperations[i].extensionVersion
                 }
             );
-            const loadedConfig = await utils.loadData(
+            let loadedConfig = await utils.loadData(
                 serviceOperations[i].value,
                 {
                     locationType: serviceOperations[i].type
                 }
             );
-            // TODO: declaration should be rendered using runtime parameters
+            // rendering secrets
+            loadedConfig = JSON.parse(utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
             await toolchainClient.service.isAvailable();
             await toolchainClient.service.create({ config: loadedConfig });
         }
