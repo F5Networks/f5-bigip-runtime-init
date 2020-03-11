@@ -19,6 +19,7 @@
 
 const fs = require('fs');
 const request = require('request');
+const Mustache = require('mustache');
 const constants = require('../constants.js');
 
 module.exports = {
@@ -89,11 +90,12 @@ module.exports = {
         /* eslint-disable no-await-in-loop, no-loop-func */
         options = options || {};
         const thisContext = options.thisContext || this;
-
+        const retryCount = options.maxRetries || constants.RETRY.DEFAULT_COUNT;
+        const retryInterval = options.retryInterval || constants.RETRY.DELAY_IN_MS;
         let i = 0;
         let response;
         let error;
-        while (i < constants.RETRY.DEFAULT_COUNT) {
+        while (i < retryCount) {
             error = null;
             try {
                 response = await func.apply(thisContext, args);
@@ -102,9 +104,9 @@ module.exports = {
             }
 
             if (error === null) {
-                i = constants.RETRY.DEFAULT_COUNT;
+                i = retryCount;
             } else {
-                await new Promise(resolve => setTimeout(resolve, constants.RETRY.DELAY_IN_MS));
+                await new Promise(resolve => setTimeout(resolve, retryInterval));
                 i += 1;
             }
         }
@@ -145,5 +147,17 @@ module.exports = {
                 .catch(err => Promise.reject(err));
         }
         return Promise.reject(new Error(`Unknown location type: ${locationType}`));
+    },
+
+    /**
+     * Renders secrets
+     *
+     * @param {string} data                    - String with token to replace
+     * @param {object} value                   - token name to secret value map (JSON)
+     *
+     * @returns {promise} Returns string with replaced tokens
+     */
+    renderData(template, value) {
+        return Mustache.render(template, value);
     }
 };
