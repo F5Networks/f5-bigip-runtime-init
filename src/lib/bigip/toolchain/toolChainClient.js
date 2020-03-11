@@ -33,9 +33,10 @@ class MetadataClient {
      *
      * @returns {void}
      */
-    constructor(component, version) {
+    constructor(component, version, hash) {
         this.component = component;
         this.version = version;
+        this.hash = hash;
         this.metadata = this._loadMetadata();
     }
 
@@ -67,6 +68,15 @@ class MetadataClient {
      */
     getComponentVersion() {
         return this.version;
+    }
+
+    /**
+     * Get component hash
+     *
+     * @returns {string} component hash
+     */
+    getComponentHash() {
+        return this.hash;
     }
 
     /**
@@ -218,6 +228,11 @@ class PackageClient {
         const tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
         await utils.downloadToFile(downloadUrl, tmpFile);
 
+        // verify package
+        if (this._metadataClient.getComponentHash()) {
+            utils.verifyHash(tmpFile, this._metadataClient.getComponentHash());
+        }
+
         // upload to target
         await this._uploadRpm(tmpFile);
 
@@ -352,6 +367,7 @@ class ToolChainClient {
      * @param {class} mgmtClient [management client]
      * @param {string} component [toolchain component]
      * @param {string} version   [toolchain component version]
+     * @param {string} hash   [toolchain component hash]
      *
      * @returns {void}
      */
@@ -359,7 +375,8 @@ class ToolChainClient {
         this._mgmtClient = mgmtClient;
         this.component = component;
         this.version = options.version;
-        this._metadataClient = new MetadataClient(this.component, this.version);
+        this.hash = options.hash;
+        this._metadataClient = new MetadataClient(this.component, this.version, this.hash);
     }
 
     get package() {

@@ -52,13 +52,17 @@ runtime_parameters:
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.10.0
+          extensionHash: 190b9bb7e0f6e20aa344a36bcabeeb76c2af26e8b9c9a93d62bd6d4a26337cae
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.17.0
+          extensionHash: 07fc72dff8d61112b3543c7b77908da1cb067b23eca62d6f041ad6dc4eba5e13
         - extensionType: ts
           extensionVersion: 1.9.0
+          extensionHash: f223c6935f167564cfe85f59b0bfc7e51d25661d89df720feccba11cab4c8d04
         - extensionType: cf
-          extensionVersion: 1.0.0
+          extensionVersion: 1.1.0
+          extensionHash: 4516fb2537b535b201d21a373b6014146c173f643fc86ad70d3f364de2ebca33
 extension_services:
     service_operations:
       - extensionType: do

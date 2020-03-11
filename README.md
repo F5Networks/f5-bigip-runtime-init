@@ -47,16 +47,18 @@ Based on the content of the provided cloud_config.yaml file, F5 BIG-IP runtime i
 - Config examples and schema: ./examples/config
 - Declaration examples: ./examples/declarations
 
-Example 1: Installs toolchain components (DO, AS3) on a local BIG-IP and then configures AS3 from a local declaration file.
+Example 1: Verifies and installs toolchain components (DO, AS3) on a local BIG-IP and then configures AS3 from a local declaration file.
 
 ```yaml
 runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.10.0
+          extensionHash: 190b9bb7e0f6e20aa344a36bcabeeb76c2af26e8b9c9a93d62bd6d4a26337cae
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.17.0
+          extensionHash: 41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6
 extension_services:
     service_operations:
       - extensionType: as3
@@ -71,9 +73,9 @@ runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.10.0
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.17.0
 extension_services:
     service_operations: []
 host:
@@ -98,9 +100,9 @@ runtime_parameters:
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.10.0
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.17.0
 extension_services:
     service_operations:
       - extensionType: do
