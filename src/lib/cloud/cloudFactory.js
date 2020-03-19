@@ -20,6 +20,7 @@ const CLOUDS = require('../../constants').CLOUDS;
 
 /* eslint-disable global-require */
 let AWSCloud;
+let AzureCloud;
 
 /**
  * Given the name of a Cloud Provider return a Cloud Instance.
@@ -32,6 +33,9 @@ function getCloudProvider(providerName, options) {
     case CLOUDS.AWS:
         AWSCloud = require('./aws/cloudClient.js').CloudClient;
         return new AWSCloud(options);
+    case CLOUDS.AZURE:
+        AzureCloud = require('./azure/cloudClient.js').CloudClient;
+        return new AzureCloud(options);
     default:
         throw new Error('Unsupported cloud');
     }

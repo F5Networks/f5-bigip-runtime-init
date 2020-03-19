@@ -41,6 +41,17 @@ describe('Resolver Client', () => {
                 }
             },
             {
+                name: 'AZURE_PASS',
+                type: 'secret',
+                secretProvider: {
+                    type: 'SecretClient',
+                    environment: 'azure',
+                    versionInfo: '6e86876be4ce46a49ec578dfda897593',
+                    secretId: 'this-secret',
+                    debug: true
+                }
+            },
+            {
                 name: 'SOME_NAME',
                 type: 'static',
                 value: 'SOME VALUE'
@@ -62,9 +73,10 @@ describe('Resolver Client', () => {
         resolver._resolveSecret = sinon.stub().resolves('StrongPassword2010+');
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 2);
+                assert.ok(Object.keys(results).length === 3);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AWS_PASS, 'StrongPassword2010+');
+                assert.strictEqual(results.AZURE_PASS, 'StrongPassword2010+');
             });
     });
 
@@ -89,6 +101,17 @@ describe('Resolver Client', () => {
                     environment: 'aws',
                     versionStage: 'AWSCURRENT',
                     secretId: 'secert-document'
+                }
+            },
+            {
+                name: 'AZURE_PASS',
+                type: 'wrong',
+                secretProvider: {
+                    type: 'SecretClient',
+                    environment: 'azure',
+                    versionInfo: '6e86876be4ce46a49ec578dfda897593',
+                    secretId: 'this-secret',
+                    debug: true
                 }
             },
             {

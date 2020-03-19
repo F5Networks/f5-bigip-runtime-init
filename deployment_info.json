@@ -1,0 +1,11 @@
+{
+  "deploymentId": "ullcv4sy",
+  "instances": [
+    {
+      "admin_password": "D3l5vTfa8Nd0UoCW",
+      "admin_username": "azureuser",
+      "mgmt_address": "104.40.25.46",
+      "mgmt_port": 443
+    }
+  ]
+}

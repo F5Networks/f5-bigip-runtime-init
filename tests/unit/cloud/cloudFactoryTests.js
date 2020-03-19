@@ -31,6 +31,13 @@ describe('Cloud Factory', () => {
         assert.strictEqual(cloudClient.environment, cloud);
     });
 
+    it('should get azure cloud provider', () => {
+        const cloud = 'azure';
+        const cloudClient = CloudFactory.getCloudProvider(cloud);
+
+        assert.strictEqual(cloudClient.environment, cloud);
+    });
+
     it('should get cloud provider', () => {
         assert.throws(
             () => {
