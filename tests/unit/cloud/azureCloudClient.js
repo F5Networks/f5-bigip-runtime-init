@@ -18,7 +18,6 @@ const cloud = 'azure';
 describe('CloudClient - Azure', () => {
     let AzureCloudClient;
     let cloudClient;
-    // let metadataPathRequest;
 
     before(() => {
         AzureCloudClient = require('../../../src/lib/cloud/azure/cloudClient.js').CloudClient;
@@ -42,22 +41,17 @@ describe('CloudClient - Azure', () => {
 
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
-// 
     });
 
     afterEach(() => {
         sinon.restore();
     });
 
-    it('should validate constructor', () => ({
-            assert.strictEqual(cloudClient.environment, cloud);
-        })
-    );
+    it('should validate constructor', () => {
+        assert.strictEqual(cloudClient.environment, cloud);
+    });
 
-    it('should validate init', () => ({
-            return cloudClient.init();
-        })
-    );
+    it('should validate init', () => cloudClient.init());
 
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(
         'the-secret-name', {
@@ -65,7 +59,7 @@ describe('CloudClient - Azure', () => {
             versionInfo: '6e86876be4ce46a49ec578dfda897593',
             debug: true
         }
-        )
+    )
         .then((secret) => {
             assert.strictEqual(secret.value, 'StrongPassword2010!');
         }));
@@ -75,13 +69,13 @@ describe('CloudClient - Azure', () => {
             vaultUrl: 'https://hello-kv.vault.azure.net',
             debug: true
         }
-        )
+    )
         .then((secret) => {
             assert.strictEqual(secret.value, 'StrongPassword2010!');
         }));
 
     it('should validate getSecret when secret does not exist', () => {
-         cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.resolve();
             }
@@ -99,7 +93,7 @@ describe('CloudClient - Azure', () => {
     });
 
     it('should validate getSecret promise rejection', () => {
-         cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.reject(new Error('Test rejection'));
             }
@@ -121,7 +115,7 @@ describe('CloudClient - Azure', () => {
 
     it('should validate getSecret throws error when vault url is not provided', () => {
         assert.throws(() => {
-            cloudClient.getSecret('incorrect-secret-name', {debug: true});
+            cloudClient.getSecret('incorrect-secret-name', { debug: true });
         }, (err) => {
             if (err.message.includes('vault url is missing')) {
                 return true;

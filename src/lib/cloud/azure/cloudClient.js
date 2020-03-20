@@ -49,7 +49,6 @@ class CloudClient extends AbstractCloudClient {
      * @returns {Promise}
      */
     getSecret(secretId, options) {
-
         const vaultUrl = options ? options.vaultUrl : undefined;
 
         if (!vaultUrl) {
@@ -72,21 +71,13 @@ class CloudClient extends AbstractCloudClient {
         if (typeof versionInfo === 'undefined') {
             return this.keyVaultSecretClient.getSecret(secretId)
                 .promise()
-                .then((result) => ({
-                                    return Promise.resolve(result);
-                                })
-                )
+                .then(result => Promise.resolve(result))
                 .catch(err => Promise.reject(err));
-            }
-        else {
-            return this.keyVaultSecretClient.getSecret(secretId, {version: versionInfo})
-                .promise()
-                .then((result) => ({
-                                    return Promise.resolve(result);
-                                })
-                )
-                .catch(err => Promise.reject(err));
-            }
+        }
+        return this.keyVaultSecretClient.getSecret(secretId, { version: versionInfo })
+            .promise()
+            .then(result => Promise.resolve(result))
+            .catch(err => Promise.reject(err));
     }
 }
 
