@@ -30,9 +30,6 @@ class CloudClient extends AbstractCloudClient {
         this.keyVaultSecretClient = {};
     }
 
-    /**
-     * See the parent class method for details
-     */
     init() {
         this.credentials = new ManagedIdentityCredential();
     }
