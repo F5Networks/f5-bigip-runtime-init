@@ -65,13 +65,7 @@ class CloudClient extends AbstractCloudClient {
             this.keyVaultSecretClient = SecretClient(vaultUrl, this.credentials);
         }
 
-        if (typeof versionInfo === 'undefined') {
-            return this.keyVaultSecretClient.getSecret(secretId)
-                .promise()
-                .then(result => Promise.resolve(result))
-                .catch(err => Promise.reject(err));
-        }
-        return this.keyVaultSecretClient.getSecret(secretId, { version: versionInfo })
+        return this.keyVaultSecretClient.getSecret(secretId, { version: versionInfo || null })
             .promise()
             .then(result => Promise.resolve(result))
             .catch(err => Promise.reject(err));
