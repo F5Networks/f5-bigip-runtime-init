@@ -35,13 +35,13 @@ class CloudClient extends AbstractCloudClient {
     }
 
     /**
-     * Gets secret from Azure Kay Vault
+     * Gets secret from Azure Key Vault
      *
      * @param {String} secretId                      - secret name
      * @param {Object} [options]                     - cloud specific metadata for getting secret value
-     * @param {Object} [options.vaultUrl]            - vault to get secret from
-     * @param {Object} [options.versionInfo]         - version value for secret
-     * @param {Object} [options.debug]               - debug option specifically for testing
+     * @param {Object} [options.vaultUrl]            - vault to get secret from (required)
+     * @param {Object} [options.versionInfo]         - version value for secret (optional)
+     * @param {Object} [options.debug]               - debug option specifically for testing (optional)
      *
      * @returns {Promise}
      */
