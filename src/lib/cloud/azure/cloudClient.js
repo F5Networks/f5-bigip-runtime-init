@@ -16,8 +16,8 @@
 
 'use strict';
 
-const { SecretClient } = require("@azure/keyvault-secrets");
-const { ManagedIdentityCredential } = require("@azure/identity");
+const { SecretClient } = require('@azure/keyvault-secrets');
+const { ManagedIdentityCredential } = require('@azure/identity');
 
 const CLOUDS = require('../../../constants').CLOUDS;
 const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
@@ -36,7 +36,6 @@ class CloudClient extends AbstractCloudClient {
     init() {
         this.credentials = new ManagedIdentityCredential();
     }
-
 
     /**
      * Gets secret from Azure Kay Vault
@@ -66,26 +65,28 @@ class CloudClient extends AbstractCloudClient {
 
         const debug = options.debug ? options.debug : false;
 
-        if (debug == false){
+        if (debug === false) {
             this.keyVaultSecretClient = SecretClient(vaultUrl, this.credentials);
         }
 
         if (typeof versionInfo === 'undefined') {
             return this.keyVaultSecretClient.getSecret(secretId)
-            .promise()
-            .then((result) => {
-                return Promise.resolve(result);
-            })
-            .catch(err => Promise.reject(err));
-        }
-        else{
+                .promise()
+                .then((result) => ({
+                                    return Promise.resolve(result);
+                                })
+                )
+                .catch(err => Promise.reject(err));
+            }
+        else {
             return this.keyVaultSecretClient.getSecret(secretId, {version: versionInfo})
-            .promise()
-            .then((result) => {
-                return Promise.resolve(result);
-            })
-            .catch(err => Promise.reject(err));
-        }
+                .promise()
+                .then((result) => ({
+                                    return Promise.resolve(result);
+                                })
+                )
+                .catch(err => Promise.reject(err));
+            }
     }
 }
 

@@ -18,7 +18,7 @@ const cloud = 'azure';
 describe('CloudClient - Azure', () => {
     let AzureCloudClient;
     let cloudClient;
-    let metadataPathRequest;
+    // let metadataPathRequest;
 
     before(() => {
         AzureCloudClient = require('../../../src/lib/cloud/azure/cloudClient.js').CloudClient;
@@ -42,20 +42,22 @@ describe('CloudClient - Azure', () => {
 
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
-
+// 
     });
 
     afterEach(() => {
         sinon.restore();
     });
 
-    it('should validate constructor', () => {
-        assert.strictEqual(cloudClient.environment, cloud);
-    });
+    it('should validate constructor', () => ({
+            assert.strictEqual(cloudClient.environment, cloud);
+        })
+    );
 
-    it('should validate init', () => {
-        return cloudClient.init();
-    });
+    it('should validate init', () => ({
+            return cloudClient.init();
+        })
+    );
 
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(
         'the-secret-name', {
