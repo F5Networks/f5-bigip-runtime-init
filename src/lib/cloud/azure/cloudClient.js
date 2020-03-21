@@ -26,12 +26,12 @@ const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudC
 class CloudClient extends AbstractCloudClient {
     constructor(options) {
         super(CLOUDS.AZURE, options);
-        this.credentials = {};
-        this.keyVaultSecretClient = {};
+        this._credentials = {};
+        this._keyVaultSecretClient = {};
     }
 
     init() {
-        this.credentials = new ManagedIdentityCredential();
+        this._credentials = new ManagedIdentityCredential();
     }
 
     /**
@@ -62,10 +62,10 @@ class CloudClient extends AbstractCloudClient {
         const debug = options.debug ? options.debug : false;
 
         if (debug === false) {
-            this.keyVaultSecretClient = SecretClient(vaultUrl, this.credentials);
+            this._keyVaultSecretClient = SecretClient(vaultUrl, this._credentials);
         }
 
-        return this.keyVaultSecretClient.getSecret(secretId, { version: versionInfo || null })
+        return this._keyVaultSecretClient.getSecret(secretId, { version: versionInfo || null })
             .promise()
             .then(result => Promise.resolve(result))
             .catch(err => Promise.reject(err));

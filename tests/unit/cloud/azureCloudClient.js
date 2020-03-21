@@ -31,9 +31,9 @@ describe('CloudClient - Azure', () => {
 
     beforeEach(() => {
         cloudClient = new AzureCloudClient();
-        cloudClient.credentials = sinon.stub();
-        cloudClient.keyVaultSecretClient = sinon.stub();
-        cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient._credentials = sinon.stub();
+        cloudClient._keyVaultSecretClient = sinon.stub();
+        cloudClient._keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.resolve({ value: 'StrongPassword2010!' });
             }
@@ -75,7 +75,7 @@ describe('CloudClient - Azure', () => {
         }));
 
     it('should validate getSecret when secret does not exist', () => {
-        cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient._keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.resolve();
             }
@@ -93,7 +93,7 @@ describe('CloudClient - Azure', () => {
     });
 
     it('should validate getSecret promise rejection', () => {
-        cloudClient.keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient._keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.reject(new Error('Test rejection'));
             }
