@@ -56,7 +56,7 @@ describe('CloudClient - Azure', () => {
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(
         'the-secret-name', {
             vaultUrl: 'https://hello-kv.vault.azure.net',
-            versionInfo: '6e86876be4ce46a49ec578dfda897593',
+            documentVersion: '6e86876be4ce46a49ec578dfda897593',
             debug: true
         }
     )
@@ -64,7 +64,7 @@ describe('CloudClient - Azure', () => {
             assert.strictEqual(secret.value, 'StrongPassword2010!');
         }));
 
-    it('should validate getSecret when secret exists and versionInfo default used', () => cloudClient.getSecret(
+    it('should validate getSecret when secret exists and documentVersion default used', () => cloudClient.getSecret(
         'the-secret-name', {
             vaultUrl: 'https://hello-kv.vault.azure.net',
             debug: true
@@ -83,7 +83,7 @@ describe('CloudClient - Azure', () => {
         cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',
-                versionInfo: '6e86876be4ce46a49ec578dfda897593',
+                documentVersion: '6e86876be4ce46a49ec578dfda897593',
                 debug: true
             }
         )
@@ -101,7 +101,7 @@ describe('CloudClient - Azure', () => {
         return cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',
-                versionInfo: '6e86876be4ce46a49ec578dfda897593',
+                documentVersion: '6e86876be4ce46a49ec578dfda897593',
                 debug: true
             }
         )

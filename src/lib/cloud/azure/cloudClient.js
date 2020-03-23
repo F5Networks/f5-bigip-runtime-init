@@ -32,15 +32,16 @@ class CloudClient extends AbstractCloudClient {
 
     init() {
         this._credentials = new ManagedIdentityCredential();
+        return Promise.resolve();
     }
 
     /**
      * Gets secret from Azure Key Vault
      *
      * @param {String} secretId                      - secret name
-     * @param {Object} [options]                     - cloud specific metadata for getting secret value
+     * @param {Object} [options]                     - function options
      * @param {Object} [options.vaultUrl]            - vault to get secret from (required)
-     * @param {Object} [options.versionInfo]         - version value for secret (optional)
+     * @param {Object} [options.documentVersion]     - version of the secret (optional)
      * @param {Object} [options.debug]               - debug option specifically for testing (optional)
      *
      * @returns {Promise}
@@ -57,7 +58,7 @@ class CloudClient extends AbstractCloudClient {
             throw new Error('Azure Cloud Client secret id is missing');
         }
 
-        const versionInfo = options ? options.versionInfo : undefined;
+        const documentVersion = options ? options.documentVersion : undefined;
 
         const debug = options.debug ? options.debug : false;
 
@@ -65,7 +66,7 @@ class CloudClient extends AbstractCloudClient {
             this._keyVaultSecretClient = SecretClient(vaultUrl, this._credentials);
         }
 
-        return this._keyVaultSecretClient.getSecret(secretId, { version: versionInfo || null })
+        return this._keyVaultSecretClient.getSecret(secretId, { version: documentVersion || null })
             .promise()
             .then(result => Promise.resolve(result))
             .catch(err => Promise.reject(err));
