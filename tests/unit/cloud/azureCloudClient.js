@@ -32,8 +32,12 @@ describe('CloudClient - Azure', () => {
     beforeEach(() => {
         cloudClient = new AzureCloudClient();
         cloudClient._credentials = sinon.stub();
-        cloudClient._keyVaultSecretClient = sinon.stub();
-        cloudClient._keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+
+        // We are mocking this entire function because there doesn't seem to be a
+        // way to mock out the SecretClient. Since the SecretClient needs the
+        // vaultUrl, which is provided at runtime, we are not able to override it.
+        // This seems to be the easiest way to test this code in such a scenario.
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.resolve({ value: 'StrongPassword2010!' });
             }
@@ -56,8 +60,7 @@ describe('CloudClient - Azure', () => {
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(
         'the-secret-name', {
             vaultUrl: 'https://hello-kv.vault.azure.net',
-            documentVersion: '6e86876be4ce46a49ec578dfda897593',
-            debug: true
+            documentVersion: '6e86876be4ce46a49ec578dfda897593'
         }
     )
         .then((secret) => {
@@ -66,8 +69,7 @@ describe('CloudClient - Azure', () => {
 
     it('should validate getSecret when secret exists and documentVersion default used', () => cloudClient.getSecret(
         'the-secret-name', {
-            vaultUrl: 'https://hello-kv.vault.azure.net',
-            debug: true
+            vaultUrl: 'https://hello-kv.vault.azure.net'
         }
     )
         .then((secret) => {
@@ -75,7 +77,7 @@ describe('CloudClient - Azure', () => {
         }));
 
     it('should validate getSecret when secret does not exist', () => {
-        cloudClient._keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.resolve();
             }
@@ -83,8 +85,7 @@ describe('CloudClient - Azure', () => {
         cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',
-                documentVersion: '6e86876be4ce46a49ec578dfda897593',
-                debug: true
+                documentVersion: '6e86876be4ce46a49ec578dfda897593'
             }
         )
             .then((secret) => {
@@ -93,7 +94,7 @@ describe('CloudClient - Azure', () => {
     });
 
     it('should validate getSecret promise rejection', () => {
-        cloudClient._keyVaultSecretClient.getSecret = sinon.stub().callsFake(() => ({
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => ({
             promise() {
                 return Promise.reject(new Error('Test rejection'));
             }
@@ -101,8 +102,7 @@ describe('CloudClient - Azure', () => {
         return cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',
-                documentVersion: '6e86876be4ce46a49ec578dfda897593',
-                debug: true
+                documentVersion: '6e86876be4ce46a49ec578dfda897593'
             }
         )
             .then(() => {
@@ -115,7 +115,7 @@ describe('CloudClient - Azure', () => {
 
     it('should validate getSecret throws error when vault url is not provided', () => {
         assert.throws(() => {
-            cloudClient.getSecret('incorrect-secret-name', { debug: true });
+            cloudClient.getSecret('incorrect-secret-name');
         }, (err) => {
             if (err.message.includes('vault url is missing')) {
                 return true;
@@ -127,8 +127,7 @@ describe('CloudClient - Azure', () => {
     it('should validate getSecret throws error when secret id is not provided', () => {
         assert.throws(() => {
             cloudClient.getSecret('', {
-                vaultUrl: 'https://hello-kv.vault.azure.net',
-                debug: true
+                vaultUrl: 'https://hello-kv.vault.azure.net'
             });
         }, (err) => {
             if (err.message.includes('secret id is missing')) {

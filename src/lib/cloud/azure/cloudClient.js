@@ -35,6 +35,11 @@ class CloudClient extends AbstractCloudClient {
         return Promise.resolve();
     }
 
+    _getKeyVaultSecret(vaultUrl, secretId, docVersion) {
+        this._keyVaultSecretClient = SecretClient(vaultUrl, this._credentials);
+        return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
+    }
+
     /**
      * Gets secret from Azure Key Vault
      *
@@ -42,7 +47,6 @@ class CloudClient extends AbstractCloudClient {
      * @param {Object} [options]                     - function options
      * @param {Object} [options.vaultUrl]            - vault to get secret from (required)
      * @param {Object} [options.documentVersion]     - version of the secret (optional)
-     * @param {Object} [options.debug]               - debug option specifically for testing (optional)
      *
      * @returns {Promise}
      */
@@ -60,13 +64,7 @@ class CloudClient extends AbstractCloudClient {
 
         const documentVersion = options ? options.documentVersion : undefined;
 
-        const debug = options.debug ? options.debug : false;
-
-        if (debug === false) {
-            this._keyVaultSecretClient = SecretClient(vaultUrl, this._credentials);
-        }
-
-        return this._keyVaultSecretClient.getSecret(secretId, { version: documentVersion || null })
+        return this._getKeyVaultSecret(vaultUrl, secretId, documentVersion)
             .promise()
             .then(result => Promise.resolve(result))
             .catch(err => Promise.reject(err));
