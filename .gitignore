@@ -15,6 +15,7 @@ coverage/
 # local terraform files
 .terraform/
 *.tfstate*
+**/deployment_info.json
 
 # misc
 .DS_Store
