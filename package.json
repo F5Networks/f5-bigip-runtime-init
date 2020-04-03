@@ -22,8 +22,8 @@
         "js-yaml": "^3.13.1",
         "mustache": "^4.0.0",
         "request": "^2.88.0",
-        "google-auth-library": "^5.9.2",
-        "@google-cloud/secret-manager": "^1.1.2",
+        "google-auth-library": "^5.6.1",
+        "googleapis": "^48.0.0",
         "aws-sdk": "^2.610.0",
         "@azure/keyvault-secrets": "^4.0.2",
         "@azure/identity": "^1.0.2"
@@ -36,8 +36,8 @@
             "request": "^2.88.0"
         },
         "gcp": {
-            "google-auth-library": "^5.9.2",
-            "@google-cloud/secret-manager": "^1.1.2"
+            "google-auth-library": "^5.6.1",
+            "googleapis": "^48.0.0"
         },
         "aws": {
             "aws-sdk": "^2.610.0"

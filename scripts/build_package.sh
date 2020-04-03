@@ -37,7 +37,7 @@ for cloud in "${CLOUDS[@]}"; do
     # create sha256 hash
     dir=$(pwd)
     cd dist/${cloud}/
-    sha256sum ${NAME}-${cloud}.tar.gz > ${NAME}-${cloud}.tar.gz.sha256
+    openssl dgst -sha256 ${NAME}-${cloud}.tar.gz > ${NAME}-${cloud}.tar.gz.sha256
     cd $dir
 
     # clean up
@@ -47,4 +47,4 @@ for cloud in "${CLOUDS[@]}"; do
 done
 
 # create sha256 of install.sh
-sha256sum scripts/install.sh > dist/install.sh.sha256
+openssl dgst -sha256 scripts/install.sh > dist/install.sh.sha256
