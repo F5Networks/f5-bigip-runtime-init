@@ -29,7 +29,7 @@ Based on the content of the provided cloud_config.yaml file, F5 BIG-IP runtime i
 
 ## Pre-requisites
 
-- Node.js v6.0.0 or later (to run locally)
+- Node.js v8.0.0 or later (to run locally)
 - BIG-IP 15.0 or later
 - A mechanism to copy the configuration file to the BIG-IP instance (cloud-init, custom data)
 - Internet access for downloading installer script and runtime init package
@@ -173,9 +173,9 @@ Contents of AS3 declaration:
   }
 ```
 
-Example 4: Replaces secret used within DO declaration to configure admin password on BIGIP device
+Example 4: Replaces secret used within DO declaration to configure admin password on AWS BIGIP device
 
-- in AWS Secret Manager, secreats will be stored in plain text mapped via secretId
+- in AWS Secret Manager, secrets will be stored in plain text mapped via secretId
 ```json
   "test-document-01": "StrongPassword212+"
   "test-document-02": "StrongPassword212*"
@@ -220,23 +220,100 @@ Example 4: Replaces secret used within DO declaration to configure admin passwor
 }
 ```
 
-- F5 BIGIP Runtime Init delcaration which provides secret metadata via runtime_parameters
+- F5 BIGIP Runtime Init declaration which provides secret metadata via runtime_parameters for AWS
 ```yaml
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
     secretProvider:
       type: SecretsManager
-      environment: aws
-      versionStage: AWSCURRENT
+      environment: gcp
+      versionStage: latest
       secretId: test-document-01
   - name: ROOT_PASS
     type: secret
     secretProvider:
       type: SecretsManager
-      environment: aws
-      versionStage: AWSCURRENT
+      environment: gcp
+      versionStage: latest
       secretId: test-document-02
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.5.0
+    - extensionType: as3
+      extensionVersion: 3.13.0
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: file
+      value: /tmp/f5-bigip-runtime-init/src/declarations/do.json
+```
+
+Example 5: Replaces secret used within DO declaration to configure admin password on GCP BIGIP device
+
+- In Google Secret Manager, secrets will be stored and mapped via secretId
+```json
+  "my-secret-id-01": "StrongPassword212+"
+  "my-secret-id-02": "StrongPassword212*"
+```
+- do declaration with token: 
+
+```json
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "bigip1.example.com",
+        "myDns": {
+            "class": "DNS",
+            "nameServers": [
+                "8.8.8.8"
+            ]
+        },
+        "myNtp": {
+            "class": "NTP",
+            "servers": [
+                "0.pool.ntp.org"
+            ],
+            "timezone": "UTC"
+        },
+        "admin": {
+            "class": "User",
+            "userType": "regular",
+            "password": "{{ ADMIN_PASS }}",
+            "shell": "bash"
+        },
+        "root": {
+            "class": "User",
+            "userType": "root",
+            "oldPassword": "default",
+            "newPassword": "{{ ROOT_PASS }}"
+        }
+    }
+}
+```
+
+- F5 BIGIP Runtime Init declaration which provides secret metadata via runtime_parameters for GCP
+```yaml
+runtime_parameters:
+  - name: ADMIN_PASS
+    type: secret
+    secretProvider:
+      type: SecretsManager
+      environment: gcp
+      versionStage: latest
+      secretId: my-secret-id-01
+  - name: ROOT_PASS
+    type: secret
+    secretProvider:
+      type: SecretsManager
+      environment: gcp
+      versionStage: latest
+      secretId: my-secret-id-02
 extension_packages:
   install_operations:
     - extensionType: do

@@ -60,6 +60,7 @@ async function cli() {
     // perform ready check
     await mgmtClient.isReady();
 
+    // resolve runtime parameters
     const resolver = new Resolver();
     const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
 

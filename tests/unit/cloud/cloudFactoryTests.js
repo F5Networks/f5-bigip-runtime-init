@@ -52,4 +52,11 @@ describe('Cloud Factory', () => {
             'unexpected error'
         );
     });
+
+    it('should get gcp cloud provider', () => {
+        const cloud = 'gcp';
+        const cloudClient = CloudFactory.getCloudProvider(cloud);
+
+        assert.strictEqual(cloudClient.environment, cloud);
+    });
 });

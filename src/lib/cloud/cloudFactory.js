@@ -20,6 +20,7 @@ const CLOUDS = require('../../constants').CLOUDS;
 
 /* eslint-disable global-require */
 let AWSCloud;
+let GCPCloud;
 let AzureCloud;
 
 /**
@@ -33,6 +34,9 @@ function getCloudProvider(providerName, options) {
     case CLOUDS.AWS:
         AWSCloud = require('./aws/cloudClient.js').CloudClient;
         return new AWSCloud(options);
+    case CLOUDS.GCP:
+        GCPCloud = require('./gcp/cloudClient.js').CloudClient;
+        return new GCPCloud(options);
     case CLOUDS.AZURE:
         AzureCloud = require('./azure/cloudClient.js').CloudClient;
         return new AzureCloud(options);
