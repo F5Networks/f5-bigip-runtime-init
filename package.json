@@ -15,11 +15,13 @@
         "lint": "eslint src tests",
         "unit-tests": "mocha --recursive \"./tests/unit/**/*.js\"",
         "test": "nyc npm run unit-tests",
+        "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
         "check-test-coverage": "nyc check-coverage"
     },
     "dependencies": {
         "commander": "^4.1.0",
         "js-yaml": "^3.13.1",
+        "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
         "mustache": "^4.0.0",
         "request": "^2.88.0",
         "google-auth-library": "^5.6.1",
@@ -48,6 +50,8 @@
         }
     },
     "devDependencies": {
+        "@azure/ms-rest-nodeauth": "^3.0.1",
+        "@azure/keyvault-secrets": "^4.0.2",
         "@f5devcentral/eslint-config-f5-atg": "^0.1.1",
         "eslint": "^6.8.0",
         "eslint-config-airbnb-base": "^14.0.0",

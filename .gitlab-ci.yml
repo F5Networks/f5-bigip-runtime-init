@@ -4,6 +4,149 @@ stages:
     - build
     - lint
     - unittests
+    - test_functional_init
+    - test_functional_execute
+    - test_functional_cleanup
+
+
+.helpers: &helpers |
+    function validate () {
+        "$@"
+        if [[ $? -ne 0 ]]; then exit 1; fi
+    }
+
+before_script:
+    - *helpers
+
+variables:
+    # azure vars - normalize env var options between ansible and terraform
+    AZURE_TENANT: "$AZURE_TENANT_ID"
+    AZURE_SECRET: "$AZURE_CLIENT_SECRET"
+    ARM_CLIENT_ID: "$AZURE_CLIENT_ID"
+    ARM_CLIENT_SECRET: "$AZURE_CLIENT_SECRET"
+    ARM_SUBSCRIPTION_ID: "$AZURE_SUBSCRIPTION_ID"
+    ARM_TENANT_ID: "$AZURE_TENANT_ID"
+    TF_VAR_AZURE_TENANT_ID: "$AZURE_TENANT_ID"
+    TF_VAR_AZURE_OBJECT_ID: "$AZURE_OBJECT_ID"
+
+
+### Functional Tests Section
+
+# Functional Tests - Initialization phase (with 1 retries in a case of any failures)
+.test_functional_init_generic: &test_functional_init_generic
+    stage: test_functional_init
+    image: ${DOCKER_IMG_FUNC_TEST}
+    retry:
+        max: 1
+    script:
+        # deploy environment - required artifacts will be place in output folder
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD_ENV} --action create --output-folder env_metadata/${CLOUD_ENV}
+        # Collecting deployment metadata
+        - grep "\-\-\-" /deployment-tool/plans/${CLOUD_ENV}/user_data.tpl -A 100 > env_metadata/${CLOUD_ENV}/f5-bigip-runtime-declaration.yaml
+        - MGMT_IP=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .instances[].mgmt_address -r)
+        - USERNAME=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .instances[].admin_username -r)
+        - PASSWORD=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .instances[].admin_password -r)
+        - DEPLOYMENT_ID=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .deploymentId -r)
+        # dhcp must be disalbe to workaround DO bug https://github.com/F5Networks/f5-declarative-onboarding/issues/129
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "modify sys global-settings mgmt-dhcp disabled"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "save sys config"
+        # end of workaround
+        # Copying over source code of f5-bigip-runitme-init. installing and initializing
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/${CLOUD}/f5-bigip-runtime-init-${CLOUD}.tar.gz $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/${CLOUD}/f5-bigip-runtime-init-${CLOUD}.tar.gz.sha256 $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no scripts/local_install.sh $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/local_install.sh ${CLOUD}"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config.yaml"
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    artifacts:
+        paths:
+            - env_metadata/${CLOUD_ENV}
+        when: always
+        expire_in: 2 week
+
+# run functional tests: azure
+test_functional_init_azure:
+    <<: *test_functional_init_generic
+    variables:
+        CLOUD_ENV: "bigip_runtime_init/azure"
+        CLOUD: "azure"
+
+
+# Functional Tests - Execute phase (with no retries)
+.test_functional_execute_generic: &test_functional_execute_generic
+    stage: test_functional_execute
+    image: python:3.7
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # install node (and package dependencies)
+        - curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get -y install nodejs
+        - npm install
+        # copying artifacts inherited from functional_test_init target to root directory
+        - cp -a env_metadata/${CLOUD_ENV}/. .
+        # executing fuctional test
+        - validate npm run functional-test
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    artifacts:
+        paths:
+            - logs
+        when: always
+        expire_in: 2 week
+
+# run functional tests: azure
+test_functional_execute_azure:
+    <<: *test_functional_execute_generic
+    variables:
+        CLOUD_ENV: "bigip_runtime_init/azure"
+        CLOUD: "azure"
+    dependencies:
+        - test_functional_init_azure
+        - build_package
+
+
+# Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
+.test_functional_cleanup_generic: &test_functional_cleanup_generic
+    stage: test_functional_cleanup
+    image: ${DOCKER_IMG_FUNC_TEST}
+    retry:
+        max: 1
+    when: always
+    script:
+        # copying artifacts inherited from functional_test_init target to root directory
+        - cp -a env_metadata/${CLOUD_ENV}/. .
+        # teardown environment
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD_ENV} --action delete
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+
+# run functional tests: azure
+test_functional_cleanup_azure:
+    <<: *test_functional_cleanup_generic
+    variables:
+        CLOUD_ENV: "bigip_runtime_init/azure"
+    dependencies:
+        - test_functional_init_azure
 
 # build package
 build_package:
@@ -23,7 +166,7 @@ build_package:
         paths:
             - node_modules
             - dist
-        expire_in: 1 week
+        expire_in: 2 week
 
 # lint package
 lint_package:
