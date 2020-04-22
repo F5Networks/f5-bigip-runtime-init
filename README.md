@@ -95,8 +95,8 @@ runtime_parameters:
     secretProvider: 
       type: KeyVault
       environment: azure
-      vault: my-keyvault.vault.azure.net
-    secretName: my_azure_secret
+      vaultUrl: my-keyvault.vault.azure.net
+      secretId: my_azure_secret
 extension_packages:
     install_operations:
         - extensionType: do

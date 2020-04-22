@@ -36,7 +36,7 @@ class CloudClient extends AbstractCloudClient {
     }
 
     _getKeyVaultSecret(vaultUrl, secretId, docVersion) {
-        this._keyVaultSecretClient = SecretClient(vaultUrl, this._credentials);
+        this._keyVaultSecretClient = new SecretClient(vaultUrl, this._credentials);
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
     }
 
@@ -65,8 +65,7 @@ class CloudClient extends AbstractCloudClient {
         const documentVersion = options ? options.documentVersion : undefined;
 
         return this._getKeyVaultSecret(vaultUrl, secretId, documentVersion)
-            .promise()
-            .then(result => Promise.resolve(result))
+            .then(result => Promise.resolve(result.value))
             .catch(err => Promise.reject(err));
     }
 }

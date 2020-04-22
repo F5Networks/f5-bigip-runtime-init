@@ -37,11 +37,7 @@ describe('CloudClient - Azure', () => {
         // way to mock out the SecretClient. Since the SecretClient needs the
         // vaultUrl, which is provided at runtime, we are not able to override it.
         // This seems to be the easiest way to test this code in such a scenario.
-        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => ({
-            promise() {
-                return Promise.resolve({ value: 'StrongPassword2010!' });
-            }
-        }));
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => Promise.resolve({ value: 'StrongPassword2010!' }));
 
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
@@ -64,7 +60,7 @@ describe('CloudClient - Azure', () => {
         }
     )
         .then((secret) => {
-            assert.strictEqual(secret.value, 'StrongPassword2010!');
+            assert.strictEqual(secret, 'StrongPassword2010!');
         }));
 
     it('should validate getSecret when secret exists and documentVersion default used', () => cloudClient.getSecret(
@@ -73,15 +69,11 @@ describe('CloudClient - Azure', () => {
         }
     )
         .then((secret) => {
-            assert.strictEqual(secret.value, 'StrongPassword2010!');
+            assert.strictEqual(secret, 'StrongPassword2010!');
         }));
 
     it('should validate getSecret when secret does not exist', () => {
-        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => ({
-            promise() {
-                return Promise.resolve();
-            }
-        }));
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => Promise.resolve());
         cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',
@@ -94,11 +86,7 @@ describe('CloudClient - Azure', () => {
     });
 
     it('should validate getSecret promise rejection', () => {
-        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => ({
-            promise() {
-                return Promise.reject(new Error('Test rejection'));
-            }
-        }));
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => Promise.reject(new Error('Test rejection')));
         return cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',

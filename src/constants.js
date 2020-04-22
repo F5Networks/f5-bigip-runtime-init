@@ -23,7 +23,7 @@ module.exports = {
     TMP_DIR: '/tmp',
     RETRY: {
         DEFAULT_COUNT: 50,
-        DELAY_IN_MS: 3000
+        DELAY_IN_MS: 15000
     },
     HTTP_STATUS_CODES: {
         OK: 200,
