@@ -73,7 +73,7 @@ describe('CloudClient - Azure', () => {
         }));
 
     it('should validate getSecret when secret does not exist', () => {
-        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => Promise.resolve());
+        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => Promise.resolve('secret'));
         cloudClient.getSecret(
             'incorrect-secret-name', {
                 vaultUrl: 'https://hello-kv.vault.azure.net',

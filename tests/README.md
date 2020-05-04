@@ -17,4 +17,4 @@ Best practices:
 
 ## Functional
 
-N/A
+See README under functional test directoy for more details around functonal tests
