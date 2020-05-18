@@ -18,10 +18,13 @@
 
 const { SecretClient } = require('@azure/keyvault-secrets');
 const { ManagedIdentityCredential } = require('@azure/identity');
+const request = require('request');
 
 const CLOUDS = require('../../../constants').CLOUDS;
 const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
 
+const logger = require('../../logger.js');
+const utils = require('../../utils.js');
 
 class CloudClient extends AbstractCloudClient {
     constructor(options) {
@@ -38,6 +41,46 @@ class CloudClient extends AbstractCloudClient {
     _getKeyVaultSecret(vaultUrl, secretId, docVersion) {
         this._keyVaultSecretClient = new SecretClient(vaultUrl, this._credentials);
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
+    }
+
+    async _getMetadata(metadataType, metadataField) {
+        this._metadataType = metadataType;
+        this._metadataField = metadataField;
+        let result;
+        let ipAddress;
+        let prefix;
+
+        const requestOptions = {
+            url: `http://169.254.169.254/metadata/instance/${this._metadataType}?api-version=2017-08-01`,
+            method: 'GET',
+            headers: Object.assign(
+                {
+                    Metadata: 'true'
+                }
+            )
+        };
+
+        const response = await new Promise(((resolve, reject) => {
+            request(requestOptions, (error, resp, body) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                }
+            });
+        }));
+
+        logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
+
+        if (this._metadataType === 'compute') {
+            result = response.body[this._metadataField];
+        } else {
+            ipAddress = response.body.interface[this._metadataField].ipv4.ipAddress[0].privateIpAddress;
+            prefix = response.body.interface[this._metadataField].ipv4.subnet[0].prefix;
+            result = `${ipAddress}/${prefix}`;
+        }
+
+        return result;
     }
 
     /**
@@ -66,6 +109,30 @@ class CloudClient extends AbstractCloudClient {
 
         return this._getKeyVaultSecret(vaultUrl, secretId, documentVersion)
             .then(result => Promise.resolve(result.value))
+            .catch(err => Promise.reject(err));
+    }
+
+    /**
+     * Gets value from Azure metadata
+     *
+     * @param {String} field                         - metadata property to fetch
+     * @param {Object} [options]                     - function options
+     *
+     * @returns {Promise}
+     */
+    getMetadata(metadataField, options) {
+        const metadataType = options ? options.type : undefined;
+
+        if (!metadataType) {
+            throw new Error('Azure Cloud Client metadata type is missing');
+        }
+
+        if (!metadataField) {
+            throw new Error('Azure Cloud Client metadata field is missing');
+        }
+
+        return this._getMetadata(metadataType, metadataField)
+            .then(result => Promise.resolve(result))
             .catch(err => Promise.reject(err));
     }
 }

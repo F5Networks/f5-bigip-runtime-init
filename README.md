@@ -66,6 +66,7 @@ extension_services:
         value: ./examples/declarations/as3.json
 ```
 
+
 Example 2: Installs toolchain components (DO, AS3) on a remote BIG-IP.
 
 ```yaml
@@ -73,7 +74,7 @@ runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.10.0
+          extensionVersion: 1.12.0
         - extensionType: as3
           extensionVersion: 3.17.0
 extension_services:
@@ -86,34 +87,10 @@ host:
   password: admin
 ```
 
+
 Example 3: Installs toolchain components (DO, AS3) on a local BIG-IP and renders Azure service principal into AS3 service discovery declaration downloaded from a URL.
 
-```yaml
-runtime_parameters:
-  - name: AZURE_SERVICE_PRINCIPAL
-    type: secret
-    secretProvider: 
-      type: KeyVault
-      environment: azure
-      vaultUrl: my-keyvault.vault.azure.net
-      secretId: my_azure_secret
-extension_packages:
-    install_operations:
-        - extensionType: do
-          extensionVersion: 1.10.0
-        - extensionType: as3
-          extensionVersion: 3.17.0
-extension_services:
-    service_operations:
-      - extensionType: do
-        type: url
-        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
-      - extensionType: as3
-        type: url
-        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
-```
-
-Contents of AS3 declaration:
+AS3 declaration:
 
 ```json
 {
@@ -172,6 +149,33 @@ Contents of AS3 declaration:
     }
   }
 ```
+
+- F5 BIGIP Runtime Init declaration which provides secret metadata via runtime_parameters for Azure Servce Principal
+```yaml
+runtime_parameters:
+  - name: AZURE_SERVICE_PRINCIPAL
+    type: secret
+    secretProvider: 
+      type: KeyVault
+      environment: azure
+      vaultUrl: my-keyvault.vault.azure.net
+      secretId: my_azure_secret
+extension_packages:
+    install_operations:
+        - extensionType: do
+          extensionVersion: 1.12.0
+        - extensionType: as3
+          extensionVersion: 3.17.0
+extension_services:
+    service_operations:
+      - extensionType: do
+        type: url
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
+      - extensionType: as3
+        type: url
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
+```
+
 
 Example 4: Replaces secret used within DO declaration to configure admin password on AWS BIGIP device
 
@@ -240,15 +244,16 @@ runtime_parameters:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.5.0
+      extensionVersion: 1.12.0
     - extensionType: as3
       extensionVersion: 3.13.0
 extension_services:
   service_operations:
     - extensionType: do
-      type: file
-      value: /tmp/f5-bigip-runtime-init/src/declarations/do.json
+      type: url
+      value: file:///tmp/f5-bigip-runtime-init/src/declarations/do.json
 ```
+
 
 Example 5: Replaces secret used within DO declaration to configure admin password on GCP BIGIP device
 
@@ -317,15 +322,126 @@ runtime_parameters:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.5.0
+      extensionVersion: 1.12.0
     - extensionType: as3
       extensionVersion: 3.13.0
 extension_services:
   service_operations:
     - extensionType: do
-      type: file
-      value: /tmp/f5-bigip-runtime-init/src/declarations/do.json
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
 ```
+
+Example 6: Replaces variable used within DO declaration with name property from instance metadata to configure hostname BIGIP device
+
+- do declaration with token: 
+
+```json
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "{{ HOST_NAME }}.local",
+        "internal": {
+            "class": "VLAN",
+            "tag": 4093,
+            "mtu": 1500,
+            "interfaces": [
+                {
+                    "name": "1.2",
+                    "tagged": true
+                }
+            ]
+        },
+        "internal-self": {
+            "class": "SelfIp",
+            "address": "{{SELF_IP_INTERNAL }}/24",
+            "vlan": "internal",
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "external": {
+            "class": "VLAN",
+            "tag": 4094,
+            "mtu": 1500,
+            "interfaces": [
+                {
+                    "name": "1.1",
+                    "tagged": true
+                }
+            ]
+        },
+        "external-self": {
+            "class": "SelfIp",
+            "address": "{{ SELF_IP_EXTERNAL }}/24",
+            "vlan": "external",
+            "allowService": "none",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "myDns": {
+            "class": "DNS",
+            "nameServers": [
+                "8.8.8.8"
+            ]
+        },
+        "myNtp": {
+            "class": "NTP",
+            "servers": [
+                "0.pool.ntp.org"
+            ],
+            "timezone": "UTC"
+        },
+        "myProvisioning": {
+            "class": "Provision",
+            "ltm": "nominal",
+            "asm": "nominal"
+        },
+        "dbvars": {
+        	"class": "DbVariables",
+        	"provision.extramb": 500,
+        	"restjavad.useextramb": true
+        }
+    }
+}
+```
+
+- F5 BIGIP Runtime Init declaration which provides instance metadata via runtime_parameters for Azure
+```yaml
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: compute
+      field: name
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: 1
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: 2
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.12.0
+    - extensionType: as3
+      extensionVersion: 3.13.0
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: url
+      value: file:///tmp/f5-bigip-runtime-init/src/declarations/do.json
+```
+
 ## Build Artifacts
 
 - Create artifacts: `npm run build`

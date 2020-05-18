@@ -44,6 +44,15 @@ class AbstractCloudClient {
     getSecret() {
         throw new Error('getSecret method must be implemented in child class!');
     }
+
+    /**
+     * Gets metadata
+     *
+     * @param {Object} options - function options
+     */
+    getMetadata() {
+        throw new Error('getMetadata method must be implemented in child class!');
+    }
 }
 
 module.exports = {

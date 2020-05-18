@@ -42,6 +42,11 @@ class ResolverClient {
                     runtimeParameters[i].name,
                     this._resolveSecret(runtimeParameters[i])
                 ));
+            } else if (runtimeParameters[i].type === 'metadata') {
+                promises.push(this._resolveHelper(
+                    runtimeParameters[i].name,
+                    this._resolveMetadata(runtimeParameters[i])
+                ));
             } else {
                 throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
             }
@@ -96,6 +101,27 @@ class ResolverClient {
             secretMetadata.secretProvider
         );
         return secretValue;
+    }
+
+    /**
+     * Resolves metadata using cloud client
+     *
+     * @param {Object} metadataMetadata        - list of runtime parameters
+     *
+     *
+     * @returns {Promise}                      - resolves with metadata value
+     */
+    async _resolveMetadata(metadataMetadata) {
+        const _cloudClient = CloudFactory.getCloudProvider(
+            metadataMetadata.metadataProvider.environment,
+            { logger }
+        );
+        await _cloudClient.init();
+        const metadataValue = await _cloudClient.getMetadata(
+            metadataMetadata.metadataProvider.field,
+            metadataMetadata.metadataProvider
+        );
+        return metadataValue;
     }
 }
 
