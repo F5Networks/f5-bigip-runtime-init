@@ -70,14 +70,14 @@ class CloudClient extends AbstractCloudClient {
             });
         }));
 
-        logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
-
         if (this._metadataType === 'compute') {
             result = response.body[this._metadataField];
-        } else {
+        } else if (this._metadataType === 'network') {
             ipAddress = response.body.interface[this._metadataField].ipv4.ipAddress[0].privateIpAddress;
             prefix = response.body.interface[this._metadataField].ipv4.subnet[0].prefix;
             result = `${ipAddress}/${prefix}`;
+        } else {
+            throw new Error('Runtime parameter metadata type is unknown. Must be one of [ compute, network ]');
         }
 
         return result;

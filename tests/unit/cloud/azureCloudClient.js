@@ -12,6 +12,7 @@
 
 const assert = require('assert');
 const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
+const nock = require('nock');
 
 const cloud = 'azure';
 
@@ -119,6 +120,80 @@ describe('CloudClient - Azure', () => {
             });
         }, (err) => {
             if (err.message.includes('secret id is missing')) {
+                return true;
+            }
+            return false;
+        }, 'unexpected error');
+    });
+
+    it('should validate getMetadata promise rejection', () => {
+        cloudClient._getMetadata = sinon.stub().callsFake(() => Promise.reject(new Error('Test rejection')));
+        return cloudClient.getMetadata(
+            'name', {
+                type: 'wrong',
+                environment: 'azure',
+                field: 'name'
+            }
+        )
+            .then(() => {
+                assert.ok(false);
+            })
+            .catch((err) => {
+                assert.ok(err.message.includes('Test rejection'));
+            });
+    });
+
+    it('should validate getMetadata when hostname field is provided', () => {
+        cloudClient._getMetadata = sinon.stub().callsFake(() => Promise.resolve('ru65wrde-vm0'));
+        cloudClient.getMetadata(
+            'name', {
+                type: 'compute',
+                environment: 'azure',
+                field: 'name'
+            }
+        )
+            .then((result) => {
+                assert.strictEqual(result, 'ru65wrde-vm0');
+            });
+    });
+
+    it('should validate getMetadata when network field is provided', () => {
+        cloudClient._getMetadata = sinon.stub().callsFake(() => Promise.resolve('10.0.1.4/24'));
+        cloudClient.getMetadata(
+            'name', {
+                type: 'network',
+                environment: 'azure',
+                field: 1
+            }
+        )
+            .then((result) => {
+                assert.strictEqual(result, '10.0.1.4/24');
+            });
+    });
+
+    it('should validate getMetadata throws error when metadata type is not provided', () => {
+        assert.throws(() => {
+            cloudClient.getMetadata('name', {
+                environment: 'azure',
+                field: 'name'
+            });
+        }, (err) => {
+            if (err.message.includes('metadata type is missing')) {
+                return true;
+            }
+            return false;
+        }, 'unexpected error');
+    });
+
+    it('should validate getMetadata throws error when metadata field is not provided', () => {
+        assert.throws(() => {
+            cloudClient.getMetadata('', {
+                type: 'compute',
+                environment: 'azure',
+                field: 'name'
+            });
+        }, (err) => {
+            if (err.message.includes('metadata field is missing')) {
                 return true;
             }
             return false;
