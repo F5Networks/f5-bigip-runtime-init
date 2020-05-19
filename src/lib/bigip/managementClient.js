@@ -16,9 +16,6 @@
 
 'use strict';
 
-const request = require('request');
-
-const logger = require('../logger.js');
 const utils = require('../utils.js');
 
 /**
@@ -54,59 +51,10 @@ class ManagementClient {
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
         this.useTls = options.useTls || false;
-
         this._protocol = this.useTls === false ? 'http' : 'https';
-    }
 
-    /**
-     * Make request (HTTP)
-     *
-     * @param {string} uri                   [uri]
-     * @param {object} options               [function options]
-     * @param {string} [options.method]      [HTTP method, defaults to 'GET']
-     * @param {object} [options.headers]     [HTTP headers]
-     * @param {object|stream} [options.body] [HTTP body]
-     * @param {string} [options.bodyType]    [body type, such as 'raw']
-     *
-     * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
-     */
-    async makeRequest(uri, options) {
-        options = options || {};
-
-        if (options.bodyType === 'raw') {
-            // continue
-        } else {
-            options.body = JSON.stringify(options.body);
-        }
-
-        const requestOptions = {
-            url: `${this._protocol}://${this.host}:${this.port}${uri}`,
-            method: options.method || 'GET',
-            headers: Object.assign(
-                options.headers || {},
-                {
-                    Authorization: `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`
-                }
-            ),
-            body: options.body || null,
-            rejectUnauthorized: false
-        };
-
-        logger.info(`Making request: ${requestOptions.method} ${uri}`);
-
-        const response = await new Promise(((resolve, reject) => {
-            request(requestOptions, (error, resp, body) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
-                }
-            });
-        }));
-
-        logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
-
-        return { code: response.code, body: response.body };
+        this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
     }
 
     /**
@@ -115,7 +63,13 @@ class ManagementClient {
      * @returns {Promise} Resolves true on ready check passing
      */
     async _isReadyCheck() {
-        const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
+        const readyResponse = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/ready`,
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: this.authHeader
+                }
+            });
 
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
             .nestedStats.entries;

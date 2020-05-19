@@ -18,12 +18,10 @@
 
 const { SecretClient } = require('@azure/keyvault-secrets');
 const { ManagedIdentityCredential } = require('@azure/identity');
-const request = require('request');
 
 const CLOUDS = require('../../../constants').CLOUDS;
 const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
 
-const logger = require('../../logger.js');
 const utils = require('../../utils.js');
 
 class CloudClient extends AbstractCloudClient {
@@ -59,26 +57,6 @@ class CloudClient extends AbstractCloudClient {
                 }
             }
         );
-
-        // const requestOptions = {
-        //     url: `http://169.254.169.254/metadata/instance/${this._metadataType}?api-version=2017-08-01`,
-        //     method: 'GET',
-        //     headers: Object.assign(
-        //         {
-        //             Metadata: 'true'
-        //         }
-        //     )
-        // };
-
-        // const response = await new Promise(((resolve, reject) => {
-        //     request(requestOptions, (error, resp, body) => {
-        //         if (error) {
-        //             reject(error);
-        //         } else {
-        //             resolve({ code: resp.statusCode, body: JSON.parse(body) });
-        //         }
-        //     });
-        // }));
 
         if (this._metadataType === 'compute') {
             result = response.body[this._metadataField];

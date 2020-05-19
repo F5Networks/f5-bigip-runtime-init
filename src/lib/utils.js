@@ -22,6 +22,7 @@ const crypto = require('crypto');
 const request = require('request');
 const Mustache = require('mustache');
 const constants = require('../constants.js');
+const logger = require('./logger.js');
 
 module.exports = {
     /**
@@ -193,7 +194,7 @@ module.exports = {
      *
      * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
      */
-    async makeMetadataRequest(uri, options) {
+    async makeRequest(uri, options) {
         options = options || {};
 
         if (options.bodyType === 'raw') {
@@ -212,6 +213,8 @@ module.exports = {
             rejectUnauthorized: false
         };
 
+        logger.info(`Making request: ${requestOptions.method} ${uri}`);
+
         const response = await new Promise(((resolve, reject) => {
             request(requestOptions, (error, resp, body) => {
                 if (error) {
@@ -221,6 +224,8 @@ module.exports = {
                 }
             });
         }));
+
+        logger.info(`Request response: ${response.code} ${this.stringify(response.body)}`);
 
         return { code: response.code, body: response.body };
     }

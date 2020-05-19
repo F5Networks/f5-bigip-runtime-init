@@ -12,7 +12,6 @@
 
 const assert = require('assert');
 const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
-const nock = require('nock');
 
 const cloud = 'azure';
 

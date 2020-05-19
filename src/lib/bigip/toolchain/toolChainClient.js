@@ -132,6 +132,9 @@ class PackageClient {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
 
+        this._uriPrefix = this._mgmtClient.uriPrefix;
+        this._authHeader = this._mgmtClient.authHeader;
+
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
     }
@@ -148,11 +151,12 @@ class PackageClient {
         while (end <= fileStats.size - 1 && start < end) {
             logger.info(`Sending chunk: ${start}-${end}/${fileStats.size}`);
 
-            await this._mgmtClient.makeRequest(
-                `/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
+            await utils.makeRequest(
+                `${this._uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
                 {
                     method: 'POST',
                     headers: {
+                        Authorization: this._authHeader,
                         'Content-Type': 'application/octet-stream',
                         'Content-Range': `${start}-${end}/${fileStats.size}`,
                         'Content-Length': end - start + 1
@@ -182,7 +186,12 @@ class PackageClient {
         const maxCount = 120;
         let response;
         while (i < maxCount) {
-            response = await this._mgmtClient.makeRequest(`${PKG_MGMT_URI}/${taskId}`);
+            response = await utils.makeRequest(`${this._uriPrefix}${PKG_MGMT_URI}/${taskId}`,
+                {
+                    headers: {
+                        Authorization: this._authHeader
+                    }
+                });
 
             if (response.body.status === 'FINISHED') {
                 i = maxCount;
@@ -199,10 +208,13 @@ class PackageClient {
     }
 
     async _installRpm(packagePath) {
-        const response = await this._mgmtClient.makeRequest(
-            PKG_MGMT_URI,
+        const response = await utils.makeRequest(
+            `${this._uriPrefix}${PKG_MGMT_URI}`,
             {
                 method: 'POST',
+                headers: {
+                    Authorization: this._authHeader
+                },
                 body: {
                     operation: 'INSTALL',
                     packageFilePath: packagePath
@@ -256,6 +268,9 @@ class ServiceClient {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
 
+        this._uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this._authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
+
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
     }
@@ -268,7 +283,12 @@ class ServiceClient {
      * @returns {promise} Task response
      */
     async _checkTaskState(taskUri) {
-        const taskResponse = await this._mgmtClient.makeRequest(taskUri);
+        const taskResponse = await utils.makeRequest(`${this._uriPrefix}${taskUri}`,
+            {
+                headers: {
+                    Authorization: this._authHeader
+                }
+            });
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
             return Promise.resolve(taskResponse);
@@ -298,8 +318,13 @@ class ServiceClient {
      * @returns {boolean}
      */
     async _isAvailableCheck() {
-        const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getInfoEndpoint().endpoint
+        const response = await utils.makeRequest(
+            `${this._uriPrefix}${this._metadataClient.getInfoEndpoint().endpoint}`,
+            {
+                headers: {
+                    Authorization: this._authHeader
+                }
+            }
         );
 
         if (response.code !== constants.HTTP_STATUS_CODES.OK) {
@@ -331,10 +356,13 @@ class ServiceClient {
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
 
-        const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getConfigurationEndpoint().endpoint,
+        const response = await utils.makeRequest(
+            `${this._uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
                 method: 'POST',
+                headers: {
+                    Authorization: this._authHeader
+                },
                 body: config
             }
         );
