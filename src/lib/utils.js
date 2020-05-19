@@ -179,5 +179,49 @@ module.exports = {
      */
     renderData(template, value) {
         return Mustache.render(template, value);
+    },
+
+    /**
+     * Make request (HTTP)
+     *
+     * @param {string} uri                   [uri]
+     * @param {object} options               [function options]
+     * @param {string} [options.method]      [HTTP method, defaults to 'GET']
+     * @param {object} [options.headers]     [HTTP headers]
+     * @param {object|stream} [options.body] [HTTP body]
+     * @param {string} [options.bodyType]    [body type, such as 'raw']
+     *
+     * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
+     */
+    async makeMetadataRequest(uri, options) {
+        options = options || {};
+
+        if (options.bodyType === 'raw') {
+            // continue
+        } else {
+            options.body = JSON.stringify(options.body);
+        }
+
+        const requestOptions = {
+            url: uri,
+            method: options.method || 'GET',
+            headers: Object.assign(
+                options.headers || {}
+            ),
+            body: options.body || null,
+            rejectUnauthorized: false
+        };
+
+        const response = await new Promise(((resolve, reject) => {
+            request(requestOptions, (error, resp, body) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                }
+            });
+        }));
+
+        return { code: response.code, body: response.body };
     }
 };

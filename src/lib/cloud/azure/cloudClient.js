@@ -50,25 +50,35 @@ class CloudClient extends AbstractCloudClient {
         let ipAddress;
         let prefix;
 
-        const requestOptions = {
-            url: `http://169.254.169.254/metadata/instance/${this._metadataType}?api-version=2017-08-01`,
-            method: 'GET',
-            headers: Object.assign(
-                {
+        const response = await utils.makeRequest(
+            `http://169.254.169.254/metadata/instance/${this._metadataType}?api-version=2017-08-01`,
+            {
+                method: 'GET',
+                headers: {
                     Metadata: 'true'
                 }
-            )
-        };
+            }
+        );
 
-        const response = await new Promise(((resolve, reject) => {
-            request(requestOptions, (error, resp, body) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
-                }
-            });
-        }));
+        // const requestOptions = {
+        //     url: `http://169.254.169.254/metadata/instance/${this._metadataType}?api-version=2017-08-01`,
+        //     method: 'GET',
+        //     headers: Object.assign(
+        //         {
+        //             Metadata: 'true'
+        //         }
+        //     )
+        // };
+
+        // const response = await new Promise(((resolve, reject) => {
+        //     request(requestOptions, (error, resp, body) => {
+        //         if (error) {
+        //             reject(error);
+        //         } else {
+        //             resolve({ code: resp.statusCode, body: JSON.parse(body) });
+        //         }
+        //     });
+        // }));
 
         if (this._metadataType === 'compute') {
             result = response.body[this._metadataField];
