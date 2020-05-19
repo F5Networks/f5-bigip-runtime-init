@@ -250,8 +250,8 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: file:///tmp/f5-bigip-runtime-init/src/declarations/do.json
+      type: file
+      value: ./examples/declarations/do.json
 ```
 
 
@@ -358,7 +358,7 @@ Example 6: Replaces variable used within DO declaration with name property from 
         },
         "internal-self": {
             "class": "SelfIp",
-            "address": "{{SELF_IP_INTERNAL }}/24",
+            "address": "{{{ SELF_IP_INTERNAL }}}",
             "vlan": "internal",
             "allowService": "default",
             "trafficGroup": "traffic-group-local-only"
@@ -376,33 +376,10 @@ Example 6: Replaces variable used within DO declaration with name property from 
         },
         "external-self": {
             "class": "SelfIp",
-            "address": "{{ SELF_IP_EXTERNAL }}/24",
+            "address": "{{{ SELF_IP_EXTERNAL }}}",
             "vlan": "external",
             "allowService": "none",
             "trafficGroup": "traffic-group-local-only"
-        },
-        "myDns": {
-            "class": "DNS",
-            "nameServers": [
-                "8.8.8.8"
-            ]
-        },
-        "myNtp": {
-            "class": "NTP",
-            "servers": [
-                "0.pool.ntp.org"
-            ],
-            "timezone": "UTC"
-        },
-        "myProvisioning": {
-            "class": "Provision",
-            "ltm": "nominal",
-            "asm": "nominal"
-        },
-        "dbvars": {
-        	"class": "DbVariables",
-        	"provision.extramb": 500,
-        	"restjavad.useextramb": true
         }
     }
 }
@@ -438,8 +415,8 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: file:///tmp/f5-bigip-runtime-init/src/declarations/do.json
+      type: file
+      value: ./examples/declarations/do.json
 ```
 
 ## Build Artifacts
