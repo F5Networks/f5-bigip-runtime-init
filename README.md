@@ -54,11 +54,11 @@ runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.10.0
-          extensionHash: 190b9bb7e0f6e20aa344a36bcabeeb76c2af26e8b9c9a93d62bd6d4a26337cae
+          extensionVersion: 1.12.0
+          extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
         - extensionType: as3
-          extensionVersion: 3.17.0
-          extensionHash: 41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6
+          extensionVersion: 3.19.1
+          extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
 extension_services:
     service_operations:
       - extensionType: as3
@@ -76,7 +76,7 @@ extension_packages:
         - extensionType: do
           extensionVersion: 1.12.0
         - extensionType: as3
-          extensionVersion: 3.17.0
+          extensionVersion: 3.19.1
 extension_services:
     service_operations: []
 host:
@@ -88,10 +88,9 @@ host:
 ```
 
 
-Example 3: Installs toolchain components (DO, AS3) on a local BIG-IP and renders Azure service principal into AS3 service discovery declaration downloaded from a URL.
+Example 3: Installs toolchain components (DO, AS3) on a local BIG-IP and renders Azure service principal into AS3 service discovery declaration downloaded from a URL
 
 AS3 declaration:
-
 ```json
 {
     "class": "AS3",
@@ -165,7 +164,7 @@ extension_packages:
         - extensionType: do
           extensionVersion: 1.12.0
         - extensionType: as3
-          extensionVersion: 3.17.0
+          extensionVersion: 3.19.1
 extension_services:
     service_operations:
       - extensionType: do
@@ -185,7 +184,6 @@ Example 4: Replaces secret used within DO declaration to configure admin passwor
   "test-document-02": "StrongPassword212*"
 ```
 - do declaration with token: 
-
 ```json
 {
     "schemaVersion": "1.0.0",
@@ -246,7 +244,7 @@ extension_packages:
     - extensionType: do
       extensionVersion: 1.12.0
     - extensionType: as3
-      extensionVersion: 3.13.0
+      extensionVersion: 3.19.1
 extension_services:
   service_operations:
     - extensionType: do
@@ -263,7 +261,6 @@ Example 5: Replaces secret used within DO declaration to configure admin passwor
   "my-secret-id-02": "StrongPassword212*"
 ```
 - do declaration with token: 
-
 ```json
 {
     "schemaVersion": "1.0.0",
@@ -324,7 +321,7 @@ extension_packages:
     - extensionType: do
       extensionVersion: 1.12.0
     - extensionType: as3
-      extensionVersion: 3.13.0
+      extensionVersion: 3.19.1
 extension_services:
   service_operations:
     - extensionType: do
@@ -332,10 +329,9 @@ extension_services:
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
 ```
 
-Example 6: Replaces variable used within DO declaration with name property from instance metadata to configure hostname BIGIP device
+Example 6: Replaces variables used within DO declaration with properties from instance metadata to configure hostname and self IP addresses on BIGIP device
 
-- do declaration with token: 
-
+- DO declaration (Note: Triple mustache required for fields containing a forward slash): 
 ```json
 {
     "schemaVersion": "1.0.0",
@@ -411,7 +407,7 @@ extension_packages:
     - extensionType: do
       extensionVersion: 1.12.0
     - extensionType: as3
-      extensionVersion: 3.13.0
+      extensionVersion: 3.19.1
 extension_services:
   service_operations:
     - extensionType: do
