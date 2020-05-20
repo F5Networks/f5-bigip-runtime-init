@@ -12,6 +12,7 @@
 
 const assert = require('assert');
 const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
+const nock = require('nock');
 
 const cloud = 'azure';
 
@@ -197,5 +198,41 @@ describe('CloudClient - Azure', () => {
             }
             return false;
         }, 'unexpected error');
+    });
+
+    it('should validate _getMetadata when compute type is provided', () => {
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/compute?api-version=2017-08-01')
+            .reply(200, { name: 'ru65wrde-vm0' });
+
+        cloudClient._getMetadata('compute', 'name')
+            .then((result) => {
+                assert.strictEqual(result, 'ru65wrde-vm0');
+            });
+    });
+
+    it('should validate _getMetadata when network type is provided', () => {
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/network?api-version=2017-08-01')
+            .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] } }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] } }] });
+
+        cloudClient._getMetadata('network', 1)
+            .then((result) => {
+                assert.strictEqual(result, '10.0.1.4/24');
+            });
+    });
+
+    it('should fail _getMetadata when wrong type is provided', () => {
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/foo?api-version=2017-08-01')
+            .reply(404, { name: 'foo' });
+
+        cloudClient._getMetadata('foo', 'bar')
+            .then(() => {
+                assert.fail();
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('Runtime parameter metadata type is unknown'));
+            });
     });
 });

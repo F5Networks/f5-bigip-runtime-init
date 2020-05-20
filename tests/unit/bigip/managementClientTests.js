@@ -46,17 +46,6 @@ describe('BIG-IP Management Client', () => {
         assert.strictEqual(mgmtClient.useTls, standardOptions.useTls);
     });
 
-    it('should make request (HTTP)', async () => {
-        const mgmtClient = new ManagementClient(standardOptions);
-
-        nock(`https://${standardOptions.host}`)
-            .get('/')
-            .reply(200, { foo: 'bar' });
-
-        const response = await mgmtClient.makeRequest('/');
-        assert.deepStrictEqual(response, { code: 200, body: { foo: 'bar' } });
-    });
-
     it('should perform ready check', async () => {
         const mgmtClient = new ManagementClient(standardOptions);
 

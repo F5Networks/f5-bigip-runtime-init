@@ -11,6 +11,7 @@
 const assert = require('assert');
 const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
 const mock = require('mock-fs');
+const nock = require('nock');
 
 /* eslint-disable global-require */
 
@@ -57,6 +58,31 @@ describe('Util', () => {
             const response = util.renderData('{{ TEST_VALUE }} - TRUE',
                 { TEST_VALUE: 'TRUE' });
             assert.strictEqual(response, 'TRUE - TRUE');
+        });
+    });
+
+    describe('makeRequest', () => {
+        it('should make request (HTTP)', async () => {
+            nock('https://192.0.2.1')
+                .get('/')
+                .reply(200, { foo: 'bar' });
+
+            const response = await util.makeRequest('https://192.0.2.1/');
+            assert.deepStrictEqual(response, { code: 200, body: { foo: 'bar' } });
+        });
+
+        it('should fail request (FTP)', async () => {
+            nock('ftp://192.0.2.1')
+                .get('/')
+                .reply(400, { foo: 'bar' });
+
+            util.makeRequest('ftp://192.0.2.1/')
+                .then(() => {
+                    assert.fail();
+                })
+                .catch((error) => {
+                    assert.ok(error.message.includes('Invalid protocol'));
+                });
         });
     });
 
