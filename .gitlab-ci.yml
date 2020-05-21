@@ -143,7 +143,7 @@ test_functional_execute_azure:
         # copying artifacts inherited from functional_test_init target to root directory
         - cp -a env_metadata/${CLOUD}/. .
         # teardown environment
-        - /deployment-tool/deploy.sh --deployment-plan /plans/${CLOUD} --action delete
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action delete
     tags:
         - cm-official-docker-executor
     only:
