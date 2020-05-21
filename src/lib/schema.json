@@ -1,126 +1,190 @@
 {
-   "runtime_parameters": [
-      {
-         "name": "GCP_SECRET",
-         "type": "secret",
-         "secretProvider": {
-            "type": "SecretManager",
-            "environment": "gcp",
-            "project": "f5-7656-pdsoleng-dev"
-         },
-         "secretName": "my_gcp_secret"
-      },
-      {
-         "name": "GCP_SECRET_ALT",
-         "type": "secret",
-         "secretProvider": {
-            "type": "default"
-         },
-         "secretName": "my_gcp_secret_alt"
-      },
-      {
-         "name": "AWS_SECRET",
-         "type": "secret",
-         "secretProvider": {
-            "type": "SecretsManager",
-            "environment": "aws",
-            "region": "us-east-1"
-         },
-         "secretName": "my_aws_secret"
-      },
-      {
-         "name": "AWS_SECRET_ALT",
-         "type": "secret",
-         "secretProvider": {
-            "type": "default"
-         },
-         "secretName": "my_aws_secret_alt"
-      },
-      {
-         "name": "AZURE_SECRET",
-         "type": "secret",
-         "secretProvider": {
-            "type": "KeyVault",
-            "environment": "azure",
-            "vault": "my-keyvault.vault.azure.net"
-         },
-         "secretName": "my_azure_secret"
-      },
-      {
-         "name": "AZURE_SECRET_ALT",
-         "type": "secret",
-         "secretProvider": {
-            "type": "default"
-         },
-         "secretName": "my_azure_secret_alt"
-      },
-      {
-         "name": "VAULT_SECRET",
-         "type": "secret",
-         "secretProvider": {
-            "type": "hashicorpVault",
-            "namespace": "ns1",
-            "token": "f3b09679-3001-009d-2b80-9c306ab81aa6"
-         },
-         "secretName": "my_vault_secret"
-      },
-      {
-         "name": "HOST_NAME",
-         "type": "string",
-         "value": "bigip1.example.com"
-      },
-      {
-         "name": "LICENSE_KEY",
-         "type": "string",
-         "value": "NEZXD-VIGHH-BLFAQ-QRYQH-RRVEEHO"
-      }
-   ],
-   "extension_packages": {
-      "install_operations": [
-         {
-            "extensionType": "do",
-            "extensionVersion": "1.10.0",
-            "extensionHash": "190b9bb7e0f6e20aa344a36bcabeeb76c2af26e8b9c9a93d62bd6d4a26337cae"
-         },
-         {
-            "extensionType": "as3",
-            "extensionVersion": "3.17.0",
-            "extensionHash": "07fc72dff8d61112b3543c7b77908da1cb067b23eca62d6f041ad6dc4eba5e13"
-         },
-         {
-            "extensionType": "ts",
-            "extensionVersion": "1.9.0",
-            "extensionHash": "f223c6935f167564cfe85f59b0bfc7e51d25661d89df720feccba11cab4c8d04"
-         },
-         {
-            "extensionType": "cf",
-            "extensionVersion": "1.1.0",
-            "extensionHash": "4516fb2537b535b201d21a373b6014146c173f643fc86ad70d3f364de2ebca33"
-         }
-      ]
-   },
-   "extension_services": {
-      "service_operations": [
-         {
-            "extensionType": "do",
-            "type": "url",
-            "value": "https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/autoscale_bigip/do.json"
-         },
-         {
-            "extensionType": "as3",
-            "type": "url",
-            "value": "https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/autoscale_bigip/as3.json"
-         },
-         {
-            "extensionType": "ts",
-            "type": "file",
-            "value": "./examples/declarations/ts.json"
-         },
-         {
-            "extensionType": "cf",
-            "type": "file",
-            "value": "./examples/declarations/cf.json"
-         }
-      ]
-   }
+    "properties": {
+        "runtime_parameters": {
+            "title": "Runtime Parameters",
+            "description": "Runtime parameters (used during future template rendering)",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["static", "secret", "metadata"]
+                    },
+                    "secretProvider": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["SecretsManager", "SecretManager", "default", "KeyVault"]
+                            },
+                            "environment": {
+                                "type": "string",
+                                "enum": ["gcp", "aws", "azure"]
+                            },
+                            "project": {
+                                "description": "Name of the GCP Project",
+                                "type": "string"
+                            },
+                            "region": {
+                                "description": "Name of the AWS region used for secret storage",
+                                "type": "string"
+                            },
+                            "vault": {
+                                "description": "Name of the Azure Key Vault",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "environment"
+                        ]
+                    },
+                    "metadataProvider": {
+                        "type": "object",
+                        "properties": {
+                            "environment": {
+                                "type": "string",
+                                "enum": ["gcp", "aws", "azure"]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": ["network", "compute"]
+                            }
+                        },
+                        "if": {
+                            "properties": { "type": { "const": "compute" } }
+                        },
+                        "then": {
+                            "properties": { "field": { "type": "string" } }
+                        },
+                        "else": {
+                            "properties": { "field": { "type": "integer" } }
+                        },
+                        "required": [
+                            "environment"
+                        ]
+                    },
+                    "secretName": {
+                        "title": "Secret Name",
+                        "description": "Name of the secret in the secret manager of the specified cloud",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "required": [ "secretProvider" ]
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "metadataProvider" ]
+                    }
+                ],
+            }
+        },
+        "extension_packages":{
+            "title": "Extension Packages",
+            "description": "Used to specify packages to be installed on device",
+            "type": "object",
+            "properties": {
+                "install_operations": {
+                    "title": "Install Operations",
+                    "description": "Specify the type and version of packages to install",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "extensionType": {
+                                "type": "string",
+                                "enum": ["do", "as3", "ts", "cf"]
+                            },
+                            "extensionVersion": {
+                                "type": "string"
+                            },
+                            "extensionHash": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "extensionType",
+                            "extensionVersion"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "install_operations"
+            ]
+        },
+        "extension_services": {
+            "title": "Extension Services",
+            "description": "Used to specify operations to be performed against specific services on device",
+            "type": "object",
+            "properties": {
+                "service_operations": {
+                    "title": "Service Operations",
+                    "description": "Specify the operations to be performed against the specified services",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "extensionType": {
+                                "type": "string",
+                                "enum": ["do", "as3", "ts", "cf"]
+                            },
+                            "type": {
+                                "$comment": "The url can be local (file:) or remote (https: or http:) but the type remains 'url'",
+                                "type": "string",
+                                "enum": ["url"]
+                            },
+                            "value": {
+                                "description": "URL of local or remote file containing the declarations to be applied",
+                                "type": "string"
+                            },
+                        },
+                        "required": []
+                    }
+                }
+            },
+            "required": [
+                "service_operations"
+            ]
+        },
+        "host": {
+            "title": "Host Parameters",
+            "description": "Details of the local or remote device",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "URL or IP of the device",
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string",
+                    "enum": ["http", "https"]
+                },
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+            },
+            "required": []
+        }
+    },
+    "required": [
+        "extension_packages",
+        "extension_services"
+    ],
+    "additionalProperties": false
 }
