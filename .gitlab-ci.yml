@@ -55,13 +55,13 @@ publish_container:
         max: 1
     script:
         # deploy environment - required artifacts will be place in output folder
-        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD_ENV} --action create --output-folder env_metadata/${CLOUD_ENV}
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}
         # Collecting deployment metadata
-        - grep "\-\-\-" /deployment-tool/plans/${CLOUD_ENV}/user_data.tpl -A 100 > env_metadata/${CLOUD_ENV}/f5-bigip-runtime-declaration.yaml
-        - MGMT_IP=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .instances[].mgmt_address -r)
-        - USERNAME=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .instances[].admin_username -r)
-        - PASSWORD=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .instances[].admin_password -r)
-        - DEPLOYMENT_ID=$(cat env_metadata/${CLOUD_ENV}/deployment_info.json | jq .deploymentId -r)
+        - grep "\-\-\-" /plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/f5-bigip-runtime-declaration.yaml
+        - MGMT_IP=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].mgmt_address -r)
+        - USERNAME=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].admin_username -r)
+        - PASSWORD=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].admin_password -r)
+        - DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .deploymentId -r)
         # dhcp must be disalbe to workaround DO bug https://github.com/F5Networks/f5-declarative-onboarding/issues/129
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "modify sys global-settings mgmt-dhcp disabled"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "save sys config"
@@ -82,7 +82,7 @@ publish_container:
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
     artifacts:
         paths:
-            - env_metadata/${CLOUD_ENV}
+            - env_metadata/${CLOUD}
         when: always
         expire_in: 2 week
 
@@ -90,7 +90,6 @@ publish_container:
 test_functional_init_azure:
     <<: *test_functional_init_generic
     variables:
-        CLOUD_ENV: "bigip_runtime_init/azure"
         CLOUD: "azure"
 
 
@@ -106,7 +105,7 @@ test_functional_init_azure:
         - curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get -y install nodejs
         - npm install
         # copying artifacts inherited from functional_test_init target to root directory
-        - cp -a env_metadata/${CLOUD_ENV}/. .
+        - cp -a env_metadata/${CLOUD}/. .
         # executing fuctional test
         - validate npm run functional-test
     tags:
@@ -127,7 +126,6 @@ test_functional_init_azure:
 test_functional_execute_azure:
     <<: *test_functional_execute_generic
     variables:
-        CLOUD_ENV: "bigip_runtime_init/azure"
         CLOUD: "azure"
     dependencies:
         - test_functional_init_azure
@@ -143,9 +141,9 @@ test_functional_execute_azure:
     when: always
     script:
         # copying artifacts inherited from functional_test_init target to root directory
-        - cp -a env_metadata/${CLOUD_ENV}/. .
+        - cp -a env_metadata/${CLOUD}/. .
         # teardown environment
-        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD_ENV} --action delete
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action delete
     tags:
         - cm-official-docker-executor
     only:
@@ -159,7 +157,7 @@ test_functional_execute_azure:
 test_functional_cleanup_azure:
     <<: *test_functional_cleanup_generic
     variables:
-        CLOUD_ENV: "bigip_runtime_init/azure"
+        CLOUD: "azure"
     dependencies:
         - test_functional_init_azure
 
