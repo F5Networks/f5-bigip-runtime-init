@@ -57,7 +57,7 @@ publish_container:
         # deploy environment - required artifacts will be place in output folder
         - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}
         # Collecting deployment metadata
-        - grep "\-\-\-" deployment-tool/plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/f5-bigip-runtime-declaration.yaml
+        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/f5-bigip-runtime-declaration.yaml
         - MGMT_IP=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].mgmt_address -r)
         - USERNAME=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].admin_username -r)
         - PASSWORD=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].admin_password -r)

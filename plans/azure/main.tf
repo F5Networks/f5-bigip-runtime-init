@@ -1,5 +1,5 @@
 module "utils" {
-  source = "../../../modules/utils"
+  source = "../../modules/utils"
 }
 
 provider "azurerm" {
