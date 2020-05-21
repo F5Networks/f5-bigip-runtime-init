@@ -4,10 +4,10 @@ stages:
     - build
     - lint
     - unittests
+    - publish
     - test_functional_init
     - test_functional_execute
     - test_functional_cleanup
-
 
 .helpers: &helpers |
     function validate () {
@@ -29,13 +29,28 @@ variables:
     TF_VAR_AZURE_TENANT_ID: "$AZURE_TENANT_ID"
     TF_VAR_AZURE_OBJECT_ID: "$AZURE_OBJECT_ID"
 
+publish_container:
+    image: docker:stable
+    stage: publish
+    script:
+        - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
+        - docker build -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest .
+        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+    tags:
+        - docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
 
 ### Functional Tests Section
 
 # Functional Tests - Initialization phase (with 1 retries in a case of any failures)
 .test_functional_init_generic: &test_functional_init_generic
     stage: test_functional_init
-    image: ${DOCKER_IMG_FUNC_TEST}
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
     retry:
         max: 1
     script:
