@@ -16,11 +16,11 @@
 
 'use strict';
 
-const request = require('request');
+import * as request from 'request';
+import Logger from '../logger.js';
+import * as utils from '../utils.js';
 
-const logger = require('../logger.js');
-const utils = require('../utils.js');
-
+const logger = Logger.getLogger();
 /**
  * Management client class
  *
@@ -34,7 +34,13 @@ const utils = require('../utils.js');
  *
  * async mgmtClient.isReady();
  */
-class ManagementClient {
+export class ManagementClient {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    useTls: boolean;
+    _protocol: string;
     /**
      *
      * @param {object} options            [function options]
@@ -46,7 +52,13 @@ class ManagementClient {
      *
      * @returns {void}
      */
-    constructor(options) {
+    constructor(options?: {
+        host?: string;
+        port?: number;
+        user?: string;
+        password?: string;
+        useTls?: boolean;
+    }) {
         options = options || {};
 
         this.host = options.host || 'localhost';
@@ -70,7 +82,20 @@ class ManagementClient {
      *
      * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
      */
-    async makeRequest(uri, options) {
+     /* eslint-disable  @typescript-eslint/no-explicit-any */
+     async makeRequest(uri: string, options?: {
+        method?: string;
+        headers?: {
+            'Content-Type': string;
+            'Content-Range': string;
+            'Content-Length': number;
+        };
+        body?: unknown;
+        bodyType?: string;
+    }): Promise<{
+        code: number;
+        body?: any;
+    }> {
         options = options || {};
 
         if (options.bodyType === 'raw') {
@@ -94,7 +119,10 @@ class ManagementClient {
 
         logger.info(`Making request: ${requestOptions.method} ${uri}`);
 
-        const response = await new Promise(((resolve, reject) => {
+        const response: {
+            code: number;
+            body: any;
+        } = await new Promise(((resolve, reject) => {
             request(requestOptions, (error, resp, body) => {
                 if (error) {
                     reject(error);
@@ -114,7 +142,7 @@ class ManagementClient {
      *
      * @returns {Promise} Resolves true on ready check passing
      */
-    async _isReadyCheck() {
+    async _isReadyCheck(): Promise<boolean>{
         const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
 
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
@@ -138,9 +166,7 @@ class ManagementClient {
      *
      * @returns {Promise} Resolves true on ready check passing
      */
-    async isReady() {
+    async isReady(): Promise<object> {
         return utils.retrier(this._isReadyCheck, [], { thisContext: this });
     }
 }
-
-module.exports = ManagementClient;

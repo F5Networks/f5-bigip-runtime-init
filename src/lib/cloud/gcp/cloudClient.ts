@@ -1,4 +1,3 @@
-
 /**
  * Copyright 2020 F5 Networks, Inc.
  *
@@ -15,18 +14,22 @@
  * limitations under the License.
  */
 
+
 'use strict';
 
-const { google } = require('googleapis');
+import {google, GoogleApis} from 'googleapis';
+import * as constants from '../../../constants'
+import { AbstractCloudClient } from '../abstract/cloudClient.js'
 
-
-const secretmanager = google.secretmanager('v1');
-const CLOUDS = require('../../../constants').CLOUDS;
-const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
-
-class CloudClient extends AbstractCloudClient {
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+export class GcpCloudClient extends AbstractCloudClient {
+    secretmanager: any;
+    google: GoogleApis;
+    projectId: string;
+    authToken: any;
     constructor(options) {
-        super(CLOUDS.GCP, options);
+        const secretmanager = google.secretmanager('v1');
+        super(constants.CLOUDS.GCP, options);
         this.google = google;
         this.secretmanager = secretmanager;
     }
@@ -34,19 +37,17 @@ class CloudClient extends AbstractCloudClient {
     /**
      * See the parent class method for details
      */
-    init() {
-        return Promise.all([
-            this._getProjectId()
-                .then((result) => {
-                    this.projectId = result;
-                })
-                .catch(err => Promise.reject(err)),
-            this._getAuthToken()
-                .then((result) => {
-                    this.authToken = result;
-                })
-                .catch(err => Promise.reject(err))
-        ]);
+    init(): Promise<void> {
+        return this._getProjectId()
+            .then((result) => {
+                this.projectId = result;
+                return this._getAuthToken();
+            })
+            .then((result) => {
+                this.authToken = result;
+                return Promise.resolve();
+            })
+            .catch(err => Promise.reject(err))
     }
 
 
@@ -59,7 +60,7 @@ class CloudClient extends AbstractCloudClient {
      *
      * @returns {Promise}
      */
-    getSecret(secretId, options) {
+    getSecret(secretId: string, options?: any): Promise<string> {
         if (!secretId) {
             throw new Error('GCP Cloud Client secret id is missing');
         }
@@ -86,7 +87,7 @@ class CloudClient extends AbstractCloudClient {
      * @returns {Promise} A promise which is resolved with the projectId requested
      *
      */
-    _getProjectId() {
+    _getProjectId(): Promise<string> {
         return this.google.auth.getProjectId()
             .then((projectId) => Promise.resolve(projectId)) /* eslint-disable-line */
             .catch((err) => {
@@ -102,7 +103,7 @@ class CloudClient extends AbstractCloudClient {
      *
      */
 
-    _getAuthToken() {
+    _getAuthToken(): Promise<any> {
         return this.google.auth.getClient({
             scopes: [
                 'https://www.googleapis.com/auth/cloud-platform',
@@ -117,6 +118,3 @@ class CloudClient extends AbstractCloudClient {
     }
 }
 
-module.exports = {
-    CloudClient
-};
