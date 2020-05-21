@@ -49,3 +49,4 @@ describe('validator', () => {
             assert.strictEqual(Array.isArray(validation.errors), true);
         });
     });
+});
