@@ -55,7 +55,7 @@ publish_container:
         max: 1
     script:
         # deploy environment - required artifacts will be place in output folder
-        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}
+        - /deployment-tool/deploy.sh --deployment-plan /plans/${CLOUD} --action create --output-folder env_metadata/${CLOUD}
         # Collecting deployment metadata
         - grep "\-\-\-" /plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/f5-bigip-runtime-declaration.yaml
         - MGMT_IP=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].mgmt_address -r)
@@ -143,7 +143,7 @@ test_functional_execute_azure:
         # copying artifacts inherited from functional_test_init target to root directory
         - cp -a env_metadata/${CLOUD}/. .
         # teardown environment
-        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action delete
+        - /deployment-tool/deploy.sh --deployment-plan /plans/${CLOUD} --action delete
     tags:
         - cm-official-docker-executor
     only:
