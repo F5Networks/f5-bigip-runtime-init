@@ -15,7 +15,7 @@
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
         "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{ts,tsx}'",
         "unit-tests": "mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
-        "test": "nyc npm run unit-tests",
+        "test": "nyc mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
         "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
         "check-test-coverage": "nyc check-coverage"
     },
@@ -78,6 +78,10 @@
         "exit": true
     },
     "nyc": {
+        "extension": [
+            ".ts",
+            ".tsx"
+        ],
         "exclude": [
             "tests/**"
         ],
