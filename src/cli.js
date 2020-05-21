@@ -42,7 +42,12 @@ async function cli() {
     // load configuration file
     let config;
     try {
-        config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
+        if (program.configFile.endsWith('yaml') || program.configFile.endsWith('yml')) {
+            config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
+        } else {
+            config = JSON.parse(fs.readFileSync(program.configFile, 'utf8'));
+        }
+        // config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
     } catch (e) {
         logger.info(`Configuration load error: ${e}`);
     }
