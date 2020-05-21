@@ -1,4 +1,7 @@
 FROM artifactory.f5net.com/ecosystems-cloudsolutions-docker-dev/deployment-tool:latest
 
+# Set work directory
+WORKDIR /
+
 # Copy deployment files
 COPY plans/ plans/
