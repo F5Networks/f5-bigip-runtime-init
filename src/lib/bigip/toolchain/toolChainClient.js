@@ -17,6 +17,7 @@
 'use strict';
 
 const fs = require('fs');
+const url = require('url');
 
 const logger = require('../../logger.js');
 const constants = require('../../../constants.js');
@@ -234,11 +235,18 @@ class PackageClient {
         logger.info(`Installing - ${this.component} ${this.version}`);
 
         const downloadUrl = this._metadataClient.getDownloadUrl();
+        const urlObject = url.parse(downloadUrl);
         const downloadPackageName = this._metadataClient.getDownloadPackageName();
 
-        // download locally
-        const tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
-        await utils.downloadToFile(downloadUrl, tmpFile);
+        let tmpFile = '';
+        if (urlObject.protocol === 'file:') {
+            // file is already local
+            tmpFile = downloadUrl;
+        } else {
+            // download locally
+            tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
+            await utils.downloadToFile(downloadUrl, tmpFile);
+        }
 
         // verify package
         if (this._metadataClient.getComponentHash()) {
