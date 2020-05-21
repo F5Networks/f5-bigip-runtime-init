@@ -1,7 +1,7 @@
 FROM artifactory.f5net.com/ecosystems-cloudsolutions-docker-dev/deployment-tool:latest
 
-# Set work directory
-WORKDIR /
+# Delete their deployment files
+RUN rm -r plans/
 
-# Copy deployment files
+# Copy our deployment files
 COPY plans/ plans/
