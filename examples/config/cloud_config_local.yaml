@@ -8,5 +8,5 @@ extension_packages:
 extension_services:
     service_operations:
       - extensionType: as3
-        type: file
-        value: ./examples/declarations/as3.json
+        type: url
+        value: file:///root/f5-bigip-runtime-init/examples/declarations/as3.json

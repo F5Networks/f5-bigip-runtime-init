@@ -18,6 +18,7 @@
 'use strict';
 
 const fs = require('fs');
+const URL = require('url');
 const crypto = require('crypto');
 const request = require('request');
 const Mustache = require('mustache');
@@ -149,12 +150,12 @@ module.exports = {
     async loadData(location, options) {
         options = options || {};
 
-        const locationType = options.locationType || 'file';
+        const locationType = options.locationType;
+        const urlObject = URL.parse(location);
 
-        if (locationType === 'file') {
-            return Promise.resolve(JSON.parse(fs.readFileSync(location, 'utf8')));
-        }
-        if (locationType === 'url') {
+        if (urlObject.protocol === 'file:') {
+            return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
+        } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') { // eslint-disable-line no-else-return
             return new Promise(((resolve, reject) => {
                 request(location, (error, resp, body) => {
                     if (error) {
@@ -166,7 +167,7 @@ module.exports = {
             }))
                 .catch(err => Promise.reject(err));
         }
-        return Promise.reject(new Error(`Unknown location type: ${locationType}`));
+        return Promise.reject(new Error(`Unknown url type: ${urlObject.protocol}`));
     },
 
     /**
