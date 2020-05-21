@@ -55,6 +55,7 @@ publish_container:
         max: 1
     script:
         # deploy environment - required artifacts will be place in output folder
+        - cd /
         - /deployment-tool/deploy.sh --deployment-plan /plans/${CLOUD} --action create --output-folder env_metadata/${CLOUD}
         # Collecting deployment metadata
         - grep "\-\-\-" /plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/f5-bigip-runtime-declaration.yaml
