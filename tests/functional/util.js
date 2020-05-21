@@ -13,7 +13,7 @@ const path = require('path');
 const request = require('request');
 const yaml = require('js-yaml');
 const icrdk = require('icrdk'); // eslint-disable-line import/no-extraneous-dependencies
-const constants = require('../constants.js');
+const constants = require('../constants');
 
 const deploymentFile = process.env[constants.DEPLOYMENT_FILE_VAR]
     || path.join(process.cwd(), constants.DEPLOYMENT_FILE);
