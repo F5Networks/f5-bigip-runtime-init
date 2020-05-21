@@ -19,7 +19,7 @@
 
 import * as AWS from 'aws-sdk';
 import * as constants from '../../../constants';
-import { AbstractCloudClient } from '../abstract/cloudClient.js';
+import { AbstractCloudClient } from '../abstract/cloudClient';
 import Logger from '../../logger';
 
 export class AwsCloudClient extends AbstractCloudClient {
@@ -76,7 +76,9 @@ export class AwsCloudClient extends AbstractCloudClient {
             VersionStage: versionStage || 'AWSCURRENT'
         };
 
-        const secret = await this.secretsManager.getSecretValue(params).promise();
+        const secret = await this.secretsManager.getSecretValue(params).promise().catch((e) => {
+            throw new Error(`AWS Cloud returned error: ${e}`);
+        });
 
         if (secret) {
             if (secret.SecretString) {

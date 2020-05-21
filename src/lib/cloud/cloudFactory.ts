@@ -17,9 +17,9 @@
 'use strict';
 
 import * as constants from '../../constants';
-import { AwsCloudClient } from './aws/cloudClient.js';
-import { AzureCloudClient } from './azure/cloudClient.js';
-import { GcpCloudClient } from './gcp/cloudClient.js';
+import { AwsCloudClient } from './aws/cloudClient';
+import { AzureCloudClient } from './azure/cloudClient';
+import { GcpCloudClient } from './gcp/cloudClient';
 import { CloudClient } from './abstract/cloudClient';
 import Logger from '../logger'
 
@@ -35,9 +35,9 @@ export function getCloudProvider(providerName: string, options?: {
     switch (providerName) {
         case constants.CLOUDS.AWS:
             return new AwsCloudClient(options);
-        case constants.CLOUDS.GCP:
-            return new AzureCloudClient(options);
         case constants.CLOUDS.AZURE:
+            return new AzureCloudClient(options);
+        case constants.CLOUDS.GCP:
             return new GcpCloudClient(options);
         default:
             throw new Error('Unsupported cloud');

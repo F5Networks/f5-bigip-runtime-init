@@ -37,11 +37,11 @@ export async function cli(): Promise<string> {
     program.parse(process.argv);
     // load configuration file
     let config;
-
+    logger.info(`Configuration file: ${program.configFile}`);
     try {
         config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
     } catch (e) {
-        logger.info(`Configuration load error: ${e}`);
+        logger.error(`Configuration load error: ${e}`);
     }
 
     // create management client
@@ -61,7 +61,6 @@ export async function cli(): Promise<string> {
     const resolver = new ResolverClient();
     logger.info('Resolving parameters');
     const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
-
     // perform install operations
     logger.info('Performing install operations.');
     const installOperations = config.extension_packages.install_operations;
@@ -104,7 +103,6 @@ export async function cli(): Promise<string> {
     }
 
     return 'All operations finished successfully';
-
 }
 
 cli()

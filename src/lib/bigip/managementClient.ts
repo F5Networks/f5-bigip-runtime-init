@@ -17,8 +17,8 @@
 'use strict';
 
 import request from 'request';
-import Logger from '../logger.js';
-import * as utils from '../utils.js';
+import Logger from '../logger';
+import * as utils from '../utils';
 
 const logger = Logger.getLogger();
 /**

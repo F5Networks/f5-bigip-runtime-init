@@ -19,7 +19,7 @@
 
 import {google, GoogleApis} from 'googleapis';
 import * as constants from '../../../constants'
-import { AbstractCloudClient } from '../abstract/cloudClient.js'
+import { AbstractCloudClient } from '../abstract/cloudClient'
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 export class GcpCloudClient extends AbstractCloudClient {
@@ -27,7 +27,7 @@ export class GcpCloudClient extends AbstractCloudClient {
     google: GoogleApis;
     projectId: string;
     authToken: any;
-    constructor(options) {
+    constructor(options?: any) {
         const secretmanager = google.secretmanager('v1');
         super(constants.CLOUDS.GCP, options);
         this.google = google;

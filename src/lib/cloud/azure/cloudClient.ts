@@ -20,7 +20,7 @@
 import {KeyVaultSecret, SecretClient} from '@azure/keyvault-secrets';
 import { ManagedIdentityCredential } from '@azure/identity';
 import * as constants from '../../../constants';
-import { AbstractCloudClient } from '../abstract/cloudClient.js'
+import { AbstractCloudClient } from '../abstract/cloudClient'
 import Logger from "../../logger";
 
 

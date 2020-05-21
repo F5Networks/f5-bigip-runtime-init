@@ -19,11 +19,11 @@
 
 import * as fs from 'fs';
 
-import Logger from '../../logger.js';
+import Logger from '../../logger';
 import { ManagementClient } from '../managementClient';
-import * as constants from '../../../constants.js';
+import * as constants from '../../../constants';
 import * as toolChainMetadata from './toolchain_metadata.json';
-import * as utils from '../../utils.js';
+import * as utils from '../../utils';
 
 const PKG_MGMT_URI = '/mgmt/shared/iapp/package-management-tasks';
 
