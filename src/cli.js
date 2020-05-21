@@ -23,10 +23,12 @@ const yaml = require('js-yaml');
 const logger = require('./lib/logger.js');
 const constants = require('./constants.js');
 const utils = require('./lib/utils.js');
+const Validator = require('./lib/validator.js');
 
 const Resolver = require('./lib/resolver/resolverClient.js');
 const ManagementClient = require('./lib/bigip/managementClient.js');
 const ToolchainClient = require('./lib/bigip/toolchain/toolChainClient.js');
+
 
 async function cli() {
     /* eslint-disable no-await-in-loop */
@@ -44,6 +46,15 @@ async function cli() {
     } catch (e) {
         logger.info(`Configuration load error: ${e}`);
     }
+
+    const validator = new Validator();
+    const validation = validator.validate(config);
+    if (!validation.isValid) {
+        const error = new Error(`Invalid declaration: ${JSON.stringify(validation.errors)}`);
+        return Promise.reject(error);
+    }
+
+    logger.info('Successfully validated declaration');
 
     // create management client
     const host = config.host || {};

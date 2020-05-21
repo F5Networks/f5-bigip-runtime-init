@@ -1,98 +1,99 @@
 {
-    "name": "f5-bigip-runtime-init",
-    "version": "0.9.0",
-    "description": "Cloud Onboarder for F5 BIG-IP",
-    "author": "James Sevedge",
-    "license": "Apache-2.0",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/F5Networks/f5-bigip-runtime-init.git"
+  "name": "f5-bigip-runtime-init",
+  "version": "0.9.0",
+  "description": "Cloud Onboarder for F5 BIG-IP",
+  "author": "James Sevedge",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/F5Networks/f5-bigip-runtime-init.git"
+  },
+  "scripts": {
+    "cli": "node ./src/cli.js",
+    "build": "bash scripts/build_package.sh",
+    "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
+    "lint": "eslint src tests",
+    "unit-tests": "mocha --recursive \"./tests/unit/**/*.js\"",
+    "test": "nyc npm run unit-tests",
+    "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
+    "check-test-coverage": "nyc check-coverage"
+  },
+  "dependencies": {
+    "@azure/identity": "^1.0.2",
+    "@azure/keyvault-secrets": "^4.0.2",
+    "ajv": "^6.12.2",
+    "aws-sdk": "^2.610.0",
+    "commander": "^4.1.0",
+    "google-auth-library": "^5.6.1",
+    "googleapis": "^48.0.0",
+    "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
+    "js-yaml": "^3.13.1",
+    "mustache": "^4.0.0",
+    "request": "^2.88.0"
+  },
+  "dependencyMap": {
+    "common": {
+      "commander": "^4.1.0",
+      "js-yaml": "^3.13.1",
+      "mustache": "^4.0.0",
+      "request": "^2.88.0"
     },
-    "scripts": {
-        "cli": "node ./src/cli.js",
-        "build": "bash scripts/build_package.sh",
-        "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
-        "lint": "eslint src tests",
-        "unit-tests": "mocha --recursive \"./tests/unit/**/*.js\"",
-        "test": "nyc npm run unit-tests",
-        "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
-        "check-test-coverage": "nyc check-coverage"
+    "gcp": {
+      "google-auth-library": "^5.6.1",
+      "googleapis": "^48.0.0"
     },
-    "dependencies": {
-        "commander": "^4.1.0",
-        "js-yaml": "^3.13.1",
-        "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
-        "mustache": "^4.0.0",
-        "request": "^2.88.0",
-        "google-auth-library": "^5.6.1",
-        "googleapis": "^48.0.0",
-        "aws-sdk": "^2.610.0",
-        "@azure/keyvault-secrets": "^4.0.2",
-        "@azure/identity": "^1.0.2"
+    "aws": {
+      "aws-sdk": "^2.610.0"
     },
-    "dependencyMap": {
-        "common": {
-            "commander": "^4.1.0",
-            "js-yaml": "^3.13.1",
-            "mustache": "^4.0.0",
-            "request": "^2.88.0"
-        },
-        "gcp": {
-            "google-auth-library": "^5.6.1",
-            "googleapis": "^48.0.0"
-        },
-        "aws": {
-            "aws-sdk": "^2.610.0"
-        },
-        "azure": {
-            "@azure/keyvault-secrets": "^4.0.2",
-            "@azure/identity": "^1.0.2"
-        }
-    },
-    "devDependencies": {
-        "@azure/keyvault-secrets": "^4.0.2",
-        "@azure/ms-rest-nodeauth": "^3.0.1",
-        "@f5devcentral/eslint-config-f5-atg": "^0.1.1",
-        "eslint": "^6.8.0",
-        "eslint-config-airbnb-base": "^14.0.0",
-        "eslint-plugin-import": "^2.20.0",
-        "jsdoc": "^3.6.3",
-        "mocha": "^7.1.2",
-        "mock-fs": "^4.11.0",
-        "nock": "^11.7.2",
-        "nyc": "^14.1.1",
-        "sinon": "^8.1.1"
-    },
-    "mocha": {
-        "timeout": 5000,
-        "exit": true
-    },
-    "nyc": {
-        "exclude": [
-            "tests/**"
-        ],
-        "check-coverage": true,
-        "statements": 65,
-        "branches": 45,
-        "functions": 55,
-        "lines": 65,
-        "reporter": [
-            "html",
-            "text"
-        ],
-        "cache": false
-    },
-    "eslintConfig": {
-        "extends": "@f5devcentral/eslint-config-f5-atg",
-        "rules": {
-            "func-names": "off",
-            "max-classes-per-file": [
-                2,
-                5
-            ]
-        },
-        "parserOptions": {
-            "ecmaVersion": 8
-        }
+    "azure": {
+      "@azure/keyvault-secrets": "^4.0.2",
+      "@azure/identity": "^1.0.2"
     }
+  },
+  "devDependencies": {
+    "@azure/keyvault-secrets": "^4.0.2",
+    "@azure/ms-rest-nodeauth": "^3.0.1",
+    "@f5devcentral/eslint-config-f5-atg": "^0.1.1",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.20.0",
+    "jsdoc": "^3.6.3",
+    "mocha": "^7.1.2",
+    "mock-fs": "^4.11.0",
+    "nock": "^11.7.2",
+    "nyc": "^14.1.1",
+    "sinon": "^8.1.1"
+  },
+  "mocha": {
+    "timeout": 5000,
+    "exit": true
+  },
+  "nyc": {
+    "exclude": [
+      "tests/**"
+    ],
+    "check-coverage": true,
+    "statements": 65,
+    "branches": 45,
+    "functions": 55,
+    "lines": 65,
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "cache": false
+  },
+  "eslintConfig": {
+    "extends": "@f5devcentral/eslint-config-f5-atg",
+    "rules": {
+      "func-names": "off",
+      "max-classes-per-file": [
+        2,
+        5
+      ]
+    },
+    "parserOptions": {
+      "ecmaVersion": 8
+    }
+  }
 }
