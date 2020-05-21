@@ -8,7 +8,7 @@
 
 'use strict';
 
-import assert from 'assert';
+import * as assert from 'assert';
 import * as cloudFactory from '../../../src/lib/cloud/cloudFactory';
 describe('Cloud Factory', () => {
     after(() => {
@@ -24,18 +24,9 @@ describe('Cloud Factory', () => {
         });
     });
 
-    xit('should  get unsupported cloud provider', () => {
-        assert.throws(
-            () => {
-                cloudFactory.getCloudProvider('foo');
-            },
-            (err) => {
-                if (err.message.includes('Unsupported cloud')) {
-                    return true;
-                }
-                return false;
-            },
-            'unexpected error'
-        );
+    it('should  get unsupported cloud provider', () => {
+        return cloudFactory.getCloudProvider('foo').catch((err) => {
+            assert.ok(err.message.includes('Unsupported cloud'));
+        });
     });
 });
