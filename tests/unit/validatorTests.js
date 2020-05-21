@@ -26,15 +26,15 @@ const validator = new Validator();
 describe('validator', () => {
     it('should validate valid data', () => {
         const data = {
-           "runtime_parameters": [],
-           "extension_packages": {
-              "install_operations": [
-                 {
-                    "extensionType": "as3",
-                    "extensionVersion": "3.13.0"
-                 }
-              ]
-           }
+            "runtime_parameters": [],
+            "extension_packages": {
+                "install_operations": [
+                    {
+                        "extensionType": "as3",
+                        "extensionVersion": "3.13.0"
+                    }
+                ]
+            }
         };
         const validation = validator.validate(data);
         assert.strictEqual(validation.isValid, true);
@@ -49,4 +49,3 @@ describe('validator', () => {
             assert.strictEqual(Array.isArray(validation.errors), true);
         });
     });
-});
