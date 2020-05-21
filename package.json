@@ -9,7 +9,6 @@
         "url": "git+https://github.com/F5Networks/f5-bigip-runtime-init.git"
     },
     "scripts": {
-        "build-package": "tsc",
         "cli": "node ./src/cli.js",
         "build": "bash scripts/build_package.sh",
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
