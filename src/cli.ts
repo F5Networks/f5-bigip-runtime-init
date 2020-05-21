@@ -15,7 +15,7 @@
  */
 
 import * as fs from 'fs';
-import * as program from 'commander';
+import program from 'commander';
 import * as yaml from 'js-yaml';
 
 import Logger from './lib/logger';
@@ -55,15 +55,15 @@ export async function cli(): Promise<string> {
             useTls: host.protocol === 'https'
         }
     );
-
     // perform ready check
     await mgmtClient.isReady();
-
     // resolve runtime parameters
     const resolver = new ResolverClient();
+    logger.info('Resolving parameters');
     const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
 
     // perform install operations
+    logger.info('Performing install operations.');
     const installOperations = config.extension_packages.install_operations;
     if (installOperations.length) {
         for (let i = 0; i < installOperations.length; i += 1) {
@@ -79,6 +79,7 @@ export async function cli(): Promise<string> {
     }
 
     // perform service operations
+    logger.info('Performing service operations.');
     const serviceOperations = config.extension_services.service_operations;
     if (serviceOperations.length) {
         for (let i = 0; i < serviceOperations.length; i += 1) {

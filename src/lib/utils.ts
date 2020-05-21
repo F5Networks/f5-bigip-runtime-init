@@ -19,7 +19,7 @@
 
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import * as request from 'request';
+import request from 'request';
 import Mustache from 'mustache';
 import * as constants from '../constants';
 
@@ -44,7 +44,7 @@ export function stringify(data: object): string {
  * @returns {promise} Resolved on download completion
  */
 export async function downloadToFile(url: string, file: string): Promise<void> {
-    await new Promise(((resolve, reject) => {
+    await new Promise((resolve, reject) => {
         request(url)
             .on('error', (err) => {
                 reject(err);
@@ -54,7 +54,7 @@ export async function downloadToFile(url: string, file: string): Promise<void> {
                 reject(err);
             })
             .on('finish', resolve);
-    }))
+    })
         .catch(err => Promise.reject(err));
 }
 
@@ -167,13 +167,17 @@ export function loadData(location: string, options?: {
         return Promise.resolve(JSON.parse(fs.readFileSync(location, 'utf8')));
     }
     if (locationType === 'url') {
-        return new Promise((() => {
-            request(location)
-                .then((response) => {
-                    return JSON.parse(response)
-                })
-                .catch(err => Promise.reject(err));
-        }));
+        return new Promise<object>((resolve, reject) => {
+            request(location, (error, resp, body) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(JSON.parse(body));
+                }
+            });
+        })
+            .catch(err => Promise.reject(err));
+
     }
     return Promise.reject(new Error(`Unknown location type: ${locationType}`));
 }

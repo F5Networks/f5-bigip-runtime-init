@@ -16,7 +16,7 @@
 
 'use strict';
 
-import * as request from 'request';
+import request from 'request';
 import Logger from '../logger.js';
 import * as utils from '../utils.js';
 
@@ -122,7 +122,7 @@ export class ManagementClient {
         const response: {
             code: number;
             body: any;
-        } = await new Promise(((resolve, reject) => {
+        } = await new Promise((resolve, reject) => {
             request(requestOptions, (error, resp, body) => {
                 if (error) {
                     reject(error);
@@ -130,7 +130,7 @@ export class ManagementClient {
                     resolve({ code: resp.statusCode, body: JSON.parse(body) });
                 }
             });
-        }));
+        });
 
         logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
 
@@ -144,7 +144,6 @@ export class ManagementClient {
      */
     async _isReadyCheck(): Promise<boolean>{
         const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
-
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
             .nestedStats.entries;
 
@@ -154,7 +153,6 @@ export class ManagementClient {
                 isReady = false;
             }
         });
-
         if (isReady) {
             return Promise.resolve(true);
         }

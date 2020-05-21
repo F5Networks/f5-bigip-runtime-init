@@ -19,7 +19,7 @@ export const HTTP_STATUS_CODES = {
 
 export const RETRY = {
     DEFAULT_COUNT: 100,
-    DELAY_IN_MS: 1000
+    DELAY_IN_MS: 10000
 };
 
 export const ENV_VARS = {
