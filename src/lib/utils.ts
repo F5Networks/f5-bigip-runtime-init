@@ -19,6 +19,7 @@
 
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import * as URL from 'url';
 import request from 'request';
 import Mustache from 'mustache';
 import * as constants from '../constants';
@@ -161,12 +162,13 @@ export function loadData(location: string, options?: {
 ): Promise<object> {
     options = options || {};
 
-    const locationType = options.locationType || 'file';
+    const locationType = options.locationType;
+    const urlObject = URL.parse(location);
 
-    if (locationType === 'file') {
-        return Promise.resolve(JSON.parse(fs.readFileSync(location, 'utf8')));
-    }
-    if (locationType === 'url') {
+    if (urlObject.protocol === 'file:') {
+
+        return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
+    } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
         return new Promise<object>((resolve, reject) => {
             request(location, (error, resp, body) => {
                 if (error) {
