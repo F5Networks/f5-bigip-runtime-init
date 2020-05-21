@@ -62,8 +62,8 @@ extension_packages:
 extension_services:
     service_operations:
       - extensionType: as3
-        type: file
-        value: ./examples/declarations/as3.json
+        type: url
+        value: file:///examples/declarations/as3.json
 ```
 
 
@@ -248,8 +248,8 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: file
-      value: ./examples/declarations/do.json
+      type: url
+      value: file:///examples/declarations/do.json
 ```
 
 
@@ -411,8 +411,8 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: file
-      value: ./examples/declarations/do.json
+      type: url
+      value: file:///examples/declarations/do.json
 ```
 
 ## Build Artifacts
