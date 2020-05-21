@@ -17,9 +17,6 @@
 'use strict';
 
 import * as constants from '../../constants';
-import { AwsCloudClient } from './aws/cloudClient';
-import { AzureCloudClient } from './azure/cloudClient';
-import { GcpCloudClient } from './gcp/cloudClient';
 import { CloudClient } from './abstract/cloudClient';
 import Logger from '../logger'
 
@@ -29,16 +26,19 @@ import Logger from '../logger'
  * @param {Object} [options]        - Optional parameters
  * @param {Object} [options.logger] - Logger to use
  */
-export function getCloudProvider(providerName: string, options?: {
+export async function getCloudProvider(providerName: string, options?: {
     logger?: Logger;
-}): CloudClient {
+}): Promise<CloudClient> {
     switch (providerName) {
         case constants.CLOUDS.AWS:
-            return new AwsCloudClient(options);
+            const awsModule = await import('./aws/cloudClient');
+            return new awsModule.AwsCloudClient(options);
         case constants.CLOUDS.AZURE:
-            return new AzureCloudClient(options);
+            const azureModule = await import('./azure/cloudClient');
+            return new azureModule.AzureCloudClient(options);
         case constants.CLOUDS.GCP:
-            return new GcpCloudClient(options);
+            const gcpModule = await import('./gcp/cloudClient');
+            return new gcpModule.GcpCloudClient(options);
         default:
             throw new Error('Unsupported cloud');
     }

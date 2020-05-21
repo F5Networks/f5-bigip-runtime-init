@@ -97,7 +97,7 @@ export class ResolverClient {
      * @returns {Promise}                      - resolves with secret value
      */
     async _resolveSecret(secretMetadata): Promise<string> {
-        const _cloudClient = getCloudProvider(
+        const _cloudClient = await getCloudProvider(
             secretMetadata.secretProvider.environment,
             { logger }
         );
