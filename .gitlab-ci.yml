@@ -39,6 +39,8 @@ publish_container:
     tags:
         - docker-executor
     only:
+        changes:
+            - plans/*
         variables:
             - $CI_COMMIT_REF_NAME == "master"
             - $CI_COMMIT_REF_NAME == "develop"
