@@ -40,7 +40,7 @@ publish_container:
         - docker-executor
     only:
         changes:
-            - plans/*
+            - plans/**/*
         variables:
             - $CI_COMMIT_REF_NAME == "master"
             - $CI_COMMIT_REF_NAME == "develop"
