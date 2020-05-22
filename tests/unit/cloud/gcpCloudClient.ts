@@ -8,20 +8,13 @@
 
 'use strict';
 
-/* eslint-disable global-require */
-
-const assert = require('assert');
-const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
-
+import assert from 'assert';
+import sinon from 'sinon';
+import { GcpCloudClient } from '../../../src/lib/cloud/gcp/cloudClient';
 const cloud = 'gcp';
 
 describe('CloudClient - GCP', () => {
-    let GCPCloudClient;
     let cloudClient;
-
-    before(() => {
-        GCPCloudClient = require('../../../src/lib/cloud/gcp/cloudClient.js').CloudClient;
-    });
     after(() => {
         Object.keys(require.cache)
             .forEach((key) => {
@@ -30,7 +23,7 @@ describe('CloudClient - GCP', () => {
     });
 
     beforeEach(() => {
-        cloudClient = new GCPCloudClient();
+        cloudClient = new GcpCloudClient();
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
     });

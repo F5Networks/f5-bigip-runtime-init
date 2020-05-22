@@ -54,17 +54,18 @@ runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.10.0
-          extensionHash: 190b9bb7e0f6e20aa344a36bcabeeb76c2af26e8b9c9a93d62bd6d4a26337cae
+          extensionVersion: 1.12.0
+          extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
         - extensionType: as3
-          extensionVersion: 3.17.0
-          extensionHash: 41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6
+          extensionVersion: 3.19.1
+          extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
 extension_services:
     service_operations:
       - extensionType: as3
-        type: file
-        value: ./examples/declarations/as3.json
+        type: url
+        value: file:///examples/declarations/as3.json
 ```
+
 
 Example 2: Installs toolchain components (DO, AS3) on a remote BIG-IP.
 
@@ -73,9 +74,9 @@ runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.10.0
+          extensionVersion: 1.12.0
         - extensionType: as3
-          extensionVersion: 3.17.0
+          extensionVersion: 3.19.1
 extension_services:
     service_operations: []
 host:
@@ -86,35 +87,10 @@ host:
   password: admin
 ```
 
-Example 3: Installs toolchain components (DO, AS3) on a local BIG-IP and renders Azure service principal into AS3 service discovery declaration downloaded from a URL.
 
-```yaml
-runtime_parameters:
-  - name: AZURE_SERVICE_PRINCIPAL
-    type: secret
-    secretProvider: 
-      type: KeyVault
-      environment: azure
-      vaultUrl: my-keyvault.vault.azure.net
-      secretId: my_azure_secret
-extension_packages:
-    install_operations:
-        - extensionType: do
-          extensionVersion: 1.10.0
-        - extensionType: as3
-          extensionVersion: 3.17.0
-extension_services:
-    service_operations:
-      - extensionType: do
-        type: url
-        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
-      - extensionType: as3
-        type: url
-        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
-```
+Example 3: Installs toolchain components (DO, AS3) on a local BIG-IP and renders Azure service principal into AS3 service discovery declaration downloaded from a URL
 
-Contents of AS3 declaration:
-
+AS3 declaration:
 ```json
 {
     "class": "AS3",
@@ -173,6 +149,33 @@ Contents of AS3 declaration:
   }
 ```
 
+- F5 BIGIP Runtime Init declaration which provides secret metadata via runtime_parameters for Azure Servce Principal
+```yaml
+runtime_parameters:
+  - name: AZURE_SERVICE_PRINCIPAL
+    type: secret
+    secretProvider: 
+      type: KeyVault
+      environment: azure
+      vaultUrl: my-keyvault.vault.azure.net
+      secretId: my_azure_secret
+extension_packages:
+    install_operations:
+        - extensionType: do
+          extensionVersion: 1.12.0
+        - extensionType: as3
+          extensionVersion: 3.19.1
+extension_services:
+    service_operations:
+      - extensionType: do
+        type: url
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
+      - extensionType: as3
+        type: url
+        value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
+```
+
+
 Example 4: Replaces secret used within DO declaration to configure admin password on AWS BIGIP device
 
 - in AWS Secret Manager, secrets will be stored in plain text mapped via secretId
@@ -181,7 +184,6 @@ Example 4: Replaces secret used within DO declaration to configure admin passwor
   "test-document-02": "StrongPassword212*"
 ```
 - do declaration with token: 
-
 ```json
 {
     "schemaVersion": "1.0.0",
@@ -240,15 +242,16 @@ runtime_parameters:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.5.0
+      extensionVersion: 1.12.0
     - extensionType: as3
-      extensionVersion: 3.13.0
+      extensionVersion: 3.19.1
 extension_services:
   service_operations:
     - extensionType: do
-      type: file
-      value: /tmp/f5-bigip-runtime-init/src/declarations/do.json
+      type: url
+      value: file:///examples/declarations/do.json
 ```
+
 
 Example 5: Replaces secret used within DO declaration to configure admin password on GCP BIGIP device
 
@@ -258,7 +261,6 @@ Example 5: Replaces secret used within DO declaration to configure admin passwor
   "my-secret-id-02": "StrongPassword212*"
 ```
 - do declaration with token: 
-
 ```json
 {
     "schemaVersion": "1.0.0",
@@ -317,15 +319,102 @@ runtime_parameters:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.5.0
+      extensionVersion: 1.12.0
     - extensionType: as3
-      extensionVersion: 3.13.0
+      extensionVersion: 3.19.1
 extension_services:
   service_operations:
     - extensionType: do
-      type: file
-      value: /tmp/f5-bigip-runtime-init/src/declarations/do.json
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
 ```
+
+Example 6: Replaces variables used within DO declaration with properties from instance metadata to configure hostname and self IP addresses on BIGIP device
+
+- DO declaration (Note: Triple mustache required for fields containing a forward slash): 
+```json
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "{{ HOST_NAME }}.local",
+        "internal": {
+            "class": "VLAN",
+            "tag": 4093,
+            "mtu": 1500,
+            "interfaces": [
+                {
+                    "name": "1.2",
+                    "tagged": true
+                }
+            ]
+        },
+        "internal-self": {
+            "class": "SelfIp",
+            "address": "{{{ SELF_IP_INTERNAL }}}",
+            "vlan": "internal",
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "external": {
+            "class": "VLAN",
+            "tag": 4094,
+            "mtu": 1500,
+            "interfaces": [
+                {
+                    "name": "1.1",
+                    "tagged": true
+                }
+            ]
+        },
+        "external-self": {
+            "class": "SelfIp",
+            "address": "{{{ SELF_IP_EXTERNAL }}}",
+            "vlan": "external",
+            "allowService": "none",
+            "trafficGroup": "traffic-group-local-only"
+        }
+    }
+}
+```
+
+- F5 BIGIP Runtime Init declaration which provides instance metadata via runtime_parameters for Azure
+```yaml
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: compute
+      field: name
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: 1
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: 2
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.12.0
+    - extensionType: as3
+      extensionVersion: 3.19.1
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: url
+      value: file:///examples/declarations/do.json
+```
+
 ## Build Artifacts
 
 - Create artifacts: `npm run build`

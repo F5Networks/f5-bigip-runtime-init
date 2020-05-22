@@ -16,11 +16,11 @@
 
 'use strict';
 
-const sinon = require('sinon');
-const assert = require('assert');
+import sinon from 'sinon';
+import assert from 'assert';
 
-const ManagementClient = require('../../../../src/lib/bigip/managementClient.js');
-const ToolChainClient = require('../../../../src/lib/bigip/toolchain/toolChainClient.js');
+import { ManagementClient } from '../../../../src/lib/bigip/managementClient';
+import { ToolChainClient } from '../../../../src/lib/bigip/toolchain/toolChainClient';
 
 const standardMgmtOptions = {
     host: '192.0.2.1',
@@ -62,6 +62,14 @@ describe('BIG-IP Metadata Client', () => {
         assert.strictEqual(toolChainClient._metadataClient.getComponentVersion(), standardToolchainOptions.version);
     });
 
+    it('should return the component hash', () => {
+        const component = 'as3';
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
+
+        assert.strictEqual(toolChainClient._metadataClient.getComponentHash(), standardToolchainOptions.hash);
+    });
+
     it('should return the download URL', () => {
         const component = 'as3';
         const url = 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.17.0/f5-appsvcs-3.17.0-3.noarch.rpm';
@@ -100,7 +108,6 @@ describe('BIG-IP Metadata Client', () => {
 });
 
 describe('BIG-IP Package Client', () => {
-    beforeEach(() => {});
     afterEach(() => {
         sinon.restore();
     });
@@ -113,13 +120,9 @@ describe('BIG-IP Package Client', () => {
         assert.strictEqual(packageClient.component, 'as3');
         assert.strictEqual(packageClient.version, standardToolchainOptions.version);
     });
-
-    it('should install the package', () => {
-    });
 });
 
 describe('BIG-IP Service Client', () => {
-    beforeEach(() => {});
     afterEach(() => {
         sinon.restore();
     });
@@ -133,15 +136,9 @@ describe('BIG-IP Service Client', () => {
         assert.strictEqual(serviceClient.version, standardToolchainOptions.version);
     });
 
-    it('should check that the service is available', () => {
-    });
-
-    it('should create the service', () => {
-    });
 });
 
 describe('BIG-IP Toolchain Client', () => {
-    beforeEach(() => {});
     afterEach(() => {
         sinon.restore();
     });
@@ -155,11 +152,5 @@ describe('BIG-IP Toolchain Client', () => {
         assert.strictEqual(toolChainClient.version, standardToolchainOptions.version);
         assert.strictEqual(toolChainClient.hash, standardToolchainOptions.hash);
         assert.ok(toolChainClient._metadataClient !== null);
-    });
-
-    it('should return a package client', () => {
-    });
-
-    it('should return a service client', () => {
     });
 });

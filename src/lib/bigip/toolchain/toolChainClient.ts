@@ -14,24 +14,37 @@
  * limitations under the License.
  */
 
+
 'use strict';
 
-const fs = require('fs');
+import * as fs from 'fs';
+import * as url from 'url';
 
-const logger = require('../../logger.js');
-const constants = require('../../../constants.js');
-const utils = require('../../utils.js');
+
+import Logger from '../../logger';
+import { ManagementClient } from '../managementClient';
+import * as constants from '../../../constants';
+import * as toolChainMetadata from './toolchain_metadata.json';
+import * as utils from '../../utils';
 
 const PKG_MGMT_URI = '/mgmt/shared/iapp/package-management-tasks';
 
+const logger = Logger.getLogger();
+
+
 /** Metadata client class */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 class MetadataClient {
+    component: string;
+    version: string;
+    hash: string;
+    metadata: any;
     /**
      *
-     * @param {string} component         [toolchain component]
-     * @param {string} version           [toolchain component version]
-     *
-     * @returns {void}
+     * @param  component         [toolchain component]
+     * @param  version           [toolchain component version]
+     * @param  hash              [toolchain hash]
+     * @param  metadata          [toolchain metadata]
      */
     constructor(component, version, hash) {
         this.component = component;
@@ -40,60 +53,60 @@ class MetadataClient {
         this.metadata = this._loadMetadata();
     }
 
-    _loadMetadata() {
-        return require('./toolchain_metadata.json'); // eslint-disable-line global-require
+    _loadMetadata(): any {
+        return toolChainMetadata;
     }
 
-    _getComponentMetadata() {
+    _getComponentMetadata(): any {
         return this.metadata.components[this.component];
     }
 
-    _getComponentVersionMetadata() {
+    _getComponentVersionMetadata(): any {
         return this.metadata.components[this.component].versions[this.version];
     }
 
     /**
      * Get component name
      *
-     * @returns {string} component name
+     * @returns - component name
      */
-    getComponentName() {
+    getComponentName(): string {
         return this.component;
     }
 
     /**
      * Get component version
      *
-     * @returns {string} component version
+     * @returns - component version
      */
-    getComponentVersion() {
+    getComponentVersion(): string {
         return this.version;
     }
 
     /**
      * Get component hash
      *
-     * @returns {string} component hash
+     * @returns - component hash
      */
-    getComponentHash() {
+    getComponentHash(): string {
         return this.hash;
     }
 
     /**
      * Get component metadata
      *
-     * @returns {object} component metadata
+     * @returns - component metadata
      */
-    getDownloadUrl() {
+    getDownloadUrl(): any {
         return this._getComponentVersionMetadata().downloadUrl;
     }
 
     /**
      * Get download package
      *
-     * @returns {string} download package name
+     * @returns - download package name
      */
-    getDownloadPackageName() {
+    getDownloadPackageName(): string {
         const downloadUrlSplit = this.getDownloadUrl().split('/');
         return downloadUrlSplit[downloadUrlSplit.length - 1];
     }
@@ -101,9 +114,12 @@ class MetadataClient {
     /**
      * Get configuration endpoint
      *
-     * @returns {object} { endpoint: '/', methods: ['GET'] }
+     * @returns { endpoint: '/', methods: ['GET'] }
      */
-    getConfigurationEndpoint() {
+    getConfigurationEndpoint(): {
+        endpoint: string;
+        methods: string[];
+    } {
         const configure = this._getComponentMetadata().endpoints.configure;
         return { endpoint: configure.uri, methods: configure.methods };
     }
@@ -111,9 +127,12 @@ class MetadataClient {
     /**
      * Get info endpoint
      *
-     * @returns {object} { endpoint: '/', methods: ['GET'] }
+     * @returns { endpoint: '/', methods: ['GET'] }
      */
-    getInfoEndpoint() {
+    getInfoEndpoint(): {
+        endpoint: string;
+        methods: string[];
+    } {
         const info = this._getComponentMetadata().endpoints.info;
         return { endpoint: info.uri, methods: info.methods };
     }
@@ -121,12 +140,20 @@ class MetadataClient {
 
 /** Package client class */
 class PackageClient {
+    _mgmtClient: ManagementClient;
+    _metadataClient: MetadataClient;
+    component: string;
+    version: string;
+    uriPrefix: string;
+    authHeader: string;
     /**
      *
-     * @param {class} mgmtClient     [management client]
-     * @param {class} metadataClient [metadata client]
+     * @param mgmtClient     [management client]
+     * @param metadataClient [metadata client]
+     * @param  uriPrefix     [request prefix]
+     * @param  authHeader    [request auth header]
      *
-     * @returns {void}
+     * @returns
      */
     constructor(mgmtClient, metadataClient) {
         this._mgmtClient = mgmtClient;
@@ -134,25 +161,32 @@ class PackageClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
+
+        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
     }
 
-    async _uploadRpm(file, options) {
+    async _uploadRpm(file: string, options?: {
+        deleteFile?: boolean;
+    }): Promise<void> {
         /* eslint-disable no-await-in-loop, no-loop-func */
         options = options || {};
-        const deleteFile = options.deleteFile || true;
 
+        const deleteFile = options.deleteFile || true;
         const fileStats = fs.statSync(file);
         const chunkSize = 1024 * 1024;
+
         let start = 0;
         let end = chunkSize;
         while (end <= fileStats.size - 1 && start < end) {
             logger.info(`Sending chunk: ${start}-${end}/${fileStats.size}`);
 
-            await this._mgmtClient.makeRequest(
-                `/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
+            await utils.makeRequest(
+                `${this.uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
                 {
                     method: 'POST',
                     headers: {
+                        Authorization: this.authHeader,
                         'Content-Type': 'application/octet-stream',
                         'Content-Range': `${start}-${end}/${fileStats.size}`,
                         'Content-Length': end - start + 1
@@ -177,12 +211,17 @@ class PackageClient {
         }
     }
 
-    async _checkRpmTaskStatus(taskId) {
+    async _checkRpmTaskStatus(taskId: string): Promise<any> {
         let i = 0;
         const maxCount = 120;
         let response;
         while (i < maxCount) {
-            response = await this._mgmtClient.makeRequest(`${PKG_MGMT_URI}/${taskId}`);
+            response = await utils.makeRequest(`${this.uriPrefix}${PKG_MGMT_URI}/${taskId}`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
 
             if (response.body.status === 'FINISHED') {
                 i = maxCount;
@@ -192,17 +231,20 @@ class PackageClient {
                 return Promise.reject(Error(`Max count exceeded, last response: ${response.body.errorMessage}`));
             }
 
-            await new Promise(resolve => setTimeout(resolve, '2000'));
+            await new Promise(resolve => setTimeout(resolve, 2000));
             i += 1;
         }
         return response.body;
     }
 
-    async _installRpm(packagePath) {
-        const response = await this._mgmtClient.makeRequest(
-            PKG_MGMT_URI,
+    async _installRpm(packagePath: string): Promise<void> {
+        const response = await utils.makeRequest(
+            `${this.uriPrefix}${PKG_MGMT_URI}`,
             {
                 method: 'POST',
+                headers: {
+                    Authorization: this.authHeader
+                },
                 body: {
                     operation: 'INSTALL',
                     packageFilePath: packagePath
@@ -218,15 +260,26 @@ class PackageClient {
      *
      * @returns {promise} { 'component': '', 'version': '', 'installed': true }
      */
-    async install() {
+    async install(): Promise<{
+        component: string;
+        version: string;
+        installed: boolean;
+    }> {
         logger.info(`Installing - ${this.component} ${this.version}`);
 
         const downloadUrl = this._metadataClient.getDownloadUrl();
+        const urlObject = url.parse(downloadUrl);
         const downloadPackageName = this._metadataClient.getDownloadPackageName();
 
-        // download locally
-        const tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
-        await utils.downloadToFile(downloadUrl, tmpFile);
+        let tmpFile = '';
+        if (urlObject.protocol === 'file:') {
+            // file is already local
+            tmpFile = downloadUrl;
+        } else {
+            // download locally
+            tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
+            await utils.downloadToFile(downloadUrl, tmpFile);
+        }
 
         // verify package
         if (this._metadataClient.getComponentHash()) {
@@ -245,30 +298,48 @@ class PackageClient {
 
 /** Service client class */
 class ServiceClient {
+    _mgmtClient: ManagementClient;
+    _metadataClient: MetadataClient;
+    component: string;
+    version: string;
+    uriPrefix: string;
+    authHeader: string;
     /**
      *
-     * @param {string} component         [toolchain component]
-     * @param {string} version           [toolchain component version]
+     * @param component         [toolchain component]
+     * @param  version          [toolchain component version]
+     * @param  uriPrefix          [request prefix]
+     * @param  authHeader          [request auth header]
      *
-     * @returns {void}
      */
-    constructor(mgmtClient, metadataClient) {
+    constructor(mgmtClient: ManagementClient, metadataClient: MetadataClient) {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
+
+        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
     }
 
     /**
      * Check if task state passed
      *
-     * @param {string} taskUri [task URI]
+     * @param   taskUri [task URI]
      *
-     * @returns {promise} Task response
+     * @returns Task response
      */
-    async _checkTaskState(taskUri) {
-        const taskResponse = await this._mgmtClient.makeRequest(taskUri);
+    async _checkTaskState(taskUri: string): Promise<{
+        code: number;
+        body?: any;
+    }> {
+        const taskResponse = await utils.makeRequest(`${this.uriPrefix}${taskUri}`,
+            {
+                headers: {
+                    Authorization: this.authHeader
+                }
+            });
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
             return Promise.resolve(taskResponse);
@@ -284,22 +355,26 @@ class ServiceClient {
      * with a self link to query.  The self link will return 202 until
      * the task is complete, at which time it will return 200.
      *
-     * @param {string} taskUri [task URI]
+     * @param   taskUri [task URI]
      *
-     * @returns {promise} Task response
+     * @returns Task response
      */
-    async _waitForTask(taskUri) {
+    async _waitForTask(taskUri: string): Promise<void> {
         await utils.retrier(this._checkTaskState, [taskUri], { thisContext: this });
     }
 
     /**
      * Is available check
      *
-     * @returns {boolean}
      */
-    async _isAvailableCheck() {
-        const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getInfoEndpoint().endpoint
+    async _isAvailableCheck(): Promise<boolean> {
+        const response = await utils.makeRequest(
+            `${this.uriPrefix}${this._metadataClient.getInfoEndpoint().endpoint}`,
+            {
+                headers: {
+                    Authorization: this.authHeader
+                }
+            }
         );
 
         if (response.code !== constants.HTTP_STATUS_CODES.OK) {
@@ -311,30 +386,37 @@ class ServiceClient {
     /**
      * Is available (retries)
      *
-     * @returns {boolean}
      */
-    async isAvailable() {
+    async isAvailable(): Promise<void> {
         await utils.retrier(this._isAvailableCheck, [], { thisContext: this });
     }
 
     /**
      * Create
      *
-     * @param {object} options          [function options]
-     * @param {string} [options.config] [configuration]
+     * @param options          [function options]
+     * @param [options.config] [configuration]
      *
-     * @returns {promise} HTTP response
+     * @returns - HTTP response
      */
-    async create(options) {
+    async create(options?: {
+        config?: object;
+    }): Promise<{
+        code: number;
+        body?: any;
+    }> {
         options = options || {};
         const config = options.config;
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
 
-        const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getConfigurationEndpoint().endpoint,
+        const response = await utils.makeRequest(
+            `${this.uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
                 method: 'POST',
+                headers: {
+                    Authorization: this.authHeader
+                },
                 body: config
             }
         );
@@ -361,17 +443,21 @@ class ServiceClient {
  *
  * async toolchainClient.service.create({ config: {} });
  */
-class ToolChainClient {
+export class ToolChainClient {
+    _mgmtClient: ManagementClient;
+    component: string;
+    version: string;
+    hash: string;
+    _metadataClient: MetadataClient
     /**
      *
-     * @param {class} mgmtClient [management client]
-     * @param {string} component [toolchain component]
-     * @param {string} version   [toolchain component version]
-     * @param {string} hash   [toolchain component hash]
+     * @param mgmtClient [management client]
+     * @param component [toolchain component]
+     * @param version   [toolchain component version]
+     * @param hash   [toolchain component hash]
      *
-     * @returns {void}
      */
-    constructor(mgmtClient, component, options) {
+    constructor(mgmtClient: ManagementClient, component: string, options?: any) {
         this._mgmtClient = mgmtClient;
         this.component = component;
         this.version = options.version;
@@ -379,13 +465,11 @@ class ToolChainClient {
         this._metadataClient = new MetadataClient(this.component, this.version, this.hash);
     }
 
-    get package() {
+    get package(): PackageClient {
         return new PackageClient(this._mgmtClient, this._metadataClient);
     }
 
-    get service() {
+    get service(): ServiceClient {
         return new ServiceClient(this._mgmtClient, this._metadataClient);
     }
 }
-
-module.exports = ToolChainClient;
