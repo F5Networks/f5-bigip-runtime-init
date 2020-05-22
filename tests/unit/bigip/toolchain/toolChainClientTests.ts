@@ -62,6 +62,14 @@ describe('BIG-IP Metadata Client', () => {
         assert.strictEqual(toolChainClient._metadataClient.getComponentVersion(), standardToolchainOptions.version);
     });
 
+    it('should return the component hash', () => {
+        const component = 'as3';
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
+
+        assert.strictEqual(toolChainClient._metadataClient.getComponentHash(), standardToolchainOptions.hash);
+    });
+
     it('should return the download URL', () => {
         const component = 'as3';
         const url = 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.17.0/f5-appsvcs-3.17.0-3.noarch.rpm';

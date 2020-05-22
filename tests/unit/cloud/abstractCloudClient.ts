@@ -27,7 +27,8 @@ describe('Cloud Client - Abstract', () => {
 
         // check abstract methods that should throw
         const methods = [
-            'getSecret'
+            'getSecret',
+            'getMetadata'
         ];
         methods.forEach((func) => {
             assert.throws(

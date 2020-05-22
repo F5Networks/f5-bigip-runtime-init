@@ -23,7 +23,9 @@ import * as URL from 'url';
 import request from 'request';
 import Mustache from 'mustache';
 import * as constants from '../constants';
+import Logger from './logger';
 
+const logger = Logger.getLogger();
 
 /**
  * Stringify
@@ -189,8 +191,68 @@ export function loadData(location: string, options?: {
  * @param data                    - String with token to replace
  * @param value                   - token name to secret value map (JSON)
  *
- * @returns Returns string with replaced tokens
+ * @returns {promise} Returns string with replaced tokens
  */
-export function renderData(template: string, value: object): Promise<string> {
+export async function renderData(template: string, value: object): Promise<string> {
     return Mustache.render(template, value);
+}
+
+/**
+ * Make request (HTTP)
+ *
+ * @param uri                   [uri]
+ * @param options               [function options]
+ * @param [options.method]      [HTTP method, defaults to 'GET']
+ * @param [options.headers]     [HTTP headers]
+ * @param [options.body] [HTTP body]
+ * @param [options.bodyType]    [body type, such as 'raw']
+ *
+ * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
+ */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+export async function makeRequest(uri: string, options?: {
+    method?: string;
+    headers?: object;
+    body?: unknown;
+    bodyType?: string;
+}): Promise<{
+    code: number;
+    body?: any;
+}> {
+    options = options || {};
+
+    if (options.bodyType === 'raw') {
+        // continue
+    } else {
+        options.body = JSON.stringify(options.body);
+    }
+
+    const requestOptions = {
+        url: uri,
+        method: options.method || 'GET',
+        headers: Object.assign(
+            options.headers || {}
+        ),
+        body: options.body || null,
+        rejectUnauthorized: false
+    };
+
+    logger.info(`Making request: ${requestOptions.method} ${uri}`);
+
+    const response: {
+        code: number;
+        body: any;
+    } = await new Promise((resolve, reject) => {
+        request(requestOptions, (error, resp, body) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve({ code: resp.statusCode, body: JSON.parse(body) });
+            }
+        });
+    });
+
+    logger.info(`Request response: ${response.code} ${stringify(response.body)}`);
+
+    return { code: response.code, body: response.body };
 }

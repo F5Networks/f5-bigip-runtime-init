@@ -16,11 +16,8 @@
 
 'use strict';
 
-import request from 'request';
-import Logger from '../logger';
 import * as utils from '../utils';
 
-const logger = Logger.getLogger();
 /**
  * Management client class
  *
@@ -28,7 +25,7 @@ const logger = Logger.getLogger();
  *
  * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
  *
- * async mgmtClient.makeRequest('/foo/bar');
+ * async utils.makeRequest('/foo/bar', object);
  *
  * @example
  *
@@ -41,16 +38,9 @@ export class ManagementClient {
     password: string;
     useTls: boolean;
     _protocol: string;
-    /**
-     *
-     * @param options            [function options]
-     * @param [options.host]     [host]
-     * @param [options.port]    [host port]
-     * @param [options.user]     [host user]
-     * @param [options.password] [host password]
-     * @param [options.useTls]  [use TLS]
-     *
-     */
+    uriPrefix: string;
+    authHeader: string;
+
     constructor(options?: {
         host?: string;
         port?: number;
@@ -65,84 +55,25 @@ export class ManagementClient {
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
         this.useTls = options.useTls || false;
-
         this._protocol = this.useTls === false ? 'http' : 'https';
-    }
 
-    /**
-     * Make request (HTTP)
-     *
-     * @param uri                   [uri]
-     * @param options               [function options]
-     * @param [options.method]      [HTTP method, defaults to 'GET']
-     * @param options.headers]     [HTTP headers]
-     * @param [options.body] [HTTP body]
-     * @param [options.bodyType]    [body type, such as 'raw']
-     *
-     * @returns - Resolves on successful response - { code: 200, data: '' }
-     */
-     /* eslint-disable  @typescript-eslint/no-explicit-any */
-     async makeRequest(uri: string, options?: {
-        method?: string;
-        headers?: {
-            'Content-Type': string;
-            'Content-Range': string;
-            'Content-Length': number;
-        };
-        body?: unknown;
-        bodyType?: string;
-    }): Promise<{
-        code: number;
-        body?: any;
-    }> {
-        options = options || {};
-
-        if (options.bodyType === 'raw') {
-            // continue
-        } else {
-            options.body = JSON.stringify(options.body);
-        }
-
-        const requestOptions = {
-            url: `${this._protocol}://${this.host}:${this.port}${uri}`,
-            method: options.method || 'GET',
-            headers: Object.assign(
-                options.headers || {},
-                {
-                    Authorization: `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`
-                }
-            ),
-            body: options.body || null,
-            rejectUnauthorized: false
-        };
-
-        logger.info(`Making request: ${requestOptions.method} ${uri}`);
-
-        const response: {
-            code: number;
-            body: any;
-        } = await new Promise((resolve, reject) => {
-            request(requestOptions, (error, resp, body) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
-                }
-            });
-        });
-
-        logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
-
-        return { code: response.code, body: response.body };
+        this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
     }
 
     /**
      * Is device ready check
      *
-     * @returns - Resolves true on ready check passing
      */
     async _isReadyCheck(): Promise<boolean>{
-        const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
+        const readyResponse = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/ready`,
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: this.authHeader
+                }
+            });
+
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
             .nestedStats.entries;
 
@@ -161,7 +92,6 @@ export class ManagementClient {
     /**
      * Is ready (with retrier)
      *
-     * @returns - Resolves true on ready check passing
      */
     async isReady(): Promise<object> {
         return utils.retrier(this._isReadyCheck, [], { thisContext: this });
