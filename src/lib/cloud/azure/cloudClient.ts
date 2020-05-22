@@ -129,4 +129,3 @@ export class AzureCloudClient extends AbstractCloudClient {
             .catch(err => Promise.reject(err));
     }
 }
-
