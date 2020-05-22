@@ -16,8 +16,8 @@
 
 'use strict';
 
-import path from 'path';
-import PKG_JSON from '../package.json';
+const path = require('path');
+const PKG_JSON = require('../package.json');
 
 
 /**
