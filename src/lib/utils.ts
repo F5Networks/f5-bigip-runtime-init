@@ -194,7 +194,7 @@ export function loadData(location: string, options?: {
  *
  * @returns {promise} Returns string with replaced tokens
  */
-export function renderData(template: string, value: object): Promise<string> {
+export async function renderData(template: string, value: object): Promise<string> {
     return Mustache.render(template, value);
 }
 

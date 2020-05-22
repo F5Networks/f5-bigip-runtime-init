@@ -54,8 +54,8 @@ describe('Util', () => {
     });
 
     describe('renderData', () => {
-        it('should validate renderData with correct inputs', () => {
-            const response = util.renderData('{{ TEST_VALUE }} - TRUE',
+        it('should validate renderData with correct inputs', async () => {
+            const response = await util.renderData('{{ TEST_VALUE }} - TRUE',
                 { TEST_VALUE: 'TRUE' });
             assert.strictEqual(response, 'TRUE - TRUE');
         });
