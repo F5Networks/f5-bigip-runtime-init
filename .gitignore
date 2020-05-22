@@ -12,6 +12,7 @@ test.json
 # local test output
 .nyc_output/
 coverage/
+v8-compile-cache-0/
 
 # local terraform files
 .terraform/

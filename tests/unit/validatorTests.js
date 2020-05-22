@@ -34,6 +34,9 @@ describe('validator', () => {
                         "extensionVersion": "3.13.0"
                     }
                 ]
+            },
+            "extension_services": {
+                "service_operations": []
             }
         };
         const validation = validator.validate(data);

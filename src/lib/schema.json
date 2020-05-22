@@ -38,9 +38,7 @@
                                 "type": "string"
                             }
                         },
-                        "required": [
-                            "environment"
-                        ]
+                        "required": ["environment"]
                     },
                     "metadataProvider": {
                         "type": "object",
@@ -55,17 +53,27 @@
                             }
                         },
                         "if": {
-                            "properties": { "type": { "const": "compute" } }
+                            "properties": {
+                                "type": {
+                                    "const": "compute"
+                                }
+                            }
                         },
                         "then": {
-                            "properties": { "field": { "type": "string" } }
+                            "properties": {
+                                "field": {
+                                    "type": "string"
+                                }
+                            }
                         },
                         "else": {
-                            "properties": { "field": { "type": "integer" } }
+                            "properties": {
+                                "field": {
+                                    "type": "integer"
+                                }
+                            }
                         },
-                        "required": [
-                            "environment"
-                        ]
+                        "required": ["environment"]
                     },
                     "secretName": {
                         "title": "Secret Name",
@@ -73,22 +81,17 @@
                         "type": "string"
                     }
                 },
-                "required": [
-                    "type"
-                ],
-                "oneOf": [
-                    {
-                        "type": "object",
-                        "required": [ "secretProvider" ]
-                    },
-                    {
-                        "type": "object",
-                        "required": [ "metadataProvider" ]
-                    }
-                ],
+                "required": ["type"],
+                "oneOf": [{
+                    "type": "object",
+                    "required": ["secretProvider"]
+                }, {
+                    "type": "object",
+                    "required": ["metadataProvider"]
+                }]
             }
         },
-        "extension_packages":{
+        "extension_packages": {
             "title": "Extension Packages",
             "description": "Used to specify packages to be installed on device",
             "type": "object",
@@ -111,16 +114,11 @@
                                 "type": "string"
                             }
                         },
-                        "required": [
-                            "extensionType",
-                            "extensionVersion"
-                        ]
+                        "required": ["extensionType", "extensionVersion"]
                     }
                 }
             },
-            "required": [
-                "install_operations"
-            ]
+            "required": ["install_operations"]
         },
         "extension_services": {
             "title": "Extension Services",
@@ -146,15 +144,13 @@
                             "value": {
                                 "description": "URL of local or remote file containing the declarations to be applied",
                                 "type": "string"
-                            },
+                            }
                         },
                         "required": []
                     }
                 }
             },
-            "required": [
-                "service_operations"
-            ]
+            "required": ["service_operations"]
         },
         "host": {
             "title": "Host Parameters",
@@ -177,14 +173,11 @@
                 },
                 "password": {
                     "type": "string"
-                },
+                }
             },
             "required": []
         }
     },
-    "required": [
-        "extension_packages",
-        "extension_services"
-    ],
+    "required": ["extension_packages", "extension_services"],
     "additionalProperties": false
 }
