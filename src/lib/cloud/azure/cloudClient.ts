@@ -14,28 +14,31 @@
  * limitations under the License.
  */
 
+
 'use strict';
 
-const { SecretClient } = require('@azure/keyvault-secrets');
-const { ManagedIdentityCredential } = require('@azure/identity');
+import {KeyVaultSecret, SecretClient} from '@azure/keyvault-secrets';
+import { ManagedIdentityCredential } from '@azure/identity';
+import * as constants from '../../../constants';
+import { AbstractCloudClient } from '../abstract/cloudClient'
+import Logger from "../../logger";
 
-const CLOUDS = require('../../../constants').CLOUDS;
-const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
 
-
-class CloudClient extends AbstractCloudClient {
-    constructor(options) {
-        super(CLOUDS.AZURE, options);
-        this._credentials = {};
-        this._keyVaultSecretClient = {};
+export class AzureCloudClient extends AbstractCloudClient {
+    _credentials: ManagedIdentityCredential;
+    _keyVaultSecretClient: SecretClient;
+    constructor(options?: {
+        logger?: Logger;
+    }) {
+        super(constants.CLOUDS.AZURE, options);
     }
 
-    init() {
+    init(): Promise<void> {
         this._credentials = new ManagedIdentityCredential();
         return Promise.resolve();
     }
 
-    _getKeyVaultSecret(vaultUrl, secretId, docVersion) {
+    _getKeyVaultSecret(vaultUrl: string, secretId: string, docVersion?: string): Promise<KeyVaultSecret> {
         this._keyVaultSecretClient = new SecretClient(vaultUrl, this._credentials);
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
     }
@@ -43,14 +46,17 @@ class CloudClient extends AbstractCloudClient {
     /**
      * Gets secret from Azure Key Vault
      *
-     * @param {String} secretId                      - secret name
-     * @param {Object} [options]                     - function options
-     * @param {Object} [options.vaultUrl]            - vault to get secret from (required)
-     * @param {Object} [options.documentVersion]     - version of the secret (optional)
+     * @param secretId                      - secret name
+     * @param [options]                     - function options
+     * @param [options.vaultUrl]            - vault to get secret from (required)
+     * @param [options.documentVersion]     - version of the secret (optional)
      *
-     * @returns {Promise}
+     * @returns                             - resolves promise with secret value
      */
-    getSecret(secretId, options) {
+    getSecret(secretId: string, options?: {
+        vaultUrl?: string;
+        documentVersion?: string;
+    }): Promise<string> {
         const vaultUrl = options ? options.vaultUrl : undefined;
 
         if (!vaultUrl) {
@@ -70,6 +76,3 @@ class CloudClient extends AbstractCloudClient {
     }
 }
 
-module.exports = {
-    CloudClient
-};

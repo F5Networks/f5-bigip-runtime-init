@@ -8,20 +8,13 @@
 
 'use strict';
 
-/* eslint-disable global-require */
-
-const assert = require('assert');
-const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
-
+import assert from 'assert';
+import sinon from 'sinon';
+import { AzureCloudClient } from '../../../src/lib/cloud/azure/cloudClient'
 const cloud = 'azure';
 
 describe('CloudClient - Azure', () => {
-    let AzureCloudClient;
     let cloudClient;
-
-    before(() => {
-        AzureCloudClient = require('../../../src/lib/cloud/azure/cloudClient.js').CloudClient;
-    });
     after(() => {
         Object.keys(require.cache)
             .forEach((key) => {

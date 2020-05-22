@@ -16,11 +16,11 @@
 
 'use strict';
 
-const request = require('request');
+import request from 'request';
+import Logger from '../logger';
+import * as utils from '../utils';
 
-const logger = require('../logger.js');
-const utils = require('../utils.js');
-
+const logger = Logger.getLogger();
 /**
  * Management client class
  *
@@ -34,19 +34,30 @@ const utils = require('../utils.js');
  *
  * async mgmtClient.isReady();
  */
-class ManagementClient {
+export class ManagementClient {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    useTls: boolean;
+    _protocol: string;
     /**
      *
-     * @param {object} options            [function options]
-     * @param {string} [options.host]     [host]
-     * @param {integer} [options.port]    [host port]
-     * @param {string} [options.user]     [host user]
-     * @param {string} [options.password] [host password]
-     * @param {boolean} [options.useTls]  [use TLS]
+     * @param options            [function options]
+     * @param [options.host]     [host]
+     * @param [options.port]    [host port]
+     * @param [options.user]     [host user]
+     * @param [options.password] [host password]
+     * @param [options.useTls]  [use TLS]
      *
-     * @returns {void}
      */
-    constructor(options) {
+    constructor(options?: {
+        host?: string;
+        port?: number;
+        user?: string;
+        password?: string;
+        useTls?: boolean;
+    }) {
         options = options || {};
 
         this.host = options.host || 'localhost';
@@ -61,16 +72,29 @@ class ManagementClient {
     /**
      * Make request (HTTP)
      *
-     * @param {string} uri                   [uri]
-     * @param {object} options               [function options]
-     * @param {string} [options.method]      [HTTP method, defaults to 'GET']
-     * @param {object} [options.headers]     [HTTP headers]
-     * @param {object|stream} [options.body] [HTTP body]
-     * @param {string} [options.bodyType]    [body type, such as 'raw']
+     * @param uri                   [uri]
+     * @param options               [function options]
+     * @param [options.method]      [HTTP method, defaults to 'GET']
+     * @param options.headers]     [HTTP headers]
+     * @param [options.body] [HTTP body]
+     * @param [options.bodyType]    [body type, such as 'raw']
      *
-     * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
+     * @returns - Resolves on successful response - { code: 200, data: '' }
      */
-    async makeRequest(uri, options) {
+     /* eslint-disable  @typescript-eslint/no-explicit-any */
+     async makeRequest(uri: string, options?: {
+        method?: string;
+        headers?: {
+            'Content-Type': string;
+            'Content-Range': string;
+            'Content-Length': number;
+        };
+        body?: unknown;
+        bodyType?: string;
+    }): Promise<{
+        code: number;
+        body?: any;
+    }> {
         options = options || {};
 
         if (options.bodyType === 'raw') {
@@ -94,7 +118,10 @@ class ManagementClient {
 
         logger.info(`Making request: ${requestOptions.method} ${uri}`);
 
-        const response = await new Promise(((resolve, reject) => {
+        const response: {
+            code: number;
+            body: any;
+        } = await new Promise((resolve, reject) => {
             request(requestOptions, (error, resp, body) => {
                 if (error) {
                     reject(error);
@@ -102,7 +129,7 @@ class ManagementClient {
                     resolve({ code: resp.statusCode, body: JSON.parse(body) });
                 }
             });
-        }));
+        });
 
         logger.info(`Request response: ${response.code} ${utils.stringify(response.body)}`);
 
@@ -112,11 +139,10 @@ class ManagementClient {
     /**
      * Is device ready check
      *
-     * @returns {Promise} Resolves true on ready check passing
+     * @returns - Resolves true on ready check passing
      */
-    async _isReadyCheck() {
+    async _isReadyCheck(): Promise<boolean>{
         const readyResponse = await this.makeRequest('/mgmt/tm/sys/ready');
-
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
             .nestedStats.entries;
 
@@ -126,7 +152,6 @@ class ManagementClient {
                 isReady = false;
             }
         });
-
         if (isReady) {
             return Promise.resolve(true);
         }
@@ -136,11 +161,9 @@ class ManagementClient {
     /**
      * Is ready (with retrier)
      *
-     * @returns {Promise} Resolves true on ready check passing
+     * @returns - Resolves true on ready check passing
      */
-    async isReady() {
+    async isReady(): Promise<object> {
         return utils.retrier(this._isReadyCheck, [], { thisContext: this });
     }
 }
-
-module.exports = ManagementClient;
