@@ -54,11 +54,11 @@ export class GcpCloudClient extends AbstractCloudClient {
     /**
      * Gets secret from GCP Secrets Manager
      *
-     * @param {String} secretId                      - secret name
-     * @param {Object} [options]                     - cloud specific metadata for getting secret value
-     * @param {Object} [options.versionStage]        - version value for secret
+     * @param secretId                      - secret name
+     * @param [options]                     - cloud specific metadata for getting secret value
+     * @param [options.versionStage]        - version value for secret
      *
-     * @returns {Promise}
+     * @returns
      */
     getSecret(secretId: string, options?: any): Promise<string> {
         if (!secretId) {

@@ -33,10 +33,10 @@ export class ResolverClient {
     /**
      * Resolves runtime parameters
      *
-     * @param {Array} parameters       - list of runtime parameters
+     * @param parameters        - list of runtime parameters
      *
      *
-     * @returns {Promise}                     - resolves with map of runtime parameters
+     * @returns                 - resolves with map of runtime parameters
      */
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     async resolveRuntimeParameters(parameters: RuntimeParameter[]): Promise<any> {
@@ -74,11 +74,11 @@ export class ResolverClient {
     /**
      * Helper function to resolve Promise
      *
-     * @param {string} name                 - list of runtime parameters
-     * @param {Promise} name                - Promise to resolve
+     * @param name                - list of runtime parameters
+     * @param name                - Promise to resolve
      *
      *
-     * @returns {Object}                    - object which includes { name, value }
+     * @returns                   - object which includes { name, value }
      */
     async _resolveHelper(name, promise): Promise<{
         name: string;
@@ -96,10 +96,10 @@ export class ResolverClient {
     /**
      * Resolves secret using cloud client
      *
-     * @param {Object} secretMetadata          - list of runtime parameters
+     * @param secretMetadata       - list of runtime parameters
      *
      *
-     * @returns {Promise}                      - resolves with secret value
+     * @returns                    - resolves with secret value
      */
     async _resolveSecret(secretMetadata): Promise<string> {
         const _cloudClient = await getCloudProvider(
@@ -117,10 +117,10 @@ export class ResolverClient {
     /**
      * Resolves metadata using cloud client
      *
-     * @param {Object} metadataMetadata        - list of runtime parameters
+     * @param metadataMetadata     - list of runtime parameters
      *
      *
-     * @returns {Promise}                      - resolves with metadata value
+     * @returns                    - resolves with metadata value
      */
     async _resolveMetadata(metadataMetadata): Promise<string> {
         const _cloudClient = await getCloudProvider(

@@ -25,7 +25,7 @@ import * as utils from '../utils';
  *
  * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
  *
- * async mgmtClient.makeRequest('/foo/bar', object);
+ * async utils.makeRequest('/foo/bar', object);
  *
  * @example
  *
@@ -64,7 +64,6 @@ export class ManagementClient {
     /**
      * Is device ready check
      *
-     * @returns {Promise} Resolves true on ready check passing
      */
     async _isReadyCheck(): Promise<boolean>{
         const readyResponse = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/ready`,
@@ -93,7 +92,6 @@ export class ManagementClient {
     /**
      * Is ready (with retrier)
      *
-     * @returns {Promise} Resolves true on ready check passing
      */
     async isReady(): Promise<object> {
         return utils.retrier(this._isReadyCheck, [], { thisContext: this });

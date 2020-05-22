@@ -41,10 +41,10 @@ class MetadataClient {
     metadata: any;
     /**
      *
-     * @param {string} component         [toolchain component]
-     * @param {string} version           [toolchain component version]
-     *
-     * @returns {void}
+     * @param  component         [toolchain component]
+     * @param  version           [toolchain component version]
+     * @param  hash              [toolchain hash]
+     * @param  metadata          [toolchain metadata]
      */
     constructor(component, version, hash) {
         this.component = component;
@@ -68,7 +68,7 @@ class MetadataClient {
     /**
      * Get component name
      *
-     * @returns {string} component name
+     * @returns - component name
      */
     getComponentName(): string {
         return this.component;
@@ -77,7 +77,7 @@ class MetadataClient {
     /**
      * Get component version
      *
-     * @returns {string} component version
+     * @returns - component version
      */
     getComponentVersion(): string {
         return this.version;
@@ -86,7 +86,7 @@ class MetadataClient {
     /**
      * Get component hash
      *
-     * @returns {string} component hash
+     * @returns - component hash
      */
     getComponentHash(): string {
         return this.hash;
@@ -95,7 +95,7 @@ class MetadataClient {
     /**
      * Get component metadata
      *
-     * @returns {object} component metadata
+     * @returns - component metadata
      */
     getDownloadUrl(): any {
         return this._getComponentVersionMetadata().downloadUrl;
@@ -104,7 +104,7 @@ class MetadataClient {
     /**
      * Get download package
      *
-     * @returns {string} download package name
+     * @returns - download package name
      */
     getDownloadPackageName(): string {
         const downloadUrlSplit = this.getDownloadUrl().split('/');
@@ -114,7 +114,7 @@ class MetadataClient {
     /**
      * Get configuration endpoint
      *
-     * @returns {object} { endpoint: '/', methods: ['GET'] }
+     * @returns { endpoint: '/', methods: ['GET'] }
      */
     getConfigurationEndpoint(): {
         endpoint: string;
@@ -127,7 +127,7 @@ class MetadataClient {
     /**
      * Get info endpoint
      *
-     * @returns {object} { endpoint: '/', methods: ['GET'] }
+     * @returns { endpoint: '/', methods: ['GET'] }
      */
     getInfoEndpoint(): {
         endpoint: string;
@@ -148,10 +148,12 @@ class PackageClient {
     authHeader: string;
     /**
      *
-     * @param {class} mgmtClient     [management client]
-     * @param {class} metadataClient [metadata client]
+     * @param mgmtClient     [management client]
+     * @param metadataClient [metadata client]
+     * @param  uriPrefix     [request prefix]
+     * @param  authHeader    [request auth header]
      *
-     * @returns {void}
+     * @returns
      */
     constructor(mgmtClient, metadataClient) {
         this._mgmtClient = mgmtClient;
@@ -304,10 +306,11 @@ class ServiceClient {
     authHeader: string;
     /**
      *
-     * @param {string} component         [toolchain component]
-     * @param {string} version           [toolchain component version]
+     * @param component         [toolchain component]
+     * @param  version          [toolchain component version]
+     * @param  uriPrefix          [request prefix]
+     * @param  authHeader          [request auth header]
      *
-     * @returns {void}
      */
     constructor(mgmtClient: ManagementClient, metadataClient: MetadataClient) {
         this._mgmtClient = mgmtClient;
@@ -323,9 +326,9 @@ class ServiceClient {
     /**
      * Check if task state passed
      *
-     * @param {string} taskUri [task URI]
+     * @param   taskUri [task URI]
      *
-     * @returns {promise} Task response
+     * @returns Task response
      */
     async _checkTaskState(taskUri: string): Promise<{
         code: number;
@@ -352,9 +355,9 @@ class ServiceClient {
      * with a self link to query.  The self link will return 202 until
      * the task is complete, at which time it will return 200.
      *
-     * @param {string} taskUri [task URI]
+     * @param   taskUri [task URI]
      *
-     * @returns {promise} Task response
+     * @returns Task response
      */
     async _waitForTask(taskUri: string): Promise<void> {
         await utils.retrier(this._checkTaskState, [taskUri], { thisContext: this });
@@ -363,7 +366,6 @@ class ServiceClient {
     /**
      * Is available check
      *
-     * @returns {boolean}
      */
     async _isAvailableCheck(): Promise<boolean> {
         const response = await utils.makeRequest(
@@ -384,7 +386,6 @@ class ServiceClient {
     /**
      * Is available (retries)
      *
-     * @returns {boolean}
      */
     async isAvailable(): Promise<void> {
         await utils.retrier(this._isAvailableCheck, [], { thisContext: this });
@@ -393,10 +394,10 @@ class ServiceClient {
     /**
      * Create
      *
-     * @param {object} options          [function options]
-     * @param {string} [options.config] [configuration]
+     * @param options          [function options]
+     * @param [options.config] [configuration]
      *
-     * @returns {promise} HTTP response
+     * @returns - HTTP response
      */
     async create(options?: {
         config?: object;
@@ -450,12 +451,11 @@ export class ToolChainClient {
     _metadataClient: MetadataClient
     /**
      *
-     * @param {class} mgmtClient [management client]
-     * @param {string} component [toolchain component]
-     * @param {string} version   [toolchain component version]
-     * @param {string} hash   [toolchain component hash]
+     * @param mgmtClient [management client]
+     * @param component [toolchain component]
+     * @param version   [toolchain component version]
+     * @param hash   [toolchain component hash]
      *
-     * @returns {void}
      */
     constructor(mgmtClient: ManagementClient, component: string, options?: any) {
         this._mgmtClient = mgmtClient;

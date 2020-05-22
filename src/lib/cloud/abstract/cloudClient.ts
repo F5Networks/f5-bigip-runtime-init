@@ -51,7 +51,7 @@ export class AbstractCloudClient implements CloudClient{
     /**
      * Gets secret
      *
-     * @param {Object} options - function options
+     * @param options - function options
      */
     getSecret(secretId: string, options?: unknown): Promise<string> {
         throw new Error('getSecret method must be implemented in child class!');
@@ -60,7 +60,7 @@ export class AbstractCloudClient implements CloudClient{
     /**
      * Gets metadata
      *
-     * @param {Object} options - function options
+     * @param options - function options
      */
     getMetadata(field: string, options?: unknown): Promise<string> {
         throw new Error('getMetadata method must be implemented in child class!');

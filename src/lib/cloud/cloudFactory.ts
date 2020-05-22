@@ -22,9 +22,9 @@ import Logger from '../logger'
 
 /**
  * Given the name of a Cloud Provider return a Cloud Instance.
- * @param {String} providerName     - Short name of the cloud provider
- * @param {Object} [options]        - Optional parameters
- * @param {Object} [options.logger] - Logger to use
+ * @param providerName     - Short name of the cloud provider
+ * @param [options]        - Optional parameters
+ * @param [options.logger] - Logger to use
  */
 export async function getCloudProvider(providerName: string, options?: {
     logger?: Logger;

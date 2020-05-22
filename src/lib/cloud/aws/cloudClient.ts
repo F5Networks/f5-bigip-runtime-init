@@ -57,11 +57,11 @@ export class AwsCloudClient extends AbstractCloudClient {
     /**
      * Get secret from AWS Secrets Manager
      *
-     * @param {String} secret                        - secret name
-     * @param {Object} [options]                     - cloud specific metadata for getting secert value
-     * @param {Object} [options.versionStage]        - version stage value for secret
+     * @param secret                        - secret name
+     * @param [options]                     - cloud specific metadata for getting secert value
+     * @param [options.versionStage]        - version stage value for secret
      *
-     * @returns {String}
+     * @returns                             - secret value
      */
     async getSecret(secretId: string, options?: {
         versionStage?: string;
@@ -92,7 +92,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     /**
      * Gets instance identity document
      *
-     * @returns {Promise}   - A Promise that will be resolved with the Instance Identity document or
+     * @returns   - A Promise that will be resolved with the Instance Identity document or
      *                          rejected if an error occurs
      */
     _getInstanceIdentityDoc(): Promise<{

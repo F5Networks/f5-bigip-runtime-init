@@ -74,10 +74,10 @@ export class AzureCloudClient extends AbstractCloudClient {
     /**
      * Gets secret from Azure Key Vault
      *
-     * @param {String} secretId                      - secret name
-     * @param {Object} [options]                     - function options
-     * @param {Object} [options.vaultUrl]            - vault to get secret from (required)
-     * @param {Object} [options.documentVersion]     - version of the secret (optional)
+     * @param secretId                      - secret name
+     * @param [options]                     - function options
+     * @param [options.vaultUrl]            - vault to get secret from (required)
+     * @param [options.documentVersion]     - version of the secret (optional)
      *
      * @returns {Promise}
      */
@@ -106,8 +106,8 @@ export class AzureCloudClient extends AbstractCloudClient {
     /**
      * Gets value from Azure metadata
      *
-     * @param {String} field                         - metadata property to fetch
-     * @param {Object} [options]                     - function options
+     * @param field                         - metadata property to fetch
+     * @param [options]                     - function options
      *
      * @returns {Promise}
      */

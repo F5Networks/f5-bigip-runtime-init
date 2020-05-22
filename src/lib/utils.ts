@@ -41,10 +41,10 @@ export function stringify(data: object): string {
 /**
  * Download HTTP payload to file
  *
- * @param {string} url  - url
- * @param {string} file - file where data should end up
+ * @param url  - url
+ * @param file - file where data should end up
  *
- * @returns {promise} Resolved on download completion
+ * @returns Resolved on download completion
  */
 export async function downloadToFile(url: string, file: string): Promise<void> {
     await new Promise((resolve, reject) => {
@@ -85,10 +85,10 @@ export function verifyHash(file: string, extensionHash: string): boolean {
 /**
  * Base64 encoder/decoder
  *
- * @param {string} action - decode|encode
- * @param {string} data - data to process
+ * @param action - decode|encode
+ * @param data - data to process
  *
- * @returns {string} Returns processed data as a string
+ * @returns Returns processed data as a string
  */
 export function base64(action: string, data: string): string{
     // support decode|encode actions
@@ -104,11 +104,11 @@ export function base64(action: string, data: string): string{
 /**
  * Function retrier
  *
- * @param func    function to execute
- * @param args    function args to provide
- * @param options function options
+ * @param func
+ * @param args
+ * @param options
  *
- * @returns function response
+ * @returns response
  */
 export async function retrier(
     func: Function,
@@ -152,11 +152,11 @@ export async function retrier(
 /**
  * Load data
  *
- * @param {function} location              - data location
- * @param {options} options                - function options
- * @param {options} [options.locationType] - location type, file|url
+ * @param location              - data location
+ * @param options                - function options
+ * @param [options.locationType] - location type, file|url
  *
- * @returns {promise} Returns loaded data
+ * @returns Returns loaded data
  */
 export function loadData(location: string, options?: {
                             locationType?: string;
@@ -168,7 +168,6 @@ export function loadData(location: string, options?: {
     const urlObject = URL.parse(location);
 
     if (urlObject.protocol === 'file:') {
-
         return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
     } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
         return new Promise<object>((resolve, reject) => {
@@ -183,14 +182,14 @@ export function loadData(location: string, options?: {
             .catch(err => Promise.reject(err));
 
     }
-    return Promise.reject(new Error(`Unknown location type: ${locationType}`));
+    return Promise.reject(new Error(`Unknown url type: ${urlObject.protocol}`));
 }
 
 /**
  * Renders secrets
  *
- * @param {string} data                    - String with token to replace
- * @param {object} value                   - token name to secret value map (JSON)
+ * @param data                    - String with token to replace
+ * @param value                   - token name to secret value map (JSON)
  *
  * @returns {promise} Returns string with replaced tokens
  */
@@ -201,12 +200,12 @@ export async function renderData(template: string, value: object): Promise<strin
 /**
  * Make request (HTTP)
  *
- * @param {string} uri                   [uri]
- * @param {object} options               [function options]
- * @param {string} [options.method]      [HTTP method, defaults to 'GET']
- * @param {object} [options.headers]     [HTTP headers]
- * @param {object|stream} [options.body] [HTTP body]
- * @param {string} [options.bodyType]    [body type, such as 'raw']
+ * @param uri                   [uri]
+ * @param options               [function options]
+ * @param [options.method]      [HTTP method, defaults to 'GET']
+ * @param [options.headers]     [HTTP headers]
+ * @param [options.body] [HTTP body]
+ * @param [options.bodyType]    [body type, such as 'raw']
  *
  * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
  */
