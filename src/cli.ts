@@ -22,25 +22,13 @@ import Logger from './lib/logger';
 import * as constants from './constants';
 import * as utils from './lib/utils';
 
-<<<<<<< HEAD:src/cli.js
-const logger = require('./lib/logger.js');
-const constants = require('./constants.js');
-const utils = require('./lib/utils.js');
-const Validator = require('./lib/validator.js');
-=======
 import { ResolverClient } from './lib/resolver/resolverClient';
 import { ManagementClient } from './lib/bigip/managementClient'
 import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient'
->>>>>>> develop:src/cli.ts
 
 const logger = Logger.getLogger();
 
-<<<<<<< HEAD:src/cli.js
-
-async function cli() {
-=======
 export async function cli(): Promise<string> {
->>>>>>> develop:src/cli.ts
     /* eslint-disable no-await-in-loop */
     program
         .version(constants.VERSION)
@@ -56,7 +44,6 @@ export async function cli(): Promise<string> {
         } else {
             config = JSON.parse(fs.readFileSync(program.configFile, 'utf8'));
         }
-        // config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
     } catch (e) {
         logger.error(`Configuration load error: ${e}`);
     }
