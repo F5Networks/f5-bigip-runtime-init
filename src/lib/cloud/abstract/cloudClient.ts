@@ -23,6 +23,7 @@ export interface CloudClient {
     logger: Logger;
     init(): void;
     getSecret(secretId: string, options?: unknown): Promise<string>;
+    getMetadata(field: string, options?: unknown): Promise<string>;
 }
 
 /**
@@ -61,7 +62,7 @@ export class AbstractCloudClient implements CloudClient{
      *
      * @param {Object} options - function options
      */
-    getMetadata() {
+    getMetadata(field: string, options?: unknown): Promise<string> {
         throw new Error('getMetadata method must be implemented in child class!');
     }
 }

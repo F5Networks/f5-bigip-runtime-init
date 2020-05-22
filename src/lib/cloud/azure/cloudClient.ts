@@ -22,8 +22,7 @@ import { ManagedIdentityCredential } from '@azure/identity';
 import * as constants from '../../../constants';
 import { AbstractCloudClient } from '../abstract/cloudClient'
 import Logger from "../../logger";
-
-const utils = require('../../utils.js');
+import * as utils from '../../utils';
 
 export class AzureCloudClient extends AbstractCloudClient {
     _credentials: ManagedIdentityCredential;
@@ -44,15 +43,13 @@ export class AzureCloudClient extends AbstractCloudClient {
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
     }
 
-    async _getMetadata(metadataType, metadataField) {
-        this._metadataType = metadataType;
-        this._metadataField = metadataField;
+    async _getMetadata(metadataType: string, metadataField: string | number): Promise<string> {
         let result;
         let ipAddress;
         let prefix;
 
         const response = await utils.makeRequest(
-            `http://169.254.169.254/metadata/instance/${this._metadataType}?api-version=2017-08-01`,
+            `http://169.254.169.254/metadata/instance/${metadataType}?api-version=2017-08-01`,
             {
                 method: 'GET',
                 headers: {
@@ -61,11 +58,11 @@ export class AzureCloudClient extends AbstractCloudClient {
             }
         );
 
-        if (this._metadataType === 'compute') {
-            result = response.body[this._metadataField];
-        } else if (this._metadataType === 'network') {
-            ipAddress = response.body.interface[this._metadataField].ipv4.ipAddress[0].privateIpAddress;
-            prefix = response.body.interface[this._metadataField].ipv4.subnet[0].prefix;
+        if (metadataType === 'compute') {
+            result = response.body[metadataField];
+        } else if (metadataType === 'network') {
+            ipAddress = response.body.interface[metadataField].ipv4.ipAddress[0].privateIpAddress;
+            prefix = response.body.interface[metadataField].ipv4.subnet[0].prefix;
             result = `${ipAddress}/${prefix}`;
         } else {
             throw new Error('Runtime parameter metadata type is unknown. Must be one of [ compute, network ]');
@@ -114,7 +111,9 @@ export class AzureCloudClient extends AbstractCloudClient {
      *
      * @returns {Promise}
      */
-    getMetadata(metadataField, options) {
+    getMetadata(metadataField: string | number, options?: {
+        type?: string;
+    }): Promise<string> {
         const metadataType = options ? options.type : undefined;
 
         if (!metadataType) {

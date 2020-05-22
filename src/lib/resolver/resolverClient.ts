@@ -50,10 +50,10 @@ export class ResolverClient {
                     parameters[i].name,
                     this._resolveSecret(parameters[i])
                 ));
-            } else if (runtimeParameters[i].type === 'metadata') {
+            } else if (parameters[i].type === 'metadata') {
                 promises.push(this._resolveHelper(
-                    runtimeParameters[i].name,
-                    this._resolveMetadata(runtimeParameters[i])
+                    parameters[i].name,
+                    this._resolveMetadata(parameters[i])
                 ));
             } else {
                 throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
@@ -122,8 +122,8 @@ export class ResolverClient {
      *
      * @returns {Promise}                      - resolves with metadata value
      */
-    async _resolveMetadata(metadataMetadata) {
-        const _cloudClient = CloudFactory.getCloudProvider(
+    async _resolveMetadata(metadataMetadata): Promise<string> {
+        const _cloudClient = await getCloudProvider(
             metadataMetadata.metadataProvider.environment,
             { logger }
         );
