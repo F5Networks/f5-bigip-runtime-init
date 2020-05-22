@@ -25,7 +25,7 @@ import * as utils from '../utils';
  *
  * const mgmtClient = new ManagementClient({ host: '', port: '', user: '', password: ''});
  *
- * async mgmtClient.makeRequest('/foo/bar');
+ * async mgmtClient.makeRequest('/foo/bar', object);
  *
  * @example
  *
