@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
+
 'use strict';
 
-const { SecretClient } = require('@azure/keyvault-secrets');
-const { ManagedIdentityCredential } = require('@azure/identity');
-
-const CLOUDS = require('../../../constants').CLOUDS;
-const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
+import {KeyVaultSecret, SecretClient} from '@azure/keyvault-secrets';
+import { ManagedIdentityCredential } from '@azure/identity';
+import * as constants from '../../../constants';
+import { AbstractCloudClient } from '../abstract/cloudClient'
+import Logger from "../../logger";
 
 const utils = require('../../utils.js');
 
-class CloudClient extends AbstractCloudClient {
-    constructor(options) {
-        super(CLOUDS.AZURE, options);
-        this._credentials = {};
-        this._keyVaultSecretClient = {};
+export class AzureCloudClient extends AbstractCloudClient {
+    _credentials: ManagedIdentityCredential;
+    _keyVaultSecretClient: SecretClient;
+    constructor(options?: {
+        logger?: Logger;
+    }) {
+        super(constants.CLOUDS.AZURE, options);
     }
 
-    init() {
+    init(): Promise<void> {
         this._credentials = new ManagedIdentityCredential();
         return Promise.resolve();
     }
 
-    _getKeyVaultSecret(vaultUrl, secretId, docVersion) {
+    _getKeyVaultSecret(vaultUrl: string, secretId: string, docVersion?: string): Promise<KeyVaultSecret> {
         this._keyVaultSecretClient = new SecretClient(vaultUrl, this._credentials);
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
     }
@@ -81,7 +84,10 @@ class CloudClient extends AbstractCloudClient {
      *
      * @returns {Promise}
      */
-    getSecret(secretId, options) {
+    getSecret(secretId: string, options?: {
+        vaultUrl?: string;
+        documentVersion?: string;
+    }): Promise<string> {
         const vaultUrl = options ? options.vaultUrl : undefined;
 
         if (!vaultUrl) {
@@ -125,6 +131,3 @@ class CloudClient extends AbstractCloudClient {
     }
 }
 
-module.exports = {
-    CloudClient
-};

@@ -16,12 +16,9 @@
 
 'use strict';
 
-const CLOUDS = require('../../constants').CLOUDS;
-
-/* eslint-disable global-require */
-let AWSCloud;
-let GCPCloud;
-let AzureCloud;
+import * as constants from '../../constants';
+import { CloudClient } from './abstract/cloudClient';
+import Logger from '../logger'
 
 /**
  * Given the name of a Cloud Provider return a Cloud Instance.
@@ -29,22 +26,20 @@ let AzureCloud;
  * @param {Object} [options]        - Optional parameters
  * @param {Object} [options.logger] - Logger to use
  */
-function getCloudProvider(providerName, options) {
+export async function getCloudProvider(providerName: string, options?: {
+    logger?: Logger;
+}): Promise<CloudClient> {
     switch (providerName) {
-    case CLOUDS.AWS:
-        AWSCloud = require('./aws/cloudClient.js').CloudClient;
-        return new AWSCloud(options);
-    case CLOUDS.GCP:
-        GCPCloud = require('./gcp/cloudClient.js').CloudClient;
-        return new GCPCloud(options);
-    case CLOUDS.AZURE:
-        AzureCloud = require('./azure/cloudClient.js').CloudClient;
-        return new AzureCloud(options);
-    default:
-        throw new Error('Unsupported cloud');
+        case constants.CLOUDS.AWS:
+            const awsModule = await import('./aws/cloudClient');
+            return new awsModule.AwsCloudClient(options);
+        case constants.CLOUDS.AZURE:
+            const azureModule = await import('./azure/cloudClient');
+            return new azureModule.AzureCloudClient(options);
+        case constants.CLOUDS.GCP:
+            const gcpModule = await import('./gcp/cloudClient');
+            return new gcpModule.GcpCloudClient(options);
+        default:
+            throw new Error('Unsupported cloud');
     }
 }
-
-module.exports = {
-    getCloudProvider
-};

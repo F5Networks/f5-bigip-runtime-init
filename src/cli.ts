@@ -14,35 +14,34 @@
  * limitations under the License.
  */
 
-'use strict';
+import * as fs from 'fs';
+import program from 'commander';
+import * as yaml from 'js-yaml';
 
-const fs = require('fs');
-const program = require('commander');
-const yaml = require('js-yaml');
+import Logger from './lib/logger';
+import * as constants from './constants';
+import * as utils from './lib/utils';
 
-const logger = require('./lib/logger.js');
-const constants = require('./constants.js');
-const utils = require('./lib/utils.js');
+import { ResolverClient } from './lib/resolver/resolverClient';
+import { ManagementClient } from './lib/bigip/managementClient'
+import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient'
 
-const Resolver = require('./lib/resolver/resolverClient.js');
-const ManagementClient = require('./lib/bigip/managementClient.js');
-const ToolchainClient = require('./lib/bigip/toolchain/toolChainClient.js');
+const logger = Logger.getLogger();
 
-async function cli() {
+export async function cli(): Promise<string> {
     /* eslint-disable no-await-in-loop */
     program
         .version(constants.VERSION)
         .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
 
     program.parse(process.argv);
-
-    logger.info(`Configuration file: ${program.configFile}`);
     // load configuration file
     let config;
+    logger.info(`Configuration file: ${program.configFile}`);
     try {
         config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
     } catch (e) {
-        logger.info(`Configuration load error: ${e}`);
+        logger.error(`Configuration load error: ${e}`);
     }
 
     // create management client
@@ -56,19 +55,18 @@ async function cli() {
             useTls: host.protocol === 'https'
         }
     );
-
     // perform ready check
     await mgmtClient.isReady();
-
     // resolve runtime parameters
-    const resolver = new Resolver();
+    const resolver = new ResolverClient();
+    logger.info('Resolving parameters');
     const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
-
     // perform install operations
+    logger.info('Performing install operations.');
     const installOperations = config.extension_packages.install_operations;
     if (installOperations.length) {
         for (let i = 0; i < installOperations.length; i += 1) {
-            const toolchainClient = new ToolchainClient(
+            const toolchainClient = new ToolChainClient(
                 mgmtClient,
                 installOperations[i].extensionType,
                 {
@@ -80,10 +78,11 @@ async function cli() {
     }
 
     // perform service operations
+    logger.info('Performing service operations.');
     const serviceOperations = config.extension_services.service_operations;
     if (serviceOperations.length) {
         for (let i = 0; i < serviceOperations.length; i += 1) {
-            const toolchainClient = new ToolchainClient(
+            const toolchainClient = new ToolChainClient(
                 mgmtClient,
                 serviceOperations[i].extensionType,
                 {
@@ -97,13 +96,13 @@ async function cli() {
                 }
             );
             // rendering secrets
-            loadedConfig = JSON.parse(utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
+            loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
             await toolchainClient.service.isAvailable();
             await toolchainClient.service.create({ config: loadedConfig });
         }
     }
 
-    return { message: 'All operations finished successfully' };
+    return 'All operations finished successfully';
 }
 
 cli()
@@ -111,3 +110,4 @@ cli()
         logger.info(message);
     })
     .catch(err => logger.info(err));
+

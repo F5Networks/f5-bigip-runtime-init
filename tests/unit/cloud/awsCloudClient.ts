@@ -10,19 +10,14 @@
 
 /* eslint-disable global-require */
 
-const assert = require('assert');
-const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
-
+import assert from 'assert';
+import sinon from 'sinon';
+import { AwsCloudClient } from '../../../src/lib/cloud/aws/cloudClient';
 const cloud = 'aws';
 
 describe('CloudClient - AWS', () => {
-    let AWSCloudClient;
     let cloudClient;
     let metadataPathRequest;
-
-    before(() => {
-        AWSCloudClient = require('../../../src/lib/cloud/aws/cloudClient.js').CloudClient;
-    });
     after(() => {
         Object.keys(require.cache)
             .forEach((key) => {
@@ -31,10 +26,10 @@ describe('CloudClient - AWS', () => {
     });
 
     beforeEach(() => {
-        cloudClient = new AWSCloudClient();
+        cloudClient = new AwsCloudClient();
         cloudClient.secretsManager = sinon.stub();
         cloudClient.secretsManager.getSecretValue = sinon.stub().callsFake(() => ({
-            promise() {
+            promise(): Promise<object>{
                 return Promise.resolve({ SecretString: 'StrongPassword2010!' });
             }
         }));
@@ -96,7 +91,7 @@ describe('CloudClient - AWS', () => {
                 // eslint-disable-next-line arrow-body-style
                 cloudClient._metadata.request = sinon.stub()
                     .callsFake((path, callback) => {
-                        callback(new Error(expectedError, null));
+                        callback(new Error(expectedError));
                     });
                 return cloudClient._getInstanceIdentityDoc();
             })
@@ -126,7 +121,7 @@ describe('CloudClient - AWS', () => {
 
     it('should validate getSecret when secret does not exists', () => {
         cloudClient.secretsManager.getSecretValue = sinon.stub().callsFake(() => ({
-            promise() {
+            promise(): Promise<void> {
                 return Promise.resolve();
             }
         }));
@@ -137,13 +132,13 @@ describe('CloudClient - AWS', () => {
             }
         )
             .then((secret) => {
-                assert.strictEqual(secret, undefined);
+                assert.strictEqual(secret, '');
             });
     });
 
     it('should validate getSecret promise rejection', () => {
         cloudClient.secretsManager.getSecretValue = sinon.stub().callsFake(() => ({
-            promise() {
+            promise(): Promise<void> {
                 return Promise.reject(new Error('Test rejection'));
             }
         }));
@@ -162,13 +157,10 @@ describe('CloudClient - AWS', () => {
     });
 
     it('should validate getSecret throws error when secret metadata is not provided', () => {
-        assert.throws(() => {
-            cloudClient.getSecret();
-        }, (err) => {
+        cloudClient.getSecret().catch((err) => {
             if (err.message.includes('secert id is missing')) {
-                return true;
+                assert.ok(true);
             }
-            return false;
-        }, 'unexpected error');
+        });
     });
 });

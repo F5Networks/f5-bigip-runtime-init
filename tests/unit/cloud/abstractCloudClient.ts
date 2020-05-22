@@ -8,17 +8,13 @@
 
 'use strict';
 
-const assert = require('assert');
-const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
+import assert from 'assert';
+import sinon from 'sinon';
+import { AbstractCloudClient } from '../../../src/lib/cloud/abstract/cloudClient';
 
 /* eslint-disable global-require */
 
 describe('Cloud Client - Abstract', () => {
-    let CloudClient;
-
-    before(() => {
-        CloudClient = require('../../../src/lib/cloud/abstract/cloudClient.js').AbstractCloudClient;
-    });
     after(() => {
         Object.keys(require.cache).forEach((key) => {
             delete require.cache[key];
@@ -27,7 +23,7 @@ describe('Cloud Client - Abstract', () => {
 
     it('should instantiate cloudClient', () => {
         const logger = sinon.stub();
-        const cloudClient = new CloudClient('aws', logger);
+        const cloudClient = new AbstractCloudClient('aws', logger);
 
         // check abstract methods that should throw
         const methods = [
@@ -51,7 +47,7 @@ describe('Cloud Client - Abstract', () => {
     });
 
     it('should instantiate cloudClient without provided logger', () => {
-        const cloudClient = new CloudClient('aws', null);
+        const cloudClient = new AbstractCloudClient('aws', null);
         // check abstract methods that should throw
         const methods = [
             'getSecret'

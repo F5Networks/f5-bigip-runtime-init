@@ -16,7 +16,10 @@
 
 'use strict';
 
-const utils = require('../utils.js');
+import Logger from '../logger';
+import * as utils from '../utils';
+
+const logger = Logger.getLogger();
 
 /**
  * Management client class
@@ -31,7 +34,13 @@ const utils = require('../utils.js');
  *
  * async mgmtClient.isReady();
  */
-class ManagementClient {
+export class ManagementClient {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    useTls: boolean;
+    _protocol: string;
     /**
      *
      * @param {object} options            [function options]
@@ -43,7 +52,13 @@ class ManagementClient {
      *
      * @returns {void}
      */
-    constructor(options) {
+    constructor(options?: {
+        host?: string;
+        port?: number;
+        user?: string;
+        password?: string;
+        useTls?: boolean;
+    }) {
         options = options || {};
 
         this.host = options.host || 'localhost';
@@ -51,10 +66,7 @@ class ManagementClient {
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
         this.useTls = options.useTls || false;
-        this._protocol = this.useTls === false ? 'http' : 'https';
-
-        this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
-        this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
+        this._protocol = this.useTls === false ? 'http' : 'https';       
     }
 
     /**
@@ -62,12 +74,14 @@ class ManagementClient {
      *
      * @returns {Promise} Resolves true on ready check passing
      */
-    async _isReadyCheck() {
-        const readyResponse = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/ready`,
+    async _isReadyCheck(): Promise<boolean>{
+        const uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
+        const authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
+        const readyResponse = await utils.makeRequest(`${uriPrefix}/mgmt/tm/sys/ready`,
             {
                 method: 'GET',
                 headers: {
-                    Authorization: this.authHeader
+                    Authorization: authHeader
                 }
             });
 
@@ -80,7 +94,6 @@ class ManagementClient {
                 isReady = false;
             }
         });
-
         if (isReady) {
             return Promise.resolve(true);
         }
@@ -92,9 +105,7 @@ class ManagementClient {
      *
      * @returns {Promise} Resolves true on ready check passing
      */
-    async isReady() {
+    async isReady(): Promise<object> {
         return utils.retrier(this._isReadyCheck, [], { thisContext: this });
     }
 }
-
-module.exports = ManagementClient;

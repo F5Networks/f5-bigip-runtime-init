@@ -16,29 +16,38 @@
 
 'use strict';
 
-const AWS = require('aws-sdk');
-const CLOUDS = require('../../../constants').CLOUDS;
-const AbstractCloudClient = require('../abstract/cloudClient.js').AbstractCloudClient;
 
+import * as AWS from 'aws-sdk';
+import * as constants from '../../../constants';
+import { AbstractCloudClient } from '../abstract/cloudClient';
+import Logger from '../../logger';
 
-class CloudClient extends AbstractCloudClient {
-    constructor(options) {
-        super(CLOUDS.AWS, options);
+export class AwsCloudClient extends AbstractCloudClient {
+    _metadata: AWS.MetadataService;
+    secretsManager: AWS.SecretsManager;
+    region: string;
+    instanceId: string;
+
+    constructor(options?: {
+        logger?: Logger;
+    }) {
+        super(constants.CLOUDS.AWS, options);
         this._metadata = new AWS.MetadataService();
-        this.secretsManager = {};
     }
 
     /**
      * See the parent class method for details
      */
-    init() {
+    init(): Promise<void> {
         return this._getInstanceIdentityDoc()
-            .then((metadata) => {
+            .then((metadata: {
+                region: string;
+                instanceId: string;
+            }) => {
                 this.region = metadata.region;
                 this.instanceId = metadata.instanceId;
                 AWS.config.update({ region: this.region });
                 this.secretsManager = new AWS.SecretsManager();
-
                 return Promise.resolve();
             })
             .catch(err => Promise.reject(err));
@@ -46,15 +55,17 @@ class CloudClient extends AbstractCloudClient {
 
 
     /**
-     * Gets secret from AWS Secrets Manager
+     * Get secret from AWS Secrets Manager
      *
      * @param {String} secret                        - secret name
      * @param {Object} [options]                     - cloud specific metadata for getting secert value
      * @param {Object} [options.versionStage]        - version stage value for secret
      *
-     * @returns {Promise}
+     * @returns {String}
      */
-    getSecret(secretId, options) {
+    async getSecret(secretId: string, options?: {
+        versionStage?: string;
+    }): Promise<string> {
         if (!secretId) {
             throw new Error('AWS Cloud Client secert id is missing');
         }
@@ -65,15 +76,17 @@ class CloudClient extends AbstractCloudClient {
             VersionStage: versionStage || 'AWSCURRENT'
         };
 
-        return this.secretsManager.getSecretValue(params)
-            .promise()
-            .then((secret) => {
-                if (typeof secret === 'object' && 'SecretString' in secret) {
-                    return Promise.resolve(secret.SecretString);
-                }
-                return Promise.resolve();
-            })
-            .catch(err => Promise.reject(err));
+        const secret = await this.secretsManager.getSecretValue(params).promise().catch((e) => {
+            throw new Error(`AWS Cloud returned error: ${e}`);
+        });
+
+        if (secret) {
+            if (secret.SecretString) {
+                return secret.SecretString
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -82,7 +95,10 @@ class CloudClient extends AbstractCloudClient {
      * @returns {Promise}   - A Promise that will be resolved with the Instance Identity document or
      *                          rejected if an error occurs
      */
-    _getInstanceIdentityDoc() {
+    _getInstanceIdentityDoc(): Promise<{
+        region: string;
+        instanceId: string;
+    }> {
         return new Promise((resolve, reject) => {
             const iidPath = '/latest/dynamic/instance-identity/document';
             this._metadata.request(iidPath, (err, data) => {
@@ -96,7 +112,3 @@ class CloudClient extends AbstractCloudClient {
         });
     }
 }
-
-module.exports = {
-    CloudClient
-};

@@ -9,18 +9,12 @@
 'use strict';
 
 /* eslint-disable global-require */
-
-const assert = require('assert');
-const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
+import assert from 'assert';
+import sinon from 'sinon';
+import { ResolverClient } from '../../../src/lib/resolver/resolverClient';
 
 describe('Resolver Client', () => {
-    let Resolver;
     let runtimeParameters;
-
-    before(() => {
-        Resolver = require('../../../src/lib/resolver/resolverClient.js');
-    });
-
     after(() => {
         Object.keys(require.cache)
             .forEach((key) => {
@@ -82,12 +76,12 @@ describe('Resolver Client', () => {
     });
 
     it('should validate constructor', () => {
-        const resolver = new Resolver();
+        const resolver = new ResolverClient();
         assert.strictEqual(typeof resolver, 'object');
     });
 
-    it('should validate secret resolveRuntimeParameters', () => {
-        const resolver = new Resolver();
+    it('should validate resolveRuntimeParameters', () => {
+        const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('StrongPassword2010+');
         resolver._resolveMetadata = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters)
@@ -99,8 +93,8 @@ describe('Resolver Client', () => {
             });
     });
 
-    it('should validate hostname resolveRuntimeParameters', () => {
-        const resolver = new Resolver();
+    it('should validate resolveRuntimeParameters no secret match', () => {
+        const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
         return resolver.resolveRuntimeParameters(runtimeParameters)
@@ -112,7 +106,7 @@ describe('Resolver Client', () => {
     });
 
     it('should validate self IP metadata resolveRuntimeParameters', () => {
-        const resolver = new Resolver();
+        const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('10.0.1.4/24');
         return resolver.resolveRuntimeParameters(runtimeParameters)
@@ -124,7 +118,7 @@ describe('Resolver Client', () => {
     });
 
     it('should validate resolveRuntimeParameters no parameter match', () => {
-        const resolver = new Resolver();
+        const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters)
@@ -135,7 +129,7 @@ describe('Resolver Client', () => {
     });
 
     it('should validate unknown runtime parameter case', () => {
-        const resolver = new Resolver();
+        const resolver = new ResolverClient();
         runtimeParameters = [
             {
                 name: 'AWS_PASS',

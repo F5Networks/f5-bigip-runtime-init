@@ -16,11 +16,11 @@
 
 'use strict';
 
-const sinon = require('sinon');
-const assert = require('assert');
-const nock = require('nock');
+import sinon from 'sinon';
+import assert from 'assert';
+import nock from 'nock';
 
-const ManagementClient = require('../../../src/lib/bigip/managementClient.js');
+import { ManagementClient } from '../../../src/lib/bigip/managementClient';
 
 const standardOptions = {
     host: '192.0.2.1',
@@ -31,7 +31,6 @@ const standardOptions = {
 };
 
 describe('BIG-IP Management Client', () => {
-    beforeEach(() => {});
     afterEach(() => {
         sinon.restore();
     });
