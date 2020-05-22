@@ -16,10 +16,7 @@
 
 'use strict';
 
-import Logger from '../logger';
 import * as utils from '../utils';
-
-const logger = Logger.getLogger();
 
 /**
  * Management client class
