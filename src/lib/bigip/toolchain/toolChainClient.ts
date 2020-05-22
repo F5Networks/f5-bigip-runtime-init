@@ -43,6 +43,8 @@ class MetadataClient {
      *
      * @param  component         [toolchain component]
      * @param  version           [toolchain component version]
+     * @param  hash              [toolchain hash]
+     * @param  metadata          [toolchain metadata]
      */
     constructor(component, version, hash) {
         this.component = component;
@@ -142,10 +144,14 @@ class PackageClient {
     _metadataClient: MetadataClient;
     component: string;
     version: string;
+    uriPrefix: string;
+    authHeader: string;
     /**
      *
      * @param mgmtClient     [management client]
      * @param metadataClient [metadata client]
+     * @param  uriPrefix     [request prefix]
+     * @param  authHeader    [request auth header]
      *
      * @returns
      */
@@ -155,6 +161,9 @@ class PackageClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
+
+        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
     }
 
     async _uploadRpm(file: string, options?: {
@@ -162,20 +171,22 @@ class PackageClient {
     }): Promise<void> {
         /* eslint-disable no-await-in-loop, no-loop-func */
         options = options || {};
-        const deleteFile = options.deleteFile || true;
 
+        const deleteFile = options.deleteFile || true;
         const fileStats = fs.statSync(file);
         const chunkSize = 1024 * 1024;
+
         let start = 0;
         let end = chunkSize;
         while (end <= fileStats.size - 1 && start < end) {
             logger.info(`Sending chunk: ${start}-${end}/${fileStats.size}`);
 
-            await this._mgmtClient.makeRequest(
-                `/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
+            await utils.makeRequest(
+                `${this.uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
                 {
                     method: 'POST',
                     headers: {
+                        Authorization: this.authHeader,
                         'Content-Type': 'application/octet-stream',
                         'Content-Range': `${start}-${end}/${fileStats.size}`,
                         'Content-Length': end - start + 1
@@ -205,7 +216,12 @@ class PackageClient {
         const maxCount = 120;
         let response;
         while (i < maxCount) {
-            response = await this._mgmtClient.makeRequest(`${PKG_MGMT_URI}/${taskId}`);
+            response = await utils.makeRequest(`${this.uriPrefix}${PKG_MGMT_URI}/${taskId}`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
 
             if (response.body.status === 'FINISHED') {
                 i = maxCount;
@@ -222,10 +238,13 @@ class PackageClient {
     }
 
     async _installRpm(packagePath: string): Promise<void> {
-        const response = await this._mgmtClient.makeRequest(
-            PKG_MGMT_URI,
+        const response = await utils.makeRequest(
+            `${this.uriPrefix}${PKG_MGMT_URI}`,
             {
                 method: 'POST',
+                headers: {
+                    Authorization: this.authHeader
+                },
                 body: {
                     operation: 'INSTALL',
                     packageFilePath: packagePath
@@ -283,10 +302,14 @@ class ServiceClient {
     _metadataClient: MetadataClient;
     component: string;
     version: string;
+    uriPrefix: string;
+    authHeader: string;
     /**
      *
      * @param component         [toolchain component]
      * @param  version          [toolchain component version]
+     * @param  uriPrefix          [request prefix]
+     * @param  authHeader          [request auth header]
      *
      */
     constructor(mgmtClient: ManagementClient, metadataClient: MetadataClient) {
@@ -295,6 +318,9 @@ class ServiceClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
+
+        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
     }
 
     /**
@@ -308,7 +334,12 @@ class ServiceClient {
         code: number;
         body?: any;
     }> {
-        const taskResponse = await this._mgmtClient.makeRequest(taskUri);
+        const taskResponse = await utils.makeRequest(`${this.uriPrefix}${taskUri}`,
+            {
+                headers: {
+                    Authorization: this.authHeader
+                }
+            });
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
             return Promise.resolve(taskResponse);
@@ -337,8 +368,13 @@ class ServiceClient {
      *
      */
     async _isAvailableCheck(): Promise<boolean> {
-        const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getInfoEndpoint().endpoint
+        const response = await utils.makeRequest(
+            `${this.uriPrefix}${this._metadataClient.getInfoEndpoint().endpoint}`,
+            {
+                headers: {
+                    Authorization: this.authHeader
+                }
+            }
         );
 
         if (response.code !== constants.HTTP_STATUS_CODES.OK) {
@@ -374,10 +410,13 @@ class ServiceClient {
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
 
-        const response = await this._mgmtClient.makeRequest(
-            this._metadataClient.getConfigurationEndpoint().endpoint,
+        const response = await utils.makeRequest(
+            `${this.uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
                 method: 'POST',
+                headers: {
+                    Authorization: this.authHeader
+                },
                 body: config
             }
         );

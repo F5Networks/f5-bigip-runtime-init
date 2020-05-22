@@ -22,7 +22,7 @@ import { ManagedIdentityCredential } from '@azure/identity';
 import * as constants from '../../../constants';
 import { AbstractCloudClient } from '../abstract/cloudClient'
 import Logger from "../../logger";
-
+import * as utils from '../../utils';
 
 export class AzureCloudClient extends AbstractCloudClient {
     _credentials: ManagedIdentityCredential;
@@ -43,6 +43,34 @@ export class AzureCloudClient extends AbstractCloudClient {
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
     }
 
+    async _getMetadata(metadataType: string, metadataField: string | number): Promise<string> {
+        let result: string;
+        let ipAddress: string;
+        let prefix: string;
+
+        const response = await utils.makeRequest(
+            `http://169.254.169.254/metadata/instance/${metadataType}?api-version=2017-08-01`,
+            {
+                method: 'GET',
+                headers: {
+                    Metadata: 'true'
+                }
+            }
+        );
+
+        if (metadataType === 'compute') {
+            result = response.body[metadataField];
+        } else if (metadataType === 'network') {
+            ipAddress = response.body.interface[metadataField].ipv4.ipAddress[0].privateIpAddress;
+            prefix = response.body.interface[metadataField].ipv4.subnet[0].prefix;
+            result = `${ipAddress}/${prefix}`;
+        } else {
+            throw new Error('Runtime parameter metadata type is unknown. Must be one of [ compute, network ]');
+        }
+
+        return result;
+    }
+
     /**
      * Gets secret from Azure Key Vault
      *
@@ -51,7 +79,7 @@ export class AzureCloudClient extends AbstractCloudClient {
      * @param [options.vaultUrl]            - vault to get secret from (required)
      * @param [options.documentVersion]     - version of the secret (optional)
      *
-     * @returns                             - resolves promise with secret value
+     * @returns {Promise}
      */
     getSecret(secretId: string, options?: {
         vaultUrl?: string;
@@ -74,5 +102,30 @@ export class AzureCloudClient extends AbstractCloudClient {
             .then(result => Promise.resolve(result.value))
             .catch(err => Promise.reject(err));
     }
-}
 
+    /**
+     * Gets value from Azure metadata
+     *
+     * @param field                         - metadata property to fetch
+     * @param [options]                     - function options
+     *
+     * @returns {Promise}
+     */
+    getMetadata(metadataField: string | number, options?: {
+        type?: string;
+    }): Promise<string> {
+        const metadataType = options ? options.type : undefined;
+
+        if (!metadataType) {
+            throw new Error('Azure Cloud Client metadata type is missing');
+        }
+
+        if (!metadataField) {
+            throw new Error('Azure Cloud Client metadata field is missing');
+        }
+
+        return this._getMetadata(metadataType, metadataField)
+            .then(result => Promise.resolve(result))
+            .catch(err => Promise.reject(err));
+    }
+}
