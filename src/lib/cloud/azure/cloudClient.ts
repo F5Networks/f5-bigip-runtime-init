@@ -44,9 +44,9 @@ export class AzureCloudClient extends AbstractCloudClient {
     }
 
     async _getMetadata(metadataType: string, metadataField: string | number): Promise<string> {
-        let result;
-        let ipAddress;
-        let prefix;
+        let result: string;
+        let ipAddress: string;
+        let prefix: string;
 
         const response = await utils.makeRequest(
             `http://169.254.169.254/metadata/instance/${metadataType}?api-version=2017-08-01`,
