@@ -144,6 +144,8 @@ class PackageClient {
     _metadataClient: MetadataClient;
     component: string;
     version: string;
+    uriPrefix: string;
+    authHeader: string;
     /**
      *
      * @param {class} mgmtClient     [management client]
@@ -157,6 +159,9 @@ class PackageClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
+
+        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
     }
 
     async _uploadRpm(file: string, options?: {
@@ -165,8 +170,6 @@ class PackageClient {
         /* eslint-disable no-await-in-loop, no-loop-func */
         options = options || {};
 
-        const uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         const deleteFile = options.deleteFile || true;
         const fileStats = fs.statSync(file);
         const chunkSize = 1024 * 1024;
@@ -177,11 +180,11 @@ class PackageClient {
             logger.info(`Sending chunk: ${start}-${end}/${fileStats.size}`);
 
             await utils.makeRequest(
-                `${uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
+                `${this.uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
                 {
                     method: 'POST',
                     headers: {
-                        Authorization: authHeader,
+                        Authorization: this.authHeader,
                         'Content-Type': 'application/octet-stream',
                         'Content-Range': `${start}-${end}/${fileStats.size}`,
                         'Content-Length': end - start + 1
@@ -207,16 +210,14 @@ class PackageClient {
     }
 
     async _checkRpmTaskStatus(taskId: string): Promise<any> {
-        const uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         let i = 0;
         const maxCount = 120;
         let response;
         while (i < maxCount) {
-            response = await utils.makeRequest(`${uriPrefix}${PKG_MGMT_URI}/${taskId}`,
+            response = await utils.makeRequest(`${this.uriPrefix}${PKG_MGMT_URI}/${taskId}`,
                 {
                     headers: {
-                        Authorization: authHeader
+                        Authorization: this.authHeader
                     }
                 });
 
@@ -235,14 +236,12 @@ class PackageClient {
     }
 
     async _installRpm(packagePath: string): Promise<void> {
-        const uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         const response = await utils.makeRequest(
-            `${uriPrefix}${PKG_MGMT_URI}`,
+            `${this.uriPrefix}${PKG_MGMT_URI}`,
             {
                 method: 'POST',
                 headers: {
-                    Authorization: authHeader
+                    Authorization: this.authHeader
                 },
                 body: {
                     operation: 'INSTALL',
@@ -301,6 +300,8 @@ class ServiceClient {
     _metadataClient: MetadataClient;
     component: string;
     version: string;
+    uriPrefix: string;
+    authHeader: string;
     /**
      *
      * @param {string} component         [toolchain component]
@@ -314,6 +315,9 @@ class ServiceClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
+
+        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
     }
 
     /**
@@ -327,12 +331,10 @@ class ServiceClient {
         code: number;
         body?: any;
     }> {
-        const uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
-        const taskResponse = await utils.makeRequest(`${uriPrefix}${taskUri}`,
+        const taskResponse = await utils.makeRequest(`${this.uriPrefix}${taskUri}`,
             {
                 headers: {
-                    Authorization: authHeader
+                    Authorization: this.authHeader
                 }
             });
 
@@ -364,13 +366,11 @@ class ServiceClient {
      * @returns {boolean}
      */
     async _isAvailableCheck(): Promise<boolean> {
-        const uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         const response = await utils.makeRequest(
-            `${uriPrefix}${this._metadataClient.getInfoEndpoint().endpoint}`,
+            `${this.uriPrefix}${this._metadataClient.getInfoEndpoint().endpoint}`,
             {
                 headers: {
-                    Authorization: authHeader
+                    Authorization: this.authHeader
                 }
             }
         );
@@ -406,17 +406,15 @@ class ServiceClient {
     }> {
         options = options || {};
         const config = options.config;
-        const uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
 
         const response = await utils.makeRequest(
-            `${uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
+            `${this.uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
                 method: 'POST',
                 headers: {
-                    Authorization: authHeader
+                    Authorization: this.authHeader
                 },
                 body: config
             }

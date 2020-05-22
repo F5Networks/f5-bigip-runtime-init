@@ -38,17 +38,9 @@ export class ManagementClient {
     password: string;
     useTls: boolean;
     _protocol: string;
-    /**
-     *
-     * @param {object} options            [function options]
-     * @param {string} [options.host]     [host]
-     * @param {integer} [options.port]    [host port]
-     * @param {string} [options.user]     [host user]
-     * @param {string} [options.password] [host password]
-     * @param {boolean} [options.useTls]  [use TLS]
-     *
-     * @returns {void}
-     */
+    uriPrefix: string;
+    authHeader: string;
+
     constructor(options?: {
         host?: string;
         port?: number;
@@ -63,7 +55,10 @@ export class ManagementClient {
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
         this.useTls = options.useTls || false;
-        this._protocol = this.useTls === false ? 'http' : 'https';       
+        this._protocol = this.useTls === false ? 'http' : 'https';
+
+        this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
+        this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
     }
 
     /**
@@ -72,13 +67,11 @@ export class ManagementClient {
      * @returns {Promise} Resolves true on ready check passing
      */
     async _isReadyCheck(): Promise<boolean>{
-        const uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
-        const authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
-        const readyResponse = await utils.makeRequest(`${uriPrefix}/mgmt/tm/sys/ready`,
+        const readyResponse = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/ready`,
             {
                 method: 'GET',
                 headers: {
-                    Authorization: authHeader
+                    Authorization: this.authHeader
                 }
             });
 
