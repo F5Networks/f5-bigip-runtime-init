@@ -8,9 +8,9 @@
 
 'use strict';
 
-const assert = require('assert');
-const sinon = require('sinon'); // eslint-disable-line import/no-extraneous-dependencies
-const mock = require('mock-fs');
+import assert from 'assert';
+import sinon from 'sinon';
+import mock from 'mock-fs';
 
 /* eslint-disable global-require */
 
@@ -18,7 +18,7 @@ describe('Util', () => {
     let util;
 
     before(() => {
-        util = require('../../src/lib/utils.js');
+        util = require('../../src/lib/utils.ts');
     });
     after(() => {
         Object.keys(require.cache).forEach((key) => {
@@ -61,7 +61,7 @@ describe('Util', () => {
     });
 
     describe('verifyHash', () => {
-        it('should return true with correct inputs', () => {
+        it('should return true with valid extension hash inputs', () => {
             mock({
                 'fake/dir': {
                     'fake.txt': '12345'
@@ -76,7 +76,7 @@ describe('Util', () => {
             mock.restore();
         });
 
-        it('should throw an error with incorrect inputs', () => {
+        it('should return false with invalid extension hash inputs', () => {
             mock({
                 'fake/dir': {
                     'fake.txt': '12345'
@@ -86,7 +86,7 @@ describe('Util', () => {
             const file = 'fake/dir/fake.txt';
             const extensionHash = 'abc';
 
-            assert.throws(() => util.verifyHash(file, extensionHash), Error, 'File verification failed.');
+            assert.ok(!util.verifyHash(file, extensionHash));
             mock.restore();
         });
     });

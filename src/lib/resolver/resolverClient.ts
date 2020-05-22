@@ -17,30 +17,38 @@
 
 'use strict';
 
-const logger = require('../logger.js');
-const CloudFactory = require('../cloud/cloudFactory.js');
+import Logger from '../../lib/logger';
+import { getCloudProvider } from '../cloud/cloudFactory';
+
+const logger = Logger.getLogger();
+
+interface RuntimeParameter {
+    type: string;
+    name: string;
+    value: string;
+}
 
 /** Resolver class */
-class ResolverClient {
+export class ResolverClient {
     /**
      * Resolves runtime parameters
      *
-     * @param {Array} runtimeParameters       - list of runtime parameters
+     * @param parameters        - list of runtime parameters
      *
      *
-     * @returns {Promise}                     - resolves with map of runtime parameters
+     * @returns                 - resolves with map of runtime parameters
      */
-    async resolveRuntimeParameters(runtimeParameters) {
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    async resolveRuntimeParameters(parameters: RuntimeParameter[]): Promise<any> {
         const results = {};
-        const secrets = [];
         const promises = [];
-        for (let i = 0; i < runtimeParameters.length; i += 1) {
-            if (runtimeParameters[i].type === 'static') {
-                results[runtimeParameters[i].name] = runtimeParameters[i].value;
-            } else if (runtimeParameters[i].type === 'secret') {
+        for (let i = 0; i < parameters.length; i += 1) {
+            if (parameters[i].type === 'static') {
+                results[parameters[i].name] = parameters[i].value;
+            } else if (parameters[i].type === 'secret') {
                 promises.push(this._resolveHelper(
-                    runtimeParameters[i].name,
-                    this._resolveSecret(runtimeParameters[i])
+                    parameters[i].name,
+                    this._resolveSecret(parameters[i])
                 ));
             } else {
                 throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
@@ -61,32 +69,35 @@ class ResolverClient {
     /**
      * Helper function to resolve Promise
      *
-     * @param {string} name                 - list of runtime parameters
-     * @param {Promise} name                - Promise to resolve
+     * @param name                - list of runtime parameters
+     * @param name                - Promise to resolve
      *
      *
-     * @returns {Object}                    - object which includes { name, value }
+     * @returns                   - object which includes { name, value }
      */
-    async _resolveHelper(name, promise) {
+    async _resolveHelper(name, promise): Promise<{
+        name: string;
+        value: string;
+    }> {
         return Promise.resolve(promise)
             .then((data) => {
-                const object = {};
-                object.name = name;
-                object.value = data;
-                return object;
+                return {
+                    name: name,
+                    value: data
+                };
             });
     }
 
     /**
      * Resolves secret using cloud client
      *
-     * @param {Object} secretMetadata          - list of runtime parameters
+     * @param secretMetadata       - list of runtime parameters
      *
      *
-     * @returns {Promise}                      - resolves with secret value
+     * @returns                    - resolves with secret value
      */
-    async _resolveSecret(secretMetadata) {
-        const _cloudClient = CloudFactory.getCloudProvider(
+    async _resolveSecret(secretMetadata): Promise<string> {
+        const _cloudClient = await getCloudProvider(
             secretMetadata.secretProvider.environment,
             { logger }
         );
@@ -98,5 +109,3 @@ class ResolverClient {
         return secretValue;
     }
 }
-
-module.exports = ResolverClient;

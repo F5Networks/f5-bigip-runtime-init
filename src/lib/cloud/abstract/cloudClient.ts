@@ -16,36 +16,43 @@
 
 'use strict';
 
-const Logger = require('../../logger.js');
+import Logger from '../../logger';
 
+export interface CloudClient {
+    environment: string;
+    logger: Logger;
+    init(): void;
+    getSecret(secretId: string, options?: unknown): Promise<string>;
+}
 
 /**
  * Abstract Cloud class - defines cloud agnostic properties and methods
  *
  * @class
  */
-
-class AbstractCloudClient {
+/* eslint-disable  @typescript-eslint/no-unused-vars */
+export class AbstractCloudClient implements CloudClient{
+    environment: string;
+    logger: Logger;
     constructor(name, options) {
         this.environment = name;
 
-        const logger = options ? options.logger : Logger;
+        const logger = options ? options.logger : Logger.getLogger();
         if (logger) {
             this.logger = logger;
         }
     }
 
+    init(): Promise<void> {
+        throw new Error('init method must be implemented in child class!');
+    }
 
     /**
      * Gets secret
      *
-     * @param {Object} options - function options
+     * @param options - function options
      */
-    getSecret() {
+    getSecret(secretId: string, options?: unknown): Promise<string> {
         throw new Error('getSecret method must be implemented in child class!');
     }
 }
-
-module.exports = {
-    AbstractCloudClient
-};
