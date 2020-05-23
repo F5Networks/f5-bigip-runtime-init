@@ -53,7 +53,7 @@ describe('validator', () => {
         extension_services:
             service_operations: []
         `;
-        let config;
+        const config;
         config = yaml.safeLoad(data);
         const validation = validator.validate(config);
         assert.strictEqual(validation.isValid, true);
