@@ -16,8 +16,8 @@
 
 'use strict';
 
-const assert = require('assert');
-const Validator = require('../../src/lib/validator');
+import assert from 'assert';
+import Validator from '../../src/lib/validator';
 
 const validator = new Validator();
 
@@ -41,7 +41,7 @@ describe('validator', () => {
         };
         const validation = validator.validate(data);
         assert.strictEqual(validation.isValid, true);
-        assert.strictEqual(validation.errors, null);
+        assert.strictEqual(validation.errors, 'No errors');
     });
 
     it('should invalidate invalid data', () => {

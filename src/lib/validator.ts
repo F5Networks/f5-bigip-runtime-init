@@ -16,32 +16,16 @@
 
 'use strict';
 
-const Ajv = require('ajv');
+import * as Ajv from 'ajv';
+import * as baseSchema from './schema.json';
 
-const baseSchema = require('./schema.json');
-
-class Validator {
-    constructor() {
-        const ajv = new Ajv(
-            {
-                allErrors: true,
-                useDefaults: true,
-                coerceTypes: true,
-                extendRefs: 'fail'
-            }
-        );
-
-        this.validator = ajv
-            .compile(baseSchema);
-    }
-
-    validate(data) {
-        const isValid = this.validator(data);
+export default class Validator {
+    validate(data): { isValid: boolean; errors?: string} {
+        const ajv = new Ajv.default({ allErrors: true });
+        const isValid = ajv.validate(baseSchema, data);
         return {
-            isValid,
-            errors: this.validator.errors
+            isValid: !!(isValid),
+            errors: ajv.errorsText()
         };
     }
 }
-
-module.exports = Validator;

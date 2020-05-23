@@ -21,6 +21,7 @@ import * as yaml from 'js-yaml';
 import Logger from './lib/logger';
 import * as constants from './constants';
 import * as utils from './lib/utils';
+import Validator from './lib/validator.js';
 
 import { ResolverClient } from './lib/resolver/resolverClient';
 import { ManagementClient } from './lib/bigip/managementClient'
