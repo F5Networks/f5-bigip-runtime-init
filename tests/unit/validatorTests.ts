@@ -17,6 +17,7 @@
 'use strict';
 
 import assert from 'assert';
+import * as yaml from 'js-yaml';
 import Validator from '../../src/lib/validator';
 
 const validator = new Validator();
@@ -24,7 +25,7 @@ const validator = new Validator();
 /* eslint-disable quotes, quote-props */
 
 describe('validator', () => {
-    it('should validate valid data', () => {
+    it('should validate valid json data', () => {
         const data = {
             "runtime_parameters": [],
             "extension_packages": {
@@ -40,6 +41,21 @@ describe('validator', () => {
             }
         };
         const validation = validator.validate(data);
+        assert.strictEqual(validation.isValid, true);
+        assert.strictEqual(validation.errors, 'No errors');
+    });
+
+    it('should validate valid yaml data', () => {
+        const data = `
+        runtime_parameters: []
+        extension_packages:
+            install_operations: [{extensionType: as3, extensionVersion: 3.13.0}]
+        extension_services:
+            service_operations: []
+        `;
+        let config;
+        config = yaml.safeLoad(data);
+        const validation = validator.validate(config);
         assert.strictEqual(validation.isValid, true);
         assert.strictEqual(validation.errors, 'No errors');
     });
