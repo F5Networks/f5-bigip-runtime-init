@@ -38,6 +38,46 @@
                                 "type": "string"
                             }
                         },
+                        "dependencies": {
+                            "environment": {
+                                "if": {
+                                    "properties": {
+                                        "environment": {
+                                            "const": "gcp"
+                                        }
+                                    }
+                                },
+                                "then": {
+                                    "required": [
+                                        "project"
+                                    ]
+                                },
+                                "if": {
+                                    "properties": {
+                                        "environment": {
+                                            "const": "aws"
+                                        }
+                                    }
+                                },
+                                "then": {
+                                    "required": [
+                                        "region"
+                                    ]
+                                },
+                                "if": {
+                                    "properties": {
+                                        "environment": {
+                                            "const": "azure"
+                                        }
+                                    }
+                                },
+                                "then": {
+                                    "required": [
+                                        "vault"
+                                    ]
+                                }
+                            }
+                        },
                         "required": ["environment"]
                     },
                     "metadataProvider": {
