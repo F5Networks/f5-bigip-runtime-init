@@ -33,7 +33,7 @@
                                 "description": "Name of the AWS region used for secret storage",
                                 "type": "string"
                             },
-                            "vault": {
+                            "vaultUrl": {
                                 "description": "Name of the Azure Key Vault",
                                 "type": "string"
                             }
@@ -73,7 +73,7 @@
                                 },
                                 "then": {
                                     "required": [
-                                        "vault"
+                                        "vaultUrl"
                                     ]
                                 }
                             }
