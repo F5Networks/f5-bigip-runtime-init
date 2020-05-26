@@ -60,7 +60,8 @@ describe('Resolver Client', () => {
                 metadataProvider: {
                     type: 'network',
                     environment: 'azure',
-                    field: 1
+                    field: 'ipv4',
+                    index: 1
                 }
             },
             {

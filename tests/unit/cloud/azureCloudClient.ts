@@ -156,7 +156,8 @@ describe('CloudClient - Azure', () => {
             'name', {
                 type: 'network',
                 environment: 'azure',
-                field: 1
+                field: 'ipv4',
+                index: 1
             }
         )
             .then((result) => {
@@ -209,7 +210,7 @@ describe('CloudClient - Azure', () => {
             .get('/metadata/instance/network?api-version=2017-08-01')
             .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] } }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] } }] });
 
-        cloudClient._getMetadata('network', 1)
+        cloudClient._getMetadata('network', 'ipv4', 1)
             .then((result) => {
                 assert.strictEqual(result, '10.0.1.4/24');
             });
