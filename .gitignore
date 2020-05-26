@@ -28,3 +28,6 @@ v8-compile-cache-0/
 # Python VENV
 */venv/
 venv/
+
+# npm debug info
+npm-debiglog
