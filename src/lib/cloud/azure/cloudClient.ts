@@ -43,7 +43,7 @@ export class AzureCloudClient extends AbstractCloudClient {
         return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
     }
 
-    async _getMetadata(metadataType: string, metadataField: string | number): Promise<string> {
+    async _getMetadata(metadataType: string, metadataField: string, metadataIndex: number): Promise<string> {
         let result: string;
         let ipAddress: string;
         let prefix: string;
@@ -61,8 +61,8 @@ export class AzureCloudClient extends AbstractCloudClient {
         if (metadataType === 'compute') {
             result = response.body[metadataField];
         } else if (metadataType === 'network') {
-            ipAddress = response.body.interface[metadataField].ipv4.ipAddress[0].privateIpAddress;
-            prefix = response.body.interface[metadataField].ipv4.subnet[0].prefix;
+            ipAddress = response.body.interface[metadataIndex][metadataField].ipAddress[0].privateIpAddress;
+            prefix = response.body.interface[metadataIndex][metadataField].subnet[0].prefix;
             result = `${ipAddress}/${prefix}`;
         } else {
             throw new Error('Runtime parameter metadata type is unknown. Must be one of [ compute, network ]');
@@ -111,10 +111,12 @@ export class AzureCloudClient extends AbstractCloudClient {
      *
      * @returns {Promise}
      */
-    getMetadata(metadataField: string | number, options?: {
+    getMetadata(metadataField: string, options?: {
         type?: string;
+        index?: number;
     }): Promise<string> {
         const metadataType = options ? options.type : undefined;
+        const metadataIndex = options ? options.index : 0;
 
         if (!metadataType) {
             throw new Error('Azure Cloud Client metadata type is missing');
@@ -124,7 +126,11 @@ export class AzureCloudClient extends AbstractCloudClient {
             throw new Error('Azure Cloud Client metadata field is missing');
         }
 
-        return this._getMetadata(metadataType, metadataField)
+        if (metadataType === 'network' && metadataIndex == 0) {
+            throw new Error('Azure Cloud Client network metadata index is missing');
+        }
+
+        return this._getMetadata(metadataType, metadataField, metadataIndex)
             .then(result => Promise.resolve(result))
             .catch(err => Promise.reject(err));
     }

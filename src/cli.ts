@@ -21,6 +21,7 @@ import * as yaml from 'js-yaml';
 import Logger from './lib/logger';
 import * as constants from './constants';
 import * as utils from './lib/utils';
+import Validator from './lib/validator.js';
 
 import { ResolverClient } from './lib/resolver/resolverClient';
 import { ManagementClient } from './lib/bigip/managementClient'
@@ -39,10 +40,23 @@ export async function cli(): Promise<string> {
     let config;
     logger.info(`Configuration file: ${program.configFile}`);
     try {
-        config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
+        if (program.configFile.endsWith('yaml') || program.configFile.endsWith('yml')) {
+            config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
+        } else {
+            config = JSON.parse(fs.readFileSync(program.configFile, 'utf8'));
+        }
     } catch (e) {
         logger.error(`Configuration load error: ${e}`);
     }
+
+    const validator = new Validator();
+    const validation = validator.validate(config);
+    if (!validation.isValid) {
+        const error = new Error(`Invalid declaration: ${JSON.stringify(validation.errors)}`);
+        return Promise.reject(error);
+    }
+
+    logger.info('Successfully validated declaration');
 
     // create management client
     const host = config.host || {};

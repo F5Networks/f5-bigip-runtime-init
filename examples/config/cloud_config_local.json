@@ -1,0 +1,24 @@
+{
+   "runtime_parameters": [],
+   "extension_packages": {
+      "install_operations": [
+         {
+            "extensionType": "do",
+            "extensionVersion": "1.5.0"
+         },
+         {
+            "extensionType": "as3",
+            "extensionVersion": "3.13.0"
+         }
+      ]
+   },
+   "extension_services": {
+      "service_operations": [
+         {
+            "extensionType": "as3",
+            "type": "url",
+            "value": "file:///root/f5-bigip-runtime-init/examples/declarations/as3.json"
+         }
+      ]
+   }
+}
