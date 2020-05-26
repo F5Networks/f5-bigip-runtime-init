@@ -127,18 +127,18 @@
                             },
                             "required": ["field", "index"]
                         },
-                        "required": ["environment"]
+                        "required": ["environment", "type"]
                     },
-                    "secretName": {
-                        "title": "Secret Name",
-                        "description": "Name of the secret in the secret manager of the specified cloud",
+                    "secretId": {
+                        "title": "Secret ID",
+                        "description": "ID or name of the secret in the secret manager of the specified cloud",
                         "type": "string"
                     }
                 },
                 "required": ["type"],
                 "oneOf": [{
                     "type": "object",
-                    "required": ["secretProvider"]
+                    "required": ["secretProvider", "secretId"]
                 }, {
                     "type": "object",
                     "required": ["metadataProvider"]
