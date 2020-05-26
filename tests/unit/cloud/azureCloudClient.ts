@@ -194,21 +194,6 @@ describe('CloudClient - Azure', () => {
         }, 'unexpected error');
     });
 
-    it('should validate getMetadata throws error when network metadata index is not provided', () => {
-        assert.throws(() => {
-            cloudClient.getMetadata('', {
-                type: 'network',
-                environment: 'azure',
-                field: 'ipv4'
-            });
-        }, (err) => {
-            if (err.message.includes('metadata index is missing')) {
-                return true;
-            }
-            return false;
-        }, 'unexpected error');
-    });
-
     it('should validate _getMetadata when compute type is provided', () => {
         nock('http://169.254.169.254')
             .get('/metadata/instance/compute?api-version=2017-08-01')

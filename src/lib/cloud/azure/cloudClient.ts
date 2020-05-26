@@ -126,7 +126,7 @@ export class AzureCloudClient extends AbstractCloudClient {
             throw new Error('Azure Cloud Client metadata field is missing');
         }
 
-        if (metadataType === 'network' && metadataIndex === 0) {
+        if (metadataType === 'network' && metadataIndex == 0) {
             throw new Error('Azure Cloud Client network metadata index is missing');
         }
 
