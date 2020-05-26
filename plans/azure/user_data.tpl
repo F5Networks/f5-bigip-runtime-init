@@ -28,13 +28,15 @@ runtime_parameters:
     metadataProvider:
       environment: azure
       type: network
-      field: 1
+      field: ipv4
+      index: 1
   - name: SELF_IP_EXTERNAL
     type: metadata
     metadataProvider:
       environment: azure
       type: network
-      field: 2
+      field: ipv4
+      index: 2
 extension_packages:
   install_operations:
     - extensionType: do
