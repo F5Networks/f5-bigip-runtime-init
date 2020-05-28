@@ -105,14 +105,14 @@ describe('CloudClient - AWS', () => {
 
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(
         'the-secret-name', {
-            versionStage: 'some-version'
+            version: 'some-version'
         }
     )
         .then((secret) => {
             assert.strictEqual(secret, 'StrongPassword2010!');
         }));
 
-    it('should validate getSecret when secret exists and versionStage default used', () => cloudClient.getSecret(
+    it('should validate getSecret when secret exists and version default used', () => cloudClient.getSecret(
         'the-secret-name'
     )
         .then((secret) => {
@@ -128,7 +128,7 @@ describe('CloudClient - AWS', () => {
         cloudClient.getSecret(
             'incorrect-secret-name',
             {
-                versionStage: 'some-version'
+                version: 'some-version'
             }
         )
             .then((secret) => {
@@ -145,7 +145,7 @@ describe('CloudClient - AWS', () => {
         return cloudClient.getSecret(
             'incorrect-secret-name',
             {
-                versionStage: 'some-version'
+                version: 'some-version'
             }
         )
             .then(() => {

@@ -17,68 +17,36 @@
                     "secretProvider": {
                         "type": "object",
                         "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": ["SecretsManager", "SecretManager", "default", "KeyVault"]
-                            },
                             "environment": {
                                 "type": "string",
                                 "enum": ["gcp", "aws", "azure"]
                             },
-                            "project": {
-                                "description": "Name of the GCP Project",
+                            "type": {
+                                "type": "string",
+                                "enum": ["SecretsManager", "SecretManager", "default", "KeyVault"]
+                            },
+                            "secretId": {
+                                "description": "ID or name of the secret in the secret manager of the specified cloud",
                                 "type": "string"
                             },
-                            "region": {
-                                "description": "Name of the AWS region used for secret storage",
+                            "version": {
+                                "description": "Version identifier for the secret to be retrieved",
                                 "type": "string"
                             },
                             "vaultUrl": {
-                                "description": "Name of the Azure Key Vault",
-                                "type": "string"
+                                "description": "URL of the Azure Key Vault",
+                                "type": "string",
+                                "pattern": "(https?:\/\/(.+?\\.)?vault\\.azure\\.net(\/[A-Za-z0-9\\-\\._~:\/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)"
                             }
                         },
-                        "dependencies": {
-                            "environment": {
-                                "if": {
-                                    "properties": {
-                                        "environment": {
-                                            "const": "gcp"
-                                        }
-                                    }
-                                },
-                                "then": {
-                                    "required": [
-                                        "project"
-                                    ]
-                                },
-                                "if": {
-                                    "properties": {
-                                        "environment": {
-                                            "const": "aws"
-                                        }
-                                    }
-                                },
-                                "then": {
-                                    "required": [
-                                        "region"
-                                    ]
-                                },
-                                "if": {
-                                    "properties": {
-                                        "environment": {
-                                            "const": "azure"
-                                        }
-                                    }
-                                },
-                                "then": {
-                                    "required": [
-                                        "vaultUrl"
-                                    ]
-                                }
+                        "allOf": [
+                            {
+                                "if": { "properties": { "environment": { "const": "azure" } } },
+                                "then": { "required": ["vaultUrl"] }
                             }
-                        },
-                        "required": ["environment"]
+                        ],
+                        "required": ["environment", "type", "secretId"],
+                        "additionalProperties": false
                     },
                     "metadataProvider": {
                         "type": "object",
@@ -90,59 +58,30 @@
                             "type": {
                                 "type": "string",
                                 "enum": ["network", "compute"]
-                            }
-                        },
-                        "if": {
-                            "properties": {
-                                "type": {
-                                    "const": "compute"
-                                }
-                            }
-                        },
-                        "then": {
-                            "properties": {
-                                "field": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "if": {
-                            "properties": {
-                                "type": {
-                                    "const": "network"
-                                }
-                            }
-                        },
-                        "then": {
-                            "properties": {
-                                "field": {
-                                    "type": "string",
-                                    "enum": ["ipv4", "ipv6"]
-                                },
-                                "index": {
-                                    "type": "integer",
-                                    "minimum": 1,
-                                    "maximum": 8
-                                }
                             },
-                            "required": ["field", "index"]
+                            "field": {
+                              	"type": "string"
+                            },
+                            "index": {
+                              	"type": "integer"
+                            }
                         },
-                        "required": ["environment", "type"]
-                    },
-                    "secretId": {
-                        "title": "Secret ID",
-                        "description": "ID or name of the secret in the secret manager of the specified cloud",
-                        "type": "string"
+                        "allOf": [
+                            {
+                                "if": { "properties": { "type": { "const": "compute" } } },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["name"] } }, "required": ["field"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "network" } } },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["ipv4", "ipv6"] }, "index": { "type": "integer", "minimum": 1, "maximum": 8 } }, "required": ["field", "index"] }
+                            }
+                        ],
+                        "required": ["environment", "type"],
+                        "additionalProperties": false
                     }
                 },
-                "required": ["type"],
-                "oneOf": [{
-                    "type": "object",
-                    "required": ["secretProvider", "secretId"]
-                }, {
-                    "type": "object",
-                    "required": ["metadataProvider"]
-                }]
+                "required": ["name", "type"],
+                "additionalProperties": false
             }
         },
         "extension_packages": {
@@ -168,11 +107,13 @@
                                 "type": "string"
                             }
                         },
-                        "required": ["extensionType", "extensionVersion"]
+                        "required": ["extensionType", "extensionVersion"],
+                        "additionalProperties": false
                     }
                 }
             },
-            "required": ["install_operations"]
+            "required": ["install_operations"],
+            "additionalProperties": false
         },
         "extension_services": {
             "title": "Extension Services",
@@ -197,14 +138,17 @@
                             },
                             "value": {
                                 "description": "URL of local or remote file containing the declarations to be applied",
-                                "type": "string"
+                                "type": "string",
+                                "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"
                             }
                         },
-                        "required": []
+                        "required": [],
+                        "additionalProperties": false
                     }
                 }
             },
-            "required": ["service_operations"]
+            "required": ["service_operations"],
+            "additionalProperties": false
         },
         "host": {
             "title": "Host Parameters",
@@ -229,7 +173,8 @@
                     "type": "string"
                 }
             },
-            "required": []
+            "required": ["address", "port", "protocol", "username", "password"],
+            "additionalProperties": false
         }
     },
     "required": ["extension_packages", "extension_services"],

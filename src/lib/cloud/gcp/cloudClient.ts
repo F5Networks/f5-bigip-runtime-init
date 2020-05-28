@@ -56,18 +56,20 @@ export class GcpCloudClient extends AbstractCloudClient {
      *
      * @param secretId                      - secret name
      * @param [options]                     - cloud specific metadata for getting secret value
-     * @param [options.versionStage]        - version value for secret
+     * @param [options.version]             - version value for secret
      *
      * @returns
      */
-    getSecret(secretId: string, options?: any): Promise<string> {
+    getSecret(secretId: string, options?: {
+        version?: string;
+    }): Promise<string> {
         if (!secretId) {
             throw new Error('GCP Cloud Client secret id is missing');
         }
-        const versionStage = (options ? options.versionStage : undefined) || 'latest';
+        const version = (options ? options.version : undefined) || 'latest';
         const params = {
             auth: this.authToken,
-            name: `projects/${this.projectId}/secrets/${secretId}/versions/${versionStage}`
+            name: `projects/${this.projectId}/secrets/${secretId}/versions/${version}`
         };
         return this.secretmanager.projects.secrets.versions.access(params)
             .then((response) => {

@@ -1,12 +1,58 @@
-runtime_parameters: []
+runtime_parameters:
+- name: AZURE_SERVICE_PRINCIPAL
+  type: secret
+  secretProvider:
+    environment: azure
+    type: KeyVault
+    vaultUrl: https://my-keyvault.vault.azure.net
+    secretId: my_azure_admin_secret
+    version: 6e86876be4ce46a49ec578dfda897593
+- name: GCP_ROOT_PASSWORD
+  type: secret
+  secretProvider:
+    environment: gcp
+    type: SecretManager
+    secretId: my-secret-id-02
+    version: latest
+- name: AWS_ADMIN_PASSWORD
+  type: secret
+  secretProvider:
+    environment: aws
+    type: SecretsManager
+    secretId: my_azure_root_secret
+    version: AWSCURRENT
+- name: HOST_NAME
+  type: metadata
+  metadataProvider:
+    environment: azure
+    type: compute
+    field: name
+- name: SELF_IP_INTERNAL
+  type: metadata
+  metadataProvider:
+    environment: azure
+    type: network
+    field: ipv4
+    index: 1
+- name: SELF_IP_EXTERNAL
+  type: metadata
+  metadataProvider:
+    environment: azure
+    type: network
+    field: ipv4
+    index: 2
 extension_packages:
-    install_operations:
-        - extensionType: do
-          extensionVersion: 1.5.0
-        - extensionType: as3
-          extensionVersion: 3.13.0
+  install_operations:
+  - extensionType: do
+    extensionVersion: 1.12.0
+    extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
+  - extensionType: as3
+    extensionVersion: 3.19.1
 extension_services:
-    service_operations:
-      - extensionType: as3
-        type: url
-        value: file:///root/f5-bigip-runtime-init/examples/declarations/as3.json
+  service_operations:
+  - extensionType: do
+    type: url
+    value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
+  - extensionType: as3
+    type: url
+    value: file:///var/tmp/as3_example.json

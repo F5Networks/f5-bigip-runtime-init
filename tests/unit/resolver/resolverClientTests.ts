@@ -30,7 +30,7 @@ describe('Resolver Client', () => {
                 secretProvider: {
                     type: 'SecretsManager',
                     environment: 'aws',
-                    versionStage: 'AWSCURRENT',
+                    version: 'AWSCURRENT',
                     secretId: 'secert-document'
                 }
             },
@@ -40,7 +40,7 @@ describe('Resolver Client', () => {
                 secretProvider: {
                     type: 'SecretClient',
                     environment: 'azure',
-                    versionInfo: '6e86876be4ce46a49ec578dfda897593',
+                    version: '6e86876be4ce46a49ec578dfda897593',
                     secretId: 'this-secret',
                     debug: true
                 }
@@ -138,7 +138,7 @@ describe('Resolver Client', () => {
                 secretProvider: {
                     type: 'SecretsManager',
                     environment: 'aws',
-                    versionStage: 'AWSCURRENT',
+                    version: 'AWSCURRENT',
                     secretId: 'secert-document'
                 }
             },
@@ -148,7 +148,7 @@ describe('Resolver Client', () => {
                 secretProvider: {
                     type: 'SecretClient',
                     environment: 'azure',
-                    versionInfo: '6e86876be4ce46a49ec578dfda897593',
+                    version: '6e86876be4ce46a49ec578dfda897593',
                     secretId: 'this-secret',
                     debug: true
                 }
