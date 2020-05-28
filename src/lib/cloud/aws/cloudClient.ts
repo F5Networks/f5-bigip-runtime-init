@@ -59,21 +59,21 @@ export class AwsCloudClient extends AbstractCloudClient {
      *
      * @param secret                        - secret name
      * @param [options]                     - cloud specific metadata for getting secert value
-     * @param [options.versionStage]        - version stage value for secret
+     * @param [options.version]             - version stage value for secret
      *
      * @returns                             - secret value
      */
     async getSecret(secretId: string, options?: {
-        versionStage?: string;
+        version?: string;
     }): Promise<string> {
         if (!secretId) {
             throw new Error('AWS Cloud Client secert id is missing');
         }
 
-        const versionStage = options ? options.versionStage : undefined;
+        const version = options ? options.version : undefined;
         const params = {
             SecretId: secretId,
-            VersionStage: versionStage || 'AWSCURRENT'
+            VersionStage: version || 'AWSCURRENT'
         };
 
         const secret = await this.secretsManager.getSecretValue(params).promise().catch((e) => {

@@ -17,7 +17,7 @@
 'use strict';
 
 import * as Ajv from 'ajv';
-import * as baseSchema from './schema.json';
+import * as baseSchema from '../schema/base_schema.json';
 
 export default class Validator {
     validate(data): { isValid: boolean; errors?: string} {

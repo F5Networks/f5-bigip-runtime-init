@@ -157,7 +157,7 @@ runtime_parameters:
     secretProvider: 
       type: KeyVault
       environment: azure
-      vaultUrl: my-keyvault.vault.azure.net
+      vaultUrl: https://my-keyvault.vault.azure.net
       secretId: my_azure_secret
 extension_packages:
     install_operations:
@@ -228,16 +228,16 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: secret
     secretProvider:
-      type: SecretsManager
-      environment: gcp
-      versionStage: latest
+      type: SecretManager
+      environment: aws
+      version: AWSCURRENT
       secretId: test-document-01
   - name: ROOT_PASS
     type: secret
     secretProvider:
-      type: SecretsManager
-      environment: gcp
-      versionStage: latest
+      type: SecretManager
+      environment: aws
+      version: AWSCURRENT
       secretId: test-document-02
 extension_packages:
   install_operations:
@@ -307,14 +307,14 @@ runtime_parameters:
     secretProvider:
       type: SecretsManager
       environment: gcp
-      versionStage: latest
+      version: latest
       secretId: my-secret-id-01
   - name: ROOT_PASS
     type: secret
     secretProvider:
       type: SecretsManager
       environment: gcp
-      versionStage: latest
+      version: latest
       secretId: my-secret-id-02
 extension_packages:
   install_operations:

@@ -38,37 +38,9 @@ export class AzureCloudClient extends AbstractCloudClient {
         return Promise.resolve();
     }
 
-    _getKeyVaultSecret(vaultUrl: string, secretId: string, docVersion?: string): Promise<KeyVaultSecret> {
+    _getKeyVaultSecret(vaultUrl: string, secretId: string, version?: string): Promise<KeyVaultSecret> {
         this._keyVaultSecretClient = new SecretClient(vaultUrl, this._credentials);
-        return this._keyVaultSecretClient.getSecret(secretId, { version: docVersion || null });
-    }
-
-    async _getMetadata(metadataType: string, metadataField: string, metadataIndex: number): Promise<string> {
-        let result: string;
-        let ipAddress: string;
-        let prefix: string;
-
-        const response = await utils.makeRequest(
-            `http://169.254.169.254/metadata/instance/${metadataType}?api-version=2017-08-01`,
-            {
-                method: 'GET',
-                headers: {
-                    Metadata: 'true'
-                }
-            }
-        );
-
-        if (metadataType === 'compute') {
-            result = response.body[metadataField];
-        } else if (metadataType === 'network') {
-            ipAddress = response.body.interface[metadataIndex][metadataField].ipAddress[0].privateIpAddress;
-            prefix = response.body.interface[metadataIndex][metadataField].subnet[0].prefix;
-            result = `${ipAddress}/${prefix}`;
-        } else {
-            throw new Error('Runtime parameter metadata type is unknown. Must be one of [ compute, network ]');
-        }
-
-        return result;
+        return this._keyVaultSecretClient.getSecret(secretId, { version: version || null });
     }
 
     /**
@@ -77,28 +49,26 @@ export class AzureCloudClient extends AbstractCloudClient {
      * @param secretId                      - secret name
      * @param [options]                     - function options
      * @param [options.vaultUrl]            - vault to get secret from (required)
-     * @param [options.documentVersion]     - version of the secret (optional)
+     * @param [options.version]     - version of the secret (optional)
      *
      * @returns {Promise}
      */
     getSecret(secretId: string, options?: {
+        version?: string;
         vaultUrl?: string;
-        documentVersion?: string;
     }): Promise<string> {
+        const version = options ? options.version : undefined;
         const vaultUrl = options ? options.vaultUrl : undefined;
-
-        if (!vaultUrl) {
-            throw new Error('Azure Cloud Client vault url is missing');
-        }
-
 
         if (!secretId) {
             throw new Error('Azure Cloud Client secret id is missing');
         }
 
-        const documentVersion = options ? options.documentVersion : undefined;
+        if (!vaultUrl) {
+            throw new Error('Azure Cloud Client vault url is missing');
+        }
 
-        return this._getKeyVaultSecret(vaultUrl, secretId, documentVersion)
+        return this._getKeyVaultSecret(vaultUrl, secretId, version)
             .then(result => Promise.resolve(result.value))
             .catch(err => Promise.reject(err));
     }
@@ -111,27 +81,51 @@ export class AzureCloudClient extends AbstractCloudClient {
      *
      * @returns {Promise}
      */
-    getMetadata(metadataField: string, options?: {
+    async getMetadata(field: string, options?: {
         type?: string;
         index?: number;
     }): Promise<string> {
-        const metadataType = options ? options.type : undefined;
-        const metadataIndex = options ? options.index : 0;
+        const type = options ? options.type : undefined;
+        const index = options ? options.index : undefined;
 
-        if (!metadataType) {
-            throw new Error('Azure Cloud Client metadata type is missing');
-        }
-
-        if (!metadataField) {
+        if (!field) {
             throw new Error('Azure Cloud Client metadata field is missing');
         }
 
-        if (metadataType === 'network' && metadataIndex == 0) {
+        if (!type) {
+            throw new Error('Azure Cloud Client metadata type is missing');
+        }
+
+        if (type != 'compute' && type != 'network') {
+            throw new Error('Azure Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
+        }
+
+        if (type === 'network' && !index) {
             throw new Error('Azure Cloud Client network metadata index is missing');
         }
 
-        return this._getMetadata(metadataType, metadataField, metadataIndex)
-            .then(result => Promise.resolve(result))
-            .catch(err => Promise.reject(err));
+        let result: string;
+        let ipAddress: string;
+        let prefix: string;
+
+        const response = await utils.makeRequest(
+            `http://169.254.169.254/metadata/instance/${type}?api-version=2017-08-01`,
+            {
+                method: 'GET',
+                headers: {
+                    Metadata: 'true'
+                }
+            }
+        );
+
+        if (type === 'compute') {
+            result = response.body[field];
+        } else if (type === 'network') {
+            ipAddress = response.body.interface[index][field].ipAddress[0].privateIpAddress;
+            prefix = response.body.interface[index][field].subnet[0].prefix;
+            result = `${ipAddress}/${prefix}`;
+        }
+
+        return result;
     }
 }
