@@ -14,6 +14,9 @@
                         "type": "string",
                         "enum": ["static", "secret", "metadata"]
                     },
+                    "value": { 
+                        "type": "string" 
+                    },
                     "secretProvider": {
                         "type": "object",
                         "properties": {
@@ -80,6 +83,12 @@
                         "additionalProperties": false
                     }
                 },
+                "allOf": [
+                    {
+                        "if": { "properties": { "type": { "const": "static" } } },
+                        "then": { "required": ["value"] }
+                    }
+                ],
                 "required": ["name", "type"],
                 "additionalProperties": false
             }
@@ -132,16 +141,24 @@
                                 "enum": ["do", "as3", "ts", "cf"]
                             },
                             "type": {
-                                "$comment": "The url can be local (file:) or remote (https: or http:) but the type remains 'url'",
+                                "$comment": "url in case of local file (file:) or remote (https: or http:) and inline in case the declaration is part of the config file",
                                 "type": "string",
-                                "enum": ["url"]
+                                "enum": ["url", "inline"]
                             },
                             "value": {
-                                "description": "URL of local or remote file containing the declarations to be applied",
-                                "type": "string",
-                                "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"
+                                "description": "URL of local or remote file containing the declarations to be applied, or the entire declaration inline as an object"
                             }
                         },
+                        "allOf": [
+                            {
+                                "if": { "properties": { "type": { "const": "url" } } },
+                                "then": { "properties": { "value": { "type": "string", "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "inline" } } },
+                                "then": { "properties": { "value": { "type": "object"} }, "required": ["value"] }
+                            }
+                        ],
                         "required": [],
                         "additionalProperties": false
                     }

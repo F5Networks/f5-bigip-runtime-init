@@ -103,12 +103,20 @@ export async function cli(): Promise<string> {
                     version: serviceOperations[i].extensionVersion
                 }
             );
-            let loadedConfig = await utils.loadData(
-                serviceOperations[i].value,
-                {
-                    locationType: serviceOperations[i].type
-                }
-            );
+            // if the config is already an object, then use it as such,
+            // else use loadData to convert it to an object.
+            let loadedConfig: object;
+            if ((serviceOperations[i].value !== null) && (typeof serviceOperations[i].value === "object")
+                && (serviceOperations[i].type === "inline")) {
+                loadedConfig = serviceOperations[i].value;
+            } else {
+                loadedConfig = await utils.loadData(
+                    serviceOperations[i].value,
+                    {
+                        locationType: serviceOperations[i].type
+                    }
+                );
+            }
             // rendering secrets
             loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
             await toolchainClient.service.isAvailable();
