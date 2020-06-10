@@ -417,6 +417,339 @@ extension_services:
       value: file:///examples/declarations/do.json
 ```
 
+Example 7: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP
+- Using a YAML based config file
+```yaml
+runtime_parameters: []
+extension_packages:
+    install_operations:
+        - extensionType: do
+          extensionVersion: 1.5.0
+        - extensionType: as3
+          extensionVersion: 3.13.0
+extension_services:
+    service_operations:
+      - extensionType: as3
+        type: inline
+        value: 
+          class: AS3
+          action: deploy
+          persist: true
+          declaration:
+            class: ADC
+            schemaVersion: 3.0.0
+            id: urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d
+            label: Sample 1
+            remark: Simple HTTP Service with Round-Robin Load Balancing
+            Sample_01:
+              class: Tenant
+              A1:
+                class: Application
+                template: http
+                serviceMain:
+                  class: Service_HTTP
+                  virtualAddresses:
+                  - 10.0.1.10
+                  pool: web_pool
+                web_pool:
+                  class: Pool
+                  monitors:
+                  - http
+                  members:
+                  - servicePort: 80
+                    serverAddresses:
+                    - 192.0.1.10
+                    - 192.0.1.11
+host:
+  address: 10.10.10.1
+  port: 443
+  protocol: 'https'
+  username: admin
+  password: admin
+
+```
+- Using a JSON based config file
+```json
+{
+   "runtime_parameters": [],
+   "extension_packages": {
+      "install_operations": [
+         {
+            "extensionType": "do",
+            "extensionVersion": "1.5.0"
+         },
+         {
+            "extensionType": "as3",
+            "extensionVersion": "3.13.0"
+         }
+      ]
+   },
+   "extension_services": {
+      "service_operations": [
+         {
+            "extensionType": "as3",
+            "type": "inline",
+            "value": {
+               "class": "AS3",
+               "action": "deploy",
+               "persist": true,
+               "declaration": {
+                  "class": "ADC",
+                  "schemaVersion": "3.0.0",
+                  "id": "urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d",
+                  "label": "Sample 1",
+                  "remark": "Simple HTTP Service with Round-Robin Load Balancing",
+                  "Sample_01": {
+                     "class": "Tenant",
+                     "A1": {
+                        "class": "Application",
+                        "template": "http",
+                        "serviceMain": {
+                           "class": "Service_HTTP",
+                           "virtualAddresses": [
+                           "10.0.1.10"
+                           ],
+                           "pool": "web_pool"
+                        },
+                        "web_pool": {
+                           "class": "Pool",
+                           "monitors": [
+                           "http"
+                           ],
+                           "members": [
+                              {
+                                 "servicePort": 80,
+                                 "serverAddresses": [
+                                    "192.0.1.10",
+                                    "192.0.1.11"
+                                 ]
+                              }
+                           ]
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      ]
+   },
+   "host": {
+      "address": "10.10.10.1",
+      "port": 443,
+      "protocol": "https",
+      "username": "admin",
+      "password": "admin"
+   }
+}
+```
+
+Example 7: Using runtime parameters with inline config
+- Using a YAML based config file (please note - in order to passthrough the yaml processor, you have to use triple curly braces instead of the usual double)
+```yaml
+---
+runtime_parameters:
+- name: SCHEMA_VERSION
+  type: static
+  value: 3.0.0
+- name: HOST_NAME
+  type: static
+  value: bigip1.example.com
+extension_packages:
+  install_operations:
+  - extensionType: do
+    extensionVersion: 1.5.0
+  - extensionType: as3
+    extensionVersion: 3.13.0
+extension_services:
+  service_operations:
+  - extensionType: do
+    type: inline
+    value: 
+      schemaVersion: 1.0.0
+      class: Device
+      async: true
+      label: my BIG-IP declaration for declarative onboarding
+      Common:
+        class: Tenant
+        hostname: HOST_NAME
+        myDns:
+          class: DNS
+          nameServers:
+          - 8.8.8.8
+        myNtp:
+          class: NTP
+          servers:
+          - 0.pool.ntp.org
+          timezone: UTC
+        myProvisioning:
+          class: Provision
+          ltm: nominal
+          asm: nominal
+        dbvars:
+          class: DbVariables
+          provision.extramb: 500
+          restjavad.useextramb: true
+  - extensionType: as3
+    type: inline
+    value:
+      class: AS3
+      action: deploy
+      persist: true
+      declaration:
+        class: ADC
+        schemaVersion: "{{{ SCHEMA_VERSION }}}"
+        label: Sample 1
+        remark: Simple HTTP Service with Round-Robin Load Balancing
+        Sample_01:
+          class: Tenant
+          A1:
+            class: Application
+            template: http
+            serviceMain:
+              class: Service_HTTP
+              virtualAddresses:
+              - 10.0.1.10
+              pool: web_pool
+            web_pool:
+              class: Pool
+              monitors:
+              - http
+              members:
+              - servicePort: 80
+                serverAddresses:
+                - 192.0.1.10
+                - 192.0.1.11
+host:
+  address: 10.10.10.1
+  port: 443
+  protocol: https
+  username: admin
+  password: admin
+
+```
+
+- Using a JSON based config file
+```json
+{
+  "runtime_parameters": [
+    {
+      "name": "SCHEMA_VERSION",
+      "type": "static",
+      "value": "3.0.0"
+    },
+    {
+      "name": "HOST_NAME",
+      "type": "static",
+      "value": "bigip1.example.com"
+    }
+  ],
+  "extension_packages": {
+    "install_operations": [
+      {
+        "extensionType": "do",
+        "extensionVersion": "1.5.0"
+      },
+      {
+        "extensionType": "as3",
+        "extensionVersion": "3.13.0"
+      }
+    ]
+  },
+  "extension_services": {
+    "service_operations": [
+      {
+        "extensionType": "do",
+        "type": "inline",
+        "value": {
+          "schemaVersion": "1.0.0",
+          "class": "Device",
+          "async": true,
+          "label": "my BIG-IP declaration for declarative onboarding",
+          "Common": {
+            "class": "Tenant",
+            "hostname": "HOST_NAME",
+            "myDns": {
+              "class": "DNS",
+              "nameServers": [
+                "8.8.8.8"
+              ]
+            },
+            "myNtp": {
+              "class": "NTP",
+              "servers": [
+                "0.pool.ntp.org"
+              ],
+              "timezone": "UTC"
+            },
+            "myProvisioning": {
+              "class": "Provision",
+              "ltm": "nominal",
+              "asm": "nominal"
+            },
+            "dbvars": {
+              "class": "DbVariables",
+              "provision.extramb": 500,
+              "restjavad.useextramb": true
+            }
+          }
+        }
+      },
+      {
+        "extensionType": "as3",
+        "type": "inline",
+        "value": {
+          "class": "AS3",
+          "action": "deploy",
+          "persist": true,
+          "declaration": {
+            "class": "ADC",
+            "schemaVersion": "{{{ SCHEMA_VERSION }}}",
+            "label": "Sample 1",
+            "remark": "Simple HTTP Service with Round-Robin Load Balancing",
+            "Sample_01": {
+              "class": "Tenant",
+              "A1": {
+                "class": "Application",
+                "template": "http",
+                "serviceMain": {
+                  "class": "Service_HTTP",
+                  "virtualAddresses": [
+                    "10.0.1.10"
+                  ],
+                  "pool": "web_pool"
+                },
+                "web_pool": {
+                  "class": "Pool",
+                  "monitors": [
+                    "http"
+                  ],
+                  "members": [
+                    {
+                      "servicePort": 80,
+                      "serverAddresses": [
+                        "192.0.1.10",
+                        "192.0.1.11"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "host": {
+    "address": "10.10.10.1",
+    "port": 443,
+    "protocol": "https",
+    "username": "admin",
+    "password": "admin"
+  }
+}
+```
+
 ## Build Artifacts
 
 - Create artifacts: `npm run build`
