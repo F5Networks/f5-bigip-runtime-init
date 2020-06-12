@@ -18,6 +18,8 @@
 'use strict';
 
 import * as fs from 'fs';
+import * as nodeUtil from 'util';
+import * as childProcess from 'child_process';
 import * as crypto from 'crypto';
 import * as URL from 'url';
 import request from 'request';
@@ -61,6 +63,18 @@ export async function downloadToFile(url: string, file: string): Promise<void> {
         .catch(err => Promise.reject(err));
 }
 
+/**
+ * Verifies that directory exists or create directory
+ *
+ * @param directory
+ *
+ * @returns void
+ */
+export function verifyDirectory(directory): void {
+    if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+    }
+}
 
 /**
  * Verify file against provided hash
@@ -197,6 +211,26 @@ export async function renderData(template: string, value: object): Promise<strin
     return Mustache.render(template, value);
 }
 
+
+/**
+ * Runs a shell command and returns the output
+ *
+ * @param {String} commands - Command to run
+ *
+ * @returns {Promise} A promise which is resolved with the results of the
+ *                    command or rejected if an error occurs.
+ */
+export async function runShellCommand(command): Promise<string> {
+    const exec = nodeUtil.promisify(childProcess.exec);
+    const { stdout, stderr } = await exec(command);
+    if (stderr) {
+        logger.error(`runShellCommand Error: ${stderr}`);
+        return Promise.reject(stderr);
+    }
+    return stdout;
+}
+
+
 /**
  * Make request (HTTP)
  *
@@ -247,7 +281,11 @@ export async function makeRequest(uri: string, options?: {
             if (error) {
                 reject(error);
             } else {
-                resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                try {
+                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                } catch (e) {
+                    resolve({ code: resp.statusCode, body: body });
+                }
             }
         });
     });

@@ -21,6 +21,7 @@ describe('System tests', () => {
     let availablePacakges = {};
     let postedBigIpRunTimeInitDeclaration = {};
     let installedExtDeclarations = [];
+    let customOnboardResultsCount;
 
     before(function () {
         this.timeout(80000);
@@ -61,6 +62,10 @@ describe('System tests', () => {
             })
             .then((response) => {
                 installedExtDeclarations = response.filter(item => item);
+                return funcUtils.runShellCommand(`sshpass -p ${firstDut.password} ssh -o StrictHostKeyChecking=no ${firstDut.username}@${firstDut.ip} "bash -c 'ls -l /tmp/created_by* | wc -l'"`);
+            })
+            .then((response) => {
+                customOnboardResultsCount = response.trim();
                 return Promise.resolve();
             })
             .catch(err => Promise.reject(err));
@@ -94,5 +99,9 @@ describe('System tests', () => {
             postedBigIpRunTimeInitDeclaration.extension_services.service_operations.length,
             installedExtDeclarations.length
         );
+    });
+
+    it('should verify successful execution of pre and post onboards commands', () => {
+        assert.strictEqual(parseInt(customOnboardResultsCount), 4);
     });
 });
