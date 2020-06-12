@@ -146,23 +146,37 @@
             "properties": {
                 "install_operations": {
                     "title": "Install Operations",
-                    "description": "Specify the type and version of packages to install",
+                    "description": "Specify the type, version, location, and endpoint of packages to install",
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
                             "extensionType": {
                                 "type": "string",
-                                "enum": ["do", "as3", "ts", "cf"]
+                                "enum": ["do", "as3", "ts", "cf", "ilx"]
                             },
                             "extensionVersion": {
                                 "type": "string"
                             },
                             "extensionHash": {
                                 "type": "string"
+                            },
+                            "extensionUrl": {
+                                "type": "string",
+                                "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]+\\.(rpm)$"
+                            },
+                            "extensionVerificationEndpoint": {
+                                "type": "string"
                             }
                         },
-                        "required": ["extensionType", "extensionVersion"],
+                        "allOf": [
+                            {
+                                "if": { "properties": { "extensionType": { "const": "ilx" } } },
+                                "then": { "required": ["extensionUrl", "extensionVerificationEndpoint"] },
+                                "else": { "required": ["extensionVersion"] }
+                            }
+                        ],
+                        "required": ["extensionType"],
                         "additionalProperties": false
                     }
                 }

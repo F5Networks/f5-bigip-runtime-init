@@ -20,7 +20,6 @@
 import * as fs from 'fs';
 import * as url from 'url';
 
-
 import Logger from '../../logger';
 import { ManagementClient } from '../managementClient';
 import * as constants from '../../../constants';
@@ -38,6 +37,8 @@ class MetadataClient {
     component: string;
     version: string;
     hash: string;
+    url: string;
+    infoEndpoint: string;
     metadata: any;
     /**
      *
@@ -45,11 +46,14 @@ class MetadataClient {
      * @param  version           [toolchain component version]
      * @param  hash              [toolchain hash]
      * @param  metadata          [toolchain metadata]
+     * @param  infoEndpoint      [toolchain package verification endpoint]
      */
-    constructor(component, version, hash) {
+    constructor(component: string, version: string, hash: string, url: string, infoEndpoint: string) {
         this.component = component;
         this.version = version;
         this.hash = hash;
+        this.url = url;
+        this.infoEndpoint = infoEndpoint;
         this.metadata = this._loadMetadata();
     }
 
@@ -93,12 +97,16 @@ class MetadataClient {
     }
 
     /**
-     * Get component metadata
+     * Get component download url
      *
-     * @returns - component metadata
+     * @returns - component download url
      */
     getDownloadUrl(): any {
-        return this._getComponentVersionMetadata().downloadUrl;
+        if (this.url) {
+            return this.url;
+        } else {
+            return this._getComponentVersionMetadata().downloadUrl;
+        }
     }
 
     /**
@@ -133,8 +141,12 @@ class MetadataClient {
         endpoint: string;
         methods: string[];
     } {
-        const info = this._getComponentMetadata().endpoints.info;
-        return { endpoint: info.uri, methods: info.methods };
+        if (this.infoEndpoint) {
+            return { endpoint: this.infoEndpoint, methods: ['GET'] };
+        } else {
+            const info = this._getComponentMetadata().endpoints.info;
+            return { endpoint: info.uri, methods: info.methods };
+        }
     }
 }
 
@@ -273,10 +285,13 @@ class PackageClient {
 
         let tmpFile = '';
         if (urlObject.protocol === 'file:') {
-            // file is already local
-            tmpFile = downloadUrl;
+            if ([constants.BASE_DIR, constants.TMP_DIR].indexOf(urlObject.pathname)) {
+                tmpFile = urlObject.pathname.replace(/\/$/, '');
+            } else {
+                throw new Error('File path is invalid. Must be one of [ /var/lib/cloud, /var/lib/cloud/icontrollx_installs ]');
+            }
         } else {
-            // download locally
+            utils.verifyDirectory(constants.TMP_DIR);
             tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
             await utils.downloadToFile(downloadUrl, tmpFile);
         }
@@ -448,21 +463,27 @@ export class ToolChainClient {
     component: string;
     version: string;
     hash: string;
+    url: string;
+    infoEndpoint: string;
     _metadataClient: MetadataClient
     /**
      *
-     * @param mgmtClient [management client]
-     * @param component [toolchain component]
-     * @param version   [toolchain component version]
-     * @param hash   [toolchain component hash]
+     * @param mgmtClient    [management client]
+     * @param component     [toolchain component]
+     * @param version       [toolchain component version]
+     * @param hash          [toolchain component hash]
+     * @param url           [toolchain component location]
+     * @param infoEndpoint  [toolchain component verification endpoint]
      *
      */
     constructor(mgmtClient: ManagementClient, component: string, options?: any) {
         this._mgmtClient = mgmtClient;
         this.component = component;
-        this.version = options.version;
-        this.hash = options.hash;
-        this._metadataClient = new MetadataClient(this.component, this.version, this.hash);
+        this.version = options.extensionVersion ? options.extensionVersion : 'unknown';
+        this.hash = options.extensionHash ? options.extensionHash : undefined;
+        this.url = options.extensionUrl ? options.extensionUrl : undefined;
+        this.infoEndpoint = options.extensionVerificationEndpoint ? options.extensionVerificationEndpoint : undefined;
+        this._metadataClient = new MetadataClient(this.component, this.version, this.hash, this.url, this.infoEndpoint);
     }
 
     get package(): PackageClient {

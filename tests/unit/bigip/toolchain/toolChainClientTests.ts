@@ -31,8 +31,13 @@ const standardMgmtOptions = {
 };
 
 const standardToolchainOptions = {
-    version: '3.17.0',
-    hash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6'
+    extensionVersion: '3.17.0',
+    extensionHash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6'
+};
+
+const ilxToolchainOptions = {
+    extensionUrl: 'file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm',
+    extensionVerificationEndpoint: '/mgmt/shared/fast/info'
 };
 
 describe('BIG-IP Metadata Client', () => {
@@ -42,8 +47,8 @@ describe('BIG-IP Metadata Client', () => {
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
 
         assert.strictEqual(toolChainClient._metadataClient.component, component);
-        assert.strictEqual(toolChainClient._metadataClient.version, standardToolchainOptions.version);
-        assert.strictEqual(toolChainClient._metadataClient.hash, standardToolchainOptions.hash);
+        assert.strictEqual(toolChainClient._metadataClient.version, standardToolchainOptions.extensionVersion);
+        assert.strictEqual(toolChainClient._metadataClient.hash, standardToolchainOptions.extensionHash);
     });
 
     it('should return the component name', () => {
@@ -59,7 +64,7 @@ describe('BIG-IP Metadata Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
 
-        assert.strictEqual(toolChainClient._metadataClient.getComponentVersion(), standardToolchainOptions.version);
+        assert.strictEqual(toolChainClient._metadataClient.getComponentVersion(), standardToolchainOptions.extensionVersion);
     });
 
     it('should return the component hash', () => {
@@ -67,14 +72,23 @@ describe('BIG-IP Metadata Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
 
-        assert.strictEqual(toolChainClient._metadataClient.getComponentHash(), standardToolchainOptions.hash);
+        assert.strictEqual(toolChainClient._metadataClient.getComponentHash(), standardToolchainOptions.extensionHash);
     });
 
-    it('should return the download URL', () => {
+    it('should return the download URL for an AT package', () => {
         const component = 'as3';
         const url = 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.17.0/f5-appsvcs-3.17.0-3.noarch.rpm';
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
+
+        assert.strictEqual(toolChainClient._metadataClient.getDownloadUrl(), url);
+    });
+
+    it('should return the download URL for an iLX package', () => {
+        const component = 'ilx';
+        const url = 'file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm';
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, component, ilxToolchainOptions);
 
         assert.strictEqual(toolChainClient._metadataClient.getDownloadUrl(), url);
     });
@@ -97,11 +111,20 @@ describe('BIG-IP Metadata Client', () => {
         assert.strictEqual(toolChainClient._metadataClient.getConfigurationEndpoint().endpoint, configEndpoint);
     });
 
-    it('should return the info endpoint', () => {
+    it('should return the info endpoint for an AT package', () => {
         const component = 'as3';
         const infoEndpoint = '/mgmt/shared/appsvcs/info';
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
+
+        assert.strictEqual(toolChainClient._metadataClient.getInfoEndpoint().endpoint, infoEndpoint);
+    });
+
+    it('should return the info endpoint for an iLX package', () => {
+        const component = 'ilx';
+        const infoEndpoint = '/mgmt/shared/fast/info';
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, component, ilxToolchainOptions);
 
         assert.strictEqual(toolChainClient._metadataClient.getInfoEndpoint().endpoint, infoEndpoint);
     });
@@ -118,7 +141,7 @@ describe('BIG-IP Package Client', () => {
         const packageClient = toolChainClient.package;
 
         assert.strictEqual(packageClient.component, 'as3');
-        assert.strictEqual(packageClient.version, standardToolchainOptions.version);
+        assert.strictEqual(packageClient.version, standardToolchainOptions.extensionVersion);
     });
 });
 
@@ -133,7 +156,7 @@ describe('BIG-IP Service Client', () => {
         const serviceClient = toolChainClient.service;
 
         assert.strictEqual(serviceClient.component, 'as3');
-        assert.strictEqual(serviceClient.version, standardToolchainOptions.version);
+        assert.strictEqual(serviceClient.version, standardToolchainOptions.extensionVersion);
     });
 
 });
@@ -143,14 +166,25 @@ describe('BIG-IP Toolchain Client', () => {
         sinon.restore();
     });
 
-    it('should validate constructor', () => {
+    it('should validate constructor for AT package', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
 
         assert.strictEqual(toolChainClient._mgmtClient, mgmtClient);
         assert.strictEqual(toolChainClient.component, 'as3');
-        assert.strictEqual(toolChainClient.version, standardToolchainOptions.version);
-        assert.strictEqual(toolChainClient.hash, standardToolchainOptions.hash);
+        assert.strictEqual(toolChainClient.version, standardToolchainOptions.extensionVersion);
+        assert.strictEqual(toolChainClient.hash, standardToolchainOptions.extensionHash);
+        assert.ok(toolChainClient._metadataClient !== null);
+    });
+
+    it('should validate constructor for iLX package', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'ilx', ilxToolchainOptions);
+
+        assert.strictEqual(toolChainClient._mgmtClient, mgmtClient);
+        assert.strictEqual(toolChainClient.component, 'ilx');
+        assert.strictEqual(toolChainClient.url, ilxToolchainOptions.extensionUrl);
+        assert.strictEqual(toolChainClient.infoEndpoint, ilxToolchainOptions.extensionVerificationEndpoint);
         assert.ok(toolChainClient._metadataClient !== null);
     });
 });

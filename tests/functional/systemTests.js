@@ -18,7 +18,7 @@ const firstDut = duts[0];
 
 describe('System tests', () => {
     let installedPackages = [];
-    let availablePacakges = {};
+    let availablePackages = {};
     let postedBigIpRunTimeInitDeclaration = {};
     let installedExtDeclarations = [];
     let customOnboardResultsCount;
@@ -40,7 +40,7 @@ describe('System tests', () => {
             })
             .then((data) => {
                 if (data && data.components) {
-                    availablePacakges = data;
+                    availablePackages = data;
                 }
                 return funcUtils.getDeclaration();
             })
@@ -78,20 +78,27 @@ describe('System tests', () => {
 
     it('should verify AS3 installed', () => {
         const declaredAs3Version = postedBigIpRunTimeInitDeclaration.extension_packages.install_operations.filter(item => item.extensionType === 'as3')[0].extensionVersion;
-        const delaredPackageName = availablePacakges.components.as3.versions[declaredAs3Version].packageName;
+        const declaredPackageName = availablePackages.components.as3.versions[declaredAs3Version].packageName;
 
         assert.ok(installedPackages.filter(item => item.name === 'f5-appsvcs').length > 0);
-        assert.ok(installedPackages.filter(item => item.packageName === delaredPackageName).length > 0);
+        assert.ok(installedPackages.filter(item => item.packageName === declaredPackageName).length > 0);
         assert.ok(installedPackages.filter(item => item.version === declaredAs3Version).length > 0);
     });
 
     it('should verify DO installed', () => {
-        const declatedDoVersion = postedBigIpRunTimeInitDeclaration.extension_packages.install_operations.filter(item => item.extensionType === 'do')[0].extensionVersion;
-        const delaredPackageName = availablePacakges.components.do.versions[declatedDoVersion].packageName;
+        const declaredDoVersion = postedBigIpRunTimeInitDeclaration.extension_packages.install_operations.filter(item => item.extensionType === 'do')[0].extensionVersion;
+        const declaredPackageName = availablePackages.components.do.versions[declaredDoVersion].packageName;
 
         assert.ok(installedPackages.filter(item => item.name === 'f5-declarative-onboarding').length > 0);
-        assert.ok(installedPackages.filter(item => item.packageName === delaredPackageName).length > 0);
-        assert.ok(installedPackages.filter(item => item.version === declatedDoVersion).length > 0);
+        assert.ok(installedPackages.filter(item => item.packageName === declaredPackageName).length > 0);
+        assert.ok(installedPackages.filter(item => item.version === declaredDoVersion).length > 0);
+    });
+
+    it('should verify iLX installed', () => {
+        const declaredPackageName = 'f5-appsvcs-templates-1.1.0-1.noarch';
+
+        assert.ok(installedPackages.filter(item => item.name === 'f5-appsvcs-templates').length > 0);
+        assert.ok(installedPackages.filter(item => item.packageName === declaredPackageName).length > 0);
     });
 
     it('should verify successfully installed declarations', () => {
