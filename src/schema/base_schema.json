@@ -93,6 +93,52 @@
                 "additionalProperties": false
             }
         },
+        "post_onboard_enabled": {
+            "title": "Post Onboard Commands",
+            "description": "Used to specify post onboars commands which will be executed as last phase within onboard",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["inline", "file", "url"]
+                    },
+                    "command": {
+                        "type": "array",
+                        "items" : {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "pre_onboard_enabled": {
+            "title": "Pre Onboard Commands",
+            "description": "Used to specify pre onboars commands which will be executed as a first step within onboard",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["inline", "file", "url"]
+                    },
+                    "command": {
+                        "type": "array",
+                        "items" : {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "extension_packages": {
             "title": "Extension Packages",
             "description": "Used to specify packages to be installed on device",

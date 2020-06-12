@@ -116,4 +116,48 @@ describe('Util', () => {
             mock.restore();
         });
     });
+
+    describe('validate verifyDirectory', () => {
+        it('should validate verifyDirectory does not create directory', () => {
+            mock({
+                'fake/dir': mock.directory({
+                    mode: '0755'
+                })
+            });
+            util.verifyDirectory('fake/dir');
+            assert.ok(true);
+            mock.restore();
+        });
+
+        it('should validate verifyDirectory creates directory', () => {
+            mock({
+                'fake/dir': mock.directory({})
+            });
+            util.verifyDirectory('fake/dir');
+            assert.ok(true);
+            mock.restore();
+        });
+    });
+
+    describe('validate runShellCommand', () => {
+        it('should validate runShellCommand creates directory', () => {
+            return util.runShellCommand('echo test')
+                .then((response) => {
+                    assert.notStrictEqual('test', response);
+                })
+                .catch(() => {
+                    assert.ok(false);
+                })
+        });
+
+        it('should validate runShellCommand rejection', () => {
+            return util.runShellCommand('invalid-shell-command')
+                .then(() => {
+                    assert.ok(false);
+                })
+                .catch((err) => {
+                    assert.notStrictEqual(err.message, '/bin/sh: invalid-shell-command: command not found')
+                })
+        });
+    });
 });

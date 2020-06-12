@@ -15,6 +15,7 @@ import { ResolverClient } from '../../../src/lib/resolver/resolverClient';
 
 describe('Resolver Client', () => {
     let runtimeParameters;
+    let onboardActions;
     after(() => {
         Object.keys(require.cache)
             .forEach((key) => {
@@ -23,6 +24,33 @@ describe('Resolver Client', () => {
     });
 
     beforeEach(() => {
+        onboardActions = [
+            {
+                name: "test_inline_command",
+                type: "inline",
+                commands: [
+                    "test_command_01",
+                    "test_command_02"
+                ]
+            },
+            {
+                name: "test_file_command",
+                type: "file",
+                commands: [
+                    "test-directory/test-script-01",
+                    "test-directory/test-script-02"
+                ]
+            },
+            {
+                name: "test_url_command",
+                type: "url",
+                commands: [
+                    "https://test-directory/test-script-01",
+                    "https://test-directory/test-script-02"
+                ]
+            }
+        ];
+
         runtimeParameters = [
             {
                 name: 'AWS_PASS',
@@ -175,6 +203,44 @@ describe('Resolver Client', () => {
             })
             .catch((err) => {
                 assert.ok(err.message.includes('Runtime parameter type is unknown'));
+            });
+    });
+
+    it('should validate resolveOnboardActions', () => {
+        const resolver = new ResolverClient();
+        resolver.utilsRef.verifyDirectory = sinon.stub();
+        resolver.utilsRef.runShellCommand = sinon.stub().resolves('');
+        resolver.utilsRef.downloadToFile = sinon.stub().resolves('');
+        return resolver.resolveOnboardActions(onboardActions)
+            .then(() => {
+                assert.ok(resolver.utilsRef.verifyDirectory.called);
+                assert.ok(resolver.utilsRef.runShellCommand.called);
+                assert.ok(resolver.utilsRef.downloadToFile.called);
+            })
+            .catch(() => {
+                assert.ok(false);
+            });
+    });
+
+    it('should validate resolveOnboardActions throw error', () => {
+        const resolver = new ResolverClient();
+        resolver.utilsRef.verifyDirectory = sinon.stub();
+        const invalidOnboardActions = [
+            {
+                name: "test_inline_command",
+                type: "invalid",
+                commands: [
+                    "test_command_01",
+                    "test_command_02"
+                ]
+            }
+        ];
+        return resolver.resolveOnboardActions(invalidOnboardActions)
+            .then(() => {
+                assert.ok(false);
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('Unexpected onboard action type'))
             });
     });
 });

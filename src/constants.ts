@@ -31,3 +31,5 @@ export const CLOUDS = {
   AZURE: 'azure',
   GCP: 'gcp'
 };
+
+export const CUSTOM_ONBOARD_CONFIG_DIR = '/config/cloud/custom_commands/';

@@ -14,6 +14,8 @@ const request = require('request');
 const yaml = require('js-yaml');
 const icrdk = require('icrdk'); // eslint-disable-line import/no-extraneous-dependencies
 const constants = require('../constants.js');
+const q = require('q');
+const childProcess = require('child_process');
 
 const deploymentFile = process.env[constants.DEPLOYMENT_FILE_VAR]
     || path.join(process.cwd(), constants.DEPLOYMENT_FILE);
@@ -305,5 +307,25 @@ module.exports = {
             }
         }
         return msg;
+    },
+
+    /**
+     * Runs a shell command and returns the output
+     *
+     * @param {String} commands - Command to run
+     *
+     * @returns {Promise} A promise which is resolved with the results of the
+     *                    command or rejected if an error occurs.
+     */
+    runShellCommand(command) {
+        const deferred = q.defer();
+        childProcess.exec(command, (error, stdout, stderr) => {
+            if (error) {
+                deferred.reject(new Error(`${error}:${stderr}`));
+            } else {
+                deferred.resolve(stdout);
+            }
+        });
+        return deferred.promise;
     }
 };

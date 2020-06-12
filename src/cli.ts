@@ -91,6 +91,13 @@ export async function cli(): Promise<string> {
         }
     }
 
+    // pre_onboard
+    const preOnboardEnabled = config.pre_onboard_enabled;
+    if (preOnboardEnabled.length) {
+        logger.info('Executing custom pre onboard commands');
+        await resolver.resolveOnboardActions(preOnboardEnabled);
+    }
+
     // perform service operations
     logger.info('Performing service operations.');
     const serviceOperations = config.extension_services.service_operations;
@@ -122,6 +129,13 @@ export async function cli(): Promise<string> {
             await toolchainClient.service.isAvailable();
             await toolchainClient.service.create({ config: loadedConfig });
         }
+    }
+
+    // post onboard
+    const postOnboardEnabled = config.post_onboard_enabled;
+    if (postOnboardEnabled.length) {
+        logger.info('Executing custom post onboard commands');
+        await resolver.resolveOnboardActions(postOnboardEnabled);
     }
 
     return 'All operations finished successfully';
