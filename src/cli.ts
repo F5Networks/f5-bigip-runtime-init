@@ -71,10 +71,12 @@ export async function cli(): Promise<string> {
     );
     // perform ready check
     await mgmtClient.isReady();
+
     // resolve runtime parameters
     const resolver = new ResolverClient();
     logger.info('Resolving parameters');
     const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
+
     // perform install operations
     logger.info('Performing install operations.');
     const installOperations = config.extension_packages.install_operations;
@@ -83,9 +85,7 @@ export async function cli(): Promise<string> {
             const toolchainClient = new ToolChainClient(
                 mgmtClient,
                 installOperations[i].extensionType,
-                {
-                    version: installOperations[i].extensionVersion
-                }
+                installOperations[i]
             );
             await toolchainClient.package.install();
         }
@@ -146,4 +146,3 @@ cli()
         logger.info(message);
     })
     .catch(err => logger.info(err));
-

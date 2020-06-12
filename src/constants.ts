@@ -10,7 +10,8 @@ import packageInfo from '../package.json';
 
 export const VERSION = packageInfo.version;
 
-export const TMP_DIR = '/tmp';
+export const BASE_DIR = '/var/lib/cloud';
+export const TMP_DIR = '/var/lib/cloud/icontrollx_installs';
 
 export const HTTP_STATUS_CODES = {
     ACCEPTED: 202,

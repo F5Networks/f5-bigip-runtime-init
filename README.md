@@ -66,25 +66,24 @@ extension_services:
         value: file:///examples/declarations/as3.json
 ```
 
-
-Example 2: Installs toolchain components (DO, AS3) on a remote BIG-IP.
+Example 2: Verifies and installs DO and myIlxApp RPMs from local directories and configures DO from a local declaration file. Note: Install operations with an extensionUrl value that points to a local file may only be installed from the /var/lib/cloud or /var/lib/cloud/icontrollx_installs directories.
 
 ```yaml
 runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
-        - extensionType: as3
-          extensionVersion: 3.19.1
+          extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.10.0-2.noarch.rpm
+          extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
+        - extensionType: ilx
+          extensionUrl: file:///var/lib/cloud/myIlxApp.rpm
+          extensionVerificationEndpoint: /mgmt/shared/myIlxApp/info
+          extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
 extension_services:
-    service_operations: []
-host:
-  address: 192.0.2.1
-  port: 443
-  protocol: 'https'
-  username: admin
-  password: admin
+    service_operations:
+      - extensionType: do
+        type: url
+        value: file:///var/lib/cloud/do.json
 ```
 
 
@@ -209,14 +208,14 @@ Example 4: Replaces secret used within DO declaration to configure admin passwor
         "admin": {
             "class": "User",
             "userType": "regular",
-            "password": "{{ ADMIN_PASS }}",
+            "password": "{{{ ADMIN_PASS }}}",
             "shell": "bash"
         },
         "root": {
             "class": "User",
             "userType": "root",
             "oldPassword": "default",
-            "newPassword": "{{ ROOT_PASS }}"
+            "newPassword": "{{{ ROOT_PASS }}}"
         }
     }
 }
@@ -253,7 +252,7 @@ extension_services:
 ```
 
 
-Example 5: Replaces secret used within DO declaration to configure admin password on GCP BIGIP device
+Example 5: Replaces secret used within DO declaration to configure admin password on GCP BIG-IP device
 
 - In Google Secret Manager, secrets will be stored and mapped via secretId
 ```json
@@ -286,14 +285,14 @@ Example 5: Replaces secret used within DO declaration to configure admin passwor
         "admin": {
             "class": "User",
             "userType": "regular",
-            "password": "{{ ADMIN_PASS }}",
+            "password": "{{{ ADMIN_PASS }}}",
             "shell": "bash"
         },
         "root": {
             "class": "User",
             "userType": "root",
             "oldPassword": "default",
-            "newPassword": "{{ ROOT_PASS }}"
+            "newPassword": "{{{ ROOT_PASS }}}"
         }
     }
 }
@@ -340,7 +339,7 @@ Example 6: Replaces variables used within DO declaration with properties from in
     "label": "my BIG-IP declaration for declarative onboarding",
     "Common": {
         "class": "Tenant",
-        "hostname": "{{ HOST_NAME }}.local",
+        "hostname": "{{{ HOST_NAME }}}.local",
         "internal": {
             "class": "VLAN",
             "tag": 4093,
@@ -460,12 +459,6 @@ extension_services:
                     serverAddresses:
                     - 192.0.1.10
                     - 192.0.1.11
-host:
-  address: 10.10.10.1
-  port: 443
-  protocol: 'https'
-  username: admin
-  password: admin
 
 ```
 - Using a JSON based config file
@@ -532,18 +525,11 @@ host:
             }
          }
       ]
-   },
-   "host": {
-      "address": "10.10.10.1",
-      "port": 443,
-      "protocol": "https",
-      "username": "admin",
-      "password": "admin"
    }
 }
 ```
 
-Example 7: Using runtime parameters with inline config
+Example 8: Using runtime parameters with inline config
 - Using a YAML based config file (please note - in order to passthrough the yaml processor, you have to use triple curly braces instead of the usual double)
 ```yaml
 ---
@@ -619,13 +605,6 @@ extension_services:
                 serverAddresses:
                 - 192.0.1.10
                 - 192.0.1.11
-host:
-  address: 10.10.10.1
-  port: 443
-  protocol: https
-  username: admin
-  password: admin
-
 ```
 
 - Using a JSON based config file
@@ -739,13 +718,6 @@ host:
         }
       }
     ]
-  },
-  "host": {
-    "address": "10.10.10.1",
-    "port": 443,
-    "protocol": "https",
-    "username": "admin",
-    "password": "admin"
   }
 }
 ```

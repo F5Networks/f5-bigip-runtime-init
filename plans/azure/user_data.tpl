@@ -72,7 +72,12 @@ extension_packages:
     - extensionType: do
       extensionVersion: 1.10.0
     - extensionType: as3
-      extensionVersion: 3.17.0
+      extensionVersion: 3.20.0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm
+      extensionHash: ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987
+    - extensionType: ilx
+      extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+      extensionVerificationEndpoint: /mgmt/shared/fast/info
 extension_services:
   service_operations:
     - extensionType: do

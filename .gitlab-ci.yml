@@ -39,8 +39,11 @@ publish_container:
     tags:
         - docker-executor
     only:
-        refs:
-            - merge_requests
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
         changes:
             - plans/**/*
 
