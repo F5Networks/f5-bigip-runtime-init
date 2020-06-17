@@ -44,6 +44,8 @@ runtime_parameters:
     type: network
     field: ipv4
     index: 2
+pre_onboard_enabled: []
+post_onboard_enabled: []
 extension_packages:
   install_operations:
   - extensionType: do

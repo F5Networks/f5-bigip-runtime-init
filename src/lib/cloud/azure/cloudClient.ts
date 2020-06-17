@@ -104,6 +104,7 @@ export class AzureCloudClient extends AbstractCloudClient {
             throw new Error('Azure Cloud Client network metadata index is missing');
         }
 
+        let instanceName: string;
         let result: string;
         let ipAddress: string;
         let prefix: string;
@@ -119,7 +120,12 @@ export class AzureCloudClient extends AbstractCloudClient {
         );
 
         if (type === 'compute') {
-            result = response.body[field];
+            if (field === 'name') {
+                instanceName = response.body[field];
+                result = instanceName.replace('_', '-');
+            } else {
+                result = response.body[field];
+            }
         } else if (type === 'network') {
             ipAddress = response.body.interface[index][field].ipAddress[0].privateIpAddress;
             prefix = response.body.interface[index][field].subnet[0].prefix;

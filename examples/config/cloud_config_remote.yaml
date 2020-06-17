@@ -1,4 +1,6 @@
 runtime_parameters: []
+pre_onboard_enabled: []
+post_onboard_enabled: []
 extension_packages:
     install_operations:
         - extensionType: do
