@@ -782,11 +782,26 @@ host:
 ## Build Artifacts
 
 - Create artifacts: `npm run build`
+  * creates signed RPM files for each Public Cloud
+  * creates SHA-256 checksums
+  * packages all RPMs to makeself runner for furhter use
 - Outputs:
-  * Google: dist/gcp/f5-bigip-runtime-init-gcp.tar.gz
-  * AWS: dist/aws/f5-bigip-runtime-init-aws.tar.gz
-  * Azure: dist/azure/f5-bigip-runtime-init-azure.tar.gz
-  * All clouds: dist/all/f5-bigip-runtime-init-all.tar.gz
+  * Google: 
+    - RMP: dist/rpms/f5-bigip-runtime-init-gcp-0.9.0-1-signed.noarch.rpm
+    - SHA-256: f5-bigip-runtime-init-gcp-0.9.0-1-signed.noarch.rpm.sha256
+  * AWS: 
+    - RPM: dist/rpms/f5-bigip-runtime-init-aws-0.9.0-1-signed.noarch.rpm
+    - SHA-256: dist/rpms/f5-bigip-runtime-init-aws-0.9.0-1-signed.noarch.rpm.sha256
+  * Azure: 
+    - RPM: dist/rpms/f5-bigip-runtime-init-azure-0.9.0-1-signed.noarch.rpm
+    - SHA-256: dist/rpms/f5-bigip-runtime-init-azure-0.9.0-1-signed.noarch.rpm.sha256
+  * All clouds: 
+    - RPM: dist/rpms/f5-bigip-runtime-init-all-0.9.0-1-signed.noarch.rpm
+    - f5-bigip-runtime-init-all-0.9.0-1-signed.noarch.rpm.sha256
+- All artifacts are signed and install script verifies file integraty as well as signature
+
+NOTE: *CM_SIGNER_ACCESS_TOKEN* - Access token used for communicating with the CM Signer service. 
+
 
 ## Documentation Artifacts
 

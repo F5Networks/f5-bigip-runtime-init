@@ -20,7 +20,7 @@ while getopts d:m:u:p:c:f:r: option
         p) PASSWORD=$OPTARG;;
         c) CLOUD=$OPTARG;;
         f) CONFIG_FILE=$OPTARG;;
-        r) PATH_TO_RPMS=$OPTARG;;        
+        r) PATH_TO_RPMS=$OPTARG;;
     esac
 done
 
@@ -56,9 +56,7 @@ fi
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash -c 'bigstart restart sshd'"
 
 # copy new
-sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no dist/${CLOUD}/f5-bigip-runtime-init-${CLOUD}.tar.gz ${USERNAME}@${MGMT_IP}:/var/tmp/
-sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no dist/${CLOUD}/f5-bigip-runtime-init-${CLOUD}.tar.gz.sha256 ${USERNAME}@${MGMT_IP}:/var/tmp/
-sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no scripts/local_install.sh ${USERNAME}@${MGMT_IP}:/var/tmp/
+sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no examples/config/* ${USERNAME}@${MGMT_IP}:/config/cloud/
 
 if [[ -n $PATH_TO_RPMS ]]; then
@@ -67,7 +65,7 @@ if [[ -n $PATH_TO_RPMS ]]; then
 fi
 
 # install
-sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash /var/tmp/local_install.sh ${CLOUD}"
+sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run ${CLOUD}"
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash -c 'bigstart restart restnoded'"
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash f5-bigip-runtime-init -c /config/cloud/${CONFIG_FILE}"
 

@@ -45,6 +45,7 @@ publish_container:
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
         changes:
+            - Dockerfile
             - plans/**/*
 
 ### Functional Tests Section
@@ -64,15 +65,16 @@ publish_container:
         - USERNAME=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].admin_username -r)
         - PASSWORD=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .instances[].admin_password -r)
         - DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}/deployment_info.json | jq .deploymentId -r)
+        - NAME=$(cat package.json | jq .name -r)
+        - VERSION=$(cat package.json | jq -r ".version")
+        - RELEASE=$(cat package.json | jq -r ".release")
         # dhcp must be disalbe to workaround DO bug https://github.com/F5Networks/f5-declarative-onboarding/issues/129
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "modify sys global-settings mgmt-dhcp disabled"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "save sys config"
         # end of workaround
-        # Copying over source code of f5-bigip-runitme-init. installing and initializing
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/${CLOUD}/f5-bigip-runtime-init-${CLOUD}.tar.gz $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/${CLOUD}/f5-bigip-runtime-init-${CLOUD}.tar.gz.sha256 $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no scripts/local_install.sh $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/local_install.sh ${CLOUD}"
+        # Installing RPM and executing
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run ${CLOUD}"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config.yaml"
     tags:
         - cm-official-docker-executor
@@ -169,9 +171,10 @@ test_functional_cleanup_azure:
 build_package:
     stage: build
     script:
-        # install packages: jq
+        # install packages: jq, rpm
         - apt-get update
         - apt-get install -y jq
+        - apt-get install -y rpm
         # install node dependencies
         - npm install
         # build package artifact
