@@ -40,6 +40,8 @@ export class ManagementClient {
     _protocol: string;
     uriPrefix: string;
     authHeader: string;
+    maxRetries: number;
+    retryInterval: number;
 
     constructor(options?: {
         host?: string;
@@ -47,6 +49,8 @@ export class ManagementClient {
         user?: string;
         password?: string;
         useTls?: boolean;
+        maxRetries?: number;
+        retryInterval?: number;
     }) {
         options = options || {};
 
@@ -56,6 +60,8 @@ export class ManagementClient {
         this.password = options.password || 'admin';
         this.useTls = options.useTls || false;
         this._protocol = this.useTls === false ? 'http' : 'https';
+        this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
+        this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
 
         this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
@@ -94,6 +100,10 @@ export class ManagementClient {
      *
      */
     async isReady(): Promise<object> {
-        return utils.retrier(this._isReadyCheck, [], { thisContext: this });
+        return utils.retrier(this._isReadyCheck, [], {
+            thisContext: this,
+            maxRetries: this.maxRetries,
+            retryInterval: this.retryInterval
+        });
     }
 }

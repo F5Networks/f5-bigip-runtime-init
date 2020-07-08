@@ -27,12 +27,24 @@ const standardOptions = {
     port: 443,
     user: 'admin',
     password: 'admin',
-    useTls: true
+    useTls: true,
+    maxRetries: 2,
+    retryInterval: 2500
 };
 
 describe('BIG-IP Management Client', () => {
     afterEach(() => {
         sinon.restore();
+    });
+
+    it('should validate constructor with defaults', () => {
+        const mgmtClient = new ManagementClient();
+
+        assert.strictEqual(mgmtClient.host, 'localhost');
+        assert.strictEqual(mgmtClient.port, 8100);
+        assert.strictEqual(mgmtClient.user, 'admin');
+        assert.strictEqual(mgmtClient.password, 'admin');
+        assert.strictEqual(mgmtClient.useTls, false);
     });
 
     it('should validate constructor', () => {
@@ -44,6 +56,7 @@ describe('BIG-IP Management Client', () => {
         assert.strictEqual(mgmtClient.password, standardOptions.password);
         assert.strictEqual(mgmtClient.useTls, standardOptions.useTls);
     });
+
 
     it('should perform ready check', async () => {
         const mgmtClient = new ManagementClient(standardOptions);
@@ -67,4 +80,30 @@ describe('BIG-IP Management Client', () => {
         const response = await mgmtClient.isReady();
         assert.strictEqual(response, true);
     });
+
+    it('should validate ready check for failed case', async () => {
+        const mgmtClient = new ManagementClient(standardOptions);
+
+        nock(`https://${standardOptions.host}`)
+            .get('/mgmt/tm/sys/ready')
+            .times(102)
+            .reply(200, {
+                entries: {
+                    'https://localhost/mgmt/tm/sys/ready/0': {
+                        nestedStats: {
+                            entries: {
+                                system: {
+                                    description: 'not'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        try {
+            await mgmtClient.isReady();
+        } catch (err) {
+            assert.ok(err.message.includes('Ready check failed'));
+        }
+    }).timeout(30000000);
 });

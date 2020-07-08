@@ -27,6 +27,7 @@ import * as utils from '../../utils';
 export class AzureCloudClient extends AbstractCloudClient {
     _credentials: ManagedIdentityCredential;
     _keyVaultSecretClient: SecretClient;
+    SecretClient = SecretClient;
     constructor(options?: {
         logger?: Logger;
     }) {
@@ -39,7 +40,7 @@ export class AzureCloudClient extends AbstractCloudClient {
     }
 
     _getKeyVaultSecret(vaultUrl: string, secretId: string, version?: string): Promise<KeyVaultSecret> {
-        this._keyVaultSecretClient = new SecretClient(vaultUrl, this._credentials);
+        this._keyVaultSecretClient = new this.SecretClient(vaultUrl, this._credentials);
         return this._keyVaultSecretClient.getSecret(secretId, { version: version || null });
     }
 

@@ -158,16 +158,21 @@ class PackageClient {
     version: string;
     uriPrefix: string;
     authHeader: string;
+    maxRetries: number;
+    retryInterval: number;
+
     /**
      *
      * @param mgmtClient     [management client]
      * @param metadataClient [metadata client]
      * @param  uriPrefix     [request prefix]
      * @param  authHeader    [request auth header]
+     * @param  maxRetries         [number of retries]
+     * @param  retryInterval      [delay between retries in ms];
      *
      * @returns
      */
-    constructor(mgmtClient, metadataClient) {
+    constructor(mgmtClient, metadataClient, options?: any) {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
 
@@ -176,6 +181,8 @@ class PackageClient {
 
         this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
+        this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
+        this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
     }
 
     async _uploadRpm(file: string, options?: {
@@ -225,9 +232,9 @@ class PackageClient {
 
     async _checkRpmTaskStatus(taskId: string): Promise<any> {
         let i = 0;
-        const maxCount = 120;
+        const maxCount = this.maxRetries ? this.maxRetries : constants.RETRY.DEFAULT_COUNT;
         let response;
-        while (i < maxCount) {
+        while (true) {
             response = await utils.makeRequest(`${this.uriPrefix}${PKG_MGMT_URI}/${taskId}`,
                 {
                     headers: {
@@ -236,10 +243,10 @@ class PackageClient {
                 });
 
             if (response.body.status === 'FINISHED') {
-                i = maxCount;
+                break;
             } else if (response.body.status === 'FAILED') {
                 return Promise.reject(new Error(`RPM installation failed: ${response.body.errorMessage}`));
-            } else if (i > maxCount) {
+            } else if (i === maxCount) {
                 return Promise.reject(Error(`Max count exceeded, last response: ${response.body.errorMessage}`));
             }
 
@@ -285,7 +292,7 @@ class PackageClient {
 
         let tmpFile = '';
         if (urlObject.protocol === 'file:') {
-            if ([constants.BASE_DIR, constants.TMP_DIR].indexOf(urlObject.pathname)) {
+            if (urlObject.pathname.indexOf(constants.BASE_DIR) !== -1) {
                 tmpFile = urlObject.pathname.replace(/\/$/, '');
             } else {
                 throw new Error('File path is invalid. Must be one of [ /var/lib/cloud, /var/lib/cloud/icontrollx_installs ]');
@@ -319,15 +326,19 @@ class ServiceClient {
     version: string;
     uriPrefix: string;
     authHeader: string;
+    maxRetries: number;
+    retryInterval: number;
     /**
      *
-     * @param component         [toolchain component]
-     * @param  version          [toolchain component version]
+     * @param  component          [toolchain component]
+     * @param  version            [toolchain component version]
      * @param  uriPrefix          [request prefix]
-     * @param  authHeader          [request auth header]
+     * @param  authHeader         [request auth header]
+     * @param  maxRetries         [number of retries]
+     * @param  retryInterval      [delay between retries in ms];
      *
      */
-    constructor(mgmtClient: ManagementClient, metadataClient: MetadataClient) {
+    constructor(mgmtClient: ManagementClient, metadataClient: MetadataClient, options?: any) {
         this._mgmtClient = mgmtClient;
         this._metadataClient = metadataClient;
 
@@ -336,6 +347,8 @@ class ServiceClient {
 
         this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
+        this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
+        this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
     }
 
     /**
@@ -375,7 +388,11 @@ class ServiceClient {
      * @returns Task response
      */
     async _waitForTask(taskUri: string): Promise<void> {
-        await utils.retrier(this._checkTaskState, [taskUri], { thisContext: this });
+        await utils.retrier(this._checkTaskState, [taskUri], {
+            thisContext: this,
+            maxRetries: this.maxRetries,
+            retryInterval: this.retryInterval
+        });
     }
 
     /**
@@ -403,7 +420,11 @@ class ServiceClient {
      *
      */
     async isAvailable(): Promise<void> {
-        await utils.retrier(this._isAvailableCheck, [], { thisContext: this });
+        await utils.retrier(this._isAvailableCheck, [], {
+            thisContext: this,
+            maxRetries: this.maxRetries,
+            retryInterval: this.retryInterval
+        });
     }
 
     /**
@@ -465,7 +486,9 @@ export class ToolChainClient {
     hash: string;
     url: string;
     infoEndpoint: string;
-    _metadataClient: MetadataClient
+    _metadataClient: MetadataClient;
+    maxRetries: number;
+    retryInterval: number;
     /**
      *
      * @param mgmtClient    [management client]
@@ -474,6 +497,8 @@ export class ToolChainClient {
      * @param hash          [toolchain component hash]
      * @param url           [toolchain component location]
      * @param infoEndpoint  [toolchain component verification endpoint]
+     * @param maxRetries    [number of retries]
+     * @param retryInterval [delay between retries in ms];
      *
      */
     constructor(mgmtClient: ManagementClient, component: string, options?: any) {
@@ -484,13 +509,15 @@ export class ToolChainClient {
         this.url = options.extensionUrl ? options.extensionUrl : undefined;
         this.infoEndpoint = options.extensionVerificationEndpoint ? options.extensionVerificationEndpoint : undefined;
         this._metadataClient = new MetadataClient(this.component, this.version, this.hash, this.url, this.infoEndpoint);
+        this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
+        this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
     }
 
     get package(): PackageClient {
-        return new PackageClient(this._mgmtClient, this._metadataClient);
+        return new PackageClient(this._mgmtClient, this._metadataClient, { maxRetries: this.maxRetries, retryInterval: this.retryInterval });
     }
 
     get service(): ServiceClient {
-        return new ServiceClient(this._mgmtClient, this._metadataClient);
+        return new ServiceClient(this._mgmtClient, this._metadataClient, { maxRetries: this.maxRetries, retryInterval: this.retryInterval });
     }
 }

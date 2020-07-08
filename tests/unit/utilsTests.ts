@@ -33,9 +33,7 @@ describe('Util', () => {
             const fakeFuncSpy = sinon.stub().resolves();
 
             return util.retrier(fakeFuncSpy, [], { })
-                .then(() => {
-                    assert.strictEqual(fakeFuncSpy.callCount, 1);
-                })
+                .then(() => assert.strictEqual(fakeFuncSpy.callCount, 1))
                 .catch(err => Promise.reject(err));
         });
 
@@ -44,12 +42,8 @@ describe('Util', () => {
             const retryCount = 2;
 
             return util.retrier(fakeFuncSpy, [], { maxRetries: retryCount, retryInterval: 10 })
-                .then(() => {
-                    assert.fail(); // should reject
-                })
-                .catch(() => {
-                    assert.strictEqual(fakeFuncSpy.callCount, retryCount);
-                });
+                .then(() => assert.fail())
+                .catch(() => assert.strictEqual(fakeFuncSpy.callCount, retryCount));
         });
     });
 
@@ -62,6 +56,13 @@ describe('Util', () => {
     });
 
     describe('makeRequest', () => {
+        afterEach(() => {
+            if(!nock.isDone()) {
+                throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`)
+            }
+            nock.cleanAll();
+            mock.restore();
+        });
         it('should make request (HTTP)', async () => {
             nock('https://192.0.2.1')
                 .get('/')
@@ -72,17 +73,9 @@ describe('Util', () => {
         });
 
         it('should fail request (FTP)', async () => {
-            nock('ftp://192.0.2.1')
-                .get('/')
-                .reply(400, { foo: 'bar' });
-
             util.makeRequest('ftp://192.0.2.1/')
-                .then(() => {
-                    assert.fail();
-                })
-                .catch((error) => {
-                    assert.ok(error.message.includes('Invalid protocol'));
-                });
+                .then(() => assert.fail())
+                .catch((error) => assert.ok(error.message.includes('Invalid protocol')));
         });
     });
 
@@ -142,22 +135,111 @@ describe('Util', () => {
     describe('validate runShellCommand', () => {
         it('should validate runShellCommand creates directory', () => {
             return util.runShellCommand('echo test')
-                .then((response) => {
-                    assert.notStrictEqual('test', response);
-                })
-                .catch(() => {
-                    assert.ok(false);
-                })
+                .then((response) => assert.notStrictEqual('test', response))
+                .catch(err => Promise.reject(err));
         });
 
-        it('should validate runShellCommand rejection', () => {
+        it('should validate runShellCommand with invalidate command', () => {
             return util.runShellCommand('invalid-shell-command')
-                .then(() => {
-                    assert.ok(false);
-                })
-                .catch((err) => {
-                    assert.notStrictEqual(err.message, '/bin/sh: invalid-shell-command: command not found')
-                })
+                .then(() => assert.ok(false))
+                .catch((err) => assert.notStrictEqual(err.message, '/bin/sh: invalid-shell-command: command not found'))
         });
     });
+
+    describe('validate loadData', () => {
+        afterEach(() => {
+            if(!nock.isDone()) {
+                throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`)
+            }
+            nock.cleanAll();
+            mock.restore();
+        });
+        it('should validate loadData successful execution via FILE', () => {
+            mock({
+                '/var/lib/cloud/': {
+                    'fake.txt': '12345'
+                }
+            });
+
+            return util.loadData( 'file:////var/lib/cloud/fake.txt', {
+                    locationType: 'file'
+                })
+                .then((resp) => assert.strictEqual(resp, 12345))
+                .catch(err => Promise.reject(err));
+        });
+
+        it('should validate loadData successful execution via FILE with default options', () => {
+            mock({
+                '/var/lib/cloud/': {
+                    'fake.txt': '12345'
+                }
+            });
+
+            return util.loadData( 'file:////var/lib/cloud/fake.txt')
+                .then((resp) => assert.strictEqual(resp, 12345))
+                .catch(err => Promise.reject(err));
+        });
+
+        it('should validate loadData successful execution via URL', () => {
+            nock('https://fakedomain.com')
+                .get('/awesome_file.txt')
+                .reply(200, {
+                    id: 1
+                });
+
+            return util.loadData( 'https://fakedomain.com/awesome_file.txt', {
+                locationType: 'url'
+            })
+                .then((resp) => assert.strictEqual(resp.id, 1))
+                .catch(err => Promise.reject(err));
+        });
+
+        it('should validate loadData failed execution via URL', () => {
+            nock('https://fakedomain.com')
+                .get('/awesome_file.txt')
+                .replyWithError('Not found');
+
+            return util.loadData( 'https://fakedomain.com/awesome_file.txt', {
+                locationType: 'url'
+            })
+                .then(() => assert.ok(false))
+                .catch(err => assert.ok(err.message.includes('Not found')));
+        });
+
+        it('should validate loadData failure due to unknown type', () => {
+            return util.loadData( 'sbn:////fakedomain.com/awesome_file.txt', {
+                locationType: 'sbn'
+            })
+                .then(() => assert.ok(false))
+                .catch((err) => assert.ok(err.message.includes('Unknown url type')))
+        });
+    });
+
+    describe('validate downloadToFile', () => {
+        afterEach(() => {
+            if(!nock.isDone()) {
+                throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`)
+            }
+            nock.cleanAll();
+            mock.restore();
+        });
+
+        it('should validate downloadToFile successful execution', () => {
+            nock('https://fakedomain.com')
+                .get('/awesome_file.txt')
+                .reply(200, {
+                    id: 1
+                });
+            return util.downloadToFile( 'https://fakedomain.com/awesome_file.txt', 'test_file.txt')
+                .catch(err => Promise.reject(err));
+        });
+
+        it('should validate downloadToFile failure', () => {
+            nock('https://fakedomain.com')
+                .get('/awesome_file.txt')
+                .replyWithError('Not found');
+            return util.downloadToFile( 'https://fakedomain.com/awesome_file.txt', 'test_file.txt')
+                .catch(err => assert.ok(err.message.includes('Not found')));
+        });
+    })
 });

@@ -26,13 +26,9 @@ describe('CloudClient - Azure', () => {
     beforeEach(() => {
         cloudClient = new AzureCloudClient();
         cloudClient._credentials = sinon.stub();
-
-        // SecretClient workaround: We created a private method and are mocking it here because there doesn't seem to be a
-        // way to mock out the SecretClient. Since the SecretClient needs the vaultUrl, which is provided at runtime, we are not able to override it.
-        // Trying to mock the SecretClient throws this error: TypeError: this.authenticationProvider.signRequest is not a function
-        // This seems to be the easiest way to test getSecret in such a scenario.
-        cloudClient._getKeyVaultSecret = sinon.stub().callsFake(() => Promise.resolve({ value: 'StrongPassword2010!' }));
-
+        cloudClient.SecretClient = sinon.stub().returns({
+            getSecret: sinon.stub().resolves({ value: 'StrongPassword2010!' })
+        });
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
     });

@@ -39,6 +39,7 @@ interface OnboardActions {
 /** Resolver class */
 export class ResolverClient {
     utilsRef;
+    getCloudProvider = getCloudProvider;
     constructor(){
         this.utilsRef = utils;
     }
@@ -149,7 +150,7 @@ export class ResolverClient {
      * @returns                    - resolves with secret value
      */
     async _resolveSecret(secretMetadata): Promise<string> {
-        const _cloudClient = await getCloudProvider(
+        const _cloudClient = await this.getCloudProvider(
             secretMetadata.secretProvider.environment,
             { logger }
         );
@@ -170,7 +171,7 @@ export class ResolverClient {
      * @returns                    - resolves with metadata value
      */
     async _resolveMetadata(metadataMetadata): Promise<string> {
-        const _cloudClient = await getCloudProvider(
+        const _cloudClient = await this.getCloudProvider(
             metadataMetadata.metadataProvider.environment,
             { logger }
         );
