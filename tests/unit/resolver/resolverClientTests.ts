@@ -111,8 +111,14 @@ describe('Resolver Client', () => {
 
     it('should validate resolveRuntimeParameters', () => {
         const resolver = new ResolverClient();
-        resolver._resolveSecret = sinon.stub().resolves('StrongPassword2010+');
-        resolver._resolveMetadata = sinon.stub().resolves('');
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getSecret: sinon.stub().resolves('StrongPassword2010+'),
+                getMetadata: sinon.stub().resolves('')
+            };
+            return Promise.resolve(cloudClient);
+        });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
                 assert.ok(Object.keys(results).length === 3);
@@ -137,7 +143,13 @@ describe('Resolver Client', () => {
     it('should validate self IP metadata resolveRuntimeParameters', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
-        resolver._resolveMetadata = sinon.stub().resolves('10.0.1.4/24');
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getMetadata: sinon.stub().resolves('10.0.1.4/24')
+            };
+            return Promise.resolve(cloudClient);
+        });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
                 assert.ok(Object.keys(results).length === 3);

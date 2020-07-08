@@ -88,10 +88,10 @@
             "tests/**"
         ],
         "check-coverage": true,
-        "statements": 65,
-        "branches": 45,
-        "functions": 55,
-        "lines": 65,
+        "statements": 90,
+        "branches": 90,
+        "functions": 90,
+        "lines": 90,
         "reporter": [
             "html",
             "text"

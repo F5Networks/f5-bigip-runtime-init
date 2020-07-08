@@ -18,6 +18,8 @@
 
 import sinon from 'sinon';
 import assert from 'assert';
+import mock from 'mock-fs';
+import nock from 'nock';
 
 import { ManagementClient } from '../../../../src/lib/bigip/managementClient';
 import { ToolChainClient } from '../../../../src/lib/bigip/toolchain/toolChainClient';
@@ -32,12 +34,17 @@ const standardMgmtOptions = {
 
 const standardToolchainOptions = {
     extensionVersion: '3.17.0',
-    extensionHash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6'
+    extensionHash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6',
+    maxRetries: 3,
+    retryInterval: 2500
 };
 
 const ilxToolchainOptions = {
+    extensionVersion: '1.1.0',
     extensionUrl: 'file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm',
-    extensionVerificationEndpoint: '/mgmt/shared/fast/info'
+    extensionVerificationEndpoint: '/mgmt/shared/fast/info',
+    maxRetries: 3,
+    retryInterval: 2500
 };
 
 describe('BIG-IP Metadata Client', () => {
@@ -132,7 +139,16 @@ describe('BIG-IP Metadata Client', () => {
 
 describe('BIG-IP Package Client', () => {
     afterEach(() => {
+        mock.restore();
+        if(!nock.isDone()) {
+            throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`)
+        }
+        nock.cleanAll();
         sinon.restore();
+    });
+
+    beforeEach(() => {
+        nock.cleanAll();
     });
 
     it('should validate constructor', () => {
@@ -143,10 +159,177 @@ describe('BIG-IP Package Client', () => {
         assert.strictEqual(packageClient.component, 'as3');
         assert.strictEqual(packageClient.version, standardToolchainOptions.extensionVersion);
     });
+
+    it('should validate install done via URL', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(200, {
+                id: "1"
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .reply(200, {
+                id: '1',
+                status: 'FINISHED'
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/file-transfer/uploads/')
+            .reply(200);
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(30)
+            .reply(200, {
+                id: '1'
+            });
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            }
+        });
+        return packageClient.install()
+            .then((response) => {
+                assert.strictEqual(response.component, 'as3');
+                assert.strictEqual(response.version, '3.17.0');
+                assert.ok(response.installed);
+                nock.cleanAll();
+            })
+            .catch(err => Promise.reject(err));
+    }).timeout(300000);
+
+    it('should validate install done via FILE', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', ilxToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(200, {
+                id: "1"
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .reply(200, {
+                id: '1',
+                status: 'FINISHED'
+            });
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-templates-1.1.0-1.noarch.rpm': '12345'
+            }
+        });
+        return packageClient.install()
+            .then((response) => {
+                assert.strictEqual(response.component, 'as3');
+                assert.strictEqual(response.version,'1.1.0');
+                assert.ok(response.installed);
+            })
+            .catch(err => Promise.reject(err));
+    }).timeout(300000);
+
+
+    it('should validate install failure via FILE when location is not valid', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const ilxToolchainOptions = {
+            extensionVersion: '1.1.0',
+            extensionUrl: 'file:///var/foo/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm',
+            extensionVerificationEndpoint: '/mgmt/shared/fast/info'
+        };
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', ilxToolchainOptions);
+        const packageClient = toolChainClient.package;
+        mock({
+            '/var/foo/cloud/icontrollx_installs': {
+                'f5-appsvcs-templates-1.1.0-1.noarch.rpm': '12345'
+            }
+        });
+        return packageClient.install()
+            .catch((err) => {
+                assert.ok(err.message.includes('File path is invalid. Must be one of [ /var/lib/cloud, /var/lib/cloud/icontrollx_installs ]'));
+            });
+    }).timeout(300000);
+
+    it('should validate installation failure due to FAILED status', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(200, {
+                id: "1"
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .reply(200, {
+                id: '1',
+                status: 'FAILED'
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/file-transfer/uploads/')
+            .reply(200);
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(30)
+            .reply(200, {
+                id: '1'
+            });
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '12345'
+            }
+        });
+        return packageClient.install()
+            .catch((err) => {
+                assert.ok(err.message.includes('RPM installation failed'));
+                nock.cleanAll();
+            });
+    }).timeout(300000);
+
+    it('should validate installation failure due to max retries', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(200, {
+                id: "1"
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .times(4)
+            .reply(200, {
+                id: '1',
+                status: 'FOO'
+            });
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/file-transfer/uploads/')
+            .reply(200);
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(40)
+            .reply(200, {
+                id: '1'
+            });
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '12345'
+            }
+        });
+        return packageClient.install()
+            .catch((err) => {
+                console.log(err.message);
+                assert.ok(err.message.includes('Max count exceeded'));
+                nock.cleanAll();
+            });
+    }).timeout(300000);
 });
 
 describe('BIG-IP Service Client', () => {
-    afterEach(() => {
+    afterEach(function() {
+        if(!nock.isDone()) {
+            throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`)
+        }
+        nock.cleanAll();
         sinon.restore();
     });
 
@@ -159,6 +342,50 @@ describe('BIG-IP Service Client', () => {
         assert.strictEqual(serviceClient.version, standardToolchainOptions.extensionVersion);
     });
 
+    it('should validate isAvailable method', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/appsvcs/info')
+            .reply(200);
+        return serviceClient.isAvailable()
+            .catch(err => Promise.reject(err));
+    });
+
+    it('should validate  failure for isAvailable method', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('https://192.0.2.1:443')
+            .get('/mgmt/shared/appsvcs/info')
+            .times(3)
+            .reply(400);
+        return serviceClient.isAvailable()
+            .catch((err) => {
+                assert.ok(err.message.includes('Is available check failed'));
+            })
+    }).timeout(3000000);
+
+
+    it('should validate create method', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('https://192.0.2.1:443')
+            .post('/mgmt/shared/appsvcs/declare')
+            .reply(202, {
+                selfLink: 'https://localhost/tasks/myTask/1',
+            });
+        nock('https://192.0.2.1:443')
+            .get('/tasks/myTask/1')
+            .reply(200);
+        return serviceClient.create()
+            .then((resp) => {
+                assert.strictEqual(resp.code, 202);
+            })
+            .catch(err => Promise.reject(err));
+    });
 });
 
 describe('BIG-IP Toolchain Client', () => {
