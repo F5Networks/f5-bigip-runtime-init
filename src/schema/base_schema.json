@@ -14,8 +14,8 @@
                         "type": "string",
                         "enum": ["static", "secret", "metadata"]
                     },
-                    "value": { 
-                        "type": "string" 
+                    "value": {
+                        "type": "string"
                     },
                     "secretProvider": {
                         "type": "object",
@@ -232,10 +232,6 @@
             "description": "Details of the local or remote device",
             "type": "object",
             "properties": {
-                "address": {
-                    "description": "URL or IP of the device",
-                    "type": "string"
-                },
                 "port": {
                     "type": "integer"
                 },

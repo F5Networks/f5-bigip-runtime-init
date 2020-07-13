@@ -48,6 +48,7 @@ publish_container:
             - Dockerfile
             - plans/**/*
 
+
 ### Functional Tests Section
 
 # Functional Tests - Initialization phase (with 1 retries in a case of any failures)
@@ -194,6 +195,16 @@ lint_package:
     script:
         # linter
         - npm run lint
+    tags:
+        - cm-official-docker-executor
+
+# audit packages for vulnerabilities
+test_audit:
+    stage: unittests
+    script:
+        # npm audit - uses custom audit processor wrapper
+        - npm install
+        - npm run audit
     tags:
         - cm-official-docker-executor
 

@@ -10,6 +10,7 @@
         "url": "git+https://github.com/F5Networks/f5-bigip-runtime-init.git"
     },
     "scripts": {
+        "audit": "npm audit --json > .auditReport.json; node scripts/auditProcessor.js",
         "cli": "node ./src/cli.js",
         "build": "bash scripts/build_package.sh",
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
@@ -103,5 +104,9 @@
         "extends": [
             "plugin:@typescript-eslint/recommended"
         ]
+    },
+    "auditProcessor": {
+        "whitelist": ["1523"]
     }
+
 }
