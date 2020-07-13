@@ -62,7 +62,6 @@ export async function cli(): Promise<string> {
     const host = config.host || {};
     const mgmtClient = new ManagementClient(
         {
-            host: host.address,
             port: host.port,
             user: host.username,
             password: host.password,

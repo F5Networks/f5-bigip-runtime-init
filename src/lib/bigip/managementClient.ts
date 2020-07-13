@@ -44,7 +44,6 @@ export class ManagementClient {
     retryInterval: number;
 
     constructor(options?: {
-        host?: string;
         port?: number;
         user?: string;
         password?: string;
@@ -54,7 +53,7 @@ export class ManagementClient {
     }) {
         options = options || {};
 
-        this.host = options.host || 'localhost';
+        this.host = 'localhost';
         this.port = options.port || 8100;
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';

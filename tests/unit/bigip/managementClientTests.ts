@@ -23,7 +23,6 @@ import nock from 'nock';
 import { ManagementClient } from '../../../src/lib/bigip/managementClient';
 
 const standardOptions = {
-    host: '192.0.2.1',
     port: 443,
     user: 'admin',
     password: 'admin',
@@ -40,7 +39,6 @@ describe('BIG-IP Management Client', () => {
     it('should validate constructor with defaults', () => {
         const mgmtClient = new ManagementClient();
 
-        assert.strictEqual(mgmtClient.host, 'localhost');
         assert.strictEqual(mgmtClient.port, 8100);
         assert.strictEqual(mgmtClient.user, 'admin');
         assert.strictEqual(mgmtClient.password, 'admin');
@@ -50,7 +48,6 @@ describe('BIG-IP Management Client', () => {
     it('should validate constructor', () => {
         const mgmtClient = new ManagementClient(standardOptions);
 
-        assert.strictEqual(mgmtClient.host, standardOptions.host);
         assert.strictEqual(mgmtClient.port, standardOptions.port);
         assert.strictEqual(mgmtClient.user, standardOptions.user);
         assert.strictEqual(mgmtClient.password, standardOptions.password);
@@ -61,7 +58,7 @@ describe('BIG-IP Management Client', () => {
     it('should perform ready check', async () => {
         const mgmtClient = new ManagementClient(standardOptions);
 
-        nock(`https://${standardOptions.host}`)
+        nock('https://localhost')
             .get('/mgmt/tm/sys/ready')
             .reply(200, {
                 entries: {
@@ -84,7 +81,7 @@ describe('BIG-IP Management Client', () => {
     it('should validate ready check for failed case', async () => {
         const mgmtClient = new ManagementClient(standardOptions);
 
-        nock(`https://${standardOptions.host}`)
+        nock('https://localhost')
             .get('/mgmt/tm/sys/ready')
             .times(102)
             .reply(200, {
