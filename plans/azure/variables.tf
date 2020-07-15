@@ -7,17 +7,17 @@ variable "publisher" {
   default = "f5-networks"
 }
 
-variable "offer" {
-  default = "f5-big-ip-best"
+variable "AZURE_OFFER" {
+  default = ""
 }
 
-variable "sku" {
-  default = "f5-bigip-virtual-edition-25m-best-hourly"
+variable "AZURE_SKU" {
+  default = ""
 }
 
-variable "bigip_version" {
+variable "AZURE_BIGIP_VERSION" {
   description = "The BIG-IP version for the virtual machine"
-  default     = "14.1.206000"
+  default     = ""
 }
 
 variable "instance_size" {

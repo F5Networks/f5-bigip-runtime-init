@@ -214,15 +214,15 @@ resource "azurerm_virtual_machine" "vm" {
 
   storage_image_reference {
     publisher = var.publisher
-    offer     = var.offer
-    sku       = var.sku
-    version   = var.bigip_version
+    offer     = "${var.AZURE_OFFER}"
+    sku       = "${var.AZURE_SKU}"
+    version   = "${var.AZURE_BIGIP_VERSION}"
   }
 
   plan {
     publisher = var.publisher
-    product   = var.offer
-    name      = var.sku
+    product   = "${var.AZURE_OFFER}"
+    name      = "${var.AZURE_SKU}"
   }
 
   storage_os_disk {
