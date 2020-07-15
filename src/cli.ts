@@ -59,15 +59,7 @@ export async function cli(): Promise<string> {
     logger.info('Successfully validated declaration');
 
     // create management client
-    const host = config.host || {};
-    const mgmtClient = new ManagementClient(
-        {
-            port: host.port,
-            user: host.username,
-            password: host.password,
-            useTls: host.protocol === 'https'
-        }
-    );
+    const mgmtClient = new ManagementClient();
     // perform ready check
     await mgmtClient.isReady();
 

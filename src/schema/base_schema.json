@@ -226,28 +226,6 @@
             },
             "required": ["service_operations"],
             "additionalProperties": false
-        },
-        "host": {
-            "title": "Host Parameters",
-            "description": "Details of the local or remote device",
-            "type": "object",
-            "properties": {
-                "port": {
-                    "type": "integer"
-                },
-                "protocol": {
-                    "type": "string",
-                    "enum": ["http", "https"]
-                },
-                "username": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            },
-            "required": ["address", "port", "protocol", "username", "password"],
-            "additionalProperties": false
         }
     },
     "required": ["extension_packages", "extension_services"],
