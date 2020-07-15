@@ -771,12 +771,6 @@ extension_packages:
           extensionVersion: 3.19.1
 extension_services:
     service_operations: []
-host:
-  address: 192.0.2.1
-  port: 443
-  protocol: 'https'
-  username: admin
-  password: admin
 ```
 
 ## Build Artifacts
