@@ -28,6 +28,10 @@ variables:
     ARM_TENANT_ID: "$AZURE_TENANT_ID"
     TF_VAR_AZURE_TENANT_ID: "$AZURE_TENANT_ID"
     TF_VAR_AZURE_OBJECT_ID: "$AZURE_OBJECT_ID"
+    AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+    AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+    TF_VAR_AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
+    TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID"
     TF_VAR_AZURE_OFFER: "$AZURE_OFFER"
     TF_VAR_AZURE_SKU: "$AZURE_SKU"
     TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION"
@@ -100,6 +104,11 @@ test_functional_init_azure:
     variables:
         CLOUD: "azure"
 
+# run functional tests: aws
+test_functional_init_aws:
+    <<: *test_functional_init_generic
+    variables:
+        CLOUD: "aws"
 
 # Functional Tests - Execute phase (with no retries)
 .test_functional_execute_generic: &test_functional_execute_generic
@@ -141,6 +150,14 @@ test_functional_execute_azure:
         - test_functional_init_azure
         - build_package
 
+# run functional tests: aws
+test_functional_execute_aws:
+    <<: *test_functional_execute_generic
+    variables:
+        CLOUD: "aws"
+    dependencies:
+        - test_functional_init_aws
+        - build_package
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
@@ -170,6 +187,14 @@ test_functional_cleanup_azure:
         CLOUD: "azure"
     dependencies:
         - test_functional_init_azure
+
+# run functional tests: aws
+test_functional_cleanup_aws:
+    <<: *test_functional_cleanup_generic
+    variables:
+        CLOUD: "aws"
+    dependencies:
+        - test_functional_init_aws
 
 # build package
 build_package:
