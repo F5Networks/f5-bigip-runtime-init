@@ -26,6 +26,7 @@ import Validator from './lib/validator.js';
 import { ResolverClient } from './lib/resolver/resolverClient';
 import { ManagementClient } from './lib/bigip/managementClient'
 import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient'
+import { TelemetryClient } from './lib/telemetry/telemetryClient'
 
 const logger = Logger.getLogger();
 
@@ -34,9 +35,8 @@ export async function cli(): Promise<string> {
     program
         .version(constants.VERSION)
         .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
-
     program.parse(process.argv);
-    // load configuration file
+
     let config;
     logger.info(`Configuration file: ${program.configFile}`);
     try {
@@ -54,8 +54,9 @@ export async function cli(): Promise<string> {
     if (!validation.isValid) {
         const error = new Error(`Invalid declaration: ${JSON.stringify(validation.errors)}`);
         return Promise.reject(error);
+    } else {
+        fs.writeFileSync('/var/lib/cloud/validatedConfig', JSON.stringify(config));
     }
-
     logger.info('Successfully validated declaration');
 
     // create management client
@@ -68,10 +69,18 @@ export async function cli(): Promise<string> {
     logger.info('Resolving parameters');
     const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
 
+    // pre onboard
+    // run before install operations in case they require out-of-band changes
+    const preOnboardEnabled = config.pre_onboard_enabled || [];
+    if (preOnboardEnabled.length) {
+        logger.info('Executing custom pre-onboard commands');
+        await resolver.resolveOnboardActions(preOnboardEnabled);
+    }
+
     // perform install operations
-    logger.info('Performing install operations.');
-    const installOperations = config.extension_packages.install_operations;
+    const installOperations = config.extension_packages.install_operations || [];
     if (installOperations.length) {
+        logger.info('Executing install operations.');
         for (let i = 0; i < installOperations.length; i += 1) {
             const toolchainClient = new ToolChainClient(
                 mgmtClient,
@@ -82,17 +91,10 @@ export async function cli(): Promise<string> {
         }
     }
 
-    // pre_onboard
-    const preOnboardEnabled = config.pre_onboard_enabled;
-    if (preOnboardEnabled.length) {
-        logger.info('Executing custom pre onboard commands');
-        await resolver.resolveOnboardActions(preOnboardEnabled);
-    }
-
     // perform service operations
-    logger.info('Performing service operations.');
-    const serviceOperations = config.extension_services.service_operations;
+    const serviceOperations = config.extension_services.service_operations || [];
     if (serviceOperations.length) {
+        logger.info('Executing service operations.');
         for (let i = 0; i < serviceOperations.length; i += 1) {
             const toolchainClient = new ToolChainClient(
                 mgmtClient,
@@ -123,10 +125,23 @@ export async function cli(): Promise<string> {
     }
 
     // post onboard
-    const postOnboardEnabled = config.post_onboard_enabled;
+    const postOnboardEnabled = config.post_onboard_enabled || [];
     if (postOnboardEnabled.length) {
-        logger.info('Executing custom post onboard commands');
+        logger.info('Executing custom post-onboard commands');
         await resolver.resolveOnboardActions(postOnboardEnabled);
+    }
+
+    // post hook 
+    const postHook = config.post_hook || [];
+    if (postHook.length) {
+        for (let i = 0; i < postHook.length; i += 1) {
+            logger.info('Executing post hook operation.');
+            const postHookConfig = postHook[i];
+            const telemetryClient = new TelemetryClient(
+                mgmtClient
+            );
+            await telemetryClient.sendPostHook(postHookConfig);
+        }
     }
 
     return 'All operations finished successfully';

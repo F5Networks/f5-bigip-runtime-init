@@ -38,7 +38,7 @@ echo "Running RPM install script."
 echo "Creating install location."
 mkdir -p $install_location
 
-echo "Verifying RPM file integraty..."
+echo "Verifying RPM file integrity..."
 cat $rpm_sha256_filename | sha256sum -c | grep OK
 if [[ $? -ne 0 ]]; then
     echo "Couldn't verify the f5-bigip-runtime-init package, exiting."

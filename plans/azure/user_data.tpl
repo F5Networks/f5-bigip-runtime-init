@@ -86,3 +86,11 @@ extension_services:
     - extensionType: as3
       type: url
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
+post_hook:
+  - name: example_webhook
+    type: webhook
+    url: https://postman-echo.com/post
+    verifyTls: true
+    properties:
+      optionalKey1: optional_value1
+      optionalKey2: optional_value2
