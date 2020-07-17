@@ -226,6 +226,36 @@
             },
             "required": ["service_operations"],
             "additionalProperties": false
+        },
+        "post_hook": {
+            "title": "Post hook configuration",
+            "description": "Details of request to send when deployment is finished",
+            "type": "array",
+            "properties": {
+                "name": {
+                    "description": "The name of the hook",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The type of the hook",
+                    "type": "string",
+                    "enum": ["webhook"]
+                },
+                "url": {
+                    "description": "The destination of the hook",
+                    "type": "string"
+                },
+                "verifyTls": {
+                    "description": "For enabling secure site verification",
+                    "type": "boolean"
+                },
+                "properties": {
+                    "description": "Custom properties supplied by the user",
+                    "type": "object"
+                }
+            },
+            "required": ["name", "type", "url"],
+            "additionalProperties": false
         }
     },
     "required": ["extension_packages", "extension_services"],

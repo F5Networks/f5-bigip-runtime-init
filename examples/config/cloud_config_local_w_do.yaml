@@ -1,26 +1,30 @@
 runtime_parameters:
-- name: HOST_NAME
-  type: metadata
-  metadataProvider:
-    environment: azure
-    type: compute
-    field: name
-- name: SELF_IP_INTERNAL
-  type: metadata
-  metadataProvider:
-    environment: azure
-    type: network
-    field: ipv4
-    index: 2
-- name: SELF_IP_EXTERNAL
-  type: metadata
-  metadataProvider:
-    environment: azure
-    type: network
-    field: ipv4
-    index: 1
-pre_onboard_enabled: []
-post_onboard_enabled: []
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: compute
+      field: name
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 2
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 1
+pre_onboard_enabled:
+  - name: extra_rest_provision
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
   - extensionType: do
@@ -63,3 +67,15 @@ extension_services:
           vlan: external
           allowService: none
           trafficGroup: traffic-group-local-only
+        provision:
+          class: Provision
+          ltm: nominal
+          gtm: minimum
+post_hook:
+  - name: example_webhook
+    type: webhook
+    url: https://postman-echo.com/post
+    verifyTls: true
+    properties:
+      optionalKey1: optional_value1
+      optionalKey2: optional_value2

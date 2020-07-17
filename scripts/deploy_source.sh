@@ -7,12 +7,19 @@
 # deploy with local RPM packages and passing credentials
 # ./deploy_source.sh -c azure -r /Users/shimkus/Downloads/RPMs/ -f cloud_config_install_only.yaml -u azureuser -p Pass1word -m mydeployment.westus.cloudapp.azure.com
 
-npm run build
+# deploy with a specific version
+# ./deploy_source.sh -c azure -f cloud_config_install_only.yaml -d deployment-info.json -v 0.9.0 -e 1
+
+# deploy skipping build process (for changes to config file, for example)
+# ./deploy_source.sh -c azure -f cloud_config_install_only.yaml -u azureuser -p Pass1word -m mydeployment.westus.cloudapp.azure.com -b false
 
 CLOUD='all'
 CONFIG_FILE='cloud_config_local.yaml'
+VERSION='0.9.0'
+RELEASE='1'
+BUILD='true'
 
-while getopts d:m:u:p:c:f:r: option
+while getopts d:m:u:p:c:f:r:v:e:b: option
     do case "$option" in
         d) PATH_TO_DEPLOYMENT_INFO=$OPTARG;;
         m) MGMT_IP=$OPTARG;;
@@ -21,8 +28,15 @@ while getopts d:m:u:p:c:f:r: option
         c) CLOUD=$OPTARG;;
         f) CONFIG_FILE=$OPTARG;;
         r) PATH_TO_RPMS=$OPTARG;;
+        v) VERSION=$OPTARG;;
+        e) RELEASE=$OPTARG;;
+        b) BUILD=$OPTARG;;
     esac
 done
+
+if [[ $BUILD == 'true' ]]; then
+    npm run build
+fi
 
 if [[ -n $PATH_TO_DEPLOYMENT_INFO ]]; then
     MGMT_IP=$(cat ${PATH_TO_DEPLOYMENT_INFO} | jq .instances[].mgmt_address -r)
@@ -56,7 +70,7 @@ fi
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash -c 'bigstart restart sshd'"
 
 # copy new
-sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no examples/config/* ${USERNAME}@${MGMT_IP}:/config/cloud/
 
 if [[ -n $PATH_TO_RPMS ]]; then
@@ -65,7 +79,7 @@ if [[ -n $PATH_TO_RPMS ]]; then
 fi
 
 # install
-sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run ${CLOUD}"
+sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run ${CLOUD}"
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash -c 'bigstart restart restnoded'"
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash f5-bigip-runtime-init -c /config/cloud/${CONFIG_FILE}"
 

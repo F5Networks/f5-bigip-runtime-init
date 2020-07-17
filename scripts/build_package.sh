@@ -56,6 +56,14 @@ for cloud in "${CLOUDS[@]}"; do
     chmod +x dist/rpms/${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm
     echo "*** Completed signing packge. Deleting original package: ${NAME}-${cloud}-${VERSION}-${RELEASE}.noarch.rpm"
     rm dist/${cloud}/${NAME}-${cloud}-${VERSION}-${RELEASE}.noarch.rpm
+
+    echo "*** Validate signed RPM Package"
+    rpm -qipvv dist/rpms/${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm
+    if [[ $? -ne 0 ]]; then
+        echo "Couldn't validate the signed RPM package"
+    fi
+    echo "*** Finished validating signed RPM Package" 
+
     echo "*** Create SHA-256 file"
     cd dist/rpms/
     sha256sum ${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm > ${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm.sha256
@@ -79,4 +87,3 @@ echo "*** Set permissions on install script to allow exectuon"
 chmod +x ${MAINDIR}/dist/rpms/install_rpm.sh
 echo "*** Generate makeself package"
 ${MAINDIR}/scripts/makeself.sh ${MAINDIR}/dist/rpms dist/${NAME}-${VERSION}-${RELEASE}.gz.run "F5 BIGIP Runtime Init installation" ./install_rpm.sh
-

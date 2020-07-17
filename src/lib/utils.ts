@@ -211,7 +211,6 @@ export async function renderData(template: string, value: object): Promise<strin
     return Mustache.render(template, value);
 }
 
-
 /**
  * Runs a shell command and returns the output
  *
@@ -230,7 +229,6 @@ export async function runShellCommand(command): Promise<string> {
     return stdout;
 }
 
-
 /**
  * Make request (HTTP)
  *
@@ -247,6 +245,7 @@ export async function runShellCommand(command): Promise<string> {
 export async function makeRequest(uri: string, options?: {
     method?: string;
     headers?: object;
+    useTls?: boolean;
     body?: unknown;
     bodyType?: string;
 }): Promise<{
@@ -268,7 +267,7 @@ export async function makeRequest(uri: string, options?: {
             options.headers || {}
         ),
         body: options.body || null,
-        rejectUnauthorized: false
+        rejectUnauthorized: options.useTls || false
     };
 
     logger.info(`Making request: ${requestOptions.method} ${uri}`);
