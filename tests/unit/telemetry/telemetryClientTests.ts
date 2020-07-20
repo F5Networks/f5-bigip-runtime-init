@@ -25,49 +25,6 @@ describe('Telemetry Client', () => {
 
     beforeEach(() => {
         nock.cleanAll();
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/hardware')
-            .reply(200, {entries: {
-                "https://localhost/mgmt/tm/sys/hardware/system-info": {
-                    nestedStats: {
-                        entries: {
-                            "https://localhost/mgmt/tm/sys/hardware/system-info/0": {
-                                nestedStats: {
-                                    entries: {
-                                        bigipChassisSerialNum: {
-                                            description: "74206d14-b631-d54a-16b0b09a25f8"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }})
-            .get('/mgmt/tm/sys/software/volume')
-            .reply(200, {items: [{
-                product: "BIG-IP",
-                version: "14.1.2.6"
-            }]})
-            .get('/mgmt/tm/sys/global-settings')
-            .reply(200, {hostname: "f5vm01.local"})
-            .get('/mgmt/tm/sys/management-ip')
-            .reply(200, {items: [{
-                name: "10.1.0.5/24"
-            }]})
-            .get('/mgmt/tm/sys/provision')
-            .reply(200, {items: [{
-                name: "gtm",
-                level: "minimum"
-            }, {
-                name: "ltm",
-                level: "nominal"
-            }]})
-            .get('/mgmt/shared/iapp/installed-packages')
-            .reply(200, {items:[{
-                packageName: "f5-declarative-onboarding-1.12.0-1.noarch",
-                version: "1.12.0"
-            }]});
     });
 
     afterEach(() => {
@@ -90,15 +47,33 @@ describe('Telemetry Client', () => {
         const postHookConfig = {
             name: "example_webhook",
             type: "webhook",
-            url: "https://postman-echo.com/post"
+            url: "https://postman-echo.com/post/"
         };
         sinon.stub(telemetryClient, '_getSystemInfo').resolves({});
         nock(postHookConfig.url)
             .post('/')
             .reply(200);
-        telemetryClient.sendPostHook(postHookConfig)
+        return telemetryClient.sendPostHook(postHookConfig)
         .then((result) => {
             assert.strictEqual(result, 'Successfully sent post hook!');
+        });
+    });
+
+    it('should validate sendPostHook rejects', () => {
+        const mgmtClient = new ManagementClient();
+        const telemetryClient = new TelemetryClient(mgmtClient);      
+        const postHookConfig = {
+            name: "example_webhook",
+            type: "webhook",
+            url: "https://postman-echo.com/post/",
+        };
+        sinon.stub(telemetryClient, '_getSystemInfo').resolves({});
+        nock(postHookConfig.url)
+            .post('/')
+            .reply(404);
+        return telemetryClient.sendPostHook(postHookConfig)
+        .catch((err) => {
+            assert.ok(err.message.includes('Webhook failed: 404'));
         });
     });
 
@@ -108,7 +83,7 @@ describe('Telemetry Client', () => {
         const postHookConfig = {
             name: "example_webhook",
             type: "webhook",
-            url: "https://postman-echo.com/post",
+            url: "https://postman-echo.com/post/",
             properties: {
                 customKey1: "customValue1"
             }
@@ -120,24 +95,6 @@ describe('Telemetry Client', () => {
         telemetryClient.sendPostHook(postHookConfig)
         .then(() => {
             assert.strictEqual(systemInfo, postHookConfig);
-        });
-    });
-
-    it('should validate sendPostHook rejects on failed request', () => {
-        const mgmtClient = new ManagementClient();
-        const telemetryClient = new TelemetryClient(mgmtClient);      
-        const postHookConfig = {
-            name: "example_webhook",
-            type: "webhook",
-            url: "https://postman-echo.com/post",
-        };
-        sinon.stub(telemetryClient, '_getSystemInfo').resolves({});
-        nock(postHookConfig.url)
-            .post('/')
-            .reply(404);
-        telemetryClient.sendPostHook(postHookConfig)
-        .catch((err) => {
-            assert.ok(err.message.includes('Webhook failed: 404'));
         });
     });
 
@@ -158,14 +115,69 @@ describe('Telemetry Client', () => {
                 level: "nominal"
             }],
             installedPackages: [{
-                packageName: "f5-declarative-onboarding-1.12.0-1.noarch",
+                name: "f5-declarative-onboarding-1.12.0-1.noarch",
                 version: "1.12.0"
             }]
         }
         sinon.stub(mgmtClient, 'isReady').resolves();
-        telemetryClient._getSystemInfo()
-        .then((result) => {
-            assert.strictEqual(result, expectedPayload);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/hardware')
+            .reply(200, {entries: {
+                "https://localhost/mgmt/tm/sys/hardware/system-info": {
+                    nestedStats: {
+                        entries: {
+                            "https://localhost/mgmt/tm/sys/hardware/system-info/0": {
+                                nestedStats: {
+                                    entries: {
+                                        bigipChassisSerialNum: {
+                                            description: "74206d14-b631-d54a-16b0b09a25f8"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/software/volume')
+            .reply(200, {items: [{
+                product: "BIG-IP",
+                version: "14.1.2.6"
+            }]});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/global-settings')
+            .reply(200, {hostname: "f5vm01.local"});
+            
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/management-ip')
+            .reply(200, {items: [{
+                name: "10.1.0.5/24"
+            }]});
+        
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/provision')
+            .reply(200, {items: [{
+                name: "gtm",
+                level: "minimum"
+            }, {
+                name: "ltm",
+                level: "nominal"
+            }]});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/installed-packages')
+            .reply(200, {items:[{
+                packageName: "f5-declarative-onboarding-1.12.0-1.noarch",
+                version: "1.12.0"
+            }]});
+
+        return telemetryClient._getSystemInfo()
+        .then((payload) => {
+            assert.deepEqual(payload, expectedPayload);
         })
     });
 });

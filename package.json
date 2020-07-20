@@ -17,7 +17,6 @@
         "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{ts,tsx}'",
         "unit-tests": "mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
         "test": "nyc mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
-        "ttest": "nyc mocha -r ts-node/register \"./tests/unit/**/telemetryClientTests.ts\"",
         "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
         "check-test-coverage": "nyc check-coverage"
     },
