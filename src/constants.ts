@@ -9,9 +9,16 @@
 import packageInfo from '../package.json';
 
 export const VERSION = packageInfo.version;
+export const NAME = packageInfo.name;
+export const INSTALLED_PACKAGES = packageInfo.dependencies;
 
 export const BASE_DIR = '/var/lib/cloud';
 export const TMP_DIR = '/var/lib/cloud/icontrollx_installs';
+
+export const TELEMETRY_TYPE= `${NAME}-data`;
+export const TELEMETRY_TYPE_VERSION= '1';
+export const ENVIRONMENT_KEY_NAME= 'environment';
+
 
 export const HTTP_STATUS_CODES = {
     ACCEPTED: 202,

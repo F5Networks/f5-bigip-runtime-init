@@ -29,6 +29,9 @@ describe('CloudClient - Azure', () => {
         cloudClient.SecretClient = sinon.stub().returns({
             getSecret: sinon.stub().resolves({ value: 'StrongPassword2010!' })
         });
+        nock('http://169.254.169.254')
+            .get('/metadata/instance?api-version=2017-08-01')
+            .reply(200, { compute: { subscriptionId: '1234543'} });
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
     });

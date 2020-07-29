@@ -27,6 +27,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     secretsManager: AWS.SecretsManager;
     region: string;
     instanceId: string;
+    customerId: string;
 
     constructor(options?: {
         logger?: Logger;
@@ -43,7 +44,9 @@ export class AwsCloudClient extends AbstractCloudClient {
             .then((metadata: {
                 region: string;
                 instanceId: string;
+                accountId: string;
             }) => {
+                this.customerId = metadata.accountId;
                 this.region = metadata.region;
                 this.instanceId = metadata.instanceId;
                 AWS.config.update({ region: this.region });
@@ -53,6 +56,13 @@ export class AwsCloudClient extends AbstractCloudClient {
             .catch(err => Promise.reject(err));
     }
 
+    getCustomerId(): string {
+        return this.accountId;
+    }
+
+    getCloudName(): string {
+        return constants.CLOUDS.AWS;
+    }
 
     /**
      * Get secret from AWS Secrets Manager

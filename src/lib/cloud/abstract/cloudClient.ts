@@ -21,9 +21,13 @@ import Logger from '../../logger';
 export interface CloudClient {
     environment: string;
     logger: Logger;
+    accountId: string;
+    cloudName: string;
     init(): void;
     getSecret(secretId: string, options?: { version?: string; vaultUrl?: string }): Promise<string>;
     getMetadata(field: string, options?: { type?: string; index?: number }): Promise<string>;
+    getCloudName(): string;
+    getCustomerId(): string;
 }
 
 /**
@@ -35,6 +39,8 @@ export interface CloudClient {
 export class AbstractCloudClient implements CloudClient{
     environment: string;
     logger: Logger;
+    accountId: string;
+    cloudName: string;
     constructor(name, options) {
         this.environment = name;
 
@@ -64,5 +70,23 @@ export class AbstractCloudClient implements CloudClient{
      */
     getMetadata(field: string, options?: { type?: string; index?: number }): Promise<string> {
         throw new Error('getMetadata method must be implemented in child class!');
+    }
+
+    /**
+     * Returns customer id
+     *
+     * @returns {String}
+     */
+    getCustomerId(): string {
+        throw new Error('getCustomerId method must be implemented in child class!');
+    }
+
+    /**
+     * Returns cloud name
+     *
+     * @returns {String}
+     */
+    getCloudName(): string {
+        throw new Error('getCloudName method must be implemented in child class!');
     }
 }
