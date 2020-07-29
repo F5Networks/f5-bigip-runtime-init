@@ -800,39 +800,198 @@ Standard payload with custom properties will be sent securely to https://webhook
 
 ```json
 {
-  "id": "74206d14-b631-d54a-16b0b09a25f8",
-  "version": "14.1.2.6",
+  "cpuCount": 2,
+  "diskSize": 157696,
+  "environment": {
+    "libraries": {
+      "ssh": "OpenSSH_7.4p1, OpenSSL 1.0.2s-fips  28 May 2019"
+    },
+    "nodeVersion": "v6.9.1",
+    "pythonVersion": "Python 2.7.5",
+    "pythonVersionDetailed": "2.7.5 (default, Jan 21 2020, 10:23:35)\n[GCC 4.8.5 20150623 (Red Hat 4.8.5-16)]"
+  },
+  "hostname": "bigip1.azure.com",
+  "id": "422523af-d321-e711-e8cbbe41b2c3",
+  "installedPackages": {
+    "f5-appsvcs-3.20.0-3.noarch": "3.20.0",
+    "f5-appsvcs-templates-1.1.0-1.noarch": "1.1.0",
+    "f5-declarative-onboarding-1.10.0-2.noarch": "1.10.0",
+    "f5-service-discovery-1.2.9-2.noarch": "1.2.9"
+  },
+  "management": "10.145.67.83/18",
+  "memoryInMb": 14016,
+  "nicCount": 2,
+  "platformId": "Z100",
   "product": "BIG-IP",
-  "hostname": "f5vm01.local",
-  "management": "10.1.0.5/24",
-  "provisionedModules": [
-    {
-      "name": "gtm",
-      "level": "minimum"
-    },
-    {
-      "name": "ltm",
-      "level": "nominal"
-    }
-  ],
-  "installedPackages": [
-    {
-      "name": "f5-service-discovery-1.2.9-2.noarch",
-      "version": "1.2.9"
-    },
-    {
-      "name": "f5-declarative-onboarding-1.12.0-1.noarch",
-      "version": "1.12.0"
-    },
-    {
-      "name": "f5-appsvcs-3.20.0-3.noarch",
-      "version": "3.20.0"
-    }
-  ],
+  "provisionedModules": {
+    "asm": "nominal",
+    "ltm": "nominal"
+  },
+  "regKey": "XXXX-DDDD-AAAA-DDDDD-IAWCOJO",
+  "version": "15.1.0.1",
   "properties": {
-    "optionalKey1": "optional_value1",
-    "optionalKey2": "optional_value2"
+     "optionalKey1": "optional_value1",
+     "optionalKey2": "optional_value2"
   }
+}
+```
+
+Runtime Init is integrated with F5 TEEM; payload used for F5 TEEM:
+```json
+{
+    "id": "3d8261e0-4324-11ea-9d73-752bc4d5342d",
+    "digitalAssetId": "aa2dabc4-cfbc-5ae0-bd0c-ec1c4f48b631",
+    "rawTelemetry": {
+        "documentType": "f5-bigip-runtime-init",
+        "documentVersion": "1",
+        "digitalAssetId": "aa2dabc4-cfbc-5ae0-bd0c-ec1c4f48b631",
+        "digitalAssetName": "f5-image-generator",
+        "digitalAssetVersion": "1.0.0",
+        "observationStartTime": "2020-01-30T05:49:04.493Z",
+        "observationEndTime": "2020-01-30T05:49:04.493Z",
+        "epochTime": 1580363344493,
+        "telemetryId": "cc3b812b-1fba-431d-b07c-e6f8a60d737f",
+        "telemetryRecords": [
+            {  
+                "platform": {
+                    "platform": "BIG-IP"
+                    "platformVersion": "15.0.1",
+                    "platformId": "z100",
+                    "system": {
+                        "cpuCount": 4,
+                        "memory": 2048,
+                        "diskSize": 100000
+                    },
+                    "nicCount": "3",
+                    "regKey": "XXXX-XXXXX-XXXX-XXXXXX",
+                    "deployment": {
+                        "cloud": "aws",
+                        "customerId": "911584398073"
+                    },
+                    "modules": {
+                                "ltm": "nominal",
+                                "asm": "nominal",
+                                "afm": null //wouldn't show up in payload
+                    },
+                    "packages": {
+                                "f5-declarative-onboarding": "1.10.0",
+                                "f5-appsvcs": "3.20.0",
+                                "f5-service-discovery": "1.2.9",
+                                "f5-telemetry-streaming": "1.0.0",
+                                "f5-cloud-failover": "1.0.3",
+                                "f5-appsvcs-templates": "1.1.0"
+                    },
+                    "environment": {
+                        "pythonVersion": "Python 2.6.6",
+                        "pythonVersionDetailed": "2.6.6 (r266:84292, Aug 14 2019, 11:37:50) [GCC 4.4.7 20120313 (Red Hat 4.4.7-3)]",
+                        "nodeVersion": "v6.9.1",
+                        "goVersion": null,
+                        "libraries": {
+                            "git": null,
+                            "ssh": "OpenSSH_6.6.1p1, OpenSSL 1.0.1l-fips 15 Jan 2015"
+                        }
+                    }
+                },
+                "product": {
+                    "version": "0.0.8",
+                    "locale": "en_US,UTF-8",
+                    "installDate": "2020-01-30T05:49:04.992Z",
+                    "installationId": "fde0cdd8-d0d6-11e9-8307-0242ac110002",
+                    "installedComponents": {
+                        "commander": "^4.1.0",
+                        "js-yaml": "^3.13.1",
+                        "mustache": "^4.0.0",
+                        "request": "^2.88.0",
+                        "google-auth-library": "^5.9.2",
+                        "@google-cloud/secret-manager": "^1.1.2",
+                        "aws-sdk": "^2.610.0",
+                        "@azure/keyvault-secrets": "^4.0.2",
+                        "@azure/ms-rest-nodeauth": "^3.0.3"
+                    }
+                },
+                "operation": {
+                    "clientRequestId": "87036fc2-94a9-11ea-a317-acde48001122",
+                    "rawCommand": "f5-runtime-init -c config.yaml",
+                    "pre_onboard_enabled": {
+                        "commands": 3
+                    }
+                    "runtime_params": {
+                        "secrets": 3,
+                        "custom": 1
+                    },
+                    "vaults": {
+                        "aws": 1
+                    },
+                    "extension_packages": {
+                        "as3": 1,
+                        "do": 1,
+                        "ts": 1
+                    },
+                    "extension_services": {
+                        "as3": 1,
+                        "do": 1,
+                        "ts": 1
+                    },
+                    "post_onboard_enabled": {
+                        "commands": 3,
+                        "post_hooks": 2
+                    },
+                    "result": "SUCCESS",
+                    "resultSummary": "Configuration Successful",
+                    "startTime": "2020-01-30T05:49:04.992Z", // Performance
+                    "endTime": "2020-01-30T05:49:04.992Z"
+            }
+        ]
+    },
+    "telemetryReceivedDate": "2020-01-30T05:49:11.806Z",
+    "unregisteredAsset": false,
+    "_rid": "PuQMAIrsNvOAlScAAAAAAA==",
+    "_self": "dbs/PuQMAA==/colls/PuQMAIrsNvM=/docs/PuQMAIrsNvOAlScAAAAAAA==/",
+    "_etag": "\"06000f5f-0000-0800-0000-5e326e570000\"",
+    "_attachments": "attachments/",
+    "_ts": 1580363351
+}
+```
+
+ - F5 TEEM can be disabled via BIGIP homephone feature as documented here: https://www.npmjs.com/package/@f5devcentral/f5-teem#advanced-usage
+ 
+ Example using TMSH command:
+ ```yaml
+runtime_parameters: []
+pre_onboard_enabled:
+  - name: disable_homephone_feature
+    type: inline
+    commands:
+      - tmsh modify sys software update auto-phonehome disabled
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.12.0
+    - extensionType: as3
+      extensionVersion: 3.19.1
+extension_services:
+  service_operations: []
+
+```
+
+Example using Declarative On-boarding:
+```json
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "webhook": "https://example.com/myHook",
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "mySystem": {
+            "class": "System",
+            "hostname": "bigip.example.com",
+            "cliInactivityTimeout": 1200,
+            "consoleInactivityTimeout": 1200,
+            "autoPhonehome": false
+        }
+    }
 }
 ```
 

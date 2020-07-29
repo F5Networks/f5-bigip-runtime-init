@@ -29,7 +29,9 @@ describe('Cloud Client - Abstract', () => {
         const methods = [
             'getSecret',
             'getMetadata',
-            'init'
+            'init',
+            'getCustomerId',
+            'getCloudName'
         ];
         methods.forEach((func) => {
             assert.throws(

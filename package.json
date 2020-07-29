@@ -24,6 +24,9 @@
         "@azure/identity": "^1.0.2",
         "@azure/keyvault-secrets": "^4.0.2",
         "ajv": "^6.12.2",
+        "get-user-locale": "^1.4.0",
+        "uuid": "^8.2.0",
+        "@f5devcentral/f5-teem": "^1.4.6",
         "@types/es6-promise": "^3.3.0",
         "aws-sdk": "^2.610.0",
         "commander": "^4.1.0",
@@ -37,6 +40,9 @@
     "dependencyMap": {
         "common": {
             "commander": "^4.1.0",
+            "get-user-locale": "^1.4.0",
+            "uuid": "^8.2.0",
+            "@f5devcentral/f5-teem": "^1.4.6",
             "js-yaml": "^3.13.1",
             "mustache": "^4.0.0",
             "request": "^2.88.0"

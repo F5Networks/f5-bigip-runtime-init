@@ -223,8 +223,7 @@ export async function runShellCommand(command): Promise<string> {
     const exec = nodeUtil.promisify(childProcess.exec);
     const { stdout, stderr } = await exec(command);
     if (stderr) {
-        logger.error(`runShellCommand Error: ${stderr}`);
-        return Promise.reject(stderr);
+        return stderr;
     }
     return stdout;
 }

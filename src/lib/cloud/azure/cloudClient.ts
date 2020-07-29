@@ -28,15 +28,35 @@ export class AzureCloudClient extends AbstractCloudClient {
     _credentials: ManagedIdentityCredential;
     _keyVaultSecretClient: SecretClient;
     SecretClient = SecretClient;
+    customerId: string;
     constructor(options?: {
         logger?: Logger;
     }) {
         super(constants.CLOUDS.AZURE, options);
     }
 
-    init(): Promise<void> {
+    async init(): Promise<void> {
         this._credentials = new ManagedIdentityCredential();
+        this.customerId = await this._getSubscriptionId();
         return Promise.resolve();
+    }
+
+    /**
+     * Returns accountId/subscriptionId from Azure
+     *
+     * @returns {String}
+     */
+    getCustomerId(): string {
+        return this.customerId;
+    }
+
+    /**
+     * Returns cloud name
+     *
+     * @returns {String}
+     */
+    getCloudName(): string {
+        return constants.CLOUDS.AZURE;
     }
 
     _getKeyVaultSecret(vaultUrl: string, secretId: string, version?: string): Promise<KeyVaultSecret> {
@@ -72,6 +92,19 @@ export class AzureCloudClient extends AbstractCloudClient {
         return this._getKeyVaultSecret(vaultUrl, secretId, version)
             .then(result => Promise.resolve(result.value))
             .catch(err => Promise.reject(err));
+    }
+
+    async _getSubscriptionId(): Promise<string> {
+        const response = await utils.makeRequest(
+            `http://169.254.169.254/metadata/instance?api-version=2017-08-01`,
+            {
+                method: 'GET',
+                headers: {
+                    Metadata: 'true'
+                }
+            }
+        );
+        return response.body.compute.subscriptionId;
     }
 
     /**

@@ -101,12 +101,20 @@ publish_container:
 # run functional tests: azure
 test_functional_init_azure:
     <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "azure"
     variables:
         CLOUD: "azure"
 
 # run functional tests: aws
 test_functional_init_aws:
     <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "aws"
     variables:
         CLOUD: "aws"
 
@@ -144,6 +152,10 @@ test_functional_init_aws:
 # run functional tests: azure
 test_functional_execute_azure:
     <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "azure"
     variables:
         CLOUD: "azure"
     dependencies:
@@ -153,6 +165,10 @@ test_functional_execute_azure:
 # run functional tests: aws
 test_functional_execute_aws:
     <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "aws"
     variables:
         CLOUD: "aws"
     dependencies:
@@ -183,6 +199,10 @@ test_functional_execute_aws:
 # run functional tests: azure
 test_functional_cleanup_azure:
     <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "azure"
     variables:
         CLOUD: "azure"
     dependencies:
@@ -191,6 +211,10 @@ test_functional_cleanup_azure:
 # run functional tests: aws
 test_functional_cleanup_aws:
     <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "aws"
     variables:
         CLOUD: "aws"
     dependencies:

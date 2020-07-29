@@ -29,6 +29,8 @@ import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient'
 import { TelemetryClient } from './lib/telemetry/telemetryClient'
 
 const logger = Logger.getLogger();
+const executionResults = {};
+let telemetryClient;
 
 export async function cli(): Promise<string> {
     /* eslint-disable no-await-in-loop */
@@ -49,6 +51,10 @@ export async function cli(): Promise<string> {
         logger.error(`Configuration load error: ${e}`);
     }
 
+    executionResults['configFile'] = program.configFile;
+    executionResults['startTime'] = (new Date()).toISOString();
+    executionResults['config'] = config;
+
     const validator = new Validator();
     const validation = validator.validate(config);
     if (!validation.isValid) {
@@ -63,7 +69,10 @@ export async function cli(): Promise<string> {
     const mgmtClient = new ManagementClient();
     // perform ready check
     await mgmtClient.isReady();
-
+    // Create Telemetry Client
+    telemetryClient = new TelemetryClient(
+        mgmtClient
+    );
     // resolve runtime parameters
     const resolver = new ResolverClient();
     logger.info('Resolving parameters');
@@ -131,19 +140,24 @@ export async function cli(): Promise<string> {
         await resolver.resolveOnboardActions(postOnboardEnabled);
     }
 
-    // post hook 
+
+    // post hook
     const postHook = config.post_hook || [];
     if (postHook.length) {
         for (let i = 0; i < postHook.length; i += 1) {
             logger.info('Executing post hook operation.');
             const postHookConfig = postHook[i];
-            const telemetryClient = new TelemetryClient(
-                mgmtClient
-            );
             await telemetryClient.sendPostHook(postHookConfig);
         }
     }
-
+    executionResults['endTime'] =  (new Date()).toISOString();
+    executionResults['result'] = 'SUCCESS';
+    executionResults['resultSummary'] = 'Configuration Successful';
+    // f5-teem
+    logger.info('Initializing telemetryClient');
+    await telemetryClient.init(executionResults);
+    logger.info('Sending f5-teem report');
+    telemetryClient.report(telemetryClient.createTelemetryData());
     return 'All operations finished successfully';
 }
 
@@ -151,4 +165,20 @@ cli()
     .then((message) => {
         logger.info(message);
     })
-    .catch(err => logger.info(err));
+    .catch((err) => {
+        logger.info(err);
+        executionResults['endTime'] = (new Date()).toISOString();
+        executionResults['result'] = 'FAILURE';
+        executionResults['resultSummary'] = err.message;
+        // f5-teem
+        logger.info('Sending F5 Teem report for failure case.');
+        telemetryClient.init(executionResults)
+            .then(() => {
+                return telemetryClient.report(telemetryClient.createTelemetryData());
+            }).then(() => {
+                logger.info('F5 Teem report was successfully sent for failure case.');
+            })
+            .catch((err) => {
+                logger.error(err);
+            });
+    });
