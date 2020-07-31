@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 'use strict';
 
 import * as utils from '../utils';
@@ -36,7 +37,7 @@ export class ManagementClient {
     port: number;
     user: string;
     password: string;
-    useTls: boolean;
+    verifyTls: boolean;
     _protocol: string;
     uriPrefix: string;
     authHeader: string;
@@ -47,7 +48,7 @@ export class ManagementClient {
         port?: number;
         user?: string;
         password?: string;
-        useTls?: boolean;
+        verifyTls?: boolean;
         maxRetries?: number;
         retryInterval?: number;
     }) {
@@ -57,11 +58,10 @@ export class ManagementClient {
         this.port = options.port || 8100;
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
-        this.useTls = options.useTls || false;
-        this._protocol = this.useTls === false ? 'http' : 'https';
+        this.verifyTls = 'verifyTls' in options ? options.verifyTls : false;
+        this._protocol = this.verifyTls === true ? 'https' : 'http';
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
-
         this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
     }
@@ -76,7 +76,8 @@ export class ManagementClient {
                 method: 'GET',
                 headers: {
                     Authorization: this.authHeader
-                }
+                },
+                verifyTls: this.verifyTls
             });
 
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']

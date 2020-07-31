@@ -67,12 +67,18 @@ post_onboard_enabled:
     type: url
     commands:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_post_onboard.sh
+    verifyTls: false
+  - name: example_remote_exec
+    type: url
+    commands:
+      - https://ak-metadata-package-poc.s3.amazonaws.com/remote_post_onboard.sh
 extension_packages:
   install_operations:
     - extensionType: do
       extensionVersion: 1.10.0
     - extensionType: as3
       extensionVersion: 3.20.0
+      verifyTls: false
       extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm
       extensionHash: ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987
     - extensionType: ilx
@@ -83,6 +89,7 @@ extension_services:
     - extensionType: do
       type: url
       value: https://ak-f5-cft.s3-us-west-2.amazonaws.com/azure/do_3nic.json
+      verifyTls: false
     - extensionType: as3
       type: url
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
@@ -90,7 +97,6 @@ post_hook:
   - name: example_webhook
     type: webhook
     url: https://postman-echo.com/post
-    verifyTls: true
     properties:
       optionalKey1: optional_value1
       optionalKey2: optional_value2

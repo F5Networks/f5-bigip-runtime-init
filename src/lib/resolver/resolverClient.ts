@@ -34,6 +34,7 @@ interface OnboardActions {
     type: string;
     name: string;
     commands: string[];
+    verifyTls?: boolean;
 }
 
 /** Resolver class */
@@ -105,7 +106,9 @@ export class ResolverClient {
                     let base64ScriptName;
                     if (actions[i].type === 'url') {
                         base64ScriptName = `${constants.CUSTOM_ONBOARD_CONFIG_DIR}${Buffer.from(`${actions[i].name}_${j}`).toString('base64')}`;
-                        await this.utilsRef.downloadToFile(actions[i].commands[j], base64ScriptName);
+                        await this.utilsRef.downloadToFile(actions[i].commands[j], base64ScriptName, {
+                            verifyTls: 'verifyTls' in actions[i] ? actions[i].verifyTls : true
+                        });
                     } else {
                         base64ScriptName = actions[i].commands[j];
                     }

@@ -25,17 +25,18 @@ import { ManagementClient } from '../../../../src/lib/bigip/managementClient';
 import { ToolChainClient } from '../../../../src/lib/bigip/toolchain/toolChainClient';
 
 const standardMgmtOptions = {
-    port: 443,
+    port: 8100,
     user: 'admin',
     password: 'admin',
-    useTls: true
+    verifyTls: false
 };
 
 const standardToolchainOptions = {
     extensionVersion: '3.17.0',
     extensionHash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6',
     maxRetries: 3,
-    retryInterval: 2500
+    retryInterval: 2500,
+    verifyTls: true
 };
 
 const ilxToolchainOptions = {
@@ -163,21 +164,21 @@ describe('BIG-IP Package Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/iapp/package-management-tasks')
             .reply(200, {
                 id: "1"
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/iapp/package-management-tasks/1')
             .reply(200, {
                 id: '1',
                 status: 'FINISHED'
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
             .times(30)
             .reply(200, {
@@ -202,12 +203,12 @@ describe('BIG-IP Package Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', ilxToolchainOptions);
         const packageClient = toolChainClient.package;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/iapp/package-management-tasks')
             .reply(200, {
                 id: "1"
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/iapp/package-management-tasks/1')
             .reply(200, {
                 id: '1',
@@ -252,21 +253,21 @@ describe('BIG-IP Package Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/iapp/package-management-tasks')
             .reply(200, {
                 id: "1"
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/iapp/package-management-tasks/1')
             .reply(200, {
                 id: '1',
                 status: 'FAILED'
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
             .times(30)
             .reply(200, {
@@ -288,22 +289,22 @@ describe('BIG-IP Package Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/iapp/package-management-tasks')
             .reply(200, {
                 id: "1"
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/iapp/package-management-tasks/1')
             .times(4)
             .reply(200, {
                 id: '1',
                 status: 'FOO'
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
             .times(40)
             .reply(200, {
@@ -345,7 +346,7 @@ describe('BIG-IP Service Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const serviceClient = toolChainClient.service;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/appsvcs/info')
             .reply(200);
         return serviceClient.isAvailable()
@@ -356,7 +357,7 @@ describe('BIG-IP Service Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const serviceClient = toolChainClient.service;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/mgmt/shared/appsvcs/info')
             .times(3)
             .reply(400);
@@ -371,12 +372,12 @@ describe('BIG-IP Service Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const serviceClient = toolChainClient.service;
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .post('/mgmt/shared/appsvcs/declare')
             .reply(202, {
                 selfLink: 'https://localhost/tasks/myTask/1',
             });
-        nock('https://localhost:443')
+        nock('http://localhost:8100')
             .get('/tasks/myTask/1')
             .reply(200);
         return serviceClient.create()

@@ -122,7 +122,8 @@ export async function cli(): Promise<string> {
                 loadedConfig = await utils.loadData(
                     serviceOperations[i].value,
                     {
-                        locationType: serviceOperations[i].type
+                        locationType: serviceOperations[i].type,
+                        verifyTls: 'verifyTls' in serviceOperations[i] ? serviceOperations[i].verifyTls : true
                     }
                 );
             }

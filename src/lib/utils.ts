@@ -48,9 +48,16 @@ export function stringify(data: object): string {
  *
  * @returns Resolved on download completion
  */
-export async function downloadToFile(url: string, file: string): Promise<void> {
+export async function downloadToFile(url: string, file: string, options): Promise<void> {
+    options = options || {};
+    logger.info(`Downloading File: ${url}`);
+    logger.info(`Options: ${JSON.stringify(options)}`);
     await new Promise((resolve, reject) => {
-        request(url)
+        request({
+            url: url,
+            method: 'GET',
+            rejectUnauthorized: options.verifyTls ? options.verifyTls : true
+        })
             .on('error', (err) => {
                 reject(err);
             })
@@ -174,18 +181,22 @@ export async function retrier(
  */
 export function loadData(location: string, options?: {
                             locationType?: string;
-                         }
-): Promise<object> {
+                            verifyTls?: boolean;
+                         }): Promise<object> {
     options = options || {};
-
     const locationType = options.locationType;
     const urlObject = URL.parse(location);
 
     if (urlObject.protocol === 'file:') {
         return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
     } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
+        logger.info(`Loading file via url - options: ${JSON.stringify(options)} `);
         return new Promise<object>((resolve, reject) => {
-            request(location, (error, resp, body) => {
+            request({
+                url: location,
+                method: 'GET',
+                rejectUnauthorized: options.verifyTls ? options.verifyTls : true
+            }, (error, resp, body) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -244,7 +255,7 @@ export async function runShellCommand(command): Promise<string> {
 export async function makeRequest(uri: string, options?: {
     method?: string;
     headers?: object;
-    useTls?: boolean;
+    verifyTls?: boolean;
     body?: unknown;
     bodyType?: string;
 }): Promise<{
@@ -266,10 +277,10 @@ export async function makeRequest(uri: string, options?: {
             options.headers || {}
         ),
         body: options.body || null,
-        rejectUnauthorized: options.useTls || false
+        rejectUnauthorized: options.verifyTls ? options.verifyTls : true
     };
 
-    logger.info(`Making request: ${requestOptions.method} ${uri}`);
+    logger.info(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.rejectUnauthorized}`);
 
     const response: {
         code: number;
