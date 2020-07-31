@@ -40,6 +40,7 @@ class MetadataClient {
     url: string;
     infoEndpoint: string;
     metadata: any;
+    verifyTls: boolean;
     /**
      *
      * @param  component         [toolchain component]
@@ -48,11 +49,12 @@ class MetadataClient {
      * @param  metadata          [toolchain metadata]
      * @param  infoEndpoint      [toolchain package verification endpoint]
      */
-    constructor(component: string, version: string, hash: string, url: string, infoEndpoint: string) {
+    constructor(component: string, version: string, hash: string, url: string, infoEndpoint: string, verifyTls: boolean) {
         this.component = component;
         this.version = version;
         this.hash = hash;
         this.url = url;
+        this.verifyTls = verifyTls;
         this.infoEndpoint = infoEndpoint;
         this.metadata = this._loadMetadata();
     }
@@ -67,6 +69,10 @@ class MetadataClient {
 
     _getComponentVersionMetadata(): any {
         return this.metadata.components[this.component].versions[this.version];
+    }
+
+    _getVerifyTls(): boolean {
+        return this.verifyTls;
     }
 
     /**
@@ -178,7 +184,6 @@ class PackageClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
-
         this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
@@ -211,7 +216,8 @@ class PackageClient {
                         'Content-Length': end - start + 1
                     },
                     body: fs.createReadStream(file, { start, end }),
-                    bodyType: 'raw'
+                    bodyType: 'raw',
+                    verifyTls: this._metadataClient._getVerifyTls()
                 }
             );
 
@@ -239,7 +245,8 @@ class PackageClient {
                 {
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    verifyTls: this._metadataClient._getVerifyTls()
                 });
 
             if (response.body.status === 'FINISHED') {
@@ -267,7 +274,8 @@ class PackageClient {
                 body: {
                     operation: 'INSTALL',
                     packageFilePath: packagePath
-                }
+                },
+                verifyTls: this._metadataClient._getVerifyTls()
             }
         );
 
@@ -300,7 +308,9 @@ class PackageClient {
         } else {
             utils.verifyDirectory(constants.TMP_DIR);
             tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
-            await utils.downloadToFile(downloadUrl, tmpFile);
+            await utils.downloadToFile(downloadUrl, tmpFile, {
+                verifyTls: this._metadataClient._getVerifyTls()
+            });
         }
 
         // verify package
@@ -344,7 +354,6 @@ class ServiceClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
-
         this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
@@ -366,7 +375,8 @@ class ServiceClient {
             {
                 headers: {
                     Authorization: this.authHeader
-                }
+                },
+                verifyTls: this._metadataClient._getVerifyTls()
             });
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
@@ -405,7 +415,8 @@ class ServiceClient {
             {
                 headers: {
                     Authorization: this.authHeader
-                }
+                },
+                verifyTls: this._metadataClient._getVerifyTls()
             }
         );
 
@@ -453,7 +464,8 @@ class ServiceClient {
                 headers: {
                     Authorization: this.authHeader
                 },
-                body: config
+                body: config,
+                verifyTls: this._metadataClient._getVerifyTls()
             }
         );
 
@@ -489,6 +501,7 @@ export class ToolChainClient {
     _metadataClient: MetadataClient;
     maxRetries: number;
     retryInterval: number;
+    verifyTls: boolean;
     /**
      *
      * @param mgmtClient    [management client]
@@ -507,17 +520,24 @@ export class ToolChainClient {
         this.version = options.extensionVersion ? options.extensionVersion : 'unknown';
         this.hash = options.extensionHash ? options.extensionHash : undefined;
         this.url = options.extensionUrl ? options.extensionUrl : undefined;
+        this.verifyTls = 'verifyTls' in options ? options.verifyTls : true;
         this.infoEndpoint = options.extensionVerificationEndpoint ? options.extensionVerificationEndpoint : undefined;
-        this._metadataClient = new MetadataClient(this.component, this.version, this.hash, this.url, this.infoEndpoint);
+        this._metadataClient = new MetadataClient(this.component, this.version, this.hash, this.url, this.infoEndpoint, this.verifyTls);
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
     }
 
     get package(): PackageClient {
-        return new PackageClient(this._mgmtClient, this._metadataClient, { maxRetries: this.maxRetries, retryInterval: this.retryInterval });
+        return new PackageClient(this._mgmtClient, this._metadataClient, {
+            maxRetries: this.maxRetries,
+            retryInterval: this.retryInterval
+        });
     }
 
     get service(): ServiceClient {
-        return new ServiceClient(this._mgmtClient, this._metadataClient, { maxRetries: this.maxRetries, retryInterval: this.retryInterval });
+        return new ServiceClient(this._mgmtClient, this._metadataClient, {
+            maxRetries: this.maxRetries,
+            retryInterval: this.retryInterval
+        });
     }
 }

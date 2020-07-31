@@ -562,7 +562,7 @@ export class TelemetryClient {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                useTls: postHookConfig.verifyTls || false,
+                verifyTls: 'verifyTls' in postHookConfig ? postHookConfig.verifyTls : true,
                 body: systemInfo
             }
         );

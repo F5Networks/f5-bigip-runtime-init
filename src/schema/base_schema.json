@@ -112,6 +112,10 @@
                         "items" : {
                             "type": "string"
                         }
+                    },
+                    "verifyTls": {
+                        "description": "For enabling secure site verification",
+                        "type": "boolean"
                     }
                 }
             }
@@ -135,6 +139,10 @@
                         "items" : {
                             "type": "string"
                         }
+                    },
+                    "verifyTls": {
+                        "description": "For enabling secure site verification",
+                        "type": "boolean"
                     }
                 }
             }
@@ -160,6 +168,10 @@
                             },
                             "extensionHash": {
                                 "type": "string"
+                            },
+                            "verifyTls": {
+                                "description": "For enabling secure site verification",
+                                "type": "boolean"
                             },
                             "extensionUrl": {
                                 "type": "string",
@@ -207,6 +219,10 @@
                             },
                             "value": {
                                 "description": "URL of local or remote file containing the declarations to be applied, or the entire declaration inline as an object"
+                            },
+                            "verifyTls": {
+                                "description": "For enabling secure site verification",
+                                "type": "boolean"
                             }
                         },
                         "allOf": [

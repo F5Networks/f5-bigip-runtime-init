@@ -47,7 +47,8 @@ describe('Resolver Client', () => {
                 commands: [
                     "https://test-directory/test-script-01",
                     "https://test-directory/test-script-02"
-                ]
+                ],
+                verifyTls: true
             }
         ];
 

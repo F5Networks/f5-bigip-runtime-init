@@ -188,7 +188,8 @@ describe('Util', () => {
                 });
 
             return util.loadData( 'https://fakedomain.com/awesome_file.txt', {
-                locationType: 'url'
+                locationType: 'url',
+                verifyTls: false
             })
                 .then((resp) => assert.strictEqual(resp.id, 1))
                 .catch(err => Promise.reject(err));

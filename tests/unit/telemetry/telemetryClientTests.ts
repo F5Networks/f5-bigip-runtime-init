@@ -121,7 +121,8 @@ describe('Telemetry Client', () => {
         const postHookConfig = {
             name: 'example_webhook',
             type: 'webhook',
-            url: 'https://postman-echo.com/post'
+            url: 'https://postman-echo.com/post',
+            verifyTls: true
         };
         sinon.stub(telemetryClient, '_getSystemInfo').resolves();
         nock(postHookConfig.url)
@@ -142,7 +143,8 @@ describe('Telemetry Client', () => {
             url: 'https://postman-echo.com/post',
             properties: {
                 customKey1: 'customValue1'
-            }
+            },
+            verifyTls: false
         };
         const systemInfo = sinon.stub(telemetryClient, '_getSystemInfo').resolves({
             id: 'test-id01',
@@ -181,6 +183,7 @@ describe('Telemetry Client', () => {
             name: 'example_webhook',
             type: 'webhook',
             url: 'https://postman-echo.com/post',
+            verifyTls: false
         };
         sinon.stub(telemetryClient, '_getSystemInfo').resolves();
         nock(postHookConfig.url)
