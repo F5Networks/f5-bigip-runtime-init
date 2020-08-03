@@ -56,7 +56,7 @@ export async function downloadToFile(url: string, file: string, options): Promis
         request({
             url: url,
             method: 'GET',
-            rejectUnauthorized: options.verifyTls ? options.verifyTls : true
+            strictSSL: options.verifyTls ? options.verifyTls : true
         })
             .on('error', (err) => {
                 reject(err);
@@ -195,7 +195,7 @@ export function loadData(location: string, options?: {
             request({
                 url: location,
                 method: 'GET',
-                rejectUnauthorized: options.verifyTls ? options.verifyTls : true
+                strictSSL: options.verifyTls ? options.verifyTls : true
             }, (error, resp, body) => {
                 if (error) {
                     reject(error);
@@ -277,10 +277,10 @@ export async function makeRequest(uri: string, options?: {
             options.headers || {}
         ),
         body: options.body || null,
-        rejectUnauthorized: options.verifyTls ? options.verifyTls : true
+        strictSSL: options.verifyTls ? options.verifyTls : true
     };
 
-    logger.info(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.rejectUnauthorized}`);
+    logger.info(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.strictSSL}`);
 
     const response: {
         code: number;
