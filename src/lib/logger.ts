@@ -9,83 +9,142 @@
 'use strict';
 
 import * as constants from '../constants';
-const LOG_LEVELS = {
-    error: 5,
-    warning: 4,
-    info: 3,
-    debug: 2
-};
-
+import * as winston from 'winston';
+import * as fs from 'fs';
 /**
+ * Logger Class
  *
- * Basic Example:
- *
- * ```bash
- * export F5_SDK_LOG_LEVEL='DEBUG'
- * ```
  */
-export default class Logger {
+export default class Logger{
+    static winstonLogger: winston.Logger;
     private static instance: Logger;
 
     /**
      * Get logger instance (singleton)
-     *
      * @returns logger instance
      */
     static getLogger(): Logger {
-        if (!Logger.instance) {
-            Logger.instance = new Logger();
-        }
+        Logger.instance = new Logger();
+        Logger.winstonLogger = Logger._getWinstonLogger();
         return Logger.instance;
+    }
+
+    /**
+     * Get winston logger instance (singleton)
+     * @returns winston logger instance
+     */
+     private static _getWinstonLogger(): winston.Logger {
+        const logToConsole = true;
+        let logLevel: string;
+        let fileName: string;
+
+        if (constants.ENV_VARS['LOG_LEVEL'] in process.env) {
+            logLevel = process.env[constants.ENV_VARS['LOG_LEVEL']];
+        } else {
+            logLevel = constants.LOGGER.DEFAULT_LOG_LEVEL;
+        }
+
+        if (constants.ENV_VARS['LOG_FILENAME'] in process.env) {
+            fileName = process.env[constants.ENV_VARS['LOG_FILENAME']];
+        } else {
+            fileName = constants.LOGGER.DEFAULT_FILENAME;
+        }
+
+        if ( !fs.existsSync(fileName.substring(0, fileName.lastIndexOf("/")))) {
+            fs.mkdirSync(fileName.substring(0, fileName.lastIndexOf("/")));
+        }
+
+        const transportOptions = {
+            level: logLevel,
+            format: Logger._getLoggingFormat(),
+            handleExceptions: false,
+            humanReadableUnhandledException: true
+        };
+
+        const transports = [];
+        if (logToConsole) {
+            transports.push(new (winston.transports.Console)(transportOptions));
+        }
+
+        if (fileName) {
+            const fileOptions = {
+                level: logLevel,
+                format: Logger._getLoggingFormat(),
+                handleExceptions: false,
+                humanReadableUnhandledException: true,
+                filename: fileName,
+                maxsize: 10485760,
+                maxFiles: 10,
+                tailable: true
+
+            };
+            transports.push(new (winston.transports.File)(fileOptions));
+        }
+
+
+        const logger = winston.createLogger({
+            transports: transports
+        });
+
+        return logger;
     }
 
     /**
      * Log informational message
      */
     error(msg: string): void {
-        if (LOG_LEVELS.error >= LOG_LEVELS[this._checkLogLevel()]) {
-            this._log(msg, 'ERROR');
-        }
+        Logger.winstonLogger.error(msg);
     }
 
     /**
      * Log warning message
      */
-    warning(msg: string): void {
-        if (LOG_LEVELS.warning >= LOG_LEVELS[this._checkLogLevel()]) {
-            this._log(msg, 'WARNING');
-        }
+    warn(msg: string): void {
+        Logger.winstonLogger.warn(msg);
     }
 
     /**
      * Log informational message
      */
     info(msg: string): void {
-        if (LOG_LEVELS.info >= LOG_LEVELS[this._checkLogLevel()]) {
-            this._log(msg, 'INFO');
-        }
+        Logger.winstonLogger.info(msg);
     }
 
     /**
      * Log debug message
      */
     debug(msg: string): void {
-        if (LOG_LEVELS.debug >= LOG_LEVELS[this._checkLogLevel()]) {
-            this._log(msg, 'DEBUG');
-        }
+        Logger.winstonLogger.debug(msg);
     }
 
-    private _checkLogLevel(): string {
-        const logLevels = Object.keys(LOG_LEVELS);
-        const logLevelFromEnvVar = process.env[constants.ENV_VARS.LOG_LEVEL];
-
-        if (logLevelFromEnvVar && logLevels.includes(logLevelFromEnvVar.toLowerCase())) {
-            return logLevelFromEnvVar.toLowerCase();
-        }
-        return 'info';
+    /**
+     * Log silly message
+     */
+    silly(msg: string): void {
+        Logger.winstonLogger.silly(msg);
     }
 
-    _log(msg: string, level: string): void {
-        console.log(`${level} -`, msg);
+    /**
+     * Gets logging format
+     */
+    private static _getLoggingFormat(): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
+        if (constants.ENV_VARS['LOG_TO_JSON'] in process.env) {
+            if (Boolean(process.env[constants.ENV_VARS['LOG_TO_JSON']])) {
+                return winston.format.combine(
+                    winston.format.timestamp(),
+                    winston.format.json()
+                )
+            }
+        }
+        return winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.printf(info => {
+                let message = info.message ? info.message : '';
+                for (const fieldName of constants.LOGGER.FIELDS_TO_HIDE) {
+                    message = message.replace(new RegExp(`"${fieldName}":.[^"]+`), `"${fieldName}":"********"`);
+                }
+                return `${info.timestamp} [${process.pid}]: ${info.level}: ${message}`
+            })
+        )
     }
 }

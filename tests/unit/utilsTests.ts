@@ -14,6 +14,7 @@ import mock from 'mock-fs';
 import nock from 'nock';
 
 /* eslint-disable global-require */
+sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
 
 describe('Util', () => {
     let util;

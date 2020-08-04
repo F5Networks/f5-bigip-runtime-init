@@ -12,6 +12,7 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import { ResolverClient } from '../../../src/lib/resolver/resolverClient';
+sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
 
 describe('Resolver Client', () => {
     let runtimeParameters;

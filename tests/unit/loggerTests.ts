@@ -9,42 +9,61 @@
 'use strict';
 
 import sinon from 'sinon';
-
-import Logger from '../../src/lib/logger';
 import assert from 'assert';
+import Logger from '../../src/lib/logger';
+import * as fs from 'fs';
 
 describe('Logger', function() {
+
     let logger: Logger;
-    let mockLog;
 
     beforeEach(function() {
-        logger = Logger.getLogger();
-        mockLog = sinon.stub(Logger.prototype, '_log');
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
     });
     afterEach(function() {
         sinon.restore();
     });
 
-    ['error', 'warning', 'info', 'debug'].forEach((logLevel) => {
+    ['error', 'warn', 'info', 'debug'].forEach((logLevel) => {
         it(`should log ${logLevel} message`, function() {
-            sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT: logLevel.toUpperCase() });
-
+            logger = Logger.getLogger();
             logger[logLevel]('msg');
-            assert.deepStrictEqual(mockLog.getCall(0).args, ['msg', logLevel.toUpperCase()]);
         });
     });
 
-    it('should not log a message of a lower level', function() {
-        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT: 'ERROR' });
-
-        logger.warning('msg');
-        assert.strictEqual(mockLog.called, false);
+    it('should validate that silly and debug messages are not shown', function() {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
+        logger = Logger.getLogger();
+        assert.strictEqual(Logger.winstonLogger.level, 'info');
+        logger.info('this is info message');
+        logger.debug('this is debug message');
+        logger.silly('this is silly message');
     });
 
-    it('should log info messages by default', function() {
-        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT: undefined });
 
-        logger.info('msg');
-        assert.strictEqual(mockLog.called, true);
+    it('should validate that silly and debug messages are shown', function() {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
+        logger = Logger.getLogger();
+        logger.info('this is info message');
+        logger.debug('this is debug message');
+        logger.silly('this is silly message');
     });
+
+    it('should log validate log to json format', function() {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON: true });
+        logger = Logger.getLogger();
+        logger.info('this is json message');
+    });
+
+    it('should log validate log filename setting', function() {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test.log' });
+        logger = Logger.getLogger();
+        logger.info('info msg');
+    });
+
+    it('should validate custom log creation', function() {
+        assert.ok(fs.existsSync('tmp/test.log'));
+        fs.unlinkSync('tmp/test.log');
+        fs.rmdirSync('tmp/');
+    })
 });

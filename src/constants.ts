@@ -31,7 +31,23 @@ export const RETRY = {
 };
 
 export const ENV_VARS = {
-    LOG_LEVEL: 'F5_BIGIP_RUNTIME_INIT'
+    LOG_LEVEL: 'F5_BIGIP_RUNTIME_INIT_LOG_LEVEL',
+    LOG_FILENAME: 'F5_BIGIP_RUNTIME_INIT_LOG_FILENAME',
+    LOG_TO_JSON: 'F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON'
+};
+
+export const LOGGER = {
+    DEFAULT_FILENAME: '/var/log/cloud/bigIpRuntimeInit.log',
+    DEFAULT_LOG_LEVEL: 'info',
+    DEFAULT_LOG_TO_JSON: false,
+    FIELDS_TO_HIDE: [
+        "password",
+        "passphrase",
+        "certificate",
+        "privateKey",
+        "ciphertext",
+        "protected"
+    ]
 };
 
 export const CLOUDS = {
@@ -39,5 +55,6 @@ export const CLOUDS = {
   AZURE: 'azure',
   GCP: 'gcp'
 };
+
 
 export const CUSTOM_ONBOARD_CONFIG_DIR = '/config/cloud/custom_commands/';

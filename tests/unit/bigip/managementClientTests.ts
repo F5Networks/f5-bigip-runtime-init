@@ -30,6 +30,7 @@ const standardOptions = {
     maxRetries: 2,
     retryInterval: 2500
 };
+sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
 
 describe('BIG-IP Management Client', () => {
     afterEach(() => {

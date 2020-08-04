@@ -31,3 +31,6 @@ venv/
 
 # npm debug info
 npm-debug.log
+
+# Test artifacts
+tmp/

@@ -23,23 +23,25 @@
     "dependencies": {
         "@azure/identity": "^1.0.2",
         "@azure/keyvault-secrets": "^4.0.2",
-        "ajv": "^6.12.2",
-        "get-user-locale": "^1.4.0",
-        "uuid": "^8.2.0",
         "@f5devcentral/f5-teem": "^1.4.6",
         "@types/es6-promise": "^3.3.0",
+        "ajv": "^6.12.2",
         "aws-sdk": "^2.610.0",
         "commander": "^4.1.0",
+        "get-user-locale": "^1.4.0",
         "google-auth-library": "^5.6.1",
         "googleapis": "^48.0.0",
         "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
         "js-yaml": "^3.13.1",
         "mustache": "^4.0.0",
-        "request": "^2.88.2"
+        "request": "^2.88.2",
+        "uuid": "^8.2.0",
+        "winston": "^3.3.3"
     },
     "dependencyMap": {
         "common": {
             "commander": "^4.1.0",
+            "winston": "^3.3.3",
             "get-user-locale": "^1.4.0",
             "uuid": "^8.2.0",
             "@f5devcentral/f5-teem": "^1.4.6",

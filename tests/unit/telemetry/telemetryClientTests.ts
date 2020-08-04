@@ -43,6 +43,7 @@ describe('Telemetry Client', () => {
 
     beforeEach(() => {
         nock.cleanAll();
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
         mgmtClient = new ManagementClient();
         telemetryClient = new TelemetryClient(mgmtClient);
         telemetryClient.utils.runShellCommand = sinon.stub();
