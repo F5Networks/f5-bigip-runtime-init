@@ -1065,6 +1065,26 @@ post_hook:
 
 ```
 
+## Logging
+
+ - The following enviroment variables can be used for setting logging options: 
+    * F5_BIGIP_RUNTIME_INIT_LOG_LEVEL - defines log level
+    ```json
+        { 
+          error: 0, 
+          warn: 1, 
+          info: 2, 
+          debug: 5, 
+          silly: 6 
+        }
+    ```
+    * F5_BIGIP_RUNTIME_INIT_LOG_FILENAME - defines path to log file (i.e. /var/log/cloud/bigIpRuntimeInit.log)
+    * F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON - defines if logs should be outputed in JSON format:
+    ```json
+       {"message":"this is json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
+    ```
+Example how to set log level using env variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run ${CLOUD}```
+
 ## Build Artifacts
 
 - Create artifacts: `npm run build`

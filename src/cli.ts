@@ -24,9 +24,9 @@ import * as utils from './lib/utils';
 import Validator from './lib/validator.js';
 
 import { ResolverClient } from './lib/resolver/resolverClient';
-import { ManagementClient } from './lib/bigip/managementClient'
-import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient'
-import { TelemetryClient } from './lib/telemetry/telemetryClient'
+import { ManagementClient } from './lib/bigip/managementClient';
+import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient';
+import { TelemetryClient } from './lib/telemetry/telemetryClient';
 
 const logger = Logger.getLogger();
 const executionResults = {};

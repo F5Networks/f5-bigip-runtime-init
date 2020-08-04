@@ -187,9 +187,9 @@ export class TelemetryClient {
 
     async report(payload): Promise<void> {
         const teemClient = new this.F5TeemDevice(this.teemAssetInfo);
-        logger.info(`Telemetry Type: ${this.telemetryType}`);
-        logger.info(`Telemetry Version: ${this.telemetryTypeVersion}`);
-        logger.info(`F5 TEEM Payload: ${JSON.stringify(payload)}`);
+        logger.debug(`Telemetry Type: ${this.telemetryType}`);
+        logger.debug(`Telemetry Version: ${this.telemetryTypeVersion}`);
+        logger.debug(`F5 TEEM Payload: ${JSON.stringify(payload)}`);
         await teemClient.report(this.telemetryType, this.telemetryTypeVersion, payload, {});
     }
 
@@ -356,7 +356,7 @@ export class TelemetryClient {
                 await this._cloudClient.init();
                 break;
             } catch(error) {
-                logger.warning(`${cloudName} did not work. Trying another cloud`);
+                logger.warn(`${cloudName} did not work. Trying another cloud`);
                 logger.error(error.message);
             }
         }
@@ -553,7 +553,7 @@ export class TelemetryClient {
         if ('properties' in postHookConfig) {
             systemInfo['properties'] = postHookConfig.properties
         }
-        logger.info(`Webhook payload: ${utils.stringify(systemInfo)}`);
+        logger.debug(`Webhook payload: ${utils.stringify(systemInfo)}`);
 
         // make a request to the hook target
         const response = await utils.makeRequest(`${postHookConfig.url}`,

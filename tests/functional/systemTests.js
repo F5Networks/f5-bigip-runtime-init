@@ -22,6 +22,7 @@ describe('System tests', () => {
     let postedBigIpRunTimeInitDeclaration = {};
     let installedExtDeclarations = [];
     let customOnboardResultsCount;
+    let logFileSize = 0;
 
     before(function () {
         this.timeout(80000);
@@ -66,6 +67,11 @@ describe('System tests', () => {
             })
             .then((response) => {
                 customOnboardResultsCount = response.trim();
+                return funcUtils.runShellCommand(`sshpass -p ${firstDut.password} ssh -o StrictHostKeyChecking=no ${firstDut.username}@${firstDut.ip} "bash -c 'du -k /var/log/cloud/bigIpRuntimeInit.log | cut -f1'"`);
+
+            })
+            .then((response) => {
+                logFileSize = parseInt(response.trim());
                 return Promise.resolve();
             })
             .catch(err => Promise.reject(err));
@@ -110,5 +116,9 @@ describe('System tests', () => {
 
     it('should verify successful execution of pre and post onboards commands', () => {
         assert.strictEqual(parseInt(customOnboardResultsCount), 4);
+    });
+
+    it('should validate log file created and written', () => {
+        assert.ok(logFileSize > 0);
     });
 });

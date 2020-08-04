@@ -50,8 +50,8 @@ export function stringify(data: object): string {
  */
 export async function downloadToFile(url: string, file: string, options): Promise<void> {
     options = options || {};
-    logger.info(`Downloading File: ${url}`);
-    logger.info(`Options: ${JSON.stringify(options)}`);
+    logger.silly(`Downloading File: ${url}`);
+    logger.silly(`Options: ${JSON.stringify(options)}`);
     await new Promise((resolve, reject) => {
         request({
             url: url,
@@ -190,7 +190,7 @@ export function loadData(location: string, options?: {
     if (urlObject.protocol === 'file:') {
         return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
     } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
-        logger.info(`Loading file via url - options: ${JSON.stringify(options)} `);
+        logger.silly(`Loading file via url - options: ${JSON.stringify(options)} `);
         return new Promise<object>((resolve, reject) => {
             request({
                 url: location,
@@ -280,7 +280,7 @@ export async function makeRequest(uri: string, options?: {
         strictSSL: options.verifyTls ? options.verifyTls : true
     };
 
-    logger.info(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.strictSSL}`);
+    logger.silly(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.strictSSL}`);
 
     const response: {
         code: number;
@@ -299,7 +299,7 @@ export async function makeRequest(uri: string, options?: {
         });
     });
 
-    logger.info(`Request response: ${response.code} ${stringify(response.body)}`);
+    logger.silly(`Request response: ${response.code} ${stringify(response.body)}`);
 
     return { code: response.code, body: response.body };
 }

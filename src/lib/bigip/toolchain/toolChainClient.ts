@@ -203,7 +203,7 @@ class PackageClient {
         let start = 0;
         let end = chunkSize;
         while (end <= fileStats.size - 1 && start < end) {
-            logger.info(`Sending chunk: ${start}-${end}/${fileStats.size}`);
+            logger.silly(`Sending chunk: ${start}-${end}/${fileStats.size}`);
 
             await utils.makeRequest(
                 `${this.uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
