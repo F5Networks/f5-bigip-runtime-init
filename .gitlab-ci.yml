@@ -1,6 +1,7 @@
 image: node:8
 
 stages:
+    - process
     - build
     - lint
     - unittests
@@ -54,6 +55,9 @@ publish_container:
         changes:
             - Dockerfile
             - plans/**/*
+    except:
+        - schedules
+        - triggers
 
 
 ### Functional Tests Section
@@ -92,6 +96,9 @@ publish_container:
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        - schedules
+        - triggers
     artifacts:
         paths:
             - env_metadata/${CLOUD}
@@ -105,6 +112,9 @@ test_functional_init_azure:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "azure"
+    except:
+        - schedules
+        - triggers
     variables:
         CLOUD: "azure"
 
@@ -115,6 +125,9 @@ test_functional_init_aws:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "aws"
+    except:
+        - schedules
+        - triggers
     variables:
         CLOUD: "aws"
 
@@ -143,6 +156,9 @@ test_functional_init_aws:
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        - schedules
+        - triggers
     artifacts:
         paths:
             - logs
@@ -156,6 +172,9 @@ test_functional_execute_azure:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "azure"
+    except:
+        - schedules
+        - triggers
     variables:
         CLOUD: "azure"
     dependencies:
@@ -169,6 +188,9 @@ test_functional_execute_aws:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "aws"
+    except:
+        - schedules
+        - triggers
     variables:
         CLOUD: "aws"
     dependencies:
@@ -195,6 +217,9 @@ test_functional_execute_aws:
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        - schedules
+        - triggers
 
 # run functional tests: azure
 test_functional_cleanup_azure:
@@ -207,6 +232,9 @@ test_functional_cleanup_azure:
         CLOUD: "azure"
     dependencies:
         - test_functional_init_azure
+    except:
+        - schedules
+        - triggers
 
 # run functional tests: aws
 test_functional_cleanup_aws:
@@ -215,6 +243,9 @@ test_functional_cleanup_aws:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "aws"
+    except:
+        - schedules
+        - triggers
     variables:
         CLOUD: "aws"
     dependencies:
@@ -234,6 +265,9 @@ build_package:
         - npm run build
     tags:
         - cm-official-docker-executor
+    except:
+        - schedules
+        - triggers
     artifacts:
         name: package
         paths:
@@ -249,6 +283,9 @@ lint_package:
         - npm run lint
     tags:
         - cm-official-docker-executor
+    except:
+        - schedules
+        - triggers
 
 # audit packages for vulnerabilities
 test_audit:
@@ -259,11 +296,112 @@ test_audit:
         - npm run audit
     tags:
         - cm-official-docker-executor
+    except:
+        - schedules
+        - triggers
 
 # run unit tests
 unit_tests:
     stage: unittests
     script:
         - npm run test
+    tags:
+        - cm-official-docker-executor
+    except:
+        - schedules
+        - triggers
+
+# Publish RPM's to CDN
+publish_rpms_dev_cdn:
+    stage: publish
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $PUBLISH_RPM_DEVELOP == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_publish_develop_cdn/
+    except:
+        - schedules
+        - triggers
+    script:
+        # publish dist rpms to F5 CDN into develop directory
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # copy push rpms to cdn
+        - VERSION=$(cat package.json | jq -r ".version")
+        - RELEASE=$(cat package.json | jq -r ".release")
+        - echo "Version:${VERSION}, Release:${RELEASE}"
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - mkdir -p ${CDN_FOLDER}/develop/${CI_COMMIT_REF_NAME}
+        - cp -r dist ${CDN_FOLDER}/develop/${CI_COMMIT_REF_NAME}
+        - cd ${CDN_FOLDER}/develop
+        - status=$(svn status)
+        - echo "$status"
+        - if echo "$status" | grep -F '?'; then svn add ${CI_COMMIT_REF_NAME}; else echo "No new directory to add"; fi
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - echo "$changed_files_count"
+        - if [[ $changed_files_count -ge 1 ]]; then svn add --force ${CI_COMMIT_REF_NAME}/*; svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "RPM files unchanged"; fi
+    tags:
+        - cm-official-docker-executor
+
+publish_rpms_cdn:
+    stage: publish
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $PUBLISH_RPM == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_publish_cdn/
+    except:
+        - schedules
+        - triggers
+    script:
+        # publish dist rpms to F5 CDN into $VERSION directory
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # copy push rpms to cdn
+        - VERSION=$(cat package.json | jq -r ".version")
+        - RELEASE=$(cat package.json | jq -r ".release")
+        - echo "Version:${VERSION}, Release:${RELEASE}"
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - mkdir -p ${CDN_FOLDER}/v${VERSION}
+        - cp -r dist ${CDN_FOLDER}/v${VERSION}
+        - cd ${CDN_FOLDER}
+        - status=$(svn status)
+        - if echo "$status" | grep -F '?'; then svn add v${VERSION}; else echo "No new directory to add"; fi
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - if [[ $changed_files_count -ge 1 ]]; then svn add --force v${VERSION}/*; svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "RPM files unchanged"; fi
+    tags:
+        - cm-official-docker-executor
+
+# Cleanup development RPM's on CDN when branch no longer present on gitlab
+cleanup_publish_rpms_dev_cdn:
+    stage: process
+    only:
+      variables:
+        - $CLEANUP_DEVELOP_CDN == "true"
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # find branches in project and cdn
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - curl -k -H "PRIVATE-TOKEN:${DAILY_TEST_TOKEN}" "https://gitlab.f5net.com/api/v4/projects/${CI_PROJECT_ID}/repository/branches" | jq -r .[].name > branches.txt
+        - cat branches.txt
+        - ls ${CDN_FOLDER}/develop > cdn_branches.txt
+        - cat cdn_branches.txt
+        - diff=$(comm -23 cdn_branches.txt branches.txt)
+        - echo "Removing directories:$diff"
+        - cd ${CDN_FOLDER}/develop
+        - for d in $diff; do svn rm $d; done
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - if [[ $changed_files_count -ge 1 ]]; then svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "Develop directories unchanged"; fi
+
     tags:
         - cm-official-docker-executor

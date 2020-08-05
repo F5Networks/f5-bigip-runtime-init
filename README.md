@@ -1,7 +1,23 @@
+
 # f5-bigip-runtime-init
 ## NOTE: This project is under active development.
 
 F5 BIG-IP runtime init installs and configures BIG-IP Toolchain components, while also providing runtime rendering of entities such as secrets, metadata values, etc. into the Toolchain declarations resulting in a complete overlay deployment tool for configuring a BIG-IP.
+<br>
+<br>
+RPM's, file hashes, and installer are located on cdn using the following url's:
+* Examples using version v0.9.0 release 1
+  * [f5-bigip-runtime-init installer](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/f5-bigip-runtime-init-0.9.0-1.gz.run)
+  * RPMS & checksum file
+    * [All clouds rpm](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-all-0.9.0-1-signed.noarch.rpm)
+    * [All checksum](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-all-0.9.0-1-signed.noarch.rpm.sha256)
+    * [Azure rpm](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-azure-0.9.0-1-signed.noarch.rpm)
+    * [Azure checksum](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-azure-0.9.0-1-signed.noarch.rpm.sha256)
+    * [AWS rpm](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-aws-0.9.0-1-signed.noarch.rpm)
+    * [AWS checksum](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-aws-0.9.0-1-signed.noarch.rpm.sha256)
+    * [GCP rpm](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-gcp-0.9.0-1-signed.noarch.rpm)
+    * [GCP checksum](https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/rpms/f5-bigip-runtime-init-gcp-0.9.0-1-signed.noarch.rpm.sha256)
+
 
 ## Value
 
