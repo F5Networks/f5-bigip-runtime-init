@@ -80,6 +80,7 @@ export async function cli(): Promise<string> {
 
     // pre onboard
     // run before install operations in case they require out-of-band changes
+    logger.info('Start working with pre-onboard commands');
     const preOnboardEnabled = config.pre_onboard_enabled || [];
     if (preOnboardEnabled.length) {
         logger.info('Executing custom pre-onboard commands');
@@ -178,8 +179,9 @@ cli()
                 return telemetryClient.report(telemetryClient.createTelemetryData());
             }).then(() => {
                 logger.info('F5 Teem report was successfully sent for failure case.');
+                logger.error(executionResults['resultSummary']);
             })
-            .catch((err) => {
-                logger.error(err);
+            .catch((err2) => {
+                logger.error(err2.message);
             });
     });

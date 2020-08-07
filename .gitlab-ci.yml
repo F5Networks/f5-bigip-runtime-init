@@ -56,8 +56,8 @@ publish_container:
             - Dockerfile
             - plans/**/*
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
 
 
 ### Functional Tests Section
@@ -97,8 +97,9 @@ publish_container:
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
     artifacts:
         paths:
             - env_metadata/${CLOUD}
@@ -112,9 +113,6 @@ test_functional_init_azure:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "azure"
-    except:
-        - schedules
-        - triggers
     variables:
         CLOUD: "azure"
 
@@ -125,11 +123,18 @@ test_functional_init_aws:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "aws"
-    except:
-        - schedules
-        - triggers
     variables:
         CLOUD: "aws"
+
+# run functional tests: gcp
+test_functional_init_gcp:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "gcp"
+    variables:
+        CLOUD: "gcp"
 
 # Functional Tests - Execute phase (with no retries)
 .test_functional_execute_generic: &test_functional_execute_generic
@@ -157,8 +162,9 @@ test_functional_init_aws:
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
     artifacts:
         paths:
             - logs
@@ -172,9 +178,6 @@ test_functional_execute_azure:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "azure"
-    except:
-        - schedules
-        - triggers
     variables:
         CLOUD: "azure"
     dependencies:
@@ -188,13 +191,24 @@ test_functional_execute_aws:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "aws"
-    except:
-        - schedules
-        - triggers
     variables:
         CLOUD: "aws"
     dependencies:
         - test_functional_init_aws
+        - build_package
+
+
+# run functional tests: gcp
+test_functional_execute_gcp:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "gcp"
+    variables:
+        CLOUD: "gcp"
+    dependencies:
+        - test_functional_init_gcp
         - build_package
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
@@ -218,8 +232,9 @@ test_functional_execute_aws:
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
 
 # run functional tests: azure
 test_functional_cleanup_azure:
@@ -232,9 +247,6 @@ test_functional_cleanup_azure:
         CLOUD: "azure"
     dependencies:
         - test_functional_init_azure
-    except:
-        - schedules
-        - triggers
 
 # run functional tests: aws
 test_functional_cleanup_aws:
@@ -243,13 +255,22 @@ test_functional_cleanup_aws:
         variables:
             - $TEST_SUITE == "all"
             - $TEST_SUITE == "aws"
-    except:
-        - schedules
-        - triggers
     variables:
         CLOUD: "aws"
     dependencies:
         - test_functional_init_aws
+
+# run functional tests: gcp
+test_functional_cleanup_gcp:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all"
+            - $TEST_SUITE == "gcp"
+    variables:
+        CLOUD: "gcp"
+    dependencies:
+        - test_functional_init_gcp
 
 # build package
 build_package:
@@ -265,15 +286,15 @@ build_package:
         - npm run build
     tags:
         - cm-official-docker-executor
-    except:
-        - schedules
-        - triggers
     artifacts:
         name: package
         paths:
             - node_modules
             - dist
         expire_in: 2 week
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
 
 # lint package
 lint_package:
@@ -284,8 +305,8 @@ lint_package:
     tags:
         - cm-official-docker-executor
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
 
 # audit packages for vulnerabilities
 test_audit:
@@ -297,8 +318,8 @@ test_audit:
     tags:
         - cm-official-docker-executor
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
 
 # run unit tests
 unit_tests:
@@ -308,8 +329,8 @@ unit_tests:
     tags:
         - cm-official-docker-executor
     except:
-        - schedules
-        - triggers
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
 
 # Publish RPM's to CDN
 publish_rpms_dev_cdn:
@@ -320,8 +341,9 @@ publish_rpms_dev_cdn:
             - $PUBLISH_RPM_DEVELOP == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_publish_develop_cdn/
     except:
-        - schedules
-        - triggers
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CLEANUP_DEVELOP_CDN == "true"
     script:
         # publish dist rpms to F5 CDN into develop directory
         # install jq
@@ -354,8 +376,9 @@ publish_rpms_cdn:
             - $PUBLISH_RPM == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_publish_cdn/
     except:
-        - schedules
-        - triggers
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CLEANUP_DEVELOP_CDN == "true"
     script:
         # publish dist rpms to F5 CDN into $VERSION directory
         # install jq
@@ -382,8 +405,12 @@ publish_rpms_cdn:
 cleanup_publish_rpms_dev_cdn:
     stage: process
     only:
-      variables:
-        - $CLEANUP_DEVELOP_CDN == "true"
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+    except:
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $PUBLISH_RPM == "true"
     script:
         # install jq
         - apt-get update

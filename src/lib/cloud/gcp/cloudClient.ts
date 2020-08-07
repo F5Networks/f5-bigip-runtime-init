@@ -84,6 +84,24 @@ export class GcpCloudClient extends AbstractCloudClient {
     }
 
     /**
+     * Returns cloud name
+     *
+     * @returns {String}
+     */
+    getCloudName(): string {
+        return constants.CLOUDS.GCP;
+    }
+
+    /**
+     * Returns accountId/subscriptionId from Azure
+     *
+     * @returns {String}
+     */
+    getCustomerId(): string {
+        return this.projectId;
+    }
+
+    /**
      * Get projectId
      *
      * @returns {Promise} A promise which is resolved with the projectId requested
