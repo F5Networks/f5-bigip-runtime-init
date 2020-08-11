@@ -130,11 +130,11 @@ export class AzureCloudClient extends AbstractCloudClient {
             throw new Error('Azure Cloud Client metadata type is missing');
         }
 
-        if (type != 'compute' && type != 'network') {
+        if (type !== 'compute' && type !== 'network') {
             throw new Error('Azure Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
         }
 
-        if (type === 'network' && !index) {
+        if (type === 'network' && index === undefined) {
             throw new Error('Azure Cloud Client network metadata index is missing');
         }
 
@@ -156,7 +156,7 @@ export class AzureCloudClient extends AbstractCloudClient {
         if (type === 'compute') {
             if (field === 'name') {
                 instanceName = response.body[field];
-                result = instanceName.replace('_', '-');
+                result = instanceName.replace(/_/g, '-');
             } else {
                 result = response.body[field];
             }

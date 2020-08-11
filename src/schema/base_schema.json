@@ -76,7 +76,7 @@
                             },
                             {
                                 "if": { "properties": { "type": { "const": "network" } } },
-                                "then": { "properties": { "field": { "type": "string", "enum": ["ipv4", "ipv6"] }, "index": { "type": "integer", "minimum": 1, "maximum": 8 } }, "required": ["field", "index"] }
+                                "then": { "properties": { "field": { "type": "string", "enum": ["ipv4", "ipv6", "ip"] }, "index": { "type": "integer", "minimum": 0, "maximum": 8 } }, "required": ["field", "index"] }
                             }
                         ],
                         "required": ["environment", "type"],

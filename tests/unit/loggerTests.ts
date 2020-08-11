@@ -58,12 +58,18 @@ describe('Logger', function() {
     it('should log validate log filename setting', function() {
         sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test.log' });
         logger = Logger.getLogger();
-        logger.info('info msg');
+        logger.info('custom log file msg');
+        assert.ok(true);
     });
 
-    it('should validate custom log creation', function() {
-        assert.ok(fs.existsSync('tmp/test.log'));
-        fs.unlinkSync('tmp/test.log');
-        fs.rmdirSync('tmp/');
+    it('should validate custom log creation', function(done) {
+        this.timeout(10000);
+        setTimeout(() => {
+            assert.ok(fs.existsSync('tmp/test.log'));
+            fs.unlinkSync('tmp/test.log');
+            fs.rmdirSync('tmp/');
+            done();
+        }, 5000);
+
     })
 });

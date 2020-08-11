@@ -20,6 +20,7 @@
 import {google, GoogleApis} from 'googleapis';
 import * as constants from '../../../constants'
 import { AbstractCloudClient } from '../abstract/cloudClient'
+import * as utils from "../../utils";
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 export class GcpCloudClient extends AbstractCloudClient {
@@ -99,6 +100,83 @@ export class GcpCloudClient extends AbstractCloudClient {
      */
     getCustomerId(): string {
         return this.projectId;
+    }
+
+    /**
+     * Gets value from Google metadata
+     *
+     * @param field                         - metadata property to fetch
+     * @param [options]                     - function options
+     *
+     * @returns {Promise}
+     */
+    async getMetadata(field: string, options?: {
+        type?: string;
+        index?: number;
+    }): Promise<string> {
+        const type = options ? options.type : undefined;
+        const index = options ? options.index : undefined;
+
+        if (!field) {
+            throw new Error('Google Cloud Client metadata field is missing');
+        }
+
+        if (!type) {
+            throw new Error('Google Cloud Client metadata type is missing');
+        }
+
+
+        if (type != 'compute' && type != 'network') {
+            throw new Error('Google Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
+        }
+
+        if (type === 'network' && index === undefined) {
+            throw new Error('Google Cloud Client network metadata index is missing');
+        }
+
+        let result: string;
+
+        if (type == 'compute') {
+            const response = await utils.makeRequest(
+                `http://metadata.google.internal/computeMetadata/v1/instance/${field}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Metadata-Flavor': 'Google'
+                    }
+                }
+            );
+
+            result = response.body.replace(/_/g, '-');
+        } else if(type === 'network') {
+            const responseIp = await utils.makeRequest(
+                `http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/${index}/${field}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Metadata-Flavor': 'Google'
+                    }
+                }
+            );
+
+            const responseMask = await utils.makeRequest(
+                `http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/${index}/subnetmask`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Metadata-Flavor': 'Google'
+                    }
+                }
+            );
+
+            const maskNodes = responseMask.body.match(/(\d+)/g);
+            let cidr = 0;
+            for(const i in maskNodes) {
+                cidr += (((maskNodes[i] >>> 0).toString(2)).match(/1/g) || []).length;
+            }
+            result = `${responseIp.body}/${cidr}`;
+        }
+        return result;
     }
 
     /**

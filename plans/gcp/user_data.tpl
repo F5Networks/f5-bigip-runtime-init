@@ -89,6 +89,26 @@ runtime_parameters:
         environment: gcp
         version: latest
         secretId: secret-01-${deployment_id}
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: compute
+        field: name
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 2
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 0
 pre_onboard_enabled:
   - name: example_inline_command
     type: inline

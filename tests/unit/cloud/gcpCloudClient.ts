@@ -10,6 +10,7 @@
 
 import assert from 'assert';
 import sinon from 'sinon';
+import nock from 'nock';
 import { GcpCloudClient } from '../../../src/lib/cloud/gcp/cloudClient';
 const cloud = 'gcp';
 
@@ -45,7 +46,8 @@ describe('CloudClient - GCP', () => {
             })
             .then(() => {
                 assert.strictEqual(cloudClient.authToken, 'my-token');
-            });
+            })
+            .catch(err => Promise.reject(err));
     });
 
     it('should validate init metadata request promise rejection _getProjectId', () => {
@@ -68,6 +70,21 @@ describe('CloudClient - GCP', () => {
             }).catch((err) => {
                 assert.ok(err.message.includes('Test Rejection'));
             });
+    });
+
+    it('should validate getCloudName', () => {
+        assert.strictEqual(cloudClient.getCloudName(), cloud);
+    });
+
+    it('should validate getCustomerId', () => {
+        cloudClient._getProjectId = sinon.stub().resolves('my-project');
+        cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        return cloudClient.init()
+            .then(() => {
+                assert.strictEqual(cloudClient.getCustomerId(), 'my-project');
+            })
+            .catch(err => Promise.reject(err));
+
     });
 
     it('should validate _getProject', () => {
@@ -171,6 +188,72 @@ describe('CloudClient - GCP', () => {
         )
             .then((secret) => {
                 assert.strictEqual(secret, 'StrongPassword!');
+            });
+    });
+
+    it('should validate getMetadata returns compute name field value', () => {
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/name')
+            .reply(200, 'test_vm_name-01');
+        cloudClient.getMetadata('name', { type: 'compute' })
+            .then((response) => {
+                assert.strictEqual(response, 'test-vm-name-01');
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+
+    it('should validate getMetadata returns network ip field value', () => {
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/network-interfaces/0/ip')
+            .reply(200, '10.0.3.2');
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/network-interfaces/0/subnetmask')
+            .reply(200, '255.255.255.0');
+        cloudClient.getMetadata('ip', { type: 'network', index: 0 })
+            .then((response) => {
+                assert.strictEqual(response, '10.0.3.2/24');
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+    it('should fail getMetadata when field is missing', () => {
+        cloudClient.getMetadata('', { type: 'compute' })
+            .then(() => {
+                assert.fail();
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('metadata field is missing'));
+            });
+    });
+
+    it('should fail getMetadata when type is missing', () => {
+        cloudClient.getMetadata('name')
+            .then(() => {
+                assert.fail();
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('metadata type is missing'));
+            });
+    });
+
+    it('should fail getMetadata when index is missing', () => {
+        cloudClient.getMetadata('ipv4', { type: 'network' })
+            .then(() => {
+                assert.fail();
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('metadata index is missing'));
+            });
+    });
+
+    it('should fail getMetadata when wrong type is provided', () => {
+        cloudClient.getMetadata('name', { type: 'bar' })
+            .then(() => {
+                assert.fail();
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('metadata type is unknown'));
             });
     });
 });
