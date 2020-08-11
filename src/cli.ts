@@ -54,7 +54,7 @@ export async function cli(): Promise<string> {
     executionResults['configFile'] = program.configFile;
     executionResults['startTime'] = (new Date()).toISOString();
     executionResults['config'] = config;
-
+    logger.info('Validating provided declaration');
     const validator = new Validator();
     const validation = validator.validate(config);
     if (!validation.isValid) {
@@ -168,11 +168,15 @@ cli()
         logger.info(message);
     })
     .catch((err) => {
-        logger.info(err);
+        logger.info(err.message);
         executionResults['endTime'] = (new Date()).toISOString();
         executionResults['result'] = 'FAILURE';
         executionResults['resultSummary'] = err.message;
         // f5-teem
+        const mgmtClient = new ManagementClient();
+        telemetryClient = new TelemetryClient(
+            mgmtClient
+        );
         logger.info('Sending F5 Teem report for failure case.');
         telemetryClient.init(executionResults)
             .then(() => {

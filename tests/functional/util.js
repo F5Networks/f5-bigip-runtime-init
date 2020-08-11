@@ -328,5 +328,26 @@ module.exports = {
             }
         });
         return deferred.promise;
+    },
+
+    getGlobalSettings(host, port, authToken){
+        const uri = '/mgmt/tm/sys/global-settings';
+        const requestOptions = {
+            method: 'GET',
+            AUTH_TOKEN: authToken,
+            PORT: port,
+            HOST: host,
+            headers: {
+                'x-f5-auth-token': authToken
+            },
+            strictSSL: false
+        };
+
+        return this.makeRequest(host, uri, requestOptions)
+            .then(data => data)
+            .catch((err) => {
+                const msg = `can't get global settings: ${err}`;
+                throw new Error(msg);
+            });
     }
 };

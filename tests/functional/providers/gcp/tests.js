@@ -40,6 +40,7 @@ describe('Provider: Google', () => {
     let authClient;
     let adminPass;
     let testNewAuthData;
+    let testHostName;
     before(() => {
         return configureAuth()
             .then((createdAuthClient) => {
@@ -61,6 +62,11 @@ describe('Provider: Google', () => {
             })
             .then((data) => {
                 testNewAuthData = data;
+                // getting Global Settings
+                return funcUtils.getGlobalSettings(firstDut.ip, firstDut.port, testNewAuthData.token)
+            })
+            .then((response) => {
+                testHostName = response.hostname;
             })
             .catch(err => Promise.reject(err));
     });
@@ -77,5 +83,9 @@ describe('Provider: Google', () => {
 
     it('should confirm new admin credentials are valid', () => {
         assert.ok('token' in testNewAuthData);
+    });
+
+    it('should confirm hostname was updated using DO', () => {
+        assert.ok(testHostName.includes('.test'));
     });
 });
