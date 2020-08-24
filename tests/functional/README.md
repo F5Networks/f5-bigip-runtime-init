@@ -8,7 +8,7 @@
   * Gitlab CI/CD - as tasks scheduling and execution mechanism
   * Deployment-tool docker image:
     - Includes terraform; tool for provisioning cloud resources
-    - Terrafrom plans defined under the following repo: https://gitswarm.f5net.com/automation-sdk/deployment-tool
+    - Terrafrom plans defined under the following repo: /automation-sdk/deployment-tool
     - Other CLI tools, such as sshpass and jq 
   * Mocha tests used for verifing installed extensions and posted declarations
   

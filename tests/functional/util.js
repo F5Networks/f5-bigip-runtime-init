@@ -349,5 +349,35 @@ module.exports = {
                 const msg = `can't get global settings: ${err}`;
                 throw new Error(msg);
             });
+    },
+
+     /**
+     * Runs n API get to bigip and returns output
+     *
+     * @param {String} host - host
+     * @param {Integer} port - mgmt port
+     * @param {String} authToken - authentication token
+     * @param {String} uri - endpoint uri
+     * @returns {Promise} A promise which is resolved with the results of the
+     *                    endpoint specified or rejected if an error occurs.
+     */
+    getBigipApi(host, port, authToken, uri){
+        const requestOptions = {
+            method: 'GET',
+            AUTH_TOKEN: authToken,
+            PORT: port,
+            HOST: host,
+            headers: {
+                'x-f5-auth-token': authToken
+            },
+            strictSSL: false
+        };
+
+        return this.makeRequest(host, uri, requestOptions)
+            .then(data => data)
+            .catch((err) => {
+                const msg = `can't GET endpoint: ${err}`;
+                throw new Error(msg);
+            });
     }
 };

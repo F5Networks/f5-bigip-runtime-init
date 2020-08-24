@@ -1,4 +1,5 @@
-FROM artifactory.f5net.com/ecosystems-cloudsolutions-docker-dev/deployment-tool:latest
+ARG artifactory_server
+FROM ${artifactory_server}/ecosystems-cloudsolutions-docker-dev/deployment-tool:latest
 
 # Delete their deployment files
 RUN rm -r plans/

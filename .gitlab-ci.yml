@@ -2,13 +2,13 @@ image: node:8
 
 stages:
     - process
+    - test
     - build
-    - lint
-    - unittests
+    - functional_test_publish
+    - functional_test_init
+    - functional_test_execute
+    - functional_test_cleanup
     - publish
-    - test_functional_init
-    - test_functional_execute
-    - test_functional_cleanup
 
 .helpers: &helpers |
     function validate () {
@@ -36,13 +36,129 @@ variables:
     TF_VAR_AZURE_OFFER: "$AZURE_OFFER"
     TF_VAR_AZURE_SKU: "$AZURE_SKU"
     TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION"
+    GIT_SECRETS_VERSION: '1.3.0'
+    GIT_SECRETS_PKG_URL: "https://github.com/awslabs/git-secrets/archive/${GIT_SECRETS_VERSION}.tar.gz"
 
+# Cleanup development RPM's on CDN when branch no longer present on gitlab
+cleanup_publish_rpms_dev_cdn:
+    stage: process
+    only:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+    except:
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $PUBLISH_RPM == "true"
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # find branches in project and cdn
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - curl -k -H "PRIVATE-TOKEN:${DAILY_TEST_TOKEN}" "https://${GITLAB_URL}/api/v4/projects/${CI_PROJECT_ID}/repository/branches" | jq -r .[].name > branches.txt
+        - cat branches.txt
+        - ls ${CDN_FOLDER}/develop > cdn_branches.txt
+        - cat cdn_branches.txt
+        - diff=$(comm -23 cdn_branches.txt branches.txt)
+        - echo "Removing directories:$diff"
+        - cd ${CDN_FOLDER}/develop
+        - for d in $diff; do svn rm $d; done
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - if [[ $changed_files_count -ge 1 ]]; then svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "Develop directories unchanged"; fi
+
+    tags:
+        - cm-official-docker-executor
+
+# lint package
+lint_package:
+    stage: test
+    script:
+        # linter
+        - npm install
+        - npm run lint
+    tags:
+        - cm-official-docker-executor
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# audit packages for vulnerabilities
+test_audit:
+    stage: test
+    script:
+        # npm audit - uses custom audit processor wrapper
+        - npm install
+        - npm run audit
+    tags:
+        - cm-official-docker-executor
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# run unit tests
+unit_tests:
+    stage: test
+    script:
+        - npm install
+        - npm run test
+    tags:
+        - cm-official-docker-executor
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# check for disallowed content in all files, this supplements
+# the native pre-receive push rules built into GitLab for secrets
+# NOTE: .gitallowed is used for exceptions
+check_content:
+    image: f5devcentral/containthedocs:rpmbuild
+    stage: test
+    script:
+        # install git-secrets
+        - curl -q -L -o git_secrets.tar.gz ${GIT_SECRETS_PKG_URL}
+        - tar xzf git_secrets.tar.gz
+        - cd git-secrets-${GIT_SECRETS_VERSION} && make install && cd ..
+        # now, add any patterns to disallow
+        - git secrets --add '.*f5.*\.com'
+        # scan
+        - git secrets --scan
+    tags:
+        - cm-official-docker-executor
+
+# build package
+build_package:
+    stage: build
+    script:
+        # install packages: jq, rpm
+        - apt-get update
+        - apt-get install -y jq
+        - apt-get install -y rpm
+        # install node dependencies
+        - npm install
+        # build package artifact
+        - npm run build
+    tags:
+        - cm-official-docker-executor
+    artifacts:
+        name: package
+        paths:
+            - node_modules
+            - dist
+        expire_in: 2 week
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+### Functional Tests Section
+# Publish docker image to artifactory
 publish_container:
     image: docker:stable
-    stage: publish
+    stage: functional_test_publish
     script:
         - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
-        - docker build -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest .
+        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest .
         - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
     tags:
         - docker-executor
@@ -59,12 +175,9 @@ publish_container:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
 
-
-### Functional Tests Section
-
 # Functional Tests - Initialization phase (with 1 retries in a case of any failures)
 .test_functional_init_generic: &test_functional_init_generic
-    stage: test_functional_init
+    stage: functional_test_init
     image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
     retry:
         max: 1
@@ -138,7 +251,7 @@ test_functional_init_gcp:
 
 # Functional Tests - Execute phase (with no retries)
 .test_functional_execute_generic: &test_functional_execute_generic
-    stage: test_functional_execute
+    stage: functional_test_execute
     image: python:3.7
     script:
         # install jq
@@ -213,7 +326,7 @@ test_functional_execute_gcp:
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
-    stage: test_functional_cleanup
+    stage: functional_test_cleanup
     image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
     retry:
         max: 1
@@ -271,66 +384,6 @@ test_functional_cleanup_gcp:
         CLOUD: "gcp"
     dependencies:
         - test_functional_init_gcp
-
-# build package
-build_package:
-    stage: build
-    script:
-        # install packages: jq, rpm
-        - apt-get update
-        - apt-get install -y jq
-        - apt-get install -y rpm
-        # install node dependencies
-        - npm install
-        # build package artifact
-        - npm run build
-    tags:
-        - cm-official-docker-executor
-    artifacts:
-        name: package
-        paths:
-            - node_modules
-            - dist
-        expire_in: 2 week
-    except:
-        variables:
-            - $CLEANUP_DEVELOP_CDN == "true"
-
-# lint package
-lint_package:
-    stage: lint
-    script:
-        # linter
-        - npm run lint
-    tags:
-        - cm-official-docker-executor
-    except:
-        variables:
-            - $CLEANUP_DEVELOP_CDN == "true"
-
-# audit packages for vulnerabilities
-test_audit:
-    stage: unittests
-    script:
-        # npm audit - uses custom audit processor wrapper
-        - npm install
-        - npm run audit
-    tags:
-        - cm-official-docker-executor
-    except:
-        variables:
-            - $CLEANUP_DEVELOP_CDN == "true"
-
-# run unit tests
-unit_tests:
-    stage: unittests
-    script:
-        - npm run test
-    tags:
-        - cm-official-docker-executor
-    except:
-        variables:
-            - $CLEANUP_DEVELOP_CDN == "true"
 
 # Publish RPM's to CDN
 publish_rpms_dev_cdn:
@@ -398,37 +451,5 @@ publish_rpms_cdn:
         - if echo "$status" | grep -F '?'; then svn add v${VERSION}; else echo "No new directory to add"; fi
         - changed_files_count=$(svn diff --summarize | wc -l)
         - if [[ $changed_files_count -ge 1 ]]; then svn add --force v${VERSION}/*; svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "RPM files unchanged"; fi
-    tags:
-        - cm-official-docker-executor
-
-# Cleanup development RPM's on CDN when branch no longer present on gitlab
-cleanup_publish_rpms_dev_cdn:
-    stage: process
-    only:
-        variables:
-            - $CLEANUP_DEVELOP_CDN == "true"
-    except:
-        variables:
-            - $RUN_FUNCTIONAL_TESTS == "true"
-            - $PUBLISH_RPM == "true"
-    script:
-        # install jq
-        - apt-get update
-        - apt-get install -y jq
-        # find branches in project and cdn
-        - CDN_FOLDER="f5-bigip-runtime-init"
-        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
-        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
-        - curl -k -H "PRIVATE-TOKEN:${DAILY_TEST_TOKEN}" "https://gitlab.f5net.com/api/v4/projects/${CI_PROJECT_ID}/repository/branches" | jq -r .[].name > branches.txt
-        - cat branches.txt
-        - ls ${CDN_FOLDER}/develop > cdn_branches.txt
-        - cat cdn_branches.txt
-        - diff=$(comm -23 cdn_branches.txt branches.txt)
-        - echo "Removing directories:$diff"
-        - cd ${CDN_FOLDER}/develop
-        - for d in $diff; do svn rm $d; done
-        - changed_files_count=$(svn diff --summarize | wc -l)
-        - if [[ $changed_files_count -ge 1 ]]; then svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "Develop directories unchanged"; fi
-
     tags:
         - cm-official-docker-executor
