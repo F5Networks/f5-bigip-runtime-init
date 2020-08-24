@@ -71,12 +71,28 @@
                         },
                         "allOf": [
                             {
-                                "if": { "properties": { "type": { "const": "compute" } } },
+                                "if": { "properties": { "type": { "const": "compute" }, "environment": { "const": "aws" } } },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["hostname"] } }, "required": ["field"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "compute" }, "environment": { "const": "azure" } } },
                                 "then": { "properties": { "field": { "type": "string", "enum": ["name"] } }, "required": ["field"] }
                             },
                             {
-                                "if": { "properties": { "type": { "const": "network" } } },
-                                "then": { "properties": { "field": { "type": "string", "enum": ["ipv4", "ipv6", "ip"] }, "index": { "type": "integer", "minimum": 0, "maximum": 8 } }, "required": ["field", "index"] }
+                                "if": { "properties": { "type": { "const": "compute" }, "environment": { "const": "gcp" } } },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["name"] } }, "required": ["field"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "network" }, "environment": { "const": "aws" } } },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["local-ipv4s", "subnet-ipv4-cidr-block"] }, "index": { "type": "integer", "minimum": 0, "maximum": 8 } }, "required": ["field", "index"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "network" }, "environment": { "const": "azure" }} },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["ipv4", "ipv6"] }, "index": { "type": "integer", "minimum": 0, "maximum": 8 } }, "required": ["field", "index"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "network" }, "environment": { "const": "gcp" }} },
+                                "then": { "properties": { "field": { "type": "string", "enum": ["ip"] }, "index": { "type": "integer", "minimum": 0, "maximum": 8 } }, "required": ["field", "index"] }
                             }
                         ],
                         "required": ["environment", "type"],

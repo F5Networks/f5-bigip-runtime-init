@@ -75,7 +75,7 @@ EOF
 chmod 755 /config/first-run.sh
 nohup /config/first-run.sh &
 
-/bin/curl -L -o /tmp/f5-appsvcs-templates-1.1.0-1.noarch.rpm https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+/bin/curl -L -o /tmp/f5-appsvcs-templates-1.1.0-1.noarch.rpm https://github.com/f5networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
 mkdir -p /var/lib/cloud/icontrollx_installs
 cp /tmp/f5-appsvcs-templates-1.1.0-1.noarch.rpm /var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
 

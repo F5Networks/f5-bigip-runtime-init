@@ -1,38 +1,40 @@
 {
-    "class": "Device",
     "schemaVersion": "1.0.0",
+    "class": "Device",
     "async": true,
-    "label": "BIG-IP declaration for declarative onboarding",
+    "label": "my BIG-IP declaration for declarative onboarding",
     "Common": {
         "class": "Tenant",
-        "hostname": "${hostname}",
+        "mySystem": {
+            "class": "System",
+            "hostname": "{{ HOST_NAME }}",
+            "cliInactivityTimeout": 1200,
+            "consoleInactivityTimeout": 1200,
+            "autoPhonehome": false
+        },
         "myDns": {
             "class": "DNS",
             "nameServers": [
                 "8.8.8.8"
-            ],
-            "search": [
-                "f5.com"
             ]
         },
         "myNtp": {
             "class": "NTP",
             "servers": [
-                "0.pool.ntp.org",
-                "1.pool.ntp.org"
+                "0.pool.ntp.org"
             ],
             "timezone": "UTC"
         },
-        "${admin_username}": {
+        "admin": {
             "class": "User",
             "userType": "regular",
-            "password": "${admin_password}",
+            "password": "{{ ADMIN_PASS }}",
             "shell": "bash"
         },
-        "moduleProvisioning": {
+        "myProvisioning": {
             "class": "Provision",
             "ltm": "nominal",
-            "gtm": "nominal"
+            "asm": "nominal"
         },
         "external": {
             "class": "VLAN",
@@ -41,24 +43,21 @@
             "interfaces": [
                 {
                     "name": "1.1",
-                    "tagged": false
+                    "tagged": true
                 }
             ]
         },
-        "externalSelf": {
+        "external-self": {
             "class": "SelfIp",
-            "address": "${external_self}/24",
+            "address": "{{{ SELF_IP_EXTERNAL }}}",
             "vlan": "external",
-            "allowService": "default"
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
         },
-        "dbVars": {
+        "dbvars": {
         	"class": "DbVariables",
-            "config.allow.rfc3927": "enable",
-            "tm.tcpudptxchecksum": "Software-only"
-        },
-        "systemSettings": {
-            "class": "System",
-            "autoPhonehome": false
+        	"provision.extramb": 500,
+        	"restjavad.useextramb": true
         }
     }
 }

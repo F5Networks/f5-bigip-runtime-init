@@ -54,10 +54,6 @@ Based on the content of the provided cloud_config.yaml file, F5 BIG-IP runtime i
 
 - Install F5 BIG-IP runtime init: ```curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.9.0/scripts/install.sh | bash```
 - Use F5 BIG-IP runtime init: ```f5-bigip-runtime-init --config-file /config/cloud/cloud_config.yaml```
-- Compare this with the current code for onboarding a BIG-IP HA pair in Azure:
-```json
-"commandToExecute": "[concat('function cp_logs() { cd /var/lib/waagent/custom-script/download && cp `ls -r | head -1`/std* /var/log/cloud/azure; cd /var/log/cloud/azure && cat stdout stderr > install.log; }; CLOUD_LIB_DIR=/config/cloud/azure/node_modules/@f5devcentral; mkdir -p $CLOUD_LIB_DIR && cp f5-cloud-libs*.tar.gz* /config/cloud; mkdir -p /var/config/rest/downloads && cp ', variables('f5AS3Build'), ' /var/config/rest/downloads; mkdir -p /var/log/cloud/azure; /usr/bin/install -m 400 /dev/null /config/cloud/.passwd; /usr/bin/install -m 400 /dev/null /config/cloud/.azCredentials; /usr/bin/install -b -m 755 /dev/null /config/verifyHash; /usr/bin/install -b -m 755 /dev/null /config/installCloudLibs.sh; /usr/bin/install -b -m 755 /dev/null /config/cloud/managedRoutes; IFS=', variables('singleQuote'), '%', variables('singleQuote'), '; echo -e ', variables('verifyHash'), ' > /config/verifyHash; echo -e ', variables('installCloudLibs'), ' > /config/installCloudLibs.sh; echo -e ', variables('appScript'), ' | /usr/bin/base64 -d > /config/cloud/deploy_app.sh; chmod +x /config/cloud/deploy_app.sh; echo -e ', variables('installCustomConfig'), ' >> /config/customConfig.sh; echo -e ', parameters('managedRoutes'), ' > /config/cloud/managedRoutes; unset IFS; bash /config/installCloudLibs.sh; source $CLOUD_LIB_DIR/f5-cloud-libs/scripts/util.sh; encrypt_secret ', variables('singleQuote'), '{\"clientId\": \"', parameters('clientId'), '\", \"tenantId\": \"', parameters('tenantId'), '\", \"secret\": \"', parameters('servicePrincipalSecret'), '\", \"subscriptionId\": \"', variables('subscriptionID'), '\", \"storageAccount\": \"', variables('newDataStorageAccountName'), '\", \"storageKey\": \"', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('newDataStorageAccountName')), variables('storageApiVersion')).keys[0].value, '\", \"resourceGroupName\": \"', variables('resourceGroupName'), '\", \"uniqueLabel\": \"', variables('dnsLabel'), '\", \"location\": \"', variables('location'), '\"}', variables('singleQuote'), ' \"/config/cloud/.azCredentials\" \"\" true; encrypt_secret ', variables('singleQuote'), variables('adminPasswordOrKey'), variables('singleQuote'), ' \"/config/cloud/.passwd\" true; $CLOUD_LIB_DIR/f5-cloud-libs/scripts/createUser.sh --user svc_user --password-file /config/cloud/.passwd --password-encrypted; ', variables('allowUsageAnalytics')[parameters('allowUsageAnalytics')].hashCmd, '; /usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs/scripts/onboard.js --no-reboot --output /var/log/cloud/azure/onboard.log --signal ONBOARD_DONE --log-level info --cloud azure --install-ilx-package file:///var/config/rest/downloads/', variables('f5AS3Build'), ' --host ', variables('mgmtSubnetPrivateAddress'), ' --port ', variables('bigIpMgmtPort'), ' --ssl-port ', variables('bigIpMgmtPort'), ' -u svc_user --password-url file:///config/cloud/.passwd --password-encrypted --hostname ', concat(variables('instanceName'), '0.', variables('location'), '.cloudapp.azure.com'), ' --license ', parameters('licenseKey1'), ' --ntp ', parameters('ntpServer'), ' --tz ', parameters('timeZone'), ' --modules ', parameters('bigIpModules'), ' --db tmm.maxremoteloglength:2048', variables('allowUsageAnalytics')[parameters('allowUsageAnalytics')].metricsCmd, '; /usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs/scripts/network.js --output /var/log/cloud/azure/network.log --wait-for ONBOARD_DONE --host ', variables('mgmtSubnetPrivateAddress'), ' --port ', variables('bigIpMgmtPort'), ' -u svc_user --password-url file:///config/cloud/.passwd --password-encrypted --default-gw ', variables('tmmRouteGw'), ' --vlan name:external,nic:1.1 --vlan name:internal,nic:1.2 ', variables('netCmd'), ' --self-ip name:self_2nic,address:', variables('extSubnetPrivateAddress'), ',vlan:external --self-ip name:self_3nic,address:', variables('intSubnetPrivateAddress'), ',vlan:internal --log-level info; echo \"/usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs-azure/scripts/failoverProvider.js\" >> /config/failover/tgactive; echo \"/usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs-azure/scripts/failoverProvider.js\" >> /config/failover/tgrefresh; tmsh modify cm device ', concat(variables('instanceName'), '0.', variables('location'), '.cloudapp.azure.com'), ' unicast-address { { ip ', variables('intSubnetPrivateAddress'), ' port 1026 } } mirror-ip ', variables('intSubnetPrivateAddress'), '; ', variables('failoverCmdArray')[parameters('bigIpVersion')], '; /usr/bin/f5-rest-node $CLOUD_LIB_DIR/f5-cloud-libs/scripts/cluster.js --output /var/log/cloud/azure/cluster.log --log-level info --host ', variables('mgmtSubnetPrivateAddress'), ' --port ', variables('bigIpMgmtPort'), ' -u svc_user --password-url file:///config/cloud/.passwd --password-encrypted --config-sync-ip ', variables('intSubnetPrivateAddress'), ' --create-group --device-group Sync --sync-type sync-failover --device ', concat(variables('instanceName'), '0.', variables('location'), '.cloudapp.azure.com'), ' --network-failover --auto-sync --save-on-auto-sync; bash /config/cloud/deploy_app.sh ', variables('commandArgs'), '; if [[ $? == 0 ]]; then tmsh load sys application template f5.service_discovery.tmpl; tmsh load sys application template f5.cloud_logger.v1.0.0.tmpl; base=', variables('extSubnetPrivateAddressPrefix'), variables('extSubnetPrivateAddressSuffixInt'), '; f3=$(echo $base | cut -d. -f1-3); last=$(echo $base | cut -d. -f4); for i in $(seq 1 ', variables('numberOfExternalIps'), '); do addr=${f3}.${last}; last=$((last+1)); tmsh create ltm virtual-address $addr address $addr; done; ', variables('routeCmd'), '; echo -e ', variables('routeCmd'), ' >> /config/startup; $(nohup bash /config/failover/tgactive &>/dev/null &); bash /config/customConfig.sh; $(cp_logs); else $(cp_logs); exit 1; fi', '; if grep -i \"PUT failed\" /var/log/waagent.log -q; then echo \"Killing waagent exthandler, daemon should restart it\"; pkill -f \"python -u /usr/sbin/waagent -run-exthandlers\"; fi')]"
-```
 
 ## Configuration Files
 - Config examples and schema: ./examples/config
@@ -416,6 +412,48 @@ runtime_parameters:
       type: network
       field: ipv4
       index: 2
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.12.0
+    - extensionType: as3
+      extensionVersion: 3.19.1
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: url
+      value: file:///examples/declarations/do.json
+```
+- F5 BIGIP Runtime Init declaration which provides instance metadata via runtime_parameters for AWS
+```yaml
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: compute
+      field: hostname
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: network
+      field: local-ipv4s
+      index: 1
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: network
+      field: local-ipv4s
+      index: 2
+  - name: DEFAULT_ROUTE
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: network
+      field: subnet-ipv4-cidr-block
+      index: 1
 extension_packages:
   install_operations:
     - extensionType: do
@@ -1064,7 +1102,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: url
-      value: https://ak-f5-cft.s3-us-west-2.amazonaws.com/azure/do_3nic.json
+      value: https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json
       verifyTls: false
     - extensionType: as3
       type: url

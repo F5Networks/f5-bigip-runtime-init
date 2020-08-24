@@ -51,7 +51,7 @@ for cloud in "${CLOUDS[@]}"; do
     echo "*** Built RPM: ${OUTPUT##*/}"
 
     echo "*** Sign package titled as ${NAME}-${cloud}-${VERSION}-${RELEASE}.noarch.rpm"
-    curl -sk -X POST -H "Authorization: Bearer $CM_SIGNER_ACCESS_TOKEN" -F "file=@dist/${cloud}/${NAME}-${cloud}-${VERSION}-${RELEASE}.noarch.rpm" -o "dist/rpms/${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm" "https://cm-signer.pdsea.f5net.com/api/v1/sign/rpm"
+    curl -sk -X POST -H "Authorization: Bearer $CM_SIGNER_ACCESS_TOKEN" -F "file=@dist/${cloud}/${NAME}-${cloud}-${VERSION}-${RELEASE}.noarch.rpm" -o "dist/rpms/${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm" "https://${RPM_SIGNER}/api/v1/sign/rpm"
     echo "*** Set execution permission ${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm"
     chmod +x dist/rpms/${NAME}-${cloud}-${VERSION}-${RELEASE}-signed.noarch.rpm
     echo "*** Completed signing packge. Deleting original package: ${NAME}-${cloud}-${VERSION}-${RELEASE}.noarch.rpm"
