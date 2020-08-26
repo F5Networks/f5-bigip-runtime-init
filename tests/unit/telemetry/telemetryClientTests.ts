@@ -20,7 +20,6 @@ import * as constants from '../../../src/constants';
 import * as bigipMgmtSysReadyResponse from '../payloads/bigip_mgmt_sys_ready.json';
 import * as bigipMgmtSysHardwareResponse from '../payloads/bigip_mgmt_sys_hardware.json';
 import * as bigipMgmtSysHardwareSizeInMbResponse from '../payloads/bigip_mgmt_sys_hardware_sizeInMb.json';
-import * as bigipMgmtSysHardwareSizeInKbResponse from '../payloads/bigip_mgmt_sys_hardware_sizeInKb.json';
 import * as bigipMgmtSysSoftwareVolumeResponse from '../payloads/bigip_mgmt_sys_software_volume.json';
 import * as bigipMgmtSysGlobablSettingsResponse from '../payloads/bigip_mgmt_sys_global_settings.json';
 import * as bigipMgmtSysManagementIpResponse from '../payloads/bigip_mgmt_sys_management_ip.json';
@@ -29,6 +28,7 @@ import * as bigipMgmtSysInstalledPackagesResponse from '../payloads/bigip_mgmt_s
 import * as bigipMgmtSysMemoryResponse from '../payloads/bigip_mgmt_sys_memory.json';
 import * as bigipMgmtNetInterfacesResponse from '../payloads/bigip_mgmt_net_interface.json';
 import * as bigipMgmtSysLicenseResponse from '../payloads/bigip_mgmt_sys_license.json';
+import * as bigipMgmtSysLogicalDisk from '../payloads/bigip_mgmt_sys_logical_disk.json';
 import * as config from '../payloads/declaration_example.json';
 
 describe('Telemetry Client', () => {
@@ -101,6 +101,9 @@ describe('Telemetry Client', () => {
             .get('/mgmt/tm/sys/license')
             .reply(200, bigipMgmtSysLicenseResponse);
 
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/disk/logical-disk')
+            .reply(200, bigipMgmtSysLogicalDisk);
     });
 
     afterEach(() => {
@@ -156,7 +159,7 @@ describe('Telemetry Client', () => {
             nicCount: 3,
             regKey: 'this is test regkey',
             memoryInMb: 33333,
-            diskSize: 55555,
+            diskSize: 77824,
             hostname: 'this-is-test-hostname',
             management: 'this-is-test-mgmt',
             provisionedModules: undefined, /* eslint-disable-line @typescript-eslint/no-explicit-any */
@@ -196,72 +199,37 @@ describe('Telemetry Client', () => {
             });
     });
 
-    it('should validate _getSystemInfo', () => {
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/hardware')
-            .reply(200, {entries: {
-                    'https://localhost/mgmt/tm/sys/hardware/system-info': {
-                        nestedStats: {
-                            entries: {
-                                'https://localhost/mgmt/tm/sys/hardware/system-info/0': {
-                                    nestedStats: {
-                                        entries: {
-                                            bigipChassisSerialNum: {
-                                                description: '74206d14-b631-d54a-16b0b09a25f8'
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }})
-            .get('/mgmt/tm/sys/software/volume')
-            .reply(200, {items: [{
-                    product: 'BIG-IP',
-                    version: '14.1.2.6'
-                }]})
-            .get('/mgmt/tm/sys/global-settings')
-            .reply(200, {hostname: 'f5vm01.local'})
-            .get('/mgmt/tm/sys/management-ip')
-            .reply(200, {items: [{
-                    name: '10.1.0.5/24'
-                }]})
-            .get('/mgmt/tm/sys/provision')
-            .reply(200, {items: [{
-                    name: 'gtm',
-                    level: 'minimum'
-                }, {
-                    name: 'ltm',
-                    level: 'nominal'
-                }]})
-            .get('/mgmt/shared/iapp/installed-packages')
-            .reply(200, {items:[{
-                    packageName: 'f5-declarative-onboarding-1.12.0-1.noarch',
-                    version: '1.12.0'
-                }]});
+    it('should validate _getSystemInfo failure', () => {
         const expectedPayload = {
-            id: '74206d14-b631-d54a-16b0b09a25f8',
-            product: 'BIG-IP',
-            version: '14.1.2.6',
-            hostname: 'f5vm01.local',
-            management: '10.1.0.5/24',
-            provisionedModules: [{
-                name: 'gtm',
-                level: 'minimum'
-            }, {
-                name: 'ltm',
-                level: 'nominal'
-            }],
-            installedPackages: [{
-                packageName: 'f5-declarative-onboarding-1.12.0-1.noarch',
-                version: '1.12.0'
-            }]
+            id: '',
+            product: '',
+            cpuCount: 0,
+            diskSize: 0,
+            memoryInMb: 0,
+            version: '',
+            nicCount: 0,
+            regKey: '',
+            platformId: '',
+            hostname: '',
+            management: '',
+            provisionedModules: {},
+            installedPackages: {},
+            environment: {
+                    pythonVersion: '',
+                    pythonVersionDetailed: '',
+                    nodeVersion: '',
+                    libraries: {
+                        ssh: ''
+                    }
+                }
         };
-        sinon.stub(mgmtClient, 'isReady').resolves();
+        sinon.stub(mgmtClient, 'isReady').rejects(new Error('this is test error'));
         telemetryClient._getSystemInfo()
             .then((result) => {
-                assert.strictEqual(result, expectedPayload);
+                assert.strictEqual(
+                    new Buffer(JSON.stringify(result)).toString('base64'),
+                    new Buffer(JSON.stringify(expectedPayload)).toString('base64')
+                );
             })
     });
 
@@ -277,7 +245,7 @@ describe('Telemetry Client', () => {
             .then(() => {
                 assert.strictEqual(telemetryClient.systemInfo.cpuCount, 2);
                 assert.strictEqual(telemetryClient.systemInfo.product, 'BIG-IP');
-                assert.strictEqual(telemetryClient.systemInfo.diskSize, 157696);
+                assert.strictEqual(telemetryClient.systemInfo.diskSize, 77824);
                 assert.strictEqual(telemetryClient.systemInfo.platformId, 'Z100');
                 assert.strictEqual(telemetryClient.systemInfo.version, '15.1.0.1');
             })
@@ -368,6 +336,10 @@ describe('Telemetry Client', () => {
         nock('http://localhost:8100')
             .get('/mgmt/tm/sys/license')
             .reply(200, bigipMgmtSysLicenseResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/disk/logical-disk')
+            .reply(200, bigipMgmtSysLogicalDisk);
         const emptyConfig = {};
         const testDate = (new Date()).toISOString();
         return telemetryClient.init({
@@ -380,65 +352,7 @@ describe('Telemetry Client', () => {
         })
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
-                assert.strictEqual(response.platform.system.diskSize, 154);
-            })
-            .catch(err => Promise.reject(err));
-    });
-
-    it('should validate diskSize in Kb', () => {
-        nock.cleanAll();
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/ready')
-            .reply(200, bigipMgmtSysReadyResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/hardware')
-            .reply(200, bigipMgmtSysHardwareSizeInKbResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/software/volume')
-            .reply(200, bigipMgmtSysSoftwareVolumeResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/global-settings')
-            .reply(200, bigipMgmtSysGlobablSettingsResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/management-ip')
-            .reply(200, bigipMgmtSysManagementIpResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/provision')
-            .reply(200, bigipMgmtSysProvisionResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/shared/iapp/installed-packages')
-            .reply(200, bigipMgmtSysInstalledPackagesResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/memory')
-            .reply(200, bigipMgmtSysMemoryResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/net/interface')
-            .reply(200, bigipMgmtNetInterfacesResponse);
-
-        nock('http://localhost:8100')
-            .get('/mgmt/tm/sys/license')
-            .reply(200, bigipMgmtSysLicenseResponse);
-        const emptyConfig = {};
-        const testDate = (new Date()).toISOString();
-        return telemetryClient.init({
-            configFile: '/tmp/test-config.yaml',
-            config: emptyConfig,
-            startTime: testDate,
-            endTime: testDate,
-            result: 'SUCCESS',
-            resultSummary: 'This is test summary'
-        })
-            .then(() => {
-                const response = telemetryClient.createTelemetryData();
-                assert.strictEqual(response.platform.system.diskSize, 15071);
+                assert.strictEqual(response.platform.system.diskSize, 77824);
             })
             .catch(err => Promise.reject(err));
     });
@@ -465,7 +379,7 @@ describe('Telemetry Client', () => {
                 assert.strictEqual(response.platform.platformId, 'Z100');
                 assert.strictEqual(response.platform.deployment.cloud, 'aws');
                 assert.strictEqual(response.platform.system.cpuCount, 2);
-                assert.strictEqual(response.platform.system.diskSize, 157696);
+                assert.strictEqual(response.platform.system.diskSize, 77824);
                 assert.strictEqual(response.platform.system.memory, 14016);
             })
             .catch(err => Promise.reject(err));
@@ -475,6 +389,7 @@ describe('Telemetry Client', () => {
         return telemetryClient.init()
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
+                console.log(response);
                 assert.strictEqual(response.operation.endTime, 0);
                 assert.strictEqual(response.operation.startTime, 0);
                 assert.strictEqual(response.operation.rawCommand, undefined);
@@ -483,6 +398,10 @@ describe('Telemetry Client', () => {
                 assert.strictEqual(response.platform.nicCount, 2);
                 assert.strictEqual(response.platform.platformId, 'Z100');
                 assert.strictEqual(response.platform.deployment.cloud, 'aws');
+                assert.strictEqual(response.platform.packages['f5-service-discovery-1.2.9-2.noarch'], '1.2.9');
+                assert.strictEqual(response.platform.packages['f5-declarative-onboarding-1.10.0-2.noarch'], '1.10.0');
+                assert.strictEqual(response.platform.packages['f5-appsvcs-3.20.0-3.noarch'], '3.20.0');
+                assert.strictEqual(response.platform.packages['f5-appsvcs-templates-1.1.0-1.noarch'], '1.1.0');
             }).catch(err => Promise.reject(err));
     });
 });

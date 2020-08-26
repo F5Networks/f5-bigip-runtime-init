@@ -297,7 +297,7 @@ resource "aws_instance" "vm0" {
   }
   iam_instance_profile = "${aws_iam_instance_profile.instance_profile.name}"
   user_data = "${data.template_file.user_data_vm0.rendered}"
-  tags = merge(var.global_tags, {Name="sdkbigip-vm0-${module.utils.env_prefix}"})
+  tags = merge(var.global_tags, {Name="runtime-init-vm0-${module.utils.env_prefix}"})
   # Wait until the instance is in a running state
   provisioner "local-exec" {
     command = "aws ec2 wait instance-status-ok --instance-ids ${aws_instance.vm0.id} --region ${var.AWS_DEFAULT_REGION}"
@@ -314,8 +314,7 @@ output "deployment_info" {
         admin_password = module.utils.admin_password,
         mgmt_address = aws_eip.mgmt1.public_ip,
         instanceId = aws_instance.vm0.id,
-        mgmt_port = 443,
-        primary = true
+        mgmt_port = 443
       },
     ],
     deploymentId: module.utils.env_prefix,
