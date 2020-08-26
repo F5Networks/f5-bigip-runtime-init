@@ -396,145 +396,193 @@ export class TelemetryClient {
             };
         };
     }> {
-        // perform ready check
-        await this._mgmtClient.isReady();
-
         const installedPackages = {};
         const provisionedModules = {};
+        // F5 TEEM payload data
+        let pythonVersion = "";
+        let pythonVersionDetailed = "";
+        let nodeVersion = "";
+        let sshVersion = "";
+        let id = "";
+        let product = "";
+        let cpuCount = 0;
+        let diskSize = 0;
+        let memoryInMb = 0;
+        let version = "";
+        let nicCount = 0;
+        let regKey = "";
+        let platformId = "";
+        let hostname = "";
+        let management = "";
 
-        const sysHardware = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/hardware`,
-            {
-                headers: {
-                    Authorization: this.authHeader
+        try {
+            // perform ready check
+            await this._mgmtClient.isReady();
+            // Getting environments details
+            pythonVersion = await this.utils.runShellCommand('python --version');
+            pythonVersionDetailed = await this.utils.runShellCommand('python -c \"import sys;print(sys.version)\"');
+            nodeVersion = await this.utils.runShellCommand('node --version');
+            sshVersion = await this.utils.runShellCommand('ssh -V');
+
+            const sysHardware = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/hardware`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+
+            id = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.bigipChassisSerialNum.description;
+            cpuCount = this._getCpuCount(sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version']
+                .nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version/cpus'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardwareVersion/cpus/versions'].nestedStats.entries);
+            const sysSoftware = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/software/volume`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+
+            product = sysSoftware.body.items[0].product;
+            version = sysSoftware.body.items[0].version;
+            platformId = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.platform.description;
+
+            const globalSettings = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/global-settings`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+
+            hostname = globalSettings.body.hostname;
+            const managementIp = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/management-ip`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+            management = managementIp.body.items[0].name;
+
+            const modules = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/provision`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+
+            modules.body.items.forEach(item => {
+                if (item.level !== 'none') {
+                    provisionedModules[item.name] = item.level;
                 }
             });
 
+            const logicalDisk = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/disk/logical-disk`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+            diskSize = this._getDiskSize(logicalDisk.body.items);
 
-        const sysSoftware = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/software/volume`,
-            {
-                headers: {
-                    Authorization: this.authHeader
-                }
+            const packages = await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/installed-packages`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+
+            packages.body.items.forEach(item => {
+                installedPackages[item.packageName] = item.version;
             });
 
+            const memory = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/memory`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+            memoryInMb = this._getMemoryInMb(memory.body.entries['https://localhost/mgmt/tm/sys/memory/memory-host'].nestedStats.entries['https://localhost/mgmt/tm/sys/memory/memory-host/0']
+                .nestedStats.entries.memoryTotal.value);
 
-        const globalSettings = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/global-settings`,
-            {
-                headers: {
-                    Authorization: this.authHeader
+            const interfaces = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/net/interface`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+            nicCount = interfaces.body.items.length;
+
+            const license = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/license`,
+                {
+                    headers: {
+                        Authorization: this.authHeader
+                    }
+                });
+            regKey = license.body.entries['https://localhost/mgmt/tm/sys/license/0'].nestedStats.entries.registrationKey.description;
+
+            const payload = {
+                id: id,
+                product: product,
+                cpuCount: cpuCount,
+                diskSize: diskSize,
+                memoryInMb: memoryInMb,
+                version: version,
+                nicCount: nicCount,
+                regKey: regKey,
+                platformId: platformId,
+                hostname: hostname,
+                management: management,
+                provisionedModules: provisionedModules,
+                installedPackages: installedPackages,
+                environment: {
+                    pythonVersion: pythonVersion.trim(),
+                    pythonVersionDetailed: pythonVersionDetailed.trim(),
+                    nodeVersion: nodeVersion.trim(),
+                    libraries: {
+                        ssh: sshVersion.trim()
+                    }
                 }
-            });
+            };
+            return payload;
+        } catch (err) {
 
-
-        const managementIp = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/management-ip`,
-            {
-                headers: {
-                    Authorization: this.authHeader
+            logger.error('Error caugth while constucting F5-TEEM payload');
+            logger.error(err.message);
+            const payload = {
+                id: id,
+                product: product,
+                cpuCount: cpuCount,
+                diskSize: diskSize,
+                memoryInMb: memoryInMb,
+                version: version,
+                nicCount: nicCount,
+                regKey: regKey,
+                platformId: platformId,
+                hostname: hostname,
+                management: management,
+                provisionedModules: provisionedModules,
+                installedPackages: installedPackages,
+                environment: {
+                    pythonVersion: pythonVersion.trim(),
+                    pythonVersionDetailed: pythonVersionDetailed.trim(),
+                    nodeVersion: nodeVersion.trim(),
+                    libraries: {
+                        ssh: sshVersion.trim()
+                    }
                 }
-            });
-
-
-        const modules = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/provision`,
-            {
-                headers: {
-                    Authorization: this.authHeader
-                }
-            });
-
-        modules.body.items.forEach(item => {
-            if (item.level !== 'none') {
-                provisionedModules[item.name] = item.level;
-            }
-        });
-
-
-        const packages = await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/installed-packages`,
-            {
-                headers: {
-                    Authorization: this.authHeader
-                }
-            });
-
-        packages.body.items.forEach(item => {
-            installedPackages[item.packageName] = item.version;
-        });
-
-        const memory = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/memory`,
-            {
-                headers: {
-                    Authorization: this.authHeader
-                }
-            });
-
-        const interfaces = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/net/interface`,
-            {
-                headers: {
-                    Authorization: this.authHeader
-                }
-            });
-
-        const license = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/license`,
-            {
-                headers: {
-                    Authorization: this.authHeader
-                }
-            });
-
-        // Getting environments details
-        const pythonVersion = await this.utils.runShellCommand('python --version');
-        const pythonVersionDetailed = await this.utils.runShellCommand('python -c \"import sys;print(sys.version)\"');
-        const nodeVersion = await this.utils.runShellCommand('node --version');
-        const sshVersion = await this.utils.runShellCommand('ssh -V');
-
-        const payload = {
-            id: sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.bigipChassisSerialNum.description,
-            product: sysSoftware.body.items[0].product,
-            cpuCount: this._getCpuCount(sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version']
-                .nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version/cpus'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardwareVersion/cpus/versions'].nestedStats.entries),
-            diskSize: this._getDiskSize(sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version/HD1']
-                .nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardwareVersion/HD1/versions'].nestedStats.entries),
-            memoryInMb: this._getMemoryInMb(memory.body.entries['https://localhost/mgmt/tm/sys/memory/memory-host'].nestedStats.entries['https://localhost/mgmt/tm/sys/memory/memory-host/0']
-                .nestedStats.entries.memoryTotal.value),
-            version: sysSoftware.body.items[0].version,
-            nicCount: interfaces.body.items.length,
-            regKey: license.body.entries['https://localhost/mgmt/tm/sys/license/0'].nestedStats.entries.registrationKey.description,
-            platformId: sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.platform.description,
-            hostname: globalSettings.body.hostname,
-            management: managementIp.body.items[0].name,
-            provisionedModules: provisionedModules,
-            installedPackages: installedPackages,
-            environment: {
-                pythonVersion: pythonVersion.trim(),
-                pythonVersionDetailed: pythonVersionDetailed.trim(),
-                nodeVersion: nodeVersion.trim(),
-                libraries: {
-                    ssh: sshVersion.trim()
-                }
-            }
-        };
-
-        return payload;
+            };
+            return payload;
+        }
     }
 
     _getMemoryInMb(totalMemoryInBytes): number{
         return Math.round(parseInt(totalMemoryInBytes, 10)/ 1048576);
     }
 
-    _getDiskSize(diskVersions): number{
-        for (const version of Object.keys(diskVersions)) {
-            if(diskVersions[version].nestedStats.entries.tmName.description === "Size") {
-                if (diskVersions[version].nestedStats.entries.version.description.includes('G')){
-                    return parseInt(diskVersions[version].nestedStats.entries.version.description.slice(0, -1), 10) * 1024;
-                }
-                else if (diskVersions[version].nestedStats.entries.version.description.includes('M')){
-                    return parseInt(diskVersions[version].nestedStats.entries.version.description.slice(0, -1), 10);
-                }
-                else if (diskVersions[version].nestedStats.entries.version.description.includes('k')){
-                    return Math.round(parseInt(diskVersions[version].nestedStats.entries.version.description.slice(0, -1), 10) / 1024);
-                }
-                return parseInt(diskVersions[version].nestedStats.entries.version.description.slice(0, -1), 10);
-            }
-        }
+    _getDiskSize(hardDisks): number{
+        let totalSizeInMb = 0;
+        hardDisks.forEach((item) => {
+            totalSizeInMb +=  item.size;
+        });
+        return totalSizeInMb
     }
 
     // Gets CPU counts

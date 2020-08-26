@@ -62,7 +62,7 @@ for cloud in "${CLOUDS[@]}"; do
     if [[ $? -ne 0 ]]; then
         echo "Couldn't validate the signed RPM package"
     fi
-    echo "*** Finished validating signed RPM Package" 
+    echo "*** Finished validating signed RPM Package"
 
     echo "*** Create SHA-256 file"
     cd dist/rpms/
