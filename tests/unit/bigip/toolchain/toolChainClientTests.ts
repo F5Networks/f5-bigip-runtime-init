@@ -23,6 +23,7 @@ import nock from 'nock';
 
 import { ManagementClient } from '../../../../src/lib/bigip/managementClient';
 import { ToolChainClient } from '../../../../src/lib/bigip/toolchain/toolChainClient';
+import * as installedPackages from '../../payloads/bigip_mgmt_shared_installed_packages.json';
 sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
 const standardMgmtOptions = {
     port: 8100,
@@ -159,6 +160,106 @@ describe('BIG-IP Package Client', () => {
         assert.strictEqual(packageClient.component, 'as3');
         assert.strictEqual(packageClient.version, standardToolchainOptions.extensionVersion);
     });
+
+    it('should validate isInsatlled method when package is not installed', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/global-installed-packages')
+            .reply(200, installedPackages);
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            }
+        });
+        return packageClient.isInstalled()
+            .then((response) => {
+                assert.ok(!response.isInstalled);
+                assert.ok(!response.reinstallRequired);
+                nock.cleanAll();
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+
+    it('should validate isInsatlled method when package installed but not required update', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainOptions = {
+            extensionType: 'as3',
+            extensionVersion: '3.20.0',
+            extensionUrl: 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm',
+            extensionHash: 'ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987',
+            maxRetries: 3,
+            retryInterval: 2500,
+            verifyTls: true
+        };
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', toolChainOptions);
+        const packageClient = toolChainClient.package;
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/global-installed-packages')
+            .reply(200, installedPackages);
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.20.0-3.noarch': '1'
+            }
+        });
+        return packageClient.isInstalled()
+            .then((response) => {
+                assert.ok(response.isInstalled);
+                assert.ok(!response.reinstallRequired);
+                nock.cleanAll();
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+
+    it('should validate isInsatlled method when package installed and required update', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainOptions = {
+            extensionType: 'as3',
+            extensionVersion: '3.17.0',
+            extensionUrl: 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm',
+            extensionHash: 'ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987',
+            maxRetries: 3,
+            retryInterval: 2500,
+            verifyTls: true
+        };
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', toolChainOptions);
+        const packageClient = toolChainClient.package;
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/global-installed-packages')
+            .reply(200, installedPackages);
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.20.0-3.noarch': '1'
+            }
+        });
+        return packageClient.isInstalled()
+            .then((response) => {
+                assert.ok(response.isInstalled);
+                assert.ok(response.reinstallRequired);
+                nock.cleanAll();
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+    it('should validate uninstall method', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(201);
+        return packageClient.uninstall()
+            .then(() => {
+                assert.ok(true);
+            })
+            .catch(err => Promise.reject(err));
+
+    });
+
+
 
     it('should validate install done via URL', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);

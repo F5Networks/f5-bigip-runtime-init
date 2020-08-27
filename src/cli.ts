@@ -97,7 +97,18 @@ export async function cli(): Promise<string> {
                 installOperations[i].extensionType,
                 installOperations[i]
             );
-            await toolchainClient.package.install();
+            const response = await toolchainClient.package.isInstalled();
+            if (response.isInstalled) {
+                logger.silly('package is already installed');
+                if (response.reinstallRequired) {
+                    logger.silly('installed package version is not matched; package requires update/re-install');
+                    await toolchainClient.package.uninstall();
+                    await mgmtClient.isReady();
+                    await toolchainClient.package.install();
+                }
+            } else {
+                await toolchainClient.package.install();
+            }
         }
     }
 

@@ -200,7 +200,7 @@
                         "allOf": [
                             {
                                 "if": { "properties": { "extensionType": { "const": "ilx" } } },
-                                "then": { "required": ["extensionUrl", "extensionVerificationEndpoint"] },
+                                "then": { "required": ["extensionUrl", "extensionVerificationEndpoint", "extensionVersion"] },
                                 "else": { "required": ["extensionVersion"] }
                             }
                         ],
