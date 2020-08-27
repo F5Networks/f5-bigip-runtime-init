@@ -98,6 +98,7 @@ extension_packages:
     - extensionType: ilx
       extensionUrl: https://github.com/f5networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/fast/info
+      extensionVersion: 1.1.0
 extension_services:
   service_operations:
     - extensionType: do

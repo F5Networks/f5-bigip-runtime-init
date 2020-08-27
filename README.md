@@ -89,6 +89,7 @@ extension_packages:
       extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
     - extensionType: ilx
       extensionUrl: file:///var/lib/cloud/myIlxApp.rpm
+      extensionVersion: 1.1.0
       extensionVerificationEndpoint: /mgmt/shared/myIlxApp/info
       extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
 extension_services:
@@ -1097,6 +1098,7 @@ extension_packages:
       extensionHash: ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987
     - extensionType: ilx
       extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+      extensionVersion: 1.1.0
       extensionVerificationEndpoint: /mgmt/shared/fast/info
 extension_services:
   service_operations:

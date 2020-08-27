@@ -19,6 +19,7 @@
 
 import * as fs from 'fs';
 import * as url from 'url';
+import * as path from 'path';
 
 import Logger from '../../logger';
 import { ManagementClient } from '../managementClient';
@@ -325,6 +326,57 @@ class PackageClient {
         await this._installRpm(`/var/config/rest/downloads/${downloadPackageName}`);
 
         return { component: this.component, version: this.version, installed: true };
+    }
+
+
+    /**
+     *  uninstall
+     *
+     * @returns {promise}  { installed: false, requireUninstall: true }
+     */
+    async uninstall(): Promise<void> {
+        const packageName = path.parse(this._metadataClient.getDownloadPackageName()).name;
+        logger.silly(`Uninstalling package name: ${packageName}`);
+        const payload = {'operation': 'UNINSTALL','packageName': packageName};
+        await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/package-management-tasks`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: this.authHeader
+                },
+                verifyTls: this._metadataClient._getVerifyTls(),
+                body: payload
+            });
+    }
+
+    /**
+     *  isInstalled
+     *
+     * @returns {promise}  { installed: false, requireUninstall: true }
+     */
+    async isInstalled(): Promise<{
+        isInstalled: boolean;
+        reinstallRequired: boolean;
+    }> {
+        const state =  { isInstalled: false, reinstallRequired: false };
+        const installedPackages = await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/global-installed-packages`,
+            {
+                headers: {
+                    Authorization: this.authHeader
+                },
+                verifyTls: this._metadataClient._getVerifyTls()
+            });
+        if ('items' in installedPackages.body && installedPackages.body.items) {
+            installedPackages.body.items.forEach((item) => {
+                if (path.parse(this._metadataClient.getDownloadPackageName()).name === item.packageName) {
+                    state.isInstalled = true;
+                    if (this._metadataClient.getComponentVersion().trim() !== item.version.trim()) {
+                        state.reinstallRequired = true;
+                    }
+                }
+            });
+        }
+        return state;
     }
 }
 

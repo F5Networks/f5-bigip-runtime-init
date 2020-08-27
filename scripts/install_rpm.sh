@@ -18,7 +18,7 @@ NAME="f5-bigip-runtime-init"
 rpm_filename=$(ls | grep $CLOUD | grep -v "sha256")
 rpm_sha256_filename=$(ls | grep $CLOUD | grep "sha256")
 install_location="/tmp/${NAME}"
-
+utility_location="/usr/local/bin/${NAME}"
 # usage: logger "log message"
 logger() {
     echo "${1}"
@@ -35,8 +35,6 @@ platform_check() {
 }
 
 echo "Running RPM install script."
-echo "Creating install location."
-mkdir -p $install_location
 
 echo "Verifying RPM file integrity..."
 cat $rpm_sha256_filename | sha256sum -c | grep OK
@@ -52,6 +50,22 @@ rpm --checksig $rpm_filename | grep "rsa sha1 (md5) pgp md5 OK"
 if [[ $? -ne 0 ]]; then
     echo "Couldn't verify the f5-bigip-runtime-init package signature"
     exit 1
+fi
+
+echo "Checking if package is already installed"
+if [[ -d $install_location && -f $utility_location && ! -z "$(ls -A $install_location)" ]]; then
+    echo "Package is already installed and utility is created. Exiting with status:0"
+    exit 0
+else
+    echo "Package is not installed. Preparing for installation."
+    if [[ -d $install_location ]]; then
+        echo "Install location $install_location already exists"
+        echo "Clearing out install location: $install_location"
+        rm -rf $install_location
+    else
+        echo "Install location $install_location does not exist. Creating install location."
+        mkdir -p $install_location
+    fi
 fi
 
 echo "Install package $rpm_filename"
@@ -72,7 +86,6 @@ else
 fi
 
 echo "Creating command utility."
-utility_location="/usr/local/bin/${NAME}"
 if [[ "$(platform_check)" == "LINUX" ]]; then
     echo "node ${install_location}/src/cli.js \"\$@\"" > ${utility_location}
     chmod 744 ${utility_location}
