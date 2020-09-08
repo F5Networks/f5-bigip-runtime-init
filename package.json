@@ -1,6 +1,6 @@
 {
     "name": "f5-bigip-runtime-init",
-    "version": "0.9.0",
+    "version": "0.11.0",
     "release": "1",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "F5 Cloud Solutions",
