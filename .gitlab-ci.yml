@@ -645,7 +645,7 @@ publish_rpms_dev_cdn:
         - cd ${CDN_FOLDER}/develop
         - status=$(svn status)
         - echo "$status"
-        - if echo "$status" | grep -F '?'; then svn add ${CI_COMMIT_REF_NAME}; else echo "No new directory to add"; fi
+        - if echo "$status" | grep -F '?'; then svn add --force ${CI_COMMIT_REF_NAME}; else echo "No new directory to add"; fi
         - changed_files_count=$(svn diff --summarize | wc -l)
         - echo "$changed_files_count"
         - if [[ $changed_files_count -ge 1 ]]; then svn add --force ${CI_COMMIT_REF_NAME}/*; svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "RPM files unchanged"; fi
