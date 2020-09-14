@@ -12,7 +12,56 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-CLOUD=$1
+
+CLOUD=""
+GPG_PUB_KEY_LOCATION="https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key"
+SKIP_VERIFICATION=""
+
+HELP_MENU()
+{
+    echo "Usage: $0 [params]"
+    echo "params can be one or more of the following:"
+    echo "    --cloud | -c            : Specifies cloud provider name; required parameter"
+    echo "    --key   | -k            : Provides location for GPG key used for verifying signature on RPM file"
+    echo "    --skip-verify           : Disables RPM signature verification"
+    exit 1
+}
+
+while true
+do
+    case "$1" in
+    --cloud | -c)
+	CLOUD="$2"
+        if ! shift 2; then HELP_MENU; exit 1; fi
+	;;
+    --key | -k)
+	GPG_PUB_KEY_LOCATION="$2"
+        if ! shift 2; then HELP_MENU; exit 1; fi
+	;;
+    --skip-verify)
+	SKIP_VERIFICATION=y
+	shift
+	;;
+    -h | --help)
+	HELP_MENU
+	;;
+    -*)
+	echo Unrecognized flag : "$1"
+	HELP_MENU
+	;;
+    *)
+	break
+	;;
+    esac
+done
+
+
+if [[ -z $CLOUD ]]; then
+    echo "--cloud parameter is not provided. Please see help menu for more details"
+    HELP_MENU
+    exit 1;
+fi
+
 NAME="f5-bigip-runtime-init"
 
 rpm_filename=$(ls | grep $CLOUD | grep -v "sha256")
@@ -43,13 +92,18 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-echo "Verifying signature..."
-curl --location https://ak-metadata-package-poc.s3.amazonaws.com/gpg.key --output /var/tmp/gpg.key
-rpm --import /var/tmp/gpg.key
-rpm --checksig $rpm_filename | grep "rsa sha1 (md5) pgp md5 OK"
-if [[ $? -ne 0 ]]; then
-    echo "Couldn't verify the f5-bigip-runtime-init package signature"
-    exit 1
+if [[ -z $SKIP_VERIFICATION ]]; then
+    echo "Verifying signature..."
+    echo "GPG PUB Key location: $GPG_PUB_KEY_LOCATION"
+    curl --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key
+    rpm --import /var/tmp/gpg.key
+    rpm --checksig $rpm_filename | grep "rsa sha1 (md5) pgp md5 OK"
+    if [[ $? -ne 0 ]]; then
+        echo "Couldn't verify the f5-bigip-runtime-init package signature"
+        exit 1
+    fi
+else
+    echo "Skipping RPM signature verification"
 fi
 
 echo "Checking if package is already installed"
