@@ -9,6 +9,7 @@
 .*github.com/repos/f5devcentral
 .*f5cloudsolutions.herokuapp.com
 .*s3-us-west-2.amazonaws.com
+.*f5-cft.s3.amazonaws.com
 
 # don't match the regex itself
 \.\*f5
