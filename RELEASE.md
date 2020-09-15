@@ -67,3 +67,4 @@ Creation of `publish-<version>-<release>` tag triggers CI/CD pipeline which incl
 
 Deploy keys, for gitlab and github repos, are used for committing changes to git; deploy keys are stored under CI/CD settings.
 
+Edits to the README.md file should be mad to scripts/README_template.md.  This file is tagged with mustache handlebars used to update README.md when scripts/README_render.mjs is executed manually or called from scripts/publish_github.sh.

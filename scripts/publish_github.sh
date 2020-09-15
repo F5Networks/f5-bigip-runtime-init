@@ -16,7 +16,7 @@ git config user.email $GITLAB_USER_EMAIL
 RELEASE_VERSION=$(echo $CI_COMMIT_REF_NAME | awk -F"-" '{ print $2 }')
 RELEASE_BUILD=$(echo $CI_COMMIT_REF_NAME | awk -F"-" '{ print $3 }')
 ALLOWED_DIRS=(src examples diagrams)
-ALLOWED_FILES=(.gitignore .gitallowed package.json package-lock.json README.md tsconfig.json)
+ALLOWED_FILES=(.gitignore .gitallowed package.json package-lock.json README.md tsconfig.json LICENSE)
 
 echo "*** Setting git origin"
 git remote rm origin && git remote add origin git@github.com:f5devcentral/f5-bigip-runtime-init.git
@@ -34,6 +34,9 @@ for file in "${ALLOWED_FILES[@]}"; do
     git checkout HEAD ${file}
     git add ${file}
 done
+
+echo "*** Updating README"
+node ./README_render.mjs
 
 echo "*** Committing source code"
 git status

@@ -687,6 +687,8 @@ publish_to_github:
         # install jq
         - apt-get update
         - apt-get install -y jq
+        # install node dependencies
+        - npm install
         # Execute Relaese script to push source to github repo
         - ./scripts/publish_github.sh
 
