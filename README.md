@@ -65,7 +65,7 @@ From a high level overview, using this tool involves three steps:
 
 - Step 2: Download and install F5 BIG-IP Runtime Init using the self-extracting installer: 
   ```sh
-  curl -o /tmp/f5-bigip-runtime-init-0.11.0-1.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run && bash /tmp/f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud azure'
+  curl -o /tmp/f5-bigip-runtime-init-1.0.0-1.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run && bash /tmp/f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud azure'
   ```
   See [installer](#installer) details and [downloads](#downloads) below.
 
@@ -142,12 +142,12 @@ The self extracting installer accepts the following parameters:
 
 ex. Private Enviroments: By default, the installer tries to download the GPG key used to verify the package from F5 over the Internet. Below is example if hosting the key locally.
 ```
- curl https://mylocahost/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run && bash f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key'
+ curl https://mylocahost/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run && bash f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key'
 ```
 
 ex. thisisinsecure
 ```
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run && bash f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud aws --skip-verify'
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run && bash f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud aws --skip-verify'
 ```
 
 ## Downloads
@@ -155,16 +155,16 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 
 | Cloud | Type | Location |
 | --- | --- | --- |
-| All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run |
-| All | SHA256 | https://github.com/f5devcentral/f5-bigip-runtime-init/releases/download/0.11.0/f5-bigip-runtime-init-0.11.0-1.gz.run.sha256 |
-| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-all-0.11.0-1-signed.noarch.rpm |
-| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-all-0.11.0-1-signed.noarch.rpm.sha256 |
-| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-aws-0.11.0-1-signed.noarch.rpm |
-| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-aws-0.11.0-1-signed.noarch.rpm.sha256 |
-| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-azure-0.11.0-1-signed.noarch.rpm |
-| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-azure-0.11.0-1-signed.noarch.rpm.sha256 |
-| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-gcp-0.11.0-1-signed.noarch.rpm |
-| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-gcp-0.11.0-1-signed.noarch.rpm.sha256 |
+| All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run |
+| All | SHA256 | https://github.com/f5devcentral/f5-bigip-runtime-init/releases/download/1.0.0/f5-bigip-runtime-init-1.0.0-1.gz.run.sha256 |
+| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-all-1.0.0-1-signed.noarch.rpm |
+| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-all-1.0.0-1-signed.noarch.rpm.sha256 |
+| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-aws-1.0.0-1-signed.noarch.rpm |
+| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-aws-1.0.0-1-signed.noarch.rpm.sha256 |
+| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-azure-1.0.0-1-signed.noarch.rpm |
+| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-azure-1.0.0-1-signed.noarch.rpm.sha256 |
+| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-gcp-1.0.0-1-signed.noarch.rpm |
+| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-gcp-1.0.0-1-signed.noarch.rpm.sha256 |
 
 
 ## Usage Examples
@@ -172,14 +172,14 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 ### Azure (ARM Template) Virtual Machine extension snippet
 #### Download F5 BIG-IP Runtime Config from URL
 ```json
-"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run && bash f5-bigip-runtime-init-0.11.0-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
+"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run && bash f5-bigip-runtime-init-1.0.0-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
 "fileUris": [
   "https://example.com/runtime-init-conf.yaml"
 ]
 ```
 #### Use inline F5 BIG-IP Runtime Config
 ```json
-"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run; bash f5-bigip-runtime-init-0.11.0-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
+"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run; bash f5-bigip-runtime-init-1.0.0-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
 ```
 
 ### Terraform
@@ -204,7 +204,7 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
       "fileUris": [
         "https://example.com/runtime-init-conf.yaml"
       ],
-      "commandToExecute": "mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run && bash f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud azure' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1"
+      "commandToExecute": "mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run && bash f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud azure' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1"
     }
   
 SETTINGS
@@ -283,7 +283,7 @@ extension_services:
 
 EOF
 
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run && bash f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud aws'
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run && bash f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud aws'
 
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
@@ -418,7 +418,7 @@ extension_services:
 
 EOF
 
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v0.11.0/dist/f5-bigip-runtime-init-0.11.0-1.gz.run -o f5-bigip-runtime-init-0.11.0-1.gz.run && bash f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud gcp'
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o f5-bigip-runtime-init-1.0.0-1.gz.run && bash f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud gcp'
 
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
@@ -567,7 +567,7 @@ In AWS Secret Manager, secrets will be stored in plain text mapped via secretId:
 F5 DO declaration with token: 
 ```json
 {
-    "schemaVersion": "0.11.0",
+    "schemaVersion": "1.0.0",
     "class": "Device",
     "async": true,
     "label": "my BIG-IP declaration for declarative onboarding",
@@ -645,7 +645,7 @@ In Google Secret Manager, secrets will be stored and mapped via secretId:
 F5 DO declaration with token: 
 ```json
 {
-    "schemaVersion": "0.11.0",
+    "schemaVersion": "1.0.0",
     "class": "Device",
     "async": true,
     "label": "my BIG-IP declaration for declarative onboarding",
@@ -716,7 +716,7 @@ Example 6: Replaces variables used within DO declaration with properties from in
 F5 DO declaration (**Note**: Triple mustache required for fields containing a forward slash): 
 ```json
 {
-    "schemaVersion": "0.11.0",
+    "schemaVersion": "1.0.0",
     "class": "Device",
     "async": true,
     "label": "my BIG-IP declaration for declarative onboarding",
@@ -976,7 +976,7 @@ extension_services:
     - extensionType: do
       type: inline
       value: 
-        schemaVersion: 0.11.0
+        schemaVersion: 1.0.0
         class: Device
         async: true
         label: my BIG-IP declaration for declarative onboarding
@@ -1065,7 +1065,7 @@ Using a JSON-based config file:
         "extensionType": "do",
         "type": "inline",
         "value": {
-          "schemaVersion": "0.11.0",
+          "schemaVersion": "1.0.0",
           "class": "Device",
           "async": true,
           "label": "my BIG-IP declaration for declarative onboarding",
@@ -1275,7 +1275,7 @@ F5 BIG-IP Runtime Init is integrated with F5 TEEM; the following payload is used
         "documentVersion": "1",
         "digitalAssetId": "aa2dabc4-cfbc-5ae0-bd0c-ec1c4f48b631",
         "digitalAssetName": "f5-image-generator",
-        "digitalAssetVersion": "0.11.0",
+        "digitalAssetVersion": "1.0.0",
         "observationStartTime": "2020-01-30T05:49:04.493Z",
         "observationEndTime": "2020-01-30T05:49:04.493Z",
         "epochTime": 1580363344493,
@@ -1306,7 +1306,7 @@ F5 BIG-IP Runtime Init is integrated with F5 TEEM; the following payload is used
                                 "f5-declarative-onboarding": "1.10.0",
                                 "f5-appsvcs": "3.20.0",
                                 "f5-service-discovery": "1.2.9",
-                                "f5-telemetry-streaming": "0.11.0",
+                                "f5-telemetry-streaming": "1.0.0",
                                 "f5-cloud-failover": "1.0.3",
                                 "f5-appsvcs-templates": "1.1.0"
                     },
@@ -1406,7 +1406,7 @@ extension_services:
 Example using Declarative Onboarding:
 ```json
 {
-    "schemaVersion": "0.11.0",
+    "schemaVersion": "1.0.0",
     "class": "Device",
     "async": true,
     "webhook": "https://example.com/myHook",
@@ -1526,7 +1526,7 @@ The following enviroment variables can be used for setting logging options:
     {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
 ```
 
-Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-0.11.0-1.gz.run -- '--cloud ${CLOUD}'```
+Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud ${CLOUD}'```
 
 
 ## Documentation
