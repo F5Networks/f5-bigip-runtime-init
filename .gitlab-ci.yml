@@ -1,0 +1,704 @@
+image: node:8
+
+stages:
+    - process
+    - test
+    - build
+    - functional_test_publish
+    - functional_test_init
+    - functional_test_execute
+    - functional_test_cleanup
+    - publish
+    - release_publish
+    - release_trigger_template_tests
+
+.helpers: &helpers |
+    function validate () {
+        "$@"
+        if [[ $? -ne 0 ]]; then exit 1; fi
+    }
+
+before_script:
+    - *helpers
+
+variables:
+    AZURE_TENANT: "$AZURE_TENANT_ID"
+    AZURE_SECRET: "$AZURE_CLIENT_SECRET"
+    ARM_CLIENT_ID: "$AZURE_CLIENT_ID"
+    ARM_CLIENT_SECRET: "$AZURE_CLIENT_SECRET"
+    ARM_SUBSCRIPTION_ID: "$AZURE_SUBSCRIPTION_ID"
+    ARM_TENANT_ID: "$AZURE_TENANT_ID"
+    TF_VAR_AZURE_TENANT_ID: "$AZURE_TENANT_ID"
+    TF_VAR_AZURE_OBJECT_ID: "$AZURE_OBJECT_ID"
+    AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+    AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+    TF_VAR_AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
+    TF_VAR_AZURE_OFFER: "$AZURE_OFFER"
+    TF_VAR_AZURE_SKU: "$AZURE_SKU"
+    TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION"
+    GIT_SECRETS_VERSION: '1.3.0'
+    GIT_SECRETS_PKG_URL: "https://github.com/awslabs/git-secrets/archive/${GIT_SECRETS_VERSION}.tar.gz"
+
+
+# Cleanup development RPM's on CDN when branch no longer present on gitlab
+cleanup_publish_rpms_dev_cdn:
+    stage: process
+    only:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+    except:
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $PUBLISH_RPM == "true"
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # find branches in project and cdn
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - curl -k -H "PRIVATE-TOKEN:${DAILY_TEST_TOKEN}" "https://${GITLAB_URL}/api/v4/projects/${CI_PROJECT_ID}/repository/branches" | jq -r .[].name > branches.txt
+        - cat branches.txt
+        - ls ${CDN_FOLDER}/develop > cdn_branches.txt
+        - cat cdn_branches.txt
+        - diff=$(comm -23 cdn_branches.txt branches.txt)
+        - echo "Removing directories:$diff"
+        - cd ${CDN_FOLDER}/develop
+        - for d in $diff; do svn rm $d; done
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - if [[ $changed_files_count -ge 1 ]]; then svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "Develop directories unchanged"; fi
+
+    tags:
+        - cm-official-docker-executor
+
+# lint package
+lint_package:
+    stage: test
+    script:
+        # linter
+        - npm install
+        - npm run lint
+    tags:
+        - cm-official-docker-executor
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# audit packages for vulnerabilities
+test_audit:
+    stage: test
+    script:
+        # npm audit - uses custom audit processor wrapper
+        - npm install
+        - npm run audit
+    tags:
+        - cm-official-docker-executor
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# run unit tests --uncomment
+unit_tests:
+    stage: test
+    script:
+        - npm install
+        - npm run test
+    tags:
+        - cm-official-docker-executor
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# check for disallowed content in all files, this supplements
+# the native pre-receive push rules built into GitLab for secrets
+# NOTE: .gitallowed is used for exceptions
+check_content:
+    image: f5devcentral/containthedocs:rpmbuild
+    stage: test
+    script:
+        # install git-secrets
+        - curl -q -L -o git_secrets.tar.gz ${GIT_SECRETS_PKG_URL}
+        - tar xzf git_secrets.tar.gz
+        - cd git-secrets-${GIT_SECRETS_VERSION} && make install && cd ..
+        # now, add any patterns to disallow
+        - git secrets --add '.*f5.*\.com'
+        # scan
+        - git secrets --scan
+    tags:
+        - cm-official-docker-executor
+
+# build package
+build_package:
+    stage: build
+    script:
+        # install packages: jq, rpm
+        - apt-get update
+        - apt-get install -y jq
+        - apt-get install -y rpm
+        # install node dependencies
+        - npm install
+        # build package artifact
+        - npm run build
+    tags:
+        - cm-official-docker-executor
+    artifacts:
+        name: package
+        paths:
+            - node_modules
+            - dist
+        expire_in: 2 week
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+### Functional Tests Section
+# Publish docker image to artifactory
+publish_container:
+    image: docker:stable
+    stage: functional_test_publish
+    script:
+        - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
+        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest .
+        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+    tags:
+        - docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+        changes:
+            - Dockerfile
+            - plans/**/*
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+
+# Functional Tests - Initialization phase (with 1 retries in a case of any failures)
+.test_functional_init_generic: &test_functional_init_generic
+    stage: functional_test_init
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+    retry:
+        max: 1
+    script:
+        # deploy environment - required artifacts will be place in output folder
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}/${VERSION_PATH}
+        # Collecting deployment metadata
+        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - MGMT_IP=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
+        - USERNAME=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
+        - PASSWORD=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
+        - DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .deploymentId -r)
+        - SECRET_ID=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .secret_id -r)
+        - NAME=$(cat package.json | jq .name -r)
+        - VERSION=$(cat package.json | jq -r ".version")
+        - RELEASE=$(cat package.json | jq -r ".release")
+        # dhcp must be disalbe to workaround DO bug https://github.com/F5Networks/f5-declarative-onboarding/issues/129
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "modify sys global-settings mgmt-dhcp disabled"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "save sys config"
+        # end of workaround
+        # Installing RPM and executing
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+        # Workaround: copying over declaration to support bigip version with no user-data support
+        - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml
+        - sed "s/\${secret_id}/$SECRET_ID/g" env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml > env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
+        - rm env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml && rm env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml
+        - mv env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - cat env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config.yaml
+        # End of Workaround.
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD}'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config.yaml"
+        # Attempt to re-run self-executable and runtime-init
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config.yaml"
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
+    artifacts:
+        paths:
+            - env_metadata/${CLOUD}/${VERSION_PATH}
+        when: always
+        expire_in: 2 week
+
+# run functional tests: azure and BIGIPv15
+test_functional_init_azure_v15:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+
+# run functional tests: azure and BIGIPv14
+test_functional_init_azure_v14:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v14"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+
+# run functional tests: aws and BIGIPv15
+test_functional_init_aws_v15:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "aws"
+        TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID_v15"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "gcp"
+
+# run functional tests: aws and BIGIPv14
+test_functional_init_aws_v14:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "aws"
+        TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID_v14"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "gcp"
+
+# run functional tests: gcp and BIGIPv15
+test_functional_init_gcp_v15:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "gcp"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v15"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+
+# run functional tests: gcp and BIGIPv14
+test_functional_init_gcp_v14:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "gcp"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v14"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+
+# Functional Tests - Execute phase (with no retries)
+.test_functional_execute_generic: &test_functional_execute_generic
+    stage: functional_test_execute
+    image: python:3.7
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # install sshpass
+        - apt-get install sshpass
+        # install node (and package dependencies)
+        - curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get -y install nodejs
+        - npm install
+        # copying artifacts inherited from functional_test_init target to root directory
+        - cp -a env_metadata/${CLOUD}/${VERSION_PATH}/. .
+        # executing fuctional test
+        - validate npm run functional-test
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
+    artifacts:
+        paths:
+            - logs
+        when: always
+        expire_in: 2 week
+
+# run functional tests: azure
+test_functional_execute_azure_v15:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "azure"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+    dependencies:
+        - test_functional_init_azure_v15
+        - build_package
+
+# run functional tests: azure
+test_functional_execute_azure_v14:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "azure"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+    dependencies:
+        - test_functional_init_azure_v14
+        - build_package
+
+
+# run functional tests: aws
+test_functional_execute_aws_v15:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "aws"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure"
+    dependencies:
+        - test_functional_init_aws_v15
+        - build_package
+
+
+test_functional_execute_aws_v14:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "aws"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure"
+    dependencies:
+        - test_functional_init_aws_v14
+        - build_package
+
+# run functional tests: gcp
+test_functional_execute_gcp_v15:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "gcp"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+    dependencies:
+        - test_functional_init_gcp_v15
+        - build_package
+
+test_functional_execute_gcp_v14:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "gcp"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+    dependencies:
+        - test_functional_init_gcp_v14
+        - build_package
+
+# Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
+.test_functional_cleanup_generic: &test_functional_cleanup_generic
+    stage: functional_test_cleanup
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+    retry:
+        max: 1
+    when: always
+    script:
+        # copying artifacts inherited from functional_test_init target to root directory
+        - cp -a env_metadata/${CLOUD}/${VERSION_PATH}/. .
+        # teardown environment
+        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action delete
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
+
+# run functional tests: azure
+test_functional_cleanup_azure_v15:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "azure"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_azure_v15
+
+
+test_functional_cleanup_azure_v14:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "azure"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_azure_v14
+
+
+# run functional tests: aws
+test_functional_cleanup_aws_v15:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "aws"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_aws_v15
+
+test_functional_cleanup_aws_v14:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "aws"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_aws_v14
+
+# run functional tests: gcp
+test_functional_cleanup_gcp_v15:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "gcp"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+    dependencies:
+        - test_functional_init_gcp_v15
+
+test_functional_cleanup_gcp_v14:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "gcp"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+    dependencies:
+        - test_functional_init_gcp_v14
+
+# Publish RPM's to CDN
+publish_rpms_dev_cdn:
+    stage: publish
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $PUBLISH_RPM_DEVELOP == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_publish_develop_cdn/
+    except:
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CLEANUP_DEVELOP_CDN == "true"
+    script:
+        # publish dist rpms to F5 CDN into develop directory
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # copy push rpms to cdn
+        - VERSION=$(cat package.json | jq -r ".version")
+        - RELEASE=$(cat package.json | jq -r ".release")
+        - echo "Version:${VERSION}, Release:${RELEASE}"
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - mkdir -p ${CDN_FOLDER}/develop/${CI_COMMIT_REF_NAME}
+        - cp -r dist ${CDN_FOLDER}/develop/${CI_COMMIT_REF_NAME}
+        - cd ${CDN_FOLDER}/develop
+        - status=$(svn status)
+        - echo "$status"
+        - if echo "$status" | grep -F '?'; then svn add --force ${CI_COMMIT_REF_NAME}; else echo "No new directory to add"; fi
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - echo "$changed_files_count"
+        - if [[ $changed_files_count -ge 1 ]]; then svn add --force ${CI_COMMIT_REF_NAME}/*; svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "RPM files unchanged"; fi
+    tags:
+        - cm-official-docker-executor
+
+publish_rpms_cdn:
+    stage: release_publish
+    only:
+        - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
+    script:
+        # publish dist rpms to F5 CDN into $VERSION directory
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # copy push rpms to cdn
+        - VERSION=$(cat package.json | jq -r ".version")
+        - RELEASE=$(cat package.json | jq -r ".release")
+        - echo "Version:${VERSION}, Release:${RELEASE}"
+        - CDN_FOLDER="f5-bigip-runtime-init"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - mkdir -p ${CDN_FOLDER}/v${VERSION}
+        - cp -r dist ${CDN_FOLDER}/v${VERSION}
+        - cd ${CDN_FOLDER}
+        - status=$(svn status)
+        - if echo "$status" | grep -F '?'; then svn add v${VERSION}; else echo "No new directory to add"; fi
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - if [[ $changed_files_count -ge 1 ]]; then svn add --force v${VERSION}/*; svn commit -m "F5 automation templates project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "RPM files unchanged"; fi
+    tags:
+        - cm-official-docker-executor
+
+
+publish_to_github:
+    stage: release_publish
+    only:
+      - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # install node dependencies
+        - npm install
+        # Execute Relaese script to push source to github repo
+        - ./scripts/publish_github.sh
+
+trigger_downstream_templates_tests:
+    stage: release_trigger_template_tests
+    only:
+      - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
+    variables:
+        RELEASE_RUNTIME_INIT_TESTS: "true"
+        VERSION: $CI_COMMIT_REF_NAME
+    trigger:
+        project: cloudsolutions/f5-cloud-factory
+        branch: master

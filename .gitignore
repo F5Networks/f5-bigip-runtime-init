@@ -1,0 +1,36 @@
+# node modules
+node_modules/
+
+# artifacts
+dist/
+code-docs/
+
+# local test files
+test.yaml
+test.json
+
+# local test output
+.nyc_output/
+coverage/
+v8-compile-cache-0/
+
+# local terraform files
+.terraform/
+*.tfstate*
+**/deployment_info.json
+
+# misc
+.DS_Store
+
+# JetBrains artifacts
+.idea/
+
+# Python VENV
+*/venv/
+venv/
+
+# npm debug info
+npm-debug.log
+
+# Test artifacts
+tmp/
