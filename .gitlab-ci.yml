@@ -678,7 +678,6 @@ publish_rpms_cdn:
     tags:
         - cm-official-docker-executor
 
-
 publish_to_github:
     stage: release_publish
     only:
@@ -687,7 +686,7 @@ publish_to_github:
         # install jq
         - apt-get update
         - apt-get install -y jq
-        # install node dependencies
+        # install node dependencies (for mustache rendering)
         - npm install
         # Execute Relaese script to push source to github repo
         - ./scripts/publish_github.sh

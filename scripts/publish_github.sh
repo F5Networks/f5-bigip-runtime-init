@@ -35,6 +35,10 @@ for file in "${ALLOWED_FILES[@]}"; do
     git add ${file}
 done
 
+echo "*** Rendering README.md"
+node ./scripts/README_render.js
+cat ./README.md
+
 echo "*** Committing source code"
 git status
 git commit -m "Release commited to $RELEASE_VERSION tag" || echo "No changes, nothing to commit!"
