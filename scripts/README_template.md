@@ -157,14 +157,14 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 | --- | --- | --- |
 | All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run |
 | All | SHA256 | https://github.com/f5devcentral/f5-bigip-runtime-init/releases/download/{{ RELEASE_VERSION }}/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run.sha256 |
-| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-all-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
-| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-all-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
-| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-aws-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
-| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-aws-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
-| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-azure-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
-| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-azure-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
-| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-gcp-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
-| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-gcp-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
+| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-all-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
+| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-all-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
+| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-aws-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
+| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-aws-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
+| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-azure-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
+| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-azure-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
+| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-gcp-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
+| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-gcp-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
 
 
 ## Usage Examples
