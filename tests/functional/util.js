@@ -138,7 +138,8 @@ module.exports = {
             region: deploymentInfo.region || null, // optional: used by AWS|GCP
             zone: deploymentInfo.zone || null, // optional: used by GCP
             networkTopology: deploymentInfo.networkTopology || null, // optional: used by AWS
-            secret_id: deploymentInfo.secret_id || null // optional: used by AWS
+            secret_id: deploymentInfo.secret_id || null, // optional: used by AWS
+            domain: deploymentInfo.domain || null // optional: used by Azure
         };
     },
 

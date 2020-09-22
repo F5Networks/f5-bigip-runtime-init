@@ -12,23 +12,23 @@ The release is fully automated process; however it requires a few manual steps t
 Before triggering release pipeline, the following needs to be done as a part of pre-release activities
 
    1. Update `version` and `release` values under package.json
-   2. Create Merge Request (aka MR) to merge all changes from `develop` to `master` branch
-   3. After merging changes to `master` branch, use pre-configured schedules to trigger functional tests against `master` branch:
+   2. Create Merge Request (aka MR) to merge all changes from `develop` to `main` branch
+   3. After merging changes to `main` branch, use pre-configured schedules to trigger functional tests against `main` branch:
       * There a few environment variables which are used for triggering functional tests for different clouds as well as BIGIP versions:
          - BIGIP_VERSION - specifies BIGIP version used in testing; possible values (14, 15 or all)
-         - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, gcp or all). 
+         - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, azure_gov, gcp or all). 
          - *Example:* Specifying `TEST_SUITE: all and BIGIP_VESION: all` will trigger 6 tests pipelines to test each supported BIGIP version (v14 and v15) against each supported Public Cloud (aws, gcp and azure)
 
-When functional tests against `master` branch is completed, the pre-release part is done. Continue to actual release
+When functional tests against `main` branch is completed, the pre-release part is done. Continue to actual release
 
 
 ### Step #2. Release
 
-The release is triggered by creating a tag with Release Notes on Master branch; however, the tag must be in a particular form to trigger the release CI/CD pipeline.
+The release is triggered by creating a tag with Release Notes on main branch; however, the tag must be in a particular form to trigger the release CI/CD pipeline.
 
 Please use the following steps to trigger release pipeline: 
  
-   1. Using Gitlab UI create tag with Release Notes on master branch; the release tag must be in form:
+   1. Using Gitlab UI create tag with Release Notes on main branch; the release tag must be in form:
       * `publish-<version>-<release>` 
           - <version> - corresponds to version number specified under package.json
           - <release> - corresponds to release number specified under package.json
