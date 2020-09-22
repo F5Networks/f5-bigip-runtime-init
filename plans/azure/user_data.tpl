@@ -38,6 +38,15 @@ runtime_parameters:
       field: ipv4
       index: 2
 pre_onboard_enabled:
+  - name: provision_modules
+    type: inline
+    commands:
+      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
   - name: example_inline_command
     type: inline
     commands:

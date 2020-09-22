@@ -266,6 +266,12 @@ runtime_parameters:
       environment: aws
       type: compute
       field: hostname
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -401,6 +407,12 @@ runtime_parameters:
         environment: gcp
         type: compute
         field: name
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -429,11 +441,37 @@ NOTE: ```--cloud gcp``` is passed to the installer to specify the environment
 ## Configuration Examples
 - Configuration examples and schema: ./examples/config
 - Declaration examples: ./examples/declarations
+- REST provisioning note: For improved performance, include pre_onboard commands that increase provisioning of the REST framework:
+ 
+```yaml
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
+```
+
+- Module provisioning note: For improved performance, include pre_onboard commands that pre-provision the ASM module when deploying WAF. Your F5 Declarative Onboarding declaration should **also** all pre-provisioned modules:
+ 
+```yaml
+pre_onboard_enabled:
+  - name: provision_modules
+    type: inline
+    commands:
+      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
+```
 
 Example 1: Verifies and installs Automation Toolchain components (DO, AS3) on a local BIG-IP and then configures AS3 from a local declaration file.
 
 ```yaml
 runtime_parameters: []
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -453,6 +491,12 @@ Example 2: Verifies and installs DO and myIlxApp RPMs from local directories and
 
 ```yaml
 runtime_parameters: []
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -541,6 +585,12 @@ runtime_parameters:
       environment: azure
       vaultUrl: https://my-keyvault.vault.azure.net
       secretId: my_azure_secret
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -620,6 +670,12 @@ runtime_parameters:
       environment: aws
       version: AWSCURRENT
       secretId: test-document-02
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -698,6 +754,12 @@ runtime_parameters:
       environment: gcp
       version: latest
       secretId: my-secret-id-02
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -786,6 +848,12 @@ runtime_parameters:
       type: network
       field: ipv4
       index: 2
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -828,6 +896,12 @@ runtime_parameters:
       type: network
       field: subnet-ipv4-cidr-block
       index: 1
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -845,6 +919,12 @@ Example 7: Installs AS3 and DO and uses an inline AS3 declaration to setup the B
 Using a YAML-based config file:
 ```yaml
 runtime_parameters: []
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -965,6 +1045,12 @@ runtime_parameters:
 - name: HOST_NAME
   type: static
   value: bigip1.example.com
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -1164,6 +1250,11 @@ pre_onboard_enabled:
       - touch /tmp/pre_onboard_script.sh
       - chmod 777 /tmp/pre_onboard_script.sh
       - echo "touch /tmp/create_by_autogenerated_pre_local" > /tmp/pre_onboard_script.sh
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
   - name: example_local_exec
     type: file
     commands:
@@ -1204,7 +1295,12 @@ This example installs DO and AS3, then sends a webhook to a user-defined URL on 
 
 ```yaml
 runtime_parameters: []
-pre_onboard_enabled: []
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -1393,6 +1489,11 @@ pre_onboard_enabled:
     type: inline
     commands:
       - tmsh modify sys software update auto-phonehome disabled
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 extension_packages:
   install_operations:
     - extensionType: do
@@ -1443,6 +1544,11 @@ pre_onboard_enabled:
     type: url
     commands:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_pre_onboard.sh
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
 post_onboard_enabled:
   - name: example_inline_command
     type: inline
