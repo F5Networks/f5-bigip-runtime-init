@@ -8,6 +8,7 @@ stages:
     - functional_test_init
     - functional_test_execute
     - functional_test_cleanup
+    - functional_test_cleanup_container
     - publish
     - release_publish
     - release_trigger_template_tests
@@ -159,8 +160,8 @@ publish_container:
     stage: functional_test_publish
     script:
         - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
-        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest .
-        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA} .
+        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA}
     tags:
         - docker-executor
     only:
@@ -179,14 +180,14 @@ publish_container:
 # Functional Tests - Initialization phase (with 1 retries in a case of any failures)
 .test_functional_init_generic: &test_functional_init_generic
     stage: functional_test_init
-    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA}
     retry:
         max: 1
     script:
         # deploy environment - required artifacts will be place in output folder
         - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}/${VERSION_PATH}
         # Collecting deployment metadata
-        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 100 > env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 150 > env_metadata/${CLOUD}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - MGMT_IP=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
         - USERNAME=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
         - PASSWORD=$(cat env_metadata/${CLOUD}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
@@ -487,7 +488,7 @@ test_functional_execute_gcp_v14:
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
     stage: functional_test_cleanup
-    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:latest
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA}
     retry:
         max: 1
     when: always
@@ -615,6 +616,26 @@ test_functional_cleanup_gcp_v14:
             - $TEST_SUITE == "aws"
     dependencies:
         - test_functional_init_gcp_v14
+
+delete_container:
+    stage: functional_test_cleanup_container
+    script:
+        # delete tag
+        - curl -u ${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD} -X DELETE "https://${ARTIFACTORY_SERVER}/artifactory/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init/${CI_COMMIT_SHORT_SHA}"
+        # list/verify tags
+        - curl -u ${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD} "https://${ARTIFACTORY_SERVER}/artifactory/api/docker/ecosystems-cloudsolutions-docker-dev/v2/deployment-tool-runtime-init/tags/list"
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
 
 # Publish RPM's to CDN
 publish_rpms_dev_cdn:
