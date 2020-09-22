@@ -37,3 +37,12 @@ variable "AZURE_TENANT_ID" {
 variable "AZURE_OBJECT_ID" {
   default = ""
 }
+
+variable "AZURE_ENVIROMENT" {
+  default = "public"
+}
+
+
+variable "DOMAIN" {
+  default = "azure"
+}

@@ -607,6 +607,38 @@ extension_services:
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
 ```
 
+F5 BIGIP Runtime Init declaration which provides secret metadata via runtime_parameters for Azure Servce Principal (**Note**: Be sure to replace vaultUrl and secretId with your values):
+```yaml
+runtime_parameters:
+  - name: AZURE_SERVICE_PRINCIPAL
+    type: secret
+    secretProvider: 
+      type: KeyVault
+      environment: azure
+      vaultUrl: https://my-keyvault.vault.azure.net
+      secretId: my_azure_secret
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.12.0
+    - extensionType: as3
+      extensionVersion: 3.19.1
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
+    - extensionType: as3
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
+```
+
 Example 4: Renders secret referenced within DO declaration to configure the admin password on a BIG-IP device in AWS.
 
 In AWS Secret Manager, secrets will be stored in plain text mapped via secretId:

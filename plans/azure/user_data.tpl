@@ -8,14 +8,14 @@ runtime_parameters:
     secretProvider:
       type: KeyVault
       environment: azure
-      vaultUrl: https://testvault-${deployment_id}.vault.azure.net
+      vaultUrl: https://testvault-${deployment_id}.vault.${domain}.net
       secretId: test-azure-admin-secret
   - name: ROOT_PASS
     type: secret
     secretProvider:
       type: KeyVault
       environment: azure
-      vaultUrl: https://testvault-${deployment_id}.vault.azure.net
+      vaultUrl: https://testvault-${deployment_id}.vault.${domain}.net
       secretId: test-azure-root-secret
   - name: HOST_NAME
     type: metadata
