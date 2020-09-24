@@ -2,8 +2,8 @@
 ## NOTE: This project is in preview and under active development.
 
 [![Slack Status](https://f5cloudsolutions.herokuapp.com/badge.svg)](https://f5cloudsolutions.herokuapp.com)
-[![Releases](https://img.shields.io/github/release/f5devcentral/f5-bigip-runtime-init.svg)](https://github.com/f5devcentral/f5-bigip-runtime-init/releases)
-[![Issues](https://img.shields.io/github/issues/f5devcentral/f5-bigip-runtime-init.svg)](https://github.com/f5devcentral/f5-bigip-runtime-init/issues)
+[![Releases](https://img.shields.io/github/release/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/releases)
+[![Issues](https://img.shields.io/github/issues/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/issues)
 
 
 ## Contents
@@ -157,7 +157,7 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 | Cloud | Type | Location |
 | --- | --- | --- |
 | All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run |
-| All | SHA256 | https://github.com/f5devcentral/f5-bigip-runtime-init/releases/download/{{ RELEASE_VERSION }}/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run.sha256 |
+| All | SHA256 | https://github.com/f5networks/f5-bigip-runtime-init/releases/download/{{ RELEASE_VERSION }}/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run.sha256 |
 | All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-all-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
 | All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-all-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
 | AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-aws-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |

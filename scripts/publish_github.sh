@@ -16,10 +16,11 @@ git config user.email $GITLAB_USER_EMAIL
 RELEASE_VERSION=$(echo $CI_COMMIT_REF_NAME | awk -F"-" '{ print $2 }')
 RELEASE_BUILD=$(echo $CI_COMMIT_REF_NAME | awk -F"-" '{ print $3 }')
 ALLOWED_DIRS=(src examples diagrams)
-ALLOWED_FILES=(.gitignore .gitallowed package.json package-lock.json README.md SCHEMA.md tsconfig.json LICENSE)
+ALLOWED_FILES=(.gitignore .gitallowed package.json package-lock.json README.md SUPPORT.md SCHEMA.md tsconfig.json LICENSE)
+
 
 echo "*** Setting git origin"
-git remote rm origin && git remote add origin git@github.com:f5devcentral/f5-bigip-runtime-init.git
+git remote rm origin && git remote add origin git@github.com:f5networks/f5-bigip-runtime-init.git
 echo "*** Removing everything from local git"
 git rm -rf .
 
@@ -68,18 +69,18 @@ EOF
 }
 
 echo "*** Create release $version"
-release_id=$(curl -X POST -d "$(generate_post_data)" "https://api.github.com/repos/f5devcentral/f5-bigip-runtime-init/releases?access_token=$GIT_HUB_API_TOKEN_AK" | jq .id)
+release_id=$(curl -X POST -d "$(generate_post_data)" "https://api.github.com/repos/f5networks/f5-bigip-runtime-init/releases?access_token=$GIT_HUB_API_TOKEN_AK" | jq .id)
 
 echo "*** Uploading self-executable to release page"
 echo "*** Calculating content length in bytes for self-executable"
 ARTIFACT_NAME=./dist/f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run
 CONTENT_LENGTH=$(wc -c < $ARTIFACT_NAME)
-curl --header "Content-Length:$CONTENT_LENGTH" --header "Content-Type:application/zip" --upload-file $ARTIFACT_NAME -X POST "https://uploads.github.com/repos/f5devcentral/f5-bigip-runtime-init/releases/$release_id/assets?name=$ARTIFACT_NAME&access_token=$GIT_HUB_API_TOKEN_AK"
+curl --header "Content-Length:$CONTENT_LENGTH" --header "Content-Type:application/zip" --upload-file $ARTIFACT_NAME -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=$ARTIFACT_NAME&access_token=$GIT_HUB_API_TOKEN_AK"
 
 echo "*** Uploading self-executable SHA256 to release page"
 echo "*** Calculating self-executable SHA256"
 cd dist/
 sha256sum f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run > f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256
-curl --header "Content-Type:application/txt" --upload-file f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256 -X POST "https://uploads.github.com/repos/f5devcentral/f5-bigip-runtime-init/releases/$release_id/assets?name=f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256&access_token=$GIT_HUB_API_TOKEN_AK"
+curl --header "Content-Type:application/txt" --upload-file f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256 -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256&access_token=$GIT_HUB_API_TOKEN_AK"
 
 echo "*** Publishing to github is completed."
