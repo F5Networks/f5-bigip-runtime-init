@@ -1,0 +1,46 @@
+default: 
+  description: Installs packages from metadata using latest versions
+  extension_packages:
+    install_operations:
+      - extensionType: do
+      - extensionType: as3
+versioned:
+  description: Installs packages using specific versions
+  extension_packages:
+    install_operations:
+      - extensionType: do
+        extensionVersion: 1.12.0
+      - extensionType: as3
+        extensionVersion: 3.19.1
+hashed:
+  description: Verifies and installs packages using specified hashes
+  extension_packages:
+    install_operations:
+      - extensionType: do
+        extensionVersion: 1.12.0
+        extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
+      - extensionType: as3
+        extensionVersion: 3.19.1
+        extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
+url:
+  description: Installs packages from custom locations
+  extension_packages:
+      install_operations:
+        - extensionType: do
+          extensionVersion: 1.10.0
+          extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.10.0/f5-declarative-onboarding-1.10.0-1.noarch.rpm
+        - extensionType: as3
+          extensionVersion: 3.20.0
+          extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-3.20.0-3.noarch.rpm
+ilx:
+  description: Installs a custom iLX package
+  extension_packages:
+    install_operations:
+      - extensionType: do
+        extensionVersion: 1.10.0
+      - extensionType: as3
+        extensionVersion: 3.20.0
+      - extensionType: ilx
+        extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+        extensionVersion: 1.1.0
+        extensionVerificationEndpoint: /mgmt/shared/fast/info
