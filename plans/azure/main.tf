@@ -3,9 +3,10 @@ module "utils" {
 }
 
 provider "azurerm" {
-  version = "=2.0.0"
+  version = "=2.5.0"
   features {
   }
+  environment = var.AZURE_ENVIROMENT
 }
 
 data "azurerm_subscription" "primary" {
@@ -25,6 +26,7 @@ data "template_file" "init_declaration" {
   template = "${file("${path.module}/user_data.tpl")}"
   vars = {
     deployment_id = "${module.utils.env_prefix}"
+    domain = "${var.DOMAIN}"
   }
 }
 
@@ -158,13 +160,13 @@ resource "azurerm_key_vault" "keyvault" {
 
 
     key_permissions = [
-      "get",
+      "get"
     ]
 
     secret_permissions = ["get","list","set","delete","recover","backup","restore","purge"]
 
     storage_permissions = [
-      "get",
+      "get"
     ]
   }
 
@@ -174,14 +176,19 @@ resource "azurerm_key_vault" "keyvault" {
 
 
     key_permissions = [
-      "get",
+      "get"
     ]
 
     secret_permissions = ["get","list","set","delete","recover","backup","restore","purge"]
 
     storage_permissions = [
-      "get",
+      "get"
     ]
+  }
+
+  network_acls {
+    default_action = "Allow"
+    bypass         = "AzureServices"
   }
 
   tags = {
@@ -258,13 +265,13 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   type                 = "CustomScript"
   type_handler_version = "2.0"
   settings             = <<SETTINGS
-    {   
+    {
       "fileUris": [
         "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm"
       ],
       "commandToExecute": "mkdir /config/cloud; cp /config/onboard_config.yaml /config/cloud/onboard_config.yaml; mkdir -p /var/lib/cloud/icontrollx_installs; cp f5-appsvcs-templates-1.1.0-1.noarch.rpm /var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm"
     }
-  
+
 SETTINGS
 
 }
@@ -277,11 +284,12 @@ output "deployment_info" {
         admin_username = var.admin_username
         admin_password = module.utils.admin_password
         mgmt_address   = azurerm_public_ip.pip.ip_address
-        mgmt_port      = 443,
+        mgmt_port      = 443
       },
     ]
     deploymentId = module.utils.env_prefix,
-    environment    = "azure"
+    environment    = "azure",
+    domain = var.DOMAIN
   }
 }
 

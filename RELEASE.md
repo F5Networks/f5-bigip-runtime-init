@@ -12,23 +12,24 @@ The release is fully automated process; however it requires a few manual steps t
 Before triggering release pipeline, the following needs to be done as a part of pre-release activities
 
    1. Update `version` and `release` values under package.json
-   2. Create Merge Request (aka MR) to merge all changes from `develop` to `master` branch
-   3. After merging changes to `master` branch, use pre-configured schedules to trigger functional tests against `master` branch:
+   2. Edits to the README.md file should be made to scripts/README_template.md.  This file is tagged with mustache handlebars used to update README.md with the correctly versioned links based on package.json when scripts/README_render.js is executed; SCHEMA.md will also be generated based on the contents of base_schema.json. Run this command manually after updating the version in package.json: **node scripts/README_render.js**
+   3. Create Merge Request (aka MR) to merge all changes from `develop` to `main` branch
+   4. After merging changes to `main` branch, use pre-configured schedules to trigger functional tests against `main` branch:
       * There a few environment variables which are used for triggering functional tests for different clouds as well as BIGIP versions:
          - BIGIP_VERSION - specifies BIGIP version used in testing; possible values (14, 15 or all)
-         - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, gcp or all). 
+         - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, azure_gov, gcp or all). 
          - *Example:* Specifying `TEST_SUITE: all and BIGIP_VESION: all` will trigger 6 tests pipelines to test each supported BIGIP version (v14 and v15) against each supported Public Cloud (aws, gcp and azure)
 
-When functional tests against `master` branch is completed, the pre-release part is done. Continue to actual release
+When functional tests against `main` branch is completed, the pre-release part is done. Continue to actual release
 
 
 ### Step #2. Release
 
-The release is triggered by creating a tag with Release Notes on Master branch; however, the tag must be in a particular form to trigger the release CI/CD pipeline.
+The release is triggered by creating a tag with Release Notes on main branch; however, the tag must be in a particular form to trigger the release CI/CD pipeline.
 
 Please use the following steps to trigger release pipeline: 
  
-   1. Using Gitlab UI create tag with Release Notes on master branch; the release tag must be in form:
+   1. Using Gitlab UI create tag with Release Notes on main branch; the release tag must be in form:
       * `publish-<version>-<release>` 
           - <version> - corresponds to version number specified under package.json
           - <release> - corresponds to release number specified under package.json
@@ -66,5 +67,3 @@ Creation of `publish-<version>-<release>` tag triggers CI/CD pipeline which incl
 ### Additional details
 
 Deploy keys, for gitlab and github repos, are used for committing changes to git; deploy keys are stored under CI/CD settings.
-
-Edits to the README.md file should be mad to scripts/README_template.md.  This file is tagged with mustache handlebars used to update README.md when scripts/README_render.mjs is executed manually or called from scripts/publish_github.sh.

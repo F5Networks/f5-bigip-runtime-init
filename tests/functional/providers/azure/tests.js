@@ -26,14 +26,18 @@ describe('Provider: Azure', () => {
 
         let credential;
         let keyVaultClient;
-        const clientId = process.env.ARM_CLIENT_ID;
-        const clientSecret = process.env.ARM_CLIENT_SECRET;
-        const tenantId = process.env.ARM_TENANT_ID;
-        const subscriptionId = process.env.ARM_SUBSCRIPTION_ID;
+        const clientId = process.env.AZURE_CLIENT_ID;
+        const clientSecret = process.env.AZURE_CLIENT_SECRET;
+        const tenantId = process.env.AZURE_TENANT_ID;
+        const subscriptionId = process.env.AZURE_SUBSCRIPTION_ID;
 
         if (clientId && clientSecret && subscriptionId && tenantId) {
-            credential = new DefaultAzureCredential();
-            keyVaultClient = new SecretClient(`https://testvault-${funcUtils.getEnvironmentInfo().deploymentId}.vault.azure.net/`, credential);
+            if (funcUtils.getEnvironmentInfo().domain == 'azure') {
+                credential = new DefaultAzureCredential();
+            } else {
+                credential = new DefaultAzureCredential({ authorityHost: 'https://login.microsoftonline.us' });
+            }
+            keyVaultClient = new SecretClient(`https://testvault-${funcUtils.getEnvironmentInfo().deploymentId}.vault.${funcUtils.getEnvironmentInfo().domain}.net/`, credential);
         }
 
         return keyVaultClient.getSecret('test-azure-admin-secret')

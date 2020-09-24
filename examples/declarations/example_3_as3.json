@@ -1,0 +1,55 @@
+{
+    "class": "AS3",
+    "action": "deploy",
+    "persist": true,
+    "declaration": {
+      "class": "ADC",
+      "schemaVersion": "3.0.0",
+      "label": "Sample 1",
+      "remark": "HTTP with custom persistence",
+      "Sample_http_01": {
+        "class": "Tenant",
+        "A1": {
+          "class": "Application",
+          "template": "http",
+          "serviceMain": {
+            "class": "Service_HTTP",
+            "virtualAddresses": [
+              "10.1.0.4"
+            ],
+            "pool": "webPool",
+            "policyWAF": {
+                "use": "My_ASM_Policy"
+            }
+          },
+          "webPool": {
+            "class": "Pool",
+            "monitors": [
+                "http"
+            ],
+            "members": [
+                {
+                    "servicePort": 80,
+                    "addressDiscovery": "azure",
+                    "updateInterval": 10,
+                    "tagKey": "foo",
+                    "tagValue": "bar",
+                    "addressRealm": "private",
+                    "resourceGroup": "myResourceGroup",
+                    "subscriptionId": "7fb1006f943a",
+                    "directoryId": "f98586303b68",
+                    "applicationId": "c9c4d0f9aa7",
+                    "apiAccessKey": "{{AZURE_SERVICE_PRINCIPAL}}",
+                    "credentialUpdate": true
+                }
+            ]
+          },
+          "My_ASM_Policy": {
+            "class": "WAF_Policy",
+            "url": "https://cdn.f5.com/product/cloudsolutions/solution-scripts/asm-policy-linux/asm-policy-linux-medium.xml",
+            "ignoreChanges": true
+          }
+        }
+      }
+    }
+  }

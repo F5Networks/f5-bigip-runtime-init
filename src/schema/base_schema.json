@@ -1,21 +1,26 @@
 {
+    "$id": "base_schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "F5 BIG-IP Runtime Init Schema",
+    "type": "object",
     "properties": {
         "runtime_parameters": {
-            "title": "Runtime Parameters",
-            "description": "Runtime parameters (used during future template rendering)",
+            "description": "Runtime parameters used to render Automation Toolchain declarations.",
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "examples": ["ADMIN_PASSWORD", "HOST_NAME"]
                     },
                     "type": {
                         "type": "string",
                         "enum": ["static", "secret", "metadata"]
                     },
                     "value": {
-                        "type": "string"
+                        "type": "string",
+                        "examples": ["myValue"]
                     },
                     "secretProvider": {
                         "type": "object",
@@ -30,16 +35,19 @@
                             },
                             "secretId": {
                                 "description": "ID or name of the secret in the secret manager of the specified cloud",
-                                "type": "string"
+                                "type": "string",
+                                "examples": ["mySecretId", "test-document-01"]
                             },
                             "version": {
                                 "description": "Version identifier for the secret to be retrieved",
-                                "type": "string"
+                                "type": "string",
+                                "examples": ["AWSCURRENT", "1.0"]
                             },
                             "vaultUrl": {
                                 "description": "URL of the Azure Key Vault",
                                 "type": "string",
-                                "pattern": "(https?:\/\/(.+?\\.)?vault\\.azure\\.net(\/[A-Za-z0-9\\-\\._~:\/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)"
+                                "pattern": "(https?://(.+?\\.)?vault\\.(azure|usgovcloudapi)\\.net(/[A-Za-z0-9\\-\\._~:/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)",
+                                "examples": ["https://my-keyvault.vault.azure.net", "https://my-keyvault.vault.usgovcloudapi.net"]
                             }
                         },
                         "allOf": [
@@ -63,10 +71,12 @@
                                 "enum": ["network", "compute"]
                             },
                             "field": {
-                              	"type": "string"
+                              	"type": "string",
+                                "examples": ["name", "hostname", "ipv4", "local-ipv4s", "subnet-ipv4-cidr-block"]
                             },
                             "index": {
-                              	"type": "integer"
+                              	"type": "integer",
+                                "examples": ["0", "1", "2"]
                             }
                         },
                         "allOf": [
@@ -110,14 +120,15 @@
             }
         },
         "post_onboard_enabled": {
-            "title": "Post Onboard Commands",
-            "description": "Used to specify post onboars commands which will be executed as last phase within onboard",
+            "description": "Used to specify commands which will be executed following extension services operations.",
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "examples": ["my_postonboard_command", "example_local_exec"]
+                        
                     },
                     "type": {
                         "type": "string",
@@ -126,25 +137,27 @@
                     "command": {
                         "type": "array",
                         "items" : {
-                            "type": "string"
+                            "type": "string",
+                            "examples": ["/tmp/post_onboard_script.sh", "https://the-delivery-location.com/remote_post_onboard.sh"]
                         }
                     },
                     "verifyTls": {
                         "description": "For enabling secure site verification",
-                        "type": "boolean"
+                        "type": "boolean",
+                        "examples": ["true", "false"]
                     }
                 }
             }
         },
         "pre_onboard_enabled": {
-            "title": "Pre Onboard Commands",
-            "description": "Used to specify pre onboars commands which will be executed as a first step within onboard",
+            "description": "Used to specify commands which will be executed before extension package operations.",
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "examples": ["my_preonboard_command", "example_local_exec", "provision_rest"]
                     },
                     "type": {
                         "type": "string",
@@ -153,23 +166,23 @@
                     "command": {
                         "type": "array",
                         "items" : {
-                            "type": "string"
+                            "type": "string",
+                            "examples": ["/usr/bin/setdb provision.extramb 500", "/usr/bin/setdb restjavad.useextramb true", "/tmp/pre_onboard_script.sh"]
                         }
                     },
                     "verifyTls": {
                         "description": "For enabling secure site verification",
-                        "type": "boolean"
+                        "type": "boolean",
+                        "examples": ["true", "false"]
                     }
                 }
             }
         },
         "extension_packages": {
-            "title": "Extension Packages",
-            "description": "Used to specify packages to be installed on device",
+            "description": "Used to specify Automation Toolchain packages to be installed on device.",
             "type": "object",
             "properties": {
                 "install_operations": {
-                    "title": "Install Operations",
                     "description": "Specify the type, version, location, and endpoint of packages to install",
                     "type": "array",
                     "items": {
@@ -180,21 +193,26 @@
                                 "enum": ["do", "as3", "ts", "cf", "ilx"]
                             },
                             "extensionVersion": {
-                                "type": "string"
+                                "type": "string",
+                                "examples": ["1.12.0", "3.19.1"]
                             },
                             "extensionHash": {
-                                "type": "string"
+                                "type": "string",
+                                "examples": ["ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987", "95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1"]
                             },
                             "verifyTls": {
                                 "description": "For enabling secure site verification",
-                                "type": "boolean"
+                                "type": "boolean",
+                                "examples": ["true", "false"]
                             },
                             "extensionUrl": {
                                 "type": "string",
-                                "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]+\\.(rpm)$"
+                                "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]+\\.(rpm)$",
+                                "examples": ["https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm", "file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.10.0-2.noarch.rpm"]
                             },
                             "extensionVerificationEndpoint": {
-                                "type": "string"
+                                "type": "string",
+                                "examples": ["/mgmt/shared/myIlxApp/info"]
                             }
                         },
                         "allOf": [
@@ -213,12 +231,10 @@
             "additionalProperties": false
         },
         "extension_services": {
-            "title": "Extension Services",
-            "description": "Used to specify operations to be performed against specific services on device",
+            "description": "Used to specify configuration operations to be performed against specific extensions on device.",
             "type": "object",
             "properties": {
                 "service_operations": {
-                    "title": "Service Operations",
                     "description": "Specify the operations to be performed against the specified services",
                     "type": "array",
                     "items": {
@@ -234,11 +250,13 @@
                                 "enum": ["url", "inline"]
                             },
                             "value": {
-                                "description": "URL of local or remote file containing the declarations to be applied, or the entire declaration inline as an object"
+                                "description": "URL of local or remote file containing the declarations to be applied, or the entire declaration inline as an object",
+                                "examples": ["https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json", "file:///examples/declarations/as3.json", "class: AS3 action: deploy persist: true declaration: class: ADC schemaVersion: 3.0.0 id: urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d label: Sample 1 remark: Simple HTTP Service with Round-Robin Load Balancing Sample_01: class: Tenant A1: class: Application template: http serviceMain: class: Service_HTTP virtualAddresses: - 10.0.1.10 pool: web_pool web_pool: class: Pool monitors: - http members: - servicePort: 80 serverAddresses: - 192.0.1.10 - 192.0.1.11"]
                             },
                             "verifyTls": {
                                 "description": "For enabling secure site verification",
-                                "type": "boolean"
+                                "type": "boolean",
+                                "examples": ["true", "false"]
                             }
                         },
                         "allOf": [
@@ -260,13 +278,13 @@
             "additionalProperties": false
         },
         "post_hook": {
-            "title": "Post hook configuration",
-            "description": "Details of request to send when deployment is finished",
+            "description": "Details of an HTTP request to send when deployment is finished.",
             "type": "array",
             "properties": {
                 "name": {
                     "description": "The name of the hook",
-                    "type": "string"
+                    "type": "string",
+                    "examples": ["my_webhook"]
                 },
                 "type": {
                     "description": "The type of the hook",
@@ -275,15 +293,18 @@
                 },
                 "url": {
                     "description": "The destination of the hook",
-                    "type": "string"
+                    "type": "string",
+                    "examples": ["https://webhook.site"]
                 },
                 "verifyTls": {
                     "description": "For enabling secure site verification",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "examples": ["true", "false"]
                 },
                 "properties": {
                     "description": "Custom properties supplied by the user",
-                    "type": "object"
+                    "type": "object",
+                    "examples": ["optionalKey1: optional_value1, optionalKey2: optional_value2"]
                 }
             },
             "required": ["name", "type", "url"],
