@@ -18,7 +18,7 @@ Before triggering release pipeline, the following needs to be done as a part of 
       * There a few environment variables which are used for triggering functional tests for different clouds as well as BIGIP versions:
          - BIGIP_VERSION - specifies BIGIP version used in testing; possible values (14, 15 or all)
          - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, azure_gov, gcp or all). 
-         - *Example:* Specifying `TEST_SUITE: all and BIGIP_VESION: all` will trigger 6 tests pipelines to test each supported BIGIP version (v14 and v15) against each supported Public Cloud (aws, gcp and azure)
+         - *Example:* Specifying `TEST_SUITE: all and BIGIP_VERSION: all` will trigger 6 tests pipelines to test each supported BIGIP version (v14 and v15) against each supported Public Cloud (aws, gcp and azure)
 
 When functional tests against `main` branch is completed, the pre-release part is done. Continue to actual release
 
@@ -54,6 +54,7 @@ Creation of `publish-<version>-<release>` tag triggers CI/CD pipeline which incl
          * examples/ directory 
          * diagrams/ directory
          * README.md 
+         * SCHEMA.md
          * package.json
          * package-lock.json
          * .gitigonre
