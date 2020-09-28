@@ -39,7 +39,7 @@ done
 echo "*** Committing source code"
 git status
 git commit -m "Release commited to $RELEASE_VERSION tag" || echo "No changes, nothing to commit!"
-git push -f origin HEAD:develop
+git push -f origin HEAD:main
 
 echo "*** Publishing tag"
 git tag -a $RELEASE_VERSION -m "Release of version $RELEASE_VERSION"
@@ -59,7 +59,7 @@ generate_post_data()
   cat <<EOF
 {
   "tag_name": "$version",
-  "target_commitish": "develop",
+  "target_commitish": "main",
   "name": "$version",
   "body": $release_description,
   "draft": false,
@@ -73,9 +73,10 @@ release_id=$(curl -X POST -d "$(generate_post_data)" "https://api.github.com/rep
 
 echo "*** Uploading self-executable to release page"
 echo "*** Calculating content length in bytes for self-executable"
-ARTIFACT_NAME=./dist/f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run
-CONTENT_LENGTH=$(wc -c < $ARTIFACT_NAME)
-curl --header "Content-Length:$CONTENT_LENGTH" --header "Content-Type:application/zip" --upload-file $ARTIFACT_NAME -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=$ARTIFACT_NAME&access_token=$GIT_HUB_API_TOKEN_AK"
+ARTIFACT_NAME=f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run
+ARTIFACT_LOCATION=./dist/f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run
+CONTENT_LENGTH=$(wc -c < $ARTIFACT_LOCATION)
+curl --header "Content-Length:$CONTENT_LENGTH" --header "Content-Type:application/zip" --upload-file $ARTIFACT_LOCATION -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=$ARTIFACT_NAME&access_token=$GIT_HUB_API_TOKEN_AK"
 
 echo "*** Uploading self-executable SHA256 to release page"
 echo "*** Calculating self-executable SHA256"

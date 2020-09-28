@@ -923,9 +923,7 @@ publish_to_github:
         # install jq
         - apt-get update
         - apt-get install -y jq
-        # install node dependencies (for mustache rendering)
-        - npm install
-        # Execute Relaese script to push source to github repo
+        # Execute Release script to push source to github repo
         - ./scripts/publish_github.sh
 
 trigger_downstream_templates_tests:

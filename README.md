@@ -1,5 +1,4 @@
 # F5 BIG-IP Runtime Init
-## NOTE: This project is in preview and under active development.
 
 [![Slack Status](https://f5cloudsolutions.herokuapp.com/badge.svg)](https://f5cloudsolutions.herokuapp.com)
 [![Releases](https://img.shields.io/github/release/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/releases)
@@ -8,7 +7,6 @@
 
 ## Contents
 - [F5 BIG-IP Runtime Init](#f5-big-ip-runtime-init)
-  - [NOTE: This project is in preview and under active development.](#note-this-project-is-in-preview-and-under-active-development)
   - [Contents](#contents)
   - [Introduction](#introduction)
   - [Overview](#overview)
@@ -129,7 +127,7 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 | post_hook | none | No  | Webhook to send upon completion. |
 
 ### Configuration Examples and Schema Documentation
-See [SCHEMA.md](./../SCHEMA.md) for complete schema documentation and configuration examples.
+See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and configuration examples.
 
 ## Installer
 
