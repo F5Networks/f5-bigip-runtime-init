@@ -14,7 +14,7 @@ function renderDocs() {
     const version = packageInfo.version;
     const build = packageInfo.release;
     const template = fs.readFileSync('./scripts/README_template.md', 'utf-8');
-    const output = mustache.render(template, { RELEASE_VERSION: version, RELEASE_BUILD: build });
+    const output = mustache.render(template, { RELEASE_VERSION: version, RELEASE_BUILD: build, ADMIN_PASS: '{{ADMIN_PASS}}' });
     fs.writeFileSync('./README.md', output);
 
     // render SCHEMA.md
