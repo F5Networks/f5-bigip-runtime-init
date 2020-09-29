@@ -321,7 +321,7 @@ test_functional_init_azure_gov_v14:
     variables:
         CLOUD: "azure"
         TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
+        VERSION_PATH: "14"
         TF_VAR_DOMAIN: "usgovcloudapi"
         TF_VAR_location: "usgovvirginia"
         TF_VAR_AZURE_ENVIROMENT: "usgovernment"
