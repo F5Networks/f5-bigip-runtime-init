@@ -214,8 +214,8 @@ publish_container:
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
         # Workaround: copying over declaration to support bigip version with no user-data support
         - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml
-        - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
-        - sed "s/\${domain}/$TF_VAR_DOMAIN/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml
+        - sed "s/\${secret_id}/$SECRET_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
+        - sed "s/\${domain}/$TF_VAR_DOMAIN/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml
         - rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml && rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml && rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
         - mv env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
@@ -321,7 +321,7 @@ test_functional_init_azure_gov_v14:
     variables:
         CLOUD: "azure"
         TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
+        VERSION_PATH: "v14"
         TF_VAR_DOMAIN: "usgovcloudapi"
         TF_VAR_location: "usgovvirginia"
         TF_VAR_AZURE_ENVIROMENT: "usgovernment"
