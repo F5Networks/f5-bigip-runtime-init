@@ -39,7 +39,7 @@ done
 echo "*** Committing source code"
 git status
 git commit -m "Release commited to $RELEASE_VERSION tag" || echo "No changes, nothing to commit!"
-git push -f origin HEAD:main
+git push -u origin HEAD:main -f
 
 echo "*** Publishing tag"
 git tag -a $RELEASE_VERSION -m "Release of version $RELEASE_VERSION"
