@@ -519,7 +519,7 @@ This schema accepts additional properties.
 				 - _URL of local or remote file containing the declarations to be applied, or the entire declaration inline as an object_
 				 - <i id="#/properties/service_operations/items/properties/value">path: #/properties/service_operations/items/properties/value</i>
 				 - Example values: 
-					 1. _"https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json"_
+					 1. _"https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json"_
 					 2. _"file:///examples/declarations/as3.json"_
 					 3. _"class: AS3 action: deploy persist: true declaration: class: ADC schemaVersion: 3.0.0 id: urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d label: Sample 1 remark: Simple HTTP Service with Round-Robin Load Balancing Sample_01: class: Tenant A1: class: Application template: http serviceMain: class: Service_HTTP virtualAddresses: - 10.0.1.10 pool: web_pool web_pool: class: Pool monitors: - http members: - servicePort: 80 serverAddresses: - 192.0.1.10 - 192.0.1.11"_
 			 - <b id="#/properties/service_operations/items/properties/verifyTls">verifyTls</b>
@@ -541,7 +541,7 @@ url:
       - extensionType: do
         type: url
         value: >-
-          https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json
+          https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json
         verifyTls: false
       - extensionType: as3
         type: url

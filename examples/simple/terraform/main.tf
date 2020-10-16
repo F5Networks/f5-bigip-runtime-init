@@ -180,7 +180,7 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
     {
       "commandToExecute": "bash /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud azure' 2>&1 && f5-bigip-runtime-init --config-file /config/onboard_config.yaml 2>&1"
     }
-  
+
 SETTINGS
 
 }

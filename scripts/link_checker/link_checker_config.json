@@ -1,0 +1,39 @@
+{
+    "ignorePatterns": [
+        {
+            "pattern": "^https://example.com"
+        },
+        {
+            "pattern": "^http://example.com"
+        },
+        {
+            "pattern": "^https://localhost"
+        },
+        {
+            "pattern": "^http://localhost"
+        },
+        {
+            "pattern": "^https://10.*"
+        },
+        {
+            "pattern": "^https://solutiontemplates.visualstudio.com"
+        },
+        {
+            "pattern": "http://www.f5.com/about/guidelines-policies/"
+        },
+        {
+            "pattern": "https://my-keyvault.vault.*"
+        },
+        {
+            "pattern": "https://the-delivery-location.com.*"
+        }
+
+    ],
+    "replacementPatterns": [
+        {
+            "pattern": "&quot;",
+            "replacement": " "
+        }
+    ],
+    "httpHeaders": []
+}
