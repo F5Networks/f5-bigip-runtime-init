@@ -1,0 +1,9 @@
+{
+    "name": "link_checker",
+    "version": "0.1.0",
+    "author": "F5 Networks",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "markdown-link-check": "^3.7.3"
+    }
+}
