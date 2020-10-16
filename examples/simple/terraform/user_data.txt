@@ -5,9 +5,11 @@ runtime_parameters: []
 extension_packages:
     install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.23.0
 extension_services:
     service_operations: []
 EOF
+
+curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run

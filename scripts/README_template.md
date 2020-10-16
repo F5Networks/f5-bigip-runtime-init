@@ -274,9 +274,9 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.14.0
+      extensionVersion: 1.16.0
     - extensionType: as3
-      extensionVersion: 3.20.0
+      extensionVersion: 3.23.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -415,9 +415,9 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.14.0
+      extensionVersion: 1.16.0
     - extensionType: as3
-      extensionVersion: 3.20.0
+      extensionVersion: 3.23.0
 extension_services:
   service_operations:
     - extensionType: do

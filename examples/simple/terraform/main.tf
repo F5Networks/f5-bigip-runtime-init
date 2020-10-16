@@ -178,7 +178,7 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   type_handler_version = "1.2"
   settings             = <<SETTINGS
     {
-      "commandToExecute": "bash /var/lib/waagent/CustomData; curl https://raw.githubusercontent.com/f5devcentral/f5-bigip-runtime-init/develop/scripts/install.sh | bash; f5-bigip-runtime-init -c /config/onboard_config.yaml"
+      "commandToExecute": "bash /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud azure' 2>&1 && f5-bigip-runtime-init --config-file /config/onboard_config.yaml 2>&1"
     }
   
 SETTINGS
