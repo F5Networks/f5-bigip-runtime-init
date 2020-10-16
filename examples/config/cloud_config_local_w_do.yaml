@@ -32,7 +32,7 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
   - extensionType: do
-    extensionVersion: 1.12.0
+    extensionVersion: 1.16.0
 extension_services:
   service_operations:
   - extensionType: do

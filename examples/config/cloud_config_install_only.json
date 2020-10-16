@@ -21,15 +21,15 @@
       "install_operations": [
          {
             "extensionType": "do",
-            "extensionVersion": "1.13.0",
-            "extensionUrl": "file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.13.0-5.noarch.rpm",
-            "extensionHash": "e7c9acb0ddfc9e9949c48b9a8de686c365764f28347aacf194a6de7e3ed183be"
+            "extensionVersion": "1.16.0",
+            "extensionUrl": "file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.16.0-8.noarch.rpm",
+            "extensionHash": "536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1"
          },
          {
             "extensionType": "as3",
-            "extensionVersion": "3.20.0",
-            "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm",
-            "extensionHash": "ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987"
+            "extensionVersion": "3.23.0",
+            "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm",
+            "extensionHash": "de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28"
          },
          {
             "extensionType": "ilx",
