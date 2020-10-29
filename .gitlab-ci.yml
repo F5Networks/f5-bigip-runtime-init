@@ -272,6 +272,7 @@ test_functional_init_azure_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: azure and BIGIPv14
 test_functional_init_azure_v14:
@@ -291,6 +292,7 @@ test_functional_init_azure_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: azure and BIGIPv15
 test_functional_init_azure_gov_v15:
@@ -318,6 +320,7 @@ test_functional_init_azure_gov_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
 
 # run functional tests: azure and BIGIPv14
 test_functional_init_azure_gov_v14:
@@ -345,6 +348,7 @@ test_functional_init_azure_gov_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
 
 
 # run functional tests: aws and BIGIPv15
@@ -364,6 +368,7 @@ test_functional_init_aws_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: aws and BIGIPv14
 test_functional_init_aws_v14:
@@ -382,6 +387,7 @@ test_functional_init_aws_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: gcp and BIGIPv15
 test_functional_init_gcp_v15:
@@ -400,6 +406,7 @@ test_functional_init_gcp_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: gcp and BIGIPv14
 test_functional_init_gcp_v14:
@@ -418,6 +425,45 @@ test_functional_init_gcp_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+
+# run functional tests: base package and BIGIPv15
+test_functional_init_base_v15:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "base"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v15"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+
+# run functional tests: base package and BIGIPv15
+test_functional_init_base_v14:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "base"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v14"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
 
 # Functional Tests - Execute phase (with no retries)
 .test_functional_execute_generic: &test_functional_execute_generic
@@ -475,6 +521,7 @@ test_functional_execute_azure_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
         - build_package
@@ -500,6 +547,7 @@ test_functional_execute_azure_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v14
         - build_package
@@ -528,6 +576,7 @@ test_functional_execute_azure_gov_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
         - build_package
@@ -556,6 +605,7 @@ test_functional_execute_azure_gov_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v14
         - build_package
@@ -577,6 +627,7 @@ test_functional_execute_aws_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v15
         - build_package
@@ -597,6 +648,7 @@ test_functional_execute_aws_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v14
         - build_package
@@ -617,6 +669,7 @@ test_functional_execute_gcp_v15:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v15
         - build_package
@@ -636,9 +689,54 @@ test_functional_execute_gcp_v14:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v14
         - build_package
+
+# run base package tests
+test_functional_execute_base_v15:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v15"
+        ENV_PROVIDER_TESTS: "ignore"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v15
+        - build_package
+
+test_functional_execute_base_v14:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v14"
+        ENV_PROVIDER_TESTS: "ignore"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v14
+        - build_package
+
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
@@ -682,6 +780,7 @@ test_functional_cleanup_azure_v15:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
 
@@ -702,6 +801,7 @@ test_functional_cleanup_azure_v14:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v14
 
@@ -733,6 +833,7 @@ test_functional_cleanup_azure_gov_v15:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
 
@@ -762,6 +863,7 @@ test_functional_cleanup_azure_gov_v14:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v14
 
@@ -781,6 +883,7 @@ test_functional_cleanup_aws_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v15
 
@@ -799,6 +902,7 @@ test_functional_cleanup_aws_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v14
 
@@ -818,6 +922,7 @@ test_functional_cleanup_gcp_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v15
 
@@ -836,9 +941,49 @@ test_functional_cleanup_gcp_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v14
 
+
+# run functional tests: base
+test_functional_cleanup_base_v15:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v15
+
+test_functional_cleanup_base_v14:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v14
 
 # End of Funtional tests
 

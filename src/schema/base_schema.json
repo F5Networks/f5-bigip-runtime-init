@@ -311,6 +311,6 @@
             "additionalProperties": false
         }
     },
-    "required": ["extension_packages", "extension_services"],
+    "required": [],
     "additionalProperties": false
 }

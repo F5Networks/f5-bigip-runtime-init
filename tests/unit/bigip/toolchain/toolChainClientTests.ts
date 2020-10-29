@@ -329,27 +329,6 @@ describe('BIG-IP Package Client', () => {
             .catch(err => Promise.reject(err));
     }).timeout(300000);
 
-
-    it('should validate install failure via FILE when location is not valid', () => {
-        const mgmtClient = new ManagementClient(standardMgmtOptions);
-        const ilxToolchainOptions = {
-            extensionVersion: '1.1.0',
-            extensionUrl: 'file:///var/foo/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm',
-            extensionVerificationEndpoint: '/mgmt/shared/fast/info'
-        };
-        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', ilxToolchainOptions);
-        const packageClient = toolChainClient.package;
-        mock({
-            '/var/foo/cloud/icontrollx_installs': {
-                'f5-appsvcs-templates-1.1.0-1.noarch.rpm': '12345'
-            }
-        });
-        return packageClient.install()
-            .catch((err) => {
-                assert.ok(err.message.includes('File path is invalid. Must be one of [ /var/lib/cloud, /var/lib/cloud/icontrollx_installs ]'));
-            });
-    }).timeout(300000);
-
     it('should validate installation failure due to FAILED status', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);

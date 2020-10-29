@@ -301,11 +301,7 @@ class PackageClient {
 
         let tmpFile = '';
         if (urlObject.protocol === 'file:') {
-            if (urlObject.pathname.indexOf(constants.BASE_DIR) !== -1) {
                 tmpFile = urlObject.pathname.replace(/\/$/, '');
-            } else {
-                throw new Error('File path is invalid. Must be one of [ /var/lib/cloud, /var/lib/cloud/icontrollx_installs ]');
-            }
         } else {
             utils.verifyDirectory(constants.TMP_DIR);
             tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
@@ -320,10 +316,12 @@ class PackageClient {
         }
 
         // upload to target
-        await this._uploadRpm(tmpFile);
+        if (urlObject.pathname.indexOf(constants.DOWNLOADS_DIR) === -1) {
+            await this._uploadRpm(tmpFile);
+        }
 
         // install on target
-        await this._installRpm(`/var/config/rest/downloads/${downloadPackageName}`);
+        await this._installRpm(`${constants.DOWNLOADS_DIR}/${downloadPackageName}`);
 
         return { component: this.component, version: this.version, installed: true };
     }
