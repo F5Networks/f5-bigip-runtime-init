@@ -22,7 +22,7 @@
          {
             "extensionType": "do",
             "extensionVersion": "1.16.0",
-            "extensionUrl": "file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.16.0-8.noarch.rpm",
+            "extensionUrl": "file:///var/config/rest/downloads/f5-declarative-onboarding-1.16.0-8.noarch.rpm",
             "extensionHash": "536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1"
          },
          {
@@ -33,7 +33,7 @@
          },
          {
             "extensionType": "ilx",
-            "extensionUrl": "file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm",
+            "extensionUrl": "file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm",
             "extensionVerificationEndpoint": "/mgmt/shared/fast/info"
          }
       ]

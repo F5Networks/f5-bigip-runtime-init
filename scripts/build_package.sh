@@ -2,7 +2,7 @@
 
 MAINDIR="$(dirname $0)/.."
 NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
-CLOUDS=(azure aws gcp all)
+CLOUDS=(azure aws gcp all base)
 COMMON_DEPENDENCIES=$(cat ${MAINDIR}/package.json | jq -r ".dependencyMap.common")
 VERSION=$(cat ${MAINDIR}/package.json | jq -r ".version")
 RELEASE=$(cat ${MAINDIR}/package.json | jq -r ".release")
@@ -24,8 +24,14 @@ for cloud in "${CLOUDS[@]}"; do
 
     echo "*** Build cloud-specific package.json"
     if [[ ${cloud} == "all" ]]; then
+        # Package for all supported public clouds (AWS, Azure, GCP)
         cp ${MAINDIR}/dist/package.json ${MAINDIR}/dist/working/${cloud}
+    elif [[ ${cloud} == "base" ]]; then
+        # Package without any Public Cloud SDKs
+        final_dependencies=$(jq --argjson common "${COMMON_DEPENDENCIES}" -n '$common')
+        jq --argjson final "${final_dependencies}" '.dependencies = $final' ${MAINDIR}/dist/package.json > ${MAINDIR}/dist/working/${cloud}/package.json
     else
+        # Cloud Specific package
         cloud_dependencies=$(cat ${MAINDIR}/dist/package.json | jq -r ".dependencyMap.${cloud}")
         final_dependencies=$(jq --argjson common "${COMMON_DEPENDENCIES}" --argjson cloud "${cloud_dependencies}" -n '$common + $cloud')
         jq --argjson final "${final_dependencies}" '.dependencies = $final' ${MAINDIR}/dist/package.json > ${MAINDIR}/dist/working/${cloud}/package.json

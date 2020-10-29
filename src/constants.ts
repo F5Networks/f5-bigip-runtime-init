@@ -12,7 +12,7 @@ export const VERSION = packageInfo.version;
 export const NAME = packageInfo.name;
 export const INSTALLED_PACKAGES = packageInfo.dependencies;
 
-export const BASE_DIR = '/var/lib/cloud';
+export const DOWNLOADS_DIR = '/var/config/rest/downloads';
 export const TMP_DIR = '/var/lib/cloud/icontrollx_installs';
 
 export const TELEMETRY_TYPE= `${NAME}-data`;

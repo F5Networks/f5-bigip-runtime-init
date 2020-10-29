@@ -461,8 +461,7 @@ url:
           https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm
       - extensionType: as3
         extensionVersion: 3.23.0
-        extensionUrl: >-
-          file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-3.23.0-5.noarch.rpm
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.23.0-5.noarch.rpm'
 ilx:
   description: Installs a custom iLX package
   extension_packages:
@@ -473,7 +472,7 @@ ilx:
         extensionVersion: 3.23.0
       - extensionType: ilx
         extensionUrl: >-
-          file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+          file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
         extensionVersion: 1.1.0
         extensionVerificationEndpoint: /mgmt/shared/fast/info
 
@@ -657,8 +656,7 @@ example_2:
   description: >-
     Verifies and installs DO and myIlxApp RPMs from local directories and
     configures DO from a local declaration file. Install operations with an
-    extensionUrl value that points to a local file may only be installed from
-    the /var/lib/cloud or /var/lib/cloud/icontrollx_installs directories.
+    extensionUrl value that points to a local file stored on BIGIP system.
   runtime_config:
     runtime_parameters: []
     pre_onboard_enabled:
@@ -671,10 +669,10 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.16.0-8.noarch.rpm
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.16.0-8.noarch.rpm
           extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
         - extensionType: ilx
-          extensionUrl: 'file:///var/lib/cloud/myIlxApp.rpm'
+          extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.1.0
           extensionVerificationEndpoint: /mgmt/shared/myIlxApp/info
           extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
@@ -682,7 +680,7 @@ example_2:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///var/lib/cloud/do.json'
+          value: 'file:///var/config/rest/downloads/do.json'
 example_3:
   description: >-
     Installs DO and AS3 on a local BIG-IP and renders the Azure service
@@ -1104,7 +1102,7 @@ example_11:
           extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
         - extensionType: ilx
           extensionUrl: >-
-            file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+            file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
           extensionVersion: 1.1.0
           extensionVerificationEndpoint: /mgmt/shared/fast/info
     extension_services:

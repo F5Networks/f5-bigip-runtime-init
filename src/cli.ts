@@ -76,11 +76,10 @@ export async function cli(): Promise<string> {
     // resolve runtime parameters
     const resolver = new ResolverClient();
     logger.info('Resolving parameters');
-    const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
+    const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters): undefined;
 
     // pre onboard
     // run before install operations in case they require out-of-band changes
-    logger.info('Start working with pre-onboard commands');
     const preOnboardEnabled = config.pre_onboard_enabled || [];
     if (preOnboardEnabled.length) {
         logger.info('Executing custom pre-onboard commands');
@@ -88,7 +87,8 @@ export async function cli(): Promise<string> {
     }
 
     // perform install operations
-    const installOperations = config.extension_packages.install_operations || [];
+    const extensionPackages = config.extension_packages || {};
+    const installOperations = extensionPackages.install_operations || [];
     if (installOperations.length) {
         logger.info('Executing install operations.');
         for (let i = 0; i < installOperations.length; i += 1) {
@@ -113,7 +113,8 @@ export async function cli(): Promise<string> {
     }
 
     // perform service operations
-    const serviceOperations = config.extension_services.service_operations || [];
+    const extensionSevices = config.extension_services || {};
+    const serviceOperations = extensionSevices.service_operations || [];
     if (serviceOperations.length) {
         logger.info('Executing service operations.');
         for (let i = 0; i < serviceOperations.length; i += 1) {
@@ -139,8 +140,10 @@ export async function cli(): Promise<string> {
                     }
                 );
             }
-            // rendering secrets
-            loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
+            // rendering secrets if provided
+            if (resolvedRuntimeParams) {
+                loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
+            }
             await toolchainClient.service.isAvailable();
             await toolchainClient.service.create({ config: loadedConfig });
         }
@@ -170,7 +173,11 @@ export async function cli(): Promise<string> {
     logger.info('Initializing telemetryClient');
     await telemetryClient.init(executionResults);
     logger.info('Sending f5-teem report');
-    telemetryClient.report(telemetryClient.createTelemetryData());
+    telemetryClient.report(telemetryClient.createTelemetryData())
+        .catch((err) => {
+            logger.warn('Problem with sending data to F5 TEEM. Perhaps, there is no public access');
+            logger.error(err.message);
+        });
     return 'All operations finished successfully';
 }
 

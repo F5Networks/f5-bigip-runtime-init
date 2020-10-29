@@ -118,9 +118,7 @@
         ]
     },
     "auditProcessor": {
-        "whitelist": [
-            "1523"
-        ]
+        "whitelist": []
     },
     "keywords": [
         "f5",

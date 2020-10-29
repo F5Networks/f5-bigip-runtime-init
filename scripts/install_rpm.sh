@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CLOUD=""
+CLOUD="base"
+SUPPORTED_CLOUDS=(aws azure gcp all base)
 GPG_PUB_KEY_LOCATION="https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key"
 SKIP_VERIFICATION=""
 
@@ -21,9 +22,9 @@ HELP_MENU()
 {
     echo "Usage: $0 [params]"
     echo "params can be one or more of the following:"
-    echo "    --cloud | -c            : Specifies cloud provider name; required parameter"
+    echo "    --cloud | -c            : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, integrations with Public Clouds (AWS, Azure or/and GCP) are disabled"
     echo "    --key   | -k            : Provides location for GPG key used for verifying signature on RPM file"
-    echo "    --skip-verify           : Disables RPM signature verification"
+    echo "    --skip-verify           : Disables RPM signature verification and AT metadata verification"
     exit 1
 }
 
@@ -55,9 +56,8 @@ do
     esac
 done
 
-
-if [[ -z $CLOUD ]]; then
-    echo "--cloud parameter is not provided. Please see help menu for more details"
+if [[ ! "${SUPPORTED_CLOUDS[@]}" =~ "${CLOUD}" ]]; then
+    echo "--cloud parameter value is not in one of allowed values. Please see help menu for more details"
     HELP_MENU
     exit 1;
 fi
@@ -115,7 +115,8 @@ else
     if [[ -d $install_location ]]; then
         echo "Install location $install_location already exists"
         echo "Clearing out install location: $install_location"
-        rm -rf $install_location
+        find ${install_location} -type f -delete
+        sleep 1
     else
         echo "Install location $install_location does not exist. Creating install location."
         mkdir -p $install_location
@@ -125,18 +126,23 @@ fi
 echo "Install package $rpm_filename"
 rpm2cpio $rpm_filename | cpio -idmv
 mv $NAME-$CLOUD/* /tmp/$NAME
-echo "Getting lastest AT metadata."
-# try to get the latest metadata
-curl --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
-cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
-if [[ $? -eq 0 ]]; then
-    diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')
-    if [[ $diff == "true" ]]; then
-        cp toolchain_metadata_tmp.json ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json
-        rm toolchain_metadata_tmp.json
+
+if [[ -z $SKIP_VERIFICATION ]]; then
+    echo "Getting lastest AT metadata."
+    # try to get the latest metadata
+    curl --retry 3 --retry-max-time 15 --max-time 5 --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
+    cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')
+        if [[ $diff == "true" ]]; then
+            cp toolchain_metadata_tmp.json ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json
+            rm toolchain_metadata_tmp.json
+        fi
+    else
+        echo "Couldn't get the latest toolchain metadata, using local copy."
     fi
 else
-    echo "Couldn't get the latest toolchain metadata, using local copy."
+    echo "Skipping verification for AT Metadata, using local copy."
 fi
 
 echo "Creating command utility."

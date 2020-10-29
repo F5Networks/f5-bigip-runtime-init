@@ -1,4 +1,4 @@
-default: 
+default:
   description: Installs packages from metadata using latest versions
   extension_packages:
     install_operations:
@@ -31,7 +31,7 @@ url:
           extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm
         - extensionType: as3
           extensionVersion: 3.23.0
-          extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-3.23.0-5.noarch.rpm
+          extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.23.0-5.noarch.rpm
 ilx:
   description: Installs a custom iLX package
   extension_packages:
@@ -41,6 +41,6 @@ ilx:
       - extensionType: as3
         extensionVersion: 3.23.0
       - extensionType: ilx
-        extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
         extensionVersion: 1.1.0
         extensionVerificationEndpoint: /mgmt/shared/fast/info

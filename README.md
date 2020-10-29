@@ -121,7 +121,7 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 | --- | --- | --- | --- | 
 | extension_packages	| none	| No | List of URLs to download and install iControl LX extension packages before onboarding. |
 | extension_services | none	| No |	List of declarations to to configure. |
-| runtime_parameters | none	| No	| List of rutime parameters to gather. |
+| runtime_parameters | none	| No	| List of runtime parameters to gather. |
 | pre_onboard_enabled | none | No	| List of commands to run before sending iControl LX declarations. |
 | post_onboard_enabled | none	| No	| List of commands to run after sending iControl LX declarations. |
 | post_hook | none | No  | Webhook to send upon completion. |
@@ -134,9 +134,9 @@ See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SC
 The self extracting installer accepts the following parameters:
 
 ```
---cloud  | -c  : Specifies cloud provider name; required parameter
+--cloud  | -c  : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
 --key    | -k  : Provides location for GPG key used for verifying signature on RPM file
---skip-verify  : Disables RPM signature verification
+--skip-verify  : Disables RPM signature verification and AT metadata verification
 ```
 
 ex. Private Enviroments: By default, the installer tries to download the GPG key used to verify the package from F5 over the Internet. Below is example if hosting the key locally.
@@ -144,7 +144,7 @@ ex. Private Enviroments: By default, the installer tries to download the GPG key
  curl https://mylocahost/f5-bigip-runtime-init-1.1.0-1.gz.run -o f5-bigip-runtime-init-1.1.0-1.gz.run && bash f5-bigip-runtime-init-1.1.0-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key'
 ```
 
-ex. thisisinsecure
+ex. this is insecure
 ```
 curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/f5-bigip-runtime-init-1.1.0-1.gz.run -o f5-bigip-runtime-init-1.1.0-1.gz.run && bash f5-bigip-runtime-init-1.1.0-1.gz.run -- '--cloud aws --skip-verify'
 ```
@@ -164,7 +164,8 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 | Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/rpms/f5-bigip-runtime-init-azure-1.1.0-1-signed.noarch.rpm.sha256 |
 | GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/rpms/f5-bigip-runtime-init-gcp-1.1.0-1-signed.noarch.rpm |
 | GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/rpms/f5-bigip-runtime-init-gcp-1.1.0-1-signed.noarch.rpm.sha256 |
-
+| None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/rpms/f5-bigip-runtime-init-base-1.1.0-1-signed.noarch.rpm |
+| None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/rpms/f5-bigip-runtime-init-base-1.1.0-1-signed.noarch.rpm.sha256 |
 
 ## Usage Examples
 

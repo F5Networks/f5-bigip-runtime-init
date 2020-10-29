@@ -357,6 +357,136 @@ describe('Telemetry Client', () => {
             .catch(err => Promise.reject(err));
     });
 
+    it('should validate data is collected when BIGIP is not licenced', () => {
+        nock.cleanAll();
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/ready')
+            .reply(200, bigipMgmtSysReadyResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/hardware')
+            .reply(200, bigipMgmtSysHardwareSizeInMbResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/software/volume')
+            .reply(200, bigipMgmtSysSoftwareVolumeResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/global-settings')
+            .reply(200, bigipMgmtSysGlobablSettingsResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/management-ip')
+            .reply(200, bigipMgmtSysManagementIpResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/provision')
+            .reply(200, bigipMgmtSysProvisionResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/installed-packages')
+            .reply(200, bigipMgmtSysInstalledPackagesResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/memory')
+            .reply(200, bigipMgmtSysMemoryResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, bigipMgmtNetInterfacesResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/license')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/disk/logical-disk')
+            .reply(200, bigipMgmtSysLogicalDisk);
+
+        const emptyConfig = {};
+        const testDate = (new Date()).toISOString();
+        return telemetryClient.init({
+            configFile: '/tmp/test-config.yaml',
+            config: emptyConfig,
+            startTime: testDate,
+            endTime: testDate,
+            result: 'FAILURE',
+            resultSummary: 'This is test summary'
+        })
+            .then(() => {
+                const response = telemetryClient.createTelemetryData();
+                assert.strictEqual(response.platform.system.diskSize, 77824);
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+
+    it('should validate data is collected when BIGIP REST API is not responding', () => {
+        nock.cleanAll();
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/ready')
+            .reply(200, bigipMgmtSysReadyResponse);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/hardware')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/software/volume')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/global-settings')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/management-ip')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/provision')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/installed-packages')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/memory')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/license')
+            .reply(200, {});
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/disk/logical-disk')
+            .reply(200, {});
+
+        const emptyConfig = {};
+        const testDate = (new Date()).toISOString();
+        return telemetryClient.init({
+            configFile: '/tmp/test-config.yaml',
+            config: emptyConfig,
+            startTime: testDate,
+            endTime: testDate,
+            result: 'FAILURE',
+            resultSummary: 'This is test summary'
+        })
+            .then(() => {
+                const response = telemetryClient.createTelemetryData();
+                assert.strictEqual(response.platform.system.diskSize, 0);
+                assert.strictEqual(response.platform.system.cpuCount, 0);
+                assert.strictEqual(response.platform.system.memory, 0);
+                assert.strictEqual(response.platform.system.regKey, undefined);
+            })
+            .catch(err => Promise.reject(err));
+    });
+
     it('should validate empty declaration', () => {
         const emptyConfig = {};
         const testDate = (new Date()).toISOString();
