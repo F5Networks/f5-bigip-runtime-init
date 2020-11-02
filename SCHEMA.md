@@ -432,7 +432,9 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
+        extensionVersion: 1.16.0
       - extensionType: as3
+        extensionVersion: 3.23.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
@@ -632,7 +634,6 @@ example_1:
     Verifies and installs Automation Toolchain components (DO, AS3) on a local
     BIG-IP and then configures AS3 from a local declaration file.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -658,7 +659,6 @@ example_2:
     configures DO from a local declaration file. Install operations with an
     extensionUrl value that points to a local file stored on BIGIP system.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -671,6 +671,7 @@ example_2:
           extensionUrl: >-
             file:///var/config/rest/downloads/f5-declarative-onboarding-1.16.0-8.noarch.rpm
           extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+          extensionVersion: 1.16.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.1.0
@@ -842,7 +843,6 @@ example_6:
 example_7:
   description: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -852,9 +852,9 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -972,7 +972,6 @@ example_8:
 example_9:
   description: Using custom pre-onboard and post-onboard commands.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: example_inline_command
         type: inline
@@ -1018,12 +1017,9 @@ example_9:
           extensionVersion: 1.16.0
         - extensionType: as3
           extensionVersion: 3.23.0
-    extension_services:
-      service_operations: []
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1036,9 +1032,6 @@ example_10:
           extensionVersion: 1.16.0
         - extensionType: as3
           extensionVersion: 3.23.0
-    extension_services:
-      service_operations: []
-    post_onboard_enabled: []
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1054,7 +1047,6 @@ example_11:
     post_onboard_enabled, extension_packages.install_operations,
     extension_services.service_operations, and post_hook.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: example_remote_exec
         type: url
