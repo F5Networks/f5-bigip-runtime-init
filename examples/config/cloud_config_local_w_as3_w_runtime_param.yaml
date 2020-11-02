@@ -76,7 +76,7 @@ extension_services:
       declaration:
         class: ADC
         schemaVersion: 3.0.0
-        label: {{{ LABEL_NAME }}}
+        label: "{{{ LABEL_NAME }}}"
         remark: Simple HTTP Service with Round-Robin Load Balancing
         Sample_01:
           class: Tenant

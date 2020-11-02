@@ -252,40 +252,7 @@ the startup script is templatized in user_data.tpl and contains the following co
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-      environment: aws
-      type: SecretsManager
-      version: AWSCURRENT
-      secretId: ${secret_id}
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-      environment: aws
-      type: compute
-      field: hostname
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 500
-      - /usr/bin/setdb restjavad.useextramb true
-extension_packages:
-  install_operations:
-    - extensionType: do
-      extensionVersion: 1.16.0
-    - extensionType: as3
-      extensionVersion: 3.23.0
-extension_services:
-  service_operations:
-    - extensionType: do
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/do.json
-    - extensionType: as3
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
+%readme_snippet_01%
 
 EOF
 
@@ -393,40 +360,7 @@ the startup script user_data.tpl is passed to via the instance's ```metadata_sta
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-        type: SecretsManager
-        environment: gcp
-        version: latest
-        secretId: mySecret01
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-        environment: gcp
-        type: compute
-        field: name
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 500
-      - /usr/bin/setdb restjavad.useextramb true
-extension_packages:
-  install_operations:
-    - extensionType: do
-      extensionVersion: 1.16.0
-    - extensionType: as3
-      extensionVersion: 3.23.0
-extension_services:
-  service_operations:
-    - extensionType: do
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/do.json
-    - extensionType: as3
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
+%readme_snippet_02%
 
 EOF
 

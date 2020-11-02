@@ -13,7 +13,12 @@ function renderDocs() {
     const packageInfo = JSON.parse(packageData);
     const version = packageInfo.version;
     const build = packageInfo.release;
-    const template = fs.readFileSync('./scripts/README_template.md', 'utf-8');
+    let template = fs.readFileSync('./scripts/README_template.md', 'utf-8');
+    fs.readdirSync('examples/config/').forEach(file => {
+        if (file.indexOf('snippet_') !== -1) {
+            template = template.replace(`%${file.replace(/\.[^/.]+$/, "")}%`, fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
+        }
+    });
     const output = mustache.render(template, { RELEASE_VERSION: version, RELEASE_BUILD: build, ADMIN_PASS: '{{ADMIN_PASS}}' });
     fs.writeFileSync('./README.md', output);
 
@@ -27,18 +32,35 @@ function renderDocs() {
             this.footer = "";
         }
     };
-    
-    // grab each chunk of schema and append example
+
+
     const completeExamples = yaml.safeLoad(fs.readFileSync(`./examples/config/complete_examples.yaml`, 'utf8'));
+    fs.readdirSync('examples/config/').forEach(file => {
+        if (file.indexOf('example_') !== -1) {
+            completeExamples[file.replace(/\.[^/.]+$/, "")]['runtime_config'] = yaml.safeLoad(fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
+        }
+    });
+
+    // grab each chunk of schema and append example
     function renderSchema(attribute) {
         try {
-            const attributeExample = yaml.safeLoad(fs.readFileSync(`./examples/config/${attribute}.yaml`, 'utf8'));
+            let attributeExample;
+            if ( attribute == 'extension_packages' ) {
+                attributeExample = yaml.safeLoad(fs.readFileSync(`./examples/config/extension_packages.yaml`, 'utf8'));
+                fs.readdirSync('examples/config/').forEach(file => {
+                    if (file.indexOf('extension_packages_') !== -1) {
+                        attributeExample[file.replace(/\.[^/.]+$/, "").split('_')[2]] = yaml.safeLoad(fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
+                    }
+                });
+            } else {
+                attributeExample = yaml.safeLoad(fs.readFileSync(`./examples/config/${attribute}.yaml`, 'utf8'));
+            }
             const Doccer = new MyDoccer();
             Doccer.load(schema.properties[attribute]);
             Doccer.generate();
             fs.appendFileSync('./SCHEMA.md', `### ${attribute}: Schema\r\n\r\n`);
             fs.appendFileSync('./SCHEMA.md', Doccer.markdown);
-            fs.appendFileSync('./SCHEMA.md', '\r\n\r\n');     
+            fs.appendFileSync('./SCHEMA.md', '\r\n\r\n');
             fs.appendFileSync('./SCHEMA.md', `### ${attribute}: Configuration Examples\r\n\r\n`);
             fs.appendFileSync('./SCHEMA.md', '```yaml\r\n');
             fs.appendFileSync('./SCHEMA.md', yaml.safeDump(attributeExample));
@@ -59,4 +81,7 @@ function renderDocs() {
     fs.appendFileSync('./SCHEMA.md', '\r\n```\r\n');
 }
 
+
+
 renderDocs();
+

@@ -287,6 +287,7 @@ extension_services:
       type: url
       value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
 
+
 EOF
 
 curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/f5-bigip-runtime-init-1.1.0-1.gz.run -o f5-bigip-runtime-init-1.1.0-1.gz.run && bash f5-bigip-runtime-init-1.1.0-1.gz.run -- '--cloud aws'
@@ -397,16 +398,16 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: secret
     secretProvider:
-        type: SecretsManager
-        environment: gcp
-        version: latest
-        secretId: mySecret01
+      type: SecretsManager
+      environment: gcp
+      version: latest
+      secretId: mySecret01
   - name: HOST_NAME
     type: metadata
     metadataProvider:
-        environment: gcp
-        type: compute
-        field: name
+      environment: gcp
+      type: compute
+      field: name
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -427,6 +428,7 @@ extension_services:
     - extensionType: as3
       type: url
       value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
+
 
 EOF
 
