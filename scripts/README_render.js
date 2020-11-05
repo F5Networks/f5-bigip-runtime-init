@@ -19,7 +19,7 @@ function renderDocs() {
             template = template.replace(`%${file.replace(/\.[^/.]+$/, "")}%`, fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
         }
     });
-    const output = mustache.render(template, { RELEASE_VERSION: version, RELEASE_BUILD: build, ADMIN_PASS: '{{ADMIN_PASS}}' });
+    const output = mustache.render(template, { RELEASE_VERSION: version, RELEASE_BUILD: build, ADMIN_PASS: '{{{ ADMIN_PASS }}}' });
     fs.writeFileSync('./README.md', output);
 
     // render SCHEMA.md

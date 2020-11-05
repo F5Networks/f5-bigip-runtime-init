@@ -2,16 +2,10 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: secret
     secretProvider:
+      environment: aws
       type: SecretsManager
-      environment: gcp
-      version: latest
-      secretId: mySecret01
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-      environment: gcp
-      type: compute
-      field: name
+      version: AWSCURRENT
+      secretId: ${secret_id}
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -24,11 +18,13 @@ extension_packages:
       extensionVersion: 1.16.0
     - extensionType: as3
       extensionVersion: 3.23.0
+    - extensionType: ts
+      extensionVersion: 1.15.0
 extension_services:
   service_operations:
     - extensionType: do
       type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/do.json
+      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
     - extensionType: as3
       type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
+      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json

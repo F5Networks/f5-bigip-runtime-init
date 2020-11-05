@@ -2,9 +2,9 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: secret
     secretProvider:
-      environment: azure
-      type: KeyVault
-      vaultUrl: https://my-keyvault.vault.azure.net
+      environment: gcp
+      type: SecretsManager
+      version: latest
       secretId: ${secret_id}
 pre_onboard_enabled:
   - name: provision_rest
@@ -28,4 +28,3 @@ extension_services:
     - extensionType: as3
       type: url
       value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
-

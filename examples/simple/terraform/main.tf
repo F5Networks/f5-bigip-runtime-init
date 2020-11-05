@@ -157,17 +157,17 @@ resource "azurerm_virtual_machine" "vm" {
     managed_disk_type = "Standard_LRS"
   }
 
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
   os_profile {
     computer_name  = "f5vm"
     admin_username = var.admin_username
     admin_password = module.utils.admin_password
-
-    custom_data = file("${path.module}/user_data.txt")
+    custom_data = file("${path.module}/startup-script.tpl")
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
 }
 
 resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
@@ -178,11 +178,9 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   type_handler_version = "1.2"
   settings             = <<SETTINGS
     {
-      "commandToExecute": "bash /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud azure' 2>&1 && f5-bigip-runtime-init --config-file /config/onboard_config.yaml 2>&1"
+      "commandToExecute": "bash /var/lib/waagent/CustomData"
     }
-
-SETTINGS
-
+  SETTINGS
 }
 
 output "deployment_info" {
