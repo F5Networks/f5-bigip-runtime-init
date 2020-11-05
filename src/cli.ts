@@ -42,13 +42,16 @@ export async function cli(): Promise<string> {
     let config;
     logger.info(`Configuration file: ${program.configFile}`);
     try {
-        if (program.configFile.endsWith('yaml') || program.configFile.endsWith('yml')) {
+        try {
+            // Attempt to load as YAML file
             config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
-        } else {
+        } catch (e){
+            // If YAML load file, attempt to load as JSON file
             config = JSON.parse(fs.readFileSync(program.configFile, 'utf8'));
         }
     } catch (e) {
         logger.error(`Configuration load error: ${e}`);
+        config  = 'INVALID_CONFIG_FILE_TYPE'
     }
 
     executionResults['configFile'] = program.configFile;
