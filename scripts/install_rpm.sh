@@ -22,9 +22,10 @@ HELP_MENU()
 {
     echo "Usage: $0 [params]"
     echo "params can be one or more of the following:"
-    echo "    --cloud | -c            : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, integrations with Public Clouds (AWS, Azure or/and GCP) are disabled"
-    echo "    --key   | -k            : Provides location for GPG key used for verifying signature on RPM file"
-    echo "    --skip-verify           : Disables RPM signature verification and AT metadata verification"
+    echo "    --cloud | -c                          : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, integrations with Public Clouds (AWS, Azure or/and GCP) are disabled"
+    echo "    --key   | -k                          : Provides location for GPG key used for verifying signature on RPM file"
+    echo "    --skip-verify                         : Disables RPM signature verification and AT metadata verification"
+    echo "    --skip-toolchain-metadata-sync        : Disables automation toolchains metadata sync"
     exit 1
 }
 
@@ -41,6 +42,10 @@ do
 	;;
     --skip-verify)
 	SKIP_VERIFICATION=y
+	shift
+	;;
+    --skip-toolchain-metadata-sync)
+	SKIP_AT_METADATA_SYNC=y
 	shift
 	;;
     -h | --help)
@@ -95,7 +100,7 @@ fi
 if [[ -z $SKIP_VERIFICATION ]]; then
     echo "Verifying signature..."
     echo "GPG PUB Key location: $GPG_PUB_KEY_LOCATION"
-    curl --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key
+    curl --retry 5 --retry-max-time 25 --max-time 5 --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key
     rpm --import /var/tmp/gpg.key
     rpm --checksig $rpm_filename | grep "rsa sha1 (md5) pgp md5 OK"
     if [[ $? -ne 0 ]]; then
@@ -127,10 +132,10 @@ echo "Install package $rpm_filename"
 rpm2cpio $rpm_filename | cpio -idmv
 mv $NAME-$CLOUD/* /tmp/$NAME
 
-if [[ -z $SKIP_VERIFICATION ]]; then
+if [[ -z $SKIP_AT_METADATA_SYNC ]]; then
     echo "Getting lastest AT metadata."
     # try to get the latest metadata
-    curl --retry 3 --retry-max-time 15 --max-time 5 --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
+    curl --retry 5 --retry-max-time 25 --max-time 5 --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
     cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')

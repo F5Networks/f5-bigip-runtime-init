@@ -17,6 +17,7 @@
 import * as fs from 'fs';
 import program from 'commander';
 import * as yaml from 'js-yaml';
+import * as process from 'process';
 
 import Logger from './lib/logger';
 import * as constants from './constants';
@@ -36,7 +37,8 @@ export async function cli(): Promise<string> {
     /* eslint-disable no-await-in-loop */
     program
         .version(constants.VERSION)
-        .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
+        .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml')
+        .option('--skip-telemetry', 'Disable telemetry');
     program.parse(process.argv);
 
     let config;
@@ -54,17 +56,20 @@ export async function cli(): Promise<string> {
         config  = 'INVALID_CONFIG_FILE_TYPE'
     }
 
-    executionResults['configFile'] = program.configFile;
-    executionResults['startTime'] = (new Date()).toISOString();
-    executionResults['config'] = config;
+    if (!program.skipTelemetry){
+        logger.silly('F5 Telemetry is enabled.');
+        executionResults['configFile'] = program.configFile;
+        executionResults['startTime'] = (new Date()).toISOString();
+        executionResults['config'] = config;
+    } else {
+        logger.info('F5 Telemetry is disabled.');
+    }
     logger.info('Validating provided declaration');
     const validator = new Validator();
     const validation = validator.validate(config);
     if (!validation.isValid) {
         const error = new Error(`Invalid declaration: ${JSON.stringify(validation.errors)}`);
         return Promise.reject(error);
-    } else {
-        fs.writeFileSync('/var/lib/cloud/validatedConfig', JSON.stringify(config));
     }
     logger.info('Successfully validated declaration');
 
@@ -72,9 +77,8 @@ export async function cli(): Promise<string> {
     const mgmtClient = new ManagementClient();
     // perform ready check
     await mgmtClient.isReady();
-    // Create Telemetry Client
     telemetryClient = new TelemetryClient(
-        mgmtClient
+            mgmtClient
     );
     // resolve runtime parameters
     const resolver = new ResolverClient();
@@ -169,44 +173,51 @@ export async function cli(): Promise<string> {
             await telemetryClient.sendPostHook(postHookConfig);
         }
     }
-    executionResults['endTime'] =  (new Date()).toISOString();
-    executionResults['result'] = 'SUCCESS';
-    executionResults['resultSummary'] = 'Configuration Successful';
-    // f5-teem
-    logger.info('Initializing telemetryClient');
-    await telemetryClient.init(executionResults);
-    logger.info('Sending f5-teem report');
-    telemetryClient.report(telemetryClient.createTelemetryData())
-        .catch((err) => {
-            logger.warn('Problem with sending data to F5 TEEM. Perhaps, there is no public access');
-            logger.error(err.message);
-        });
+    if (!program.skipTelemetry) {
+        executionResults['endTime'] = (new Date()).toISOString();
+        executionResults['result'] = 'SUCCESS';
+        executionResults['resultSummary'] = 'Configuration Successful';
+        // f5-teem
+        logger.info('Initializing telemetryClient');
+        await telemetryClient.init(executionResults);
+        logger.info('Sending f5-teem report');
+        telemetryClient.report(telemetryClient.createTelemetryData())
+            .catch((err) => {
+                logger.warn('Problem with sending data to F5 TEEM. Perhaps, there is no public access');
+                logger.error(err.message);
+            });
+    }
     return 'All operations finished successfully';
 }
 
 cli()
     .then((message) => {
         logger.info(message);
+        process.exit();
     })
     .catch((err) => {
-        logger.info(err.message);
-        executionResults['endTime'] = (new Date()).toISOString();
-        executionResults['result'] = 'FAILURE';
-        executionResults['resultSummary'] = err.message;
-        // f5-teem
-        const mgmtClient = new ManagementClient();
-        telemetryClient = new TelemetryClient(
-            mgmtClient
-        );
-        logger.info('Sending F5 Teem report for failure case.');
-        telemetryClient.init(executionResults)
-            .then(() => {
-                return telemetryClient.report(telemetryClient.createTelemetryData());
-            }).then(() => {
+        logger.error(err.message);
+        if (!program.skipTelemetry) {
+            executionResults['endTime'] = (new Date()).toISOString();
+            executionResults['result'] = 'FAILURE';
+            executionResults['resultSummary'] = err.message;
+            // f5-teem
+            const mgmtClient = new ManagementClient();
+            telemetryClient = new TelemetryClient(
+                mgmtClient
+            );
+            logger.info('Sending F5 Teem report for failure case.');
+            telemetryClient.init(executionResults)
+                .then(() => {
+                    return telemetryClient.report(telemetryClient.createTelemetryData());
+                }).then(() => {
                 logger.info('F5 Teem report was successfully sent for failure case.');
                 logger.error(executionResults['resultSummary']);
+                process.exit(1);
             })
-            .catch((err2) => {
-                logger.error(err2.message);
-            });
+                .catch((err2) => {
+                    logger.error(err2.message);
+                    process.exit(1);
+                });
+        }
     });

@@ -356,8 +356,7 @@ export class TelemetryClient {
                 await this._cloudClient.init();
                 break;
             } catch(error) {
-                logger.warn(`${cloudName} did not work. Trying another cloud`);
-                logger.error(error.message);
+                // pass since the error expected when Cloud Provider can't be instantiated
             }
         }
         if (!this._cloudClient) {
