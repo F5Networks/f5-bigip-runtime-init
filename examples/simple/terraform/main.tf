@@ -170,6 +170,9 @@ resource "azurerm_virtual_machine" "vm" {
 
 }
 
+# NOTE: Startup Script is run once / initialization only (Cloud-Init behavior vs. typical re-entrant for Azure Custom Script Extension )
+# For 15.1+ and above, Cloud-Init will run the script directly and can remove Azure Custom Script Extension below
+
 resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   name                 = "${module.utils.env_prefix}-run-startup-cmd"
   virtual_machine_id   = azurerm_virtual_machine.vm.id
@@ -196,4 +199,3 @@ output "deployment_info" {
     deploymentId = module.utils.env_prefix
   }
 }
-

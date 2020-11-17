@@ -1,16 +1,16 @@
-#!/bin/bash
+#!/bin/bash -x
+
+# NOTE: Startup Script is run once / initialization only (Cloud-Init behavior vs. typical re-entrant for Azure Custom Script Extension )
+# For 15.1+ and above, Cloud-Init will run the script directly and can remove Azure Custom Script Extension 
 
 # Send output to log file and serial console
-mkdir -p  /var/log/cloud /config/cloud
+mkdir -p  /var/log/cloud /config/cloud /var/config/rest/downloads
 LOG_FILE=/var/log/cloud/startup-script.log
-touch $LOG_FILE
-exec 1<&-
-exec 2<&-
+[[ ! -f $LOG_FILE ]] && touch $LOG_FILE || { echo "Run Only Once. Exiting"; exit; }
 npipe=/tmp/$$.tmp
 trap "rm -f $npipe" EXIT
 mknod $npipe p
-tee <$npipe -a $LOG_FILE &
-tee <$npipe /dev/ttyS0 &
+tee <$npipe -a $LOG_FILE /dev/ttyS0 &
 exec 1>&-
 exec 1>$npipe
 exec 2>&1
@@ -39,12 +39,13 @@ extension_services:
 post_onboard_enabled: []
 EOF
 
-
 ### runcmd:
 # Download
-curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.0.0/dist/f5-bigip-runtime-init-1.0.0-1.gz.run -o /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run
+PACKAGE_URL='https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.1.0/dist/f5-bigip-runtime-init-1.1.0-1.gz.run'
+for i in {1..30}; do
+    curl -fv --retry 1 --connect-timeout 5 -L "${PACKAGE_URL}" -o "/var/config/rest/downloads/${PACKAGE_URL##*/}" && break || sleep 10
+done
 # Install
-bash /var/tmp/f5-bigip-runtime-init-1.0.0-1.gz.run -- '--cloud azure'
+bash /var/config/rest/downloads/f5-bigip-runtime-init-1.1.0-1.gz.run -- '--cloud azure'
 # Run
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
-
