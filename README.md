@@ -135,9 +135,10 @@ See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SC
 The self extracting installer accepts the following parameters:
 
 ```
---cloud  | -c  : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
---key    | -k  : Provides location for GPG key used for verifying signature on RPM file
---skip-verify  : Disables RPM signature verification and AT metadata verification
+--cloud  | -c                   : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
+--key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
+--skip-verify                   : Disables RPM signature verification and AT metadata verification
+--skip-toolchain-metadata-sync  : Disables automation toolchains metadata sync
 ```
 
 ex. Private Enviroments: By default, the installer tries to download the GPG key used to verify the package from F5 over the Internet: [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key). 
