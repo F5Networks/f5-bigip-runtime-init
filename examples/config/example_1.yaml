@@ -1,0 +1,19 @@
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.16.0
+      extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+    - extensionType: as3
+      extensionVersion: 3.23.0
+      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+extension_services:
+  service_operations:
+    - extensionType: as3
+      type: url
+      value: file:///examples/declarations/as3.json

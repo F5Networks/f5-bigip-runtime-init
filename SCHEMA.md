@@ -432,48 +432,49 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
+        extensionVersion: 1.16.0
       - extensionType: as3
+        extensionVersion: 3.23.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.12.0
+        extensionVersion: 1.16.0
       - extensionType: as3
-        extensionVersion: 3.19.1
+        extensionVersion: 3.23.0
 hashed:
   description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.12.0
-        extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
+        extensionVersion: 1.16.0
+        extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
       - extensionType: as3
-        extensionVersion: 3.19.1
-        extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
+        extensionVersion: 3.23.0
+        extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
 url:
   description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.10.0
+        extensionVersion: 1.16.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.10.0/f5-declarative-onboarding-1.10.0-1.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm
       - extensionType: as3
-        extensionVersion: 3.20.0
-        extensionUrl: >-
-          file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-3.20.0-3.noarch.rpm
+        extensionVersion: 3.23.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.23.0-5.noarch.rpm'
 ilx:
   description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.10.0
+        extensionVersion: 1.16.0
       - extensionType: as3
-        extensionVersion: 3.20.0
+        extensionVersion: 3.23.0
       - extensionType: ilx
         extensionUrl: >-
-          file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+          file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
         extensionVersion: 1.1.0
         extensionVerificationEndpoint: /mgmt/shared/fast/info
 
@@ -519,7 +520,7 @@ This schema accepts additional properties.
 				 - _URL of local or remote file containing the declarations to be applied, or the entire declaration inline as an object_
 				 - <i id="#/properties/service_operations/items/properties/value">path: #/properties/service_operations/items/properties/value</i>
 				 - Example values: 
-					 1. _"https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json"_
+					 1. _"https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json"_
 					 2. _"file:///examples/declarations/as3.json"_
 					 3. _"class: AS3 action: deploy persist: true declaration: class: ADC schemaVersion: 3.0.0 id: urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d label: Sample 1 remark: Simple HTTP Service with Round-Robin Load Balancing Sample_01: class: Tenant A1: class: Application template: http serviceMain: class: Service_HTTP virtualAddresses: - 10.0.1.10 pool: web_pool web_pool: class: Pool monitors: - http members: - servicePort: 80 serverAddresses: - 192.0.1.10 - 192.0.1.11"_
 			 - <b id="#/properties/service_operations/items/properties/verifyTls">verifyTls</b>
@@ -541,7 +542,7 @@ url:
       - extensionType: do
         type: url
         value: >-
-          https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json
+          https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json
         verifyTls: false
       - extensionType: as3
         type: url
@@ -633,7 +634,6 @@ example_1:
     Verifies and installs Automation Toolchain components (DO, AS3) on a local
     BIG-IP and then configures AS3 from a local declaration file.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -643,11 +643,11 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
-          extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
+          extensionVersion: 1.16.0
+          extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
         - extensionType: as3
-          extensionVersion: 3.19.1
-          extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
+          extensionVersion: 3.23.0
+          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
     extension_services:
       service_operations:
         - extensionType: as3
@@ -657,10 +657,8 @@ example_2:
   description: >-
     Verifies and installs DO and myIlxApp RPMs from local directories and
     configures DO from a local declaration file. Install operations with an
-    extensionUrl value that points to a local file may only be installed from
-    the /var/lib/cloud or /var/lib/cloud/icontrollx_installs directories.
+    extensionUrl value that points to a local file stored on BIGIP system.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -671,18 +669,19 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.10.0-2.noarch.rpm
-          extensionHash: 95c2b76fb598bbc36fb93a2808f2e90e6c50f7723d27504f3eb2c2850de1f9e1
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.16.0-8.noarch.rpm
+          extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+          extensionVersion: 1.16.0
         - extensionType: ilx
-          extensionUrl: 'file:///var/lib/cloud/myIlxApp.rpm'
+          extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.1.0
           extensionVerificationEndpoint: /mgmt/shared/myIlxApp/info
-          extensionHash: 4477f84d0be2fa8fb551109a237768c365c4d17b44b2665e4eb096f2cfd3c4f1
+          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
     extension_services:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///var/lib/cloud/do.json'
+          value: 'file:///var/config/rest/downloads/do.json'
 example_3:
   description: >-
     Installs DO and AS3 on a local BIG-IP and renders the Azure service
@@ -705,9 +704,9 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.19.1
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -746,9 +745,9 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.19.1
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -783,9 +782,9 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.19.1
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -833,9 +832,9 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.19.1
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -844,7 +843,6 @@ example_6:
 example_7:
   description: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -854,9 +852,9 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -909,9 +907,9 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.5.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.13.0
+          extensionVersion: 3.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -974,7 +972,6 @@ example_8:
 example_9:
   description: Using custom pre-onboard and post-onboard commands.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: example_inline_command
         type: inline
@@ -1017,15 +1014,12 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.19.1
-    extension_services:
-      service_operations: []
+          extensionVersion: 3.23.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1035,12 +1029,9 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.12.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.19.1
-    extension_services:
-      service_operations: []
-    post_onboard_enabled: []
+          extensionVersion: 3.23.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1056,7 +1047,6 @@ example_11:
     post_onboard_enabled, extension_packages.install_operations,
     extension_services.service_operations, and post_hook.
   runtime_config:
-    runtime_parameters: []
     pre_onboard_enabled:
       - name: example_remote_exec
         type: url
@@ -1095,16 +1085,16 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.10.0
+          extensionVersion: 1.16.0
         - extensionType: as3
-          extensionVersion: 3.20.0
+          extensionVersion: 3.23.0
           verifyTls: false
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm
-          extensionHash: ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
+          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
         - extensionType: ilx
           extensionUrl: >-
-            file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+            file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
           extensionVersion: 1.1.0
           extensionVerificationEndpoint: /mgmt/shared/fast/info
     extension_services:
@@ -1126,5 +1116,41 @@ example_11:
         properties:
           optionalKey1: optional_value1
           optionalKey2: optional_value2
+example_12:
+  description: >-
+    Licenses BIG-IP device using BIG-IQ utility offering and authenticating with
+    credentials stored in Azure KeyVault.
+  runtime_config:
+    runtime_parameters:
+      - name: HOST_NAME
+        type: metadata
+        metadataProvider:
+          environment: azure
+          type: compute
+          field: name
+      - name: BIGIQ_ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: KeyVault
+          environment: azure
+          vaultUrl: 'https://my-keyvault.vault.azure.net'
+          secretId: my_azure_secret
+    pre_onboard_enabled:
+      - name: provision_rest
+        type: inline
+        commands:
+          - /usr/bin/setdb provision.extramb 500
+          - /usr/bin/setdb restjavad.useextramb true
+    extension_packages:
+      install_operations:
+        - extensionType: do
+          extensionVersion: 1.16.0
+        - extensionType: as3
+          extensionVersion: 3.23.0
+    extension_services:
+      service_operations:
+        - extensionType: do
+          type: url
+          value: 'file:///examples/declarations/example_7_do.json'
 
 ```

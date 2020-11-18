@@ -4,7 +4,7 @@ url:
     service_operations:
       - extensionType: do
         type: url
-        value: https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json
+        value: https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json
         verifyTls: false
       - extensionType: as3
         type: url
@@ -22,7 +22,7 @@ inline:
     service_operations:
       - extensionType: as3
         type: inline
-        value: 
+        value:
           class: AS3
           action: deploy
           persist: true

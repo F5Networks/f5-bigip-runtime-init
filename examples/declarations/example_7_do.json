@@ -1,0 +1,36 @@
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "{{{ HOST_NAME }}}.local",
+        "myLicense": {
+            "class": "License",
+            "licenseType": "licensePool",
+            "bigIqHost": "3.4.5.6",
+            "bigIqUsername": "azureuser",
+            "bigIqPassword": "{{{ BIGIQ_ADMIN_PASS }}}",
+            "licensePool": "clpv2",
+            "skuKeyword1": "F5-BIG-MSP-BT-1G",
+            "unitOfMeasure": "hourly",
+            "reachable": false,
+            "hypervisor": "azure",
+            "overwrite": false
+        },
+        "myDns": {
+            "class": "DNS",
+            "nameServers": [
+                "8.8.8.8"
+            ]
+        },
+        "myNtp": {
+            "class": "NTP",
+            "servers": [
+                "0.pool.ntp.org"
+            ],
+            "timezone": "UTC"
+        }
+    }
+}

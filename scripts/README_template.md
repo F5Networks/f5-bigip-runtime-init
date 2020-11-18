@@ -28,6 +28,7 @@
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
     - [Logging](#logging)
+      - [Send output to log file and serial console](#send-output-to-log-file-and-serial-console)
   - [Documentation](#documentation)
   - [Getting Help](#getting-help)
     - [Filing Issues](#filing-issues)
@@ -121,7 +122,7 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 | --- | --- | --- | --- | 
 | extension_packages	| none	| No | List of URLs to download and install iControl LX extension packages before onboarding. |
 | extension_services | none	| No |	List of declarations to to configure. |
-| runtime_parameters | none	| No	| List of rutime parameters to gather. |
+| runtime_parameters | none	| No	| List of runtime parameters to gather. |
 | pre_onboard_enabled | none | No	| List of commands to run before sending iControl LX declarations. |
 | post_onboard_enabled | none	| No	| List of commands to run after sending iControl LX declarations. |
 | post_hook | none | No  | Webhook to send upon completion. |
@@ -134,17 +135,20 @@ See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SC
 The self extracting installer accepts the following parameters:
 
 ```
---cloud  | -c  : Specifies cloud provider name; required parameter
---key    | -k  : Provides location for GPG key used for verifying signature on RPM file
---skip-verify  : Disables RPM signature verification
+--cloud  | -c                   : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
+--key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
+--skip-verify                   : Disables RPM signature verification and AT metadata verification
+--skip-toolchain-metadata-sync  : Disables automation toolchains metadata sync
 ```
 
-ex. Private Enviroments: By default, the installer tries to download the GPG key used to verify the package from F5 over the Internet. Below is example if hosting the key locally.
+ex. Private Enviroments: By default, the installer tries to download the GPG key used to verify the package from F5 over the Internet: [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key). 
+
+Below is example if hosting the key locally.
 ```
  curl https://mylocahost/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key'
 ```
 
-ex. thisisinsecure
+ex. this is insecure
 ```
 curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --skip-verify'
 ```
@@ -164,7 +168,8 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 | Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-azure-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
 | GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-gcp-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
 | GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-gcp-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
-
+| None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-base-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
+| None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-base-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
 
 ## Usage Examples
 
@@ -190,26 +195,113 @@ Terraform plans will generally consist of the following,
 
 
 #### Azure (Terraform) snippet
-In this example, the F5 BIG-IP Runtime Init config is downloaded from a URL:
+
+In this snippet, 
+
 ```
+data "template_file" "startup_script" {
+  template = "${file("${path.module}/startup-script.tpl")}"
+  vars = {
+    secret_id = "mySecret01"
+  }
+}
+
+resource "azurerm_virtual_machine" "vm" {
+  name                             = "${module.utils.env_prefix}-vm0"
+  location                         = azurerm_resource_group.deployment.location
+  resource_group_name              = azurerm_resource_group.deployment.name
+  network_interface_ids            = [azurerm_network_interface.mgmt.id, azurerm_network_interface.internal.id, azurerm_network_interface.external.id]
+  primary_network_interface_id     = azurerm_network_interface.mgmt.id
+  vm_size                          = var.instance_size
+  delete_os_disk_on_termination    = true
+  delete_data_disks_on_termination = true
+
+  storage_image_reference {
+    publisher = var.publisher
+    offer     = var.offer
+    sku       = var.sku
+    version   = var.bigip_version
+  }
+
+  plan {
+    publisher = var.publisher
+    product   = var.offer
+    name      = var.sku
+  }
+
+  storage_os_disk {
+    name              = "osdisk0"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
+  os_profile {
+    computer_name  = "f5vm"
+    admin_username = var.admin_username
+    admin_password = module.utils.admin_password
+    custom_data =  "${data.template_file.startup_script.rendered}"
+  }
+
+}
+
 resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   name                 = "${module.utils.env_prefix}-run-startup-cmd"
   virtual_machine_id   = azurerm_virtual_machine.vm.id
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
+  publisher            = "Microsoft.OSTCExtensions"
+  type                 = "CustomScriptForLinux"
+  type_handler_version = "1.2"
   settings             = <<SETTINGS
-    {   
-      "fileUris": [
-        "https://example.com/runtime-init-conf.yaml"
-      ],
-      "commandToExecute": "mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud azure' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1"
+    {
+      "commandToExecute": "bash /var/lib/waagent/CustomData"
     }
-  
 SETTINGS
-
 }
 ```
+
+the startup script is templatized in startup-script.tpl and sent using the vm os_profile's ```custom_data``` parameter. On BIG-IP versions 15.1+ Cloud-Init will execute this script directly. However, for earlier versions, azurerm_virtual_machine_extension is used to run it. See BIG-IP's [Cloud-Init](!https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html) documentation for more information.
+
+
+The startup script contains the following contents.
+
+```sh
+#!/bin/bash
+
+mkdir -p /config/cloud
+cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
+---
+%readme_snippet_01%
+
+EOF
+
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud azure'
+
+f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
+```
+
+NOTE: ```--cloud azure``` is passed to the installer to specify the environment 
+
+The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```custom_data``` parameter.  Ex. the rendered ```custom_data``` finally sent to BIG-IP will contain the actual key name 'mySecret01' to gather at runtime:
+
+ex.
+
+```yaml
+runtime_parameters:
+  - name: ADMIN_PASS
+    type: secret
+    secretProvider:
+      environment: azure
+      type: KeyVault
+      vaultUrl: https://my-keyvault.vault.azure.net
+      secretId: mySecret01
+```
+
+When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the admin password). 
+
 
 #### AWS (Terraform) snippet
 
@@ -218,7 +310,7 @@ In this AWS example snippet,
 
 ```
 data "template_file" "startup_script" {
-  template = "${file("${path.module}/user_data.tpl")}"
+  template = "${file("${path.module}/startup-script.tpl")}"
   vars = {
     secret_id = "${aws_secretsmanager_secret_version.AdminSecret.secret_id}"
   }
@@ -243,7 +335,7 @@ resource "aws_instance" "vm01" {
 }
 ```
 
-the startup script is templatized in user_data.tpl and contains the following contents.
+the startup script is templatized in startup-script.tpl and contains the following contents.
 
 ```sh
 #!/bin/bash
@@ -251,40 +343,7 @@ the startup script is templatized in user_data.tpl and contains the following co
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-      environment: aws
-      type: SecretsManager
-      version: AWSCURRENT
-      secretId: ${secret_id}
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-      environment: aws
-      type: compute
-      field: hostname
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 500
-      - /usr/bin/setdb restjavad.useextramb true
-extension_packages:
-  install_operations:
-    - extensionType: do
-      extensionVersion: 1.14.0
-    - extensionType: as3
-      extensionVersion: 3.20.0
-extension_services:
-  service_operations:
-    - extensionType: do
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/do.json
-    - extensionType: as3
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
+%readme_snippet_02%
 
 EOF
 
@@ -295,7 +354,7 @@ f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 
 NOTE: ```--cloud aws``` is passed to the installer to specify the environment 
 
-The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered user_data finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
+The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
 
 ex.
 
@@ -311,16 +370,16 @@ runtime_parameters:
       secretId: mySecret01
 ```
 
-When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{ADMIN_PASS}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
+When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named ```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
 
 
 #### GCP (Terraform) snippet
 
-Similar to AWS example above, 
+Similar to examples above, 
 
 ```
 data "template_file" "startup_script" {
-  template = "${file("${path.module}/user_data.tpl")}"
+  template = "${file("${path.module}/startup-script.tpl")}"
   vars = {
     secret_id = "mySecret01"
   }
@@ -383,7 +442,7 @@ resource "google_compute_instance" "vm01" {
 }
 ```
 
-the startup script user_data.tpl is passed to via the instance's ```metadata_startup_script``` parameter
+the startup script startup-script.tpl is passed to via the instance's ```metadata_startup_script``` parameter
 
 
 ```sh
@@ -392,40 +451,7 @@ the startup script user_data.tpl is passed to via the instance's ```metadata_sta
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-        type: SecretsManager
-        environment: gcp
-        version: latest
-        secretId: mySecret01
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-        environment: gcp
-        type: compute
-        field: name
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 500
-      - /usr/bin/setdb restjavad.useextramb true
-extension_packages:
-  install_operations:
-    - extensionType: do
-      extensionVersion: 1.14.0
-    - extensionType: as3
-      extensionVersion: 3.20.0
-extension_services:
-  service_operations:
-    - extensionType: do
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/do.json
-    - extensionType: as3
-      type: url
-      value: https://cdn.f5.com/product/cloudsolutions/declarations/as3.json
+%readme_snippet_03%
 
 EOF
 
@@ -469,6 +495,26 @@ The following enviroment variables can be used for setting logging options:
 
 Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'```
 
+#### Send output to log file and serial console
+
+Add the following to the beginning of user data to log startup events to a local file/serial console. See the simple [example](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/examples/simple/terraform/user_data.txt) for more information.
+
+```
+mkdir -p  /var/log/cloud
+LOG_FILE=/var/log/cloud/startup-script.log
+touch $FILE
+
+exec 1<&-
+exec 2<&-
+npipe=/tmp/$$.tmp
+trap "rm -f $npipe" EXIT
+mknod $npipe p
+tee <$npipe -a $LOG_FILE &
+tee <$npipe -a /dev/ttyS0 &
+exec 1>&-
+exec 1>$npipe
+exec 2>&1
+```
 
 ## Documentation
 For more information on F5 cloud solutions, including manual configuration procedures for some deployment scenarios, see F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/).

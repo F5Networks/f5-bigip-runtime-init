@@ -17,6 +17,7 @@
 import * as fs from 'fs';
 import program from 'commander';
 import * as yaml from 'js-yaml';
+import * as process from 'process';
 
 import Logger from './lib/logger';
 import * as constants from './constants';
@@ -36,32 +37,39 @@ export async function cli(): Promise<string> {
     /* eslint-disable no-await-in-loop */
     program
         .version(constants.VERSION)
-        .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml');
+        .option('-c, --config-file <type>', 'Configuration file', '/config/cloud/cloud_config.yaml')
+        .option('--skip-telemetry', 'Disable telemetry');
     program.parse(process.argv);
 
     let config;
     logger.info(`Configuration file: ${program.configFile}`);
     try {
-        if (program.configFile.endsWith('yaml') || program.configFile.endsWith('yml')) {
+        try {
+            // Attempt to load as YAML file
             config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
-        } else {
+        } catch (e){
+            // If YAML load file, attempt to load as JSON file
             config = JSON.parse(fs.readFileSync(program.configFile, 'utf8'));
         }
     } catch (e) {
         logger.error(`Configuration load error: ${e}`);
+        config  = 'INVALID_CONFIG_FILE_TYPE'
     }
 
-    executionResults['configFile'] = program.configFile;
-    executionResults['startTime'] = (new Date()).toISOString();
-    executionResults['config'] = config;
+    if (!program.skipTelemetry){
+        logger.silly('F5 Telemetry is enabled.');
+        executionResults['configFile'] = program.configFile;
+        executionResults['startTime'] = (new Date()).toISOString();
+        executionResults['config'] = config;
+    } else {
+        logger.info('F5 Telemetry is disabled.');
+    }
     logger.info('Validating provided declaration');
     const validator = new Validator();
     const validation = validator.validate(config);
     if (!validation.isValid) {
         const error = new Error(`Invalid declaration: ${JSON.stringify(validation.errors)}`);
         return Promise.reject(error);
-    } else {
-        fs.writeFileSync('/var/lib/cloud/validatedConfig', JSON.stringify(config));
     }
     logger.info('Successfully validated declaration');
 
@@ -69,18 +77,16 @@ export async function cli(): Promise<string> {
     const mgmtClient = new ManagementClient();
     // perform ready check
     await mgmtClient.isReady();
-    // Create Telemetry Client
     telemetryClient = new TelemetryClient(
-        mgmtClient
+            mgmtClient
     );
     // resolve runtime parameters
     const resolver = new ResolverClient();
     logger.info('Resolving parameters');
-    const resolvedRuntimeParams = await resolver.resolveRuntimeParameters(config.runtime_parameters);
+    const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters): undefined;
 
     // pre onboard
     // run before install operations in case they require out-of-band changes
-    logger.info('Start working with pre-onboard commands');
     const preOnboardEnabled = config.pre_onboard_enabled || [];
     if (preOnboardEnabled.length) {
         logger.info('Executing custom pre-onboard commands');
@@ -88,7 +94,8 @@ export async function cli(): Promise<string> {
     }
 
     // perform install operations
-    const installOperations = config.extension_packages.install_operations || [];
+    const extensionPackages = config.extension_packages || {};
+    const installOperations = extensionPackages.install_operations || [];
     if (installOperations.length) {
         logger.info('Executing install operations.');
         for (let i = 0; i < installOperations.length; i += 1) {
@@ -113,7 +120,8 @@ export async function cli(): Promise<string> {
     }
 
     // perform service operations
-    const serviceOperations = config.extension_services.service_operations || [];
+    const extensionSevices = config.extension_services || {};
+    const serviceOperations = extensionSevices.service_operations || [];
     if (serviceOperations.length) {
         logger.info('Executing service operations.');
         for (let i = 0; i < serviceOperations.length; i += 1) {
@@ -139,8 +147,10 @@ export async function cli(): Promise<string> {
                     }
                 );
             }
-            // rendering secrets
-            loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
+            // rendering secrets if provided
+            if (resolvedRuntimeParams) {
+                loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
+            }
             await toolchainClient.service.isAvailable();
             await toolchainClient.service.create({ config: loadedConfig });
         }
@@ -163,40 +173,51 @@ export async function cli(): Promise<string> {
             await telemetryClient.sendPostHook(postHookConfig);
         }
     }
-    executionResults['endTime'] =  (new Date()).toISOString();
-    executionResults['result'] = 'SUCCESS';
-    executionResults['resultSummary'] = 'Configuration Successful';
-    // f5-teem
-    logger.info('Initializing telemetryClient');
-    await telemetryClient.init(executionResults);
-    logger.info('Sending f5-teem report');
-    telemetryClient.report(telemetryClient.createTelemetryData());
+    if (!program.skipTelemetry) {
+        executionResults['endTime'] = (new Date()).toISOString();
+        executionResults['result'] = 'SUCCESS';
+        executionResults['resultSummary'] = 'Configuration Successful';
+        // f5-teem
+        logger.info('Initializing telemetryClient');
+        await telemetryClient.init(executionResults);
+        logger.info('Sending f5-teem report');
+        telemetryClient.report(telemetryClient.createTelemetryData())
+            .catch((err) => {
+                logger.warn('Problem with sending data to F5 TEEM. Perhaps, there is no public access');
+                logger.error(err.message);
+            });
+    }
     return 'All operations finished successfully';
 }
 
 cli()
     .then((message) => {
         logger.info(message);
+        process.exit();
     })
     .catch((err) => {
-        logger.info(err.message);
-        executionResults['endTime'] = (new Date()).toISOString();
-        executionResults['result'] = 'FAILURE';
-        executionResults['resultSummary'] = err.message;
-        // f5-teem
-        const mgmtClient = new ManagementClient();
-        telemetryClient = new TelemetryClient(
-            mgmtClient
-        );
-        logger.info('Sending F5 Teem report for failure case.');
-        telemetryClient.init(executionResults)
-            .then(() => {
-                return telemetryClient.report(telemetryClient.createTelemetryData());
-            }).then(() => {
+        logger.error(err.message);
+        if (!program.skipTelemetry) {
+            executionResults['endTime'] = (new Date()).toISOString();
+            executionResults['result'] = 'FAILURE';
+            executionResults['resultSummary'] = err.message;
+            // f5-teem
+            const mgmtClient = new ManagementClient();
+            telemetryClient = new TelemetryClient(
+                mgmtClient
+            );
+            logger.info('Sending F5 Teem report for failure case.');
+            telemetryClient.init(executionResults)
+                .then(() => {
+                    return telemetryClient.report(telemetryClient.createTelemetryData());
+                }).then(() => {
                 logger.info('F5 Teem report was successfully sent for failure case.');
                 logger.error(executionResults['resultSummary']);
+                process.exit(1);
             })
-            .catch((err2) => {
-                logger.error(err2.message);
-            });
+                .catch((err2) => {
+                    logger.error(err2.message);
+                    process.exit(1);
+                });
+        }
     });

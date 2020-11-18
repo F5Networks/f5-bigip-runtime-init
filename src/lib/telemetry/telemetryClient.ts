@@ -356,12 +356,11 @@ export class TelemetryClient {
                 await this._cloudClient.init();
                 break;
             } catch(error) {
-                logger.warn(`${cloudName} did not work. Trying another cloud`);
-                logger.error(error.message);
+                // pass since the error expected when Cloud Provider can't be instantiated
             }
         }
         if (!this._cloudClient) {
-            logger.error('telemetry was not able to get Cloud metadata.');
+            logger.error('telemetry was not able to get Cloud metadata. Perhaps, public cloud integrations are disabled.');
             return {
                 cloudName: undefined,
                 customerId: undefined
@@ -410,7 +409,7 @@ export class TelemetryClient {
         let memoryInMb = 0;
         let version = "";
         let nicCount = 0;
-        let regKey = "";
+        let regKey = undefined;
         let platformId = "";
         let hostname = "";
         let management = "";
@@ -430,20 +429,23 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
+            if (sysHardware.body.entries !== undefined) {
+                id = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.bigipChassisSerialNum.description;
+                cpuCount = this._getCpuCount(sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version']
+                    .nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version/cpus'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardwareVersion/cpus/versions'].nestedStats.entries);
+                const sysSoftware = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/software/volume`,
+                    {
+                        headers: {
+                            Authorization: this.authHeader
+                        }
+                    });
 
-            id = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.bigipChassisSerialNum.description;
-            cpuCount = this._getCpuCount(sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version']
-                .nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version/cpus'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardwareVersion/cpus/versions'].nestedStats.entries);
-            const sysSoftware = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/software/volume`,
-                {
-                    headers: {
-                        Authorization: this.authHeader
-                    }
-                });
-
-            product = sysSoftware.body.items[0].product;
-            version = sysSoftware.body.items[0].version;
-            platformId = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.platform.description;
+                product = sysSoftware.body.items[0].product;
+                version = sysSoftware.body.items[0].version;
+                platformId = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.platform.description;
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/hardware endpoint. Leaving Product, Version and PlatformId with defaul values');
+            }
 
             const globalSettings = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/global-settings`,
                 {
@@ -451,15 +453,23 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
+            if (globalSettings.body.hostname !== undefined) {
+                hostname = globalSettings.body.hostname;
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/global-settings endpoint. Leaving hostname with default value');
+            }
 
-            hostname = globalSettings.body.hostname;
             const managementIp = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/management-ip`,
                 {
                     headers: {
                         Authorization: this.authHeader
                     }
                 });
-            management = managementIp.body.items[0].name;
+            if (managementIp.body.items !== undefined) {
+                management = managementIp.body.items[0].name;
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/management-ip endpoint. Leaving Management with default value');
+            }
 
             const modules = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/provision`,
                 {
@@ -467,12 +477,15 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
-
-            modules.body.items.forEach(item => {
-                if (item.level !== 'none') {
-                    provisionedModules[item.name] = item.level;
-                }
-            });
+            if (modules.body.items !== undefined) {
+                modules.body.items.forEach(item => {
+                    if (item.level !== 'none') {
+                        provisionedModules[item.name] = item.level;
+                    }
+                });
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/provision endpoint. Not able to get provision modules');
+            }
 
             const logicalDisk = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/disk/logical-disk`,
                 {
@@ -480,7 +493,11 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
-            diskSize = this._getDiskSize(logicalDisk.body.items);
+            if (logicalDisk.body.items !== undefined) {
+                diskSize = this._getDiskSize(logicalDisk.body.items);
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/disk/logical-disk. Leaving diskSize with default value');
+            }
 
             const packages = await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/installed-packages`,
                 {
@@ -488,10 +505,13 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
-
-            packages.body.items.forEach(item => {
-                installedPackages[item.packageName] = item.version;
-            });
+            if (packages.body.items !== undefined) {
+                packages.body.items.forEach(item => {
+                    installedPackages[item.packageName] = item.version;
+                });
+            } else {
+                logger.warn('Problem with getting data from /mgmt/shared/iapp/installed-packages. Not able to get installed extensions');
+            }
 
             const memory = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/memory`,
                 {
@@ -499,16 +519,27 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
-            memoryInMb = this._getMemoryInMb(memory.body.entries['https://localhost/mgmt/tm/sys/memory/memory-host'].nestedStats.entries['https://localhost/mgmt/tm/sys/memory/memory-host/0']
-                .nestedStats.entries.memoryTotal.value);
-
+            if (memory.body.entries !== undefined) {
+                if ('https://localhost/mgmt/tm/sys/memory/memory-host' in memory.body.entries) {
+                    if ('https://localhost/mgmt/tm/sys/memory/memory-host/0' in memory.body.entries['https://localhost/mgmt/tm/sys/memory/memory-host'].nestedStats.entries) {
+                        memoryInMb = this._getMemoryInMb(memory.body.entries['https://localhost/mgmt/tm/sys/memory/memory-host'].nestedStats.entries['https://localhost/mgmt/tm/sys/memory/memory-host/0']
+                            .nestedStats.entries.memoryTotal.value);
+                    }
+                }
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/memory endpoint. Leaving memoryInMb with default value');
+            }
             const interfaces = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/net/interface`,
                 {
                     headers: {
                         Authorization: this.authHeader
                     }
                 });
-            nicCount = interfaces.body.items.length;
+            if (interfaces.body.items !== undefined) {
+                nicCount = interfaces.body.items.length;
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/net/interface endpoint. Leaving nicCount with default value');
+            }
 
             const license = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/license`,
                 {
@@ -516,7 +547,15 @@ export class TelemetryClient {
                         Authorization: this.authHeader
                     }
                 });
-            regKey = license.body.entries['https://localhost/mgmt/tm/sys/license/0'].nestedStats.entries.registrationKey.description;
+
+            if (license.body.entries !== undefined) {
+                if ('https://localhost/mgmt/tm/sys/license/0' in license.body.entries) {
+                    regKey = license.body.entries['https://localhost/mgmt/tm/sys/license/0'].nestedStats.entries.registrationKey.description;
+                }
+            } else {
+                logger.warn('Problem with getting data from /mgmt/tm/sys/license endpoint. Leaving regKey with default value');
+            }
+
 
             const payload = {
                 id: id,

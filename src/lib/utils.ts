@@ -192,7 +192,7 @@ export function loadData(location: string, options?: {
     } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
         logger.silly(`Loading file via url - options: ${JSON.stringify(options)} `);
         return new Promise<object>((resolve, reject) => {
-            request({
+            retrier(request, [{
                 url: location,
                 method: 'GET',
                 strictSSL: options.verifyTls ? options.verifyTls : true
@@ -202,6 +202,10 @@ export function loadData(location: string, options?: {
                 } else {
                     resolve(JSON.parse(body));
                 }
+            }],{
+                thisContext: this,
+                maxRetries: this.maxRetries,
+                retryInterval: this.retryInterval
             });
         })
             .catch(err => Promise.reject(err));
@@ -286,7 +290,7 @@ export async function makeRequest(uri: string, options?: {
         code: number;
         body: any;
     } = await new Promise((resolve, reject) => {
-        request(requestOptions, (error, resp, body) => {
+        retrier(request, [requestOptions, (error, resp, body) => {
             if (error) {
                 reject(error);
             } else {
@@ -296,6 +300,10 @@ export async function makeRequest(uri: string, options?: {
                     resolve({ code: resp.statusCode, body: body });
                 }
             }
+        }], {
+            thisContext: this,
+            maxRetries: this.maxRetries,
+            retryInterval: this.retryInterval
         });
     });
 

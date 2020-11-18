@@ -84,12 +84,12 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.10.0
+      extensionVersion: 1.16.0
     - extensionType: as3
-      extensionVersion: 3.20.0
+      extensionVersion: 3.23.0
       verifyTls: false
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm
-      extensionHash: ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
+      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
     - extensionType: ilx
       extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/fast/info

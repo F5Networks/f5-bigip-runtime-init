@@ -1,6 +1,6 @@
 {
     "name": "f5-bigip-runtime-init",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "release": "1",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "F5 Cloud Solutions",
@@ -11,6 +11,8 @@
     },
     "scripts": {
         "audit": "npm audit --json > .auditReport.json; node scripts/auditProcessor.js",
+        "sync-at-components-metadata": "bash scripts/sync_at_components_metadata.sh",
+        "generate-readmes": "node ./scripts/README_render.js",
         "cli": "node ./src/cli.js",
         "build": "bash scripts/build_package.sh",
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
@@ -29,8 +31,8 @@
         "aws-sdk": "^2.610.0",
         "commander": "^4.1.0",
         "get-user-locale": "^1.4.0",
-        "google-auth-library": "^5.6.1",
-        "googleapis": "^48.0.0",
+        "google-auth-library": "^6.1.1",
+        "googleapis": "^61.0.0",
         "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
         "js-yaml": "^3.13.1",
         "lodash": "^4.17.20",
@@ -118,9 +120,7 @@
         ]
     },
     "auditProcessor": {
-        "whitelist": [
-            "1523"
-        ]
+        "whitelist": []
     },
     "keywords": [
         "f5",

@@ -157,18 +157,21 @@ resource "azurerm_virtual_machine" "vm" {
     managed_disk_type = "Standard_LRS"
   }
 
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
   os_profile {
     computer_name  = "f5vm"
     admin_username = var.admin_username
     admin_password = module.utils.admin_password
-
-    custom_data = file("${path.module}/user_data.txt")
+    custom_data = file("${path.module}/startup-script.tpl")
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
 }
+
+# NOTE: Startup Script is run once / initialization only (Cloud-Init behavior vs. typical re-entrant for Azure Custom Script Extension )
+# For 15.1+ and above, Cloud-Init will run the script directly and can remove Azure Custom Script Extension below
 
 resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   name                 = "${module.utils.env_prefix}-run-startup-cmd"
@@ -178,11 +181,9 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   type_handler_version = "1.2"
   settings             = <<SETTINGS
     {
-      "commandToExecute": "bash /var/lib/waagent/CustomData; curl https://raw.githubusercontent.com/f5devcentral/f5-bigip-runtime-init/develop/scripts/install.sh | bash; f5-bigip-runtime-init -c /config/onboard_config.yaml"
+      "commandToExecute": "bash /var/lib/waagent/CustomData"
     }
-  
-SETTINGS
-
+  SETTINGS
 }
 
 output "deployment_info" {
@@ -198,4 +199,3 @@ output "deployment_info" {
     deploymentId = module.utils.env_prefix
   }
 }
-

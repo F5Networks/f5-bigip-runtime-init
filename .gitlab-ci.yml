@@ -1,4 +1,4 @@
-image: node:8
+image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:8
 
 stages:
     - process
@@ -115,7 +115,7 @@ unit_tests:
 # the native pre-receive push rules built into GitLab for secrets
 # NOTE: .gitallowed is used for exceptions
 check_content:
-    image: f5devcentral/containthedocs:rpmbuild
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/f5devcentral/containthedocs:rpmbuild
     stage: test
     script:
         # install git-secrets
@@ -134,8 +134,32 @@ check_schema:
     stage: test
     script:
         - npm install
-        - node ./scripts/README_render.js 
+        - npm run generate-readmes
         - if git diff | grep 'diff --git'; then exit 1; else exit 0; fi
+    tags:
+        - cm-official-docker-executor
+
+# verifies all examples use the latest AT Components versions
+check_at_components_metadata:
+    stage: test
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3
+    script:
+        - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -yq nodejs build-essential
+        - npm install -g npm
+        - apt-get install -y jq
+        - pip3 install yq
+        - npm run sync-at-components-metadata
+        - if git diff | grep 'diff --git'; then exit 1; else exit 0; fi
+    tags:
+        - cm-official-docker-executor
+
+
+# checks links in README
+check_links:
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:10
+    stage: test
+    script:
+        - validate make link_check
     tags:
         - cm-official-docker-executor
 
@@ -166,7 +190,7 @@ build_package:
 ### Functional Tests Section
 # Publish docker image to artifactory
 publish_container:
-    image: docker:stable
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/docker:stable
     stage: functional_test_publish
     script:
         - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
@@ -176,7 +200,7 @@ publish_container:
         - docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -219,19 +243,19 @@ publish_container:
         - rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml && rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml && rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
         - mv env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config.yaml
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
         # End of Workaround.
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD}'"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config.yaml"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config"
         # Attempt to re-run self-executable and runtime-init
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify'"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config.yaml"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config --skip-telemetry"
     tags:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -263,6 +287,7 @@ test_functional_init_azure_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: azure and BIGIPv14
 test_functional_init_azure_v14:
@@ -282,6 +307,7 @@ test_functional_init_azure_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: azure and BIGIPv15
 test_functional_init_azure_gov_v15:
@@ -309,6 +335,7 @@ test_functional_init_azure_gov_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
 
 # run functional tests: azure and BIGIPv14
 test_functional_init_azure_gov_v14:
@@ -336,6 +363,7 @@ test_functional_init_azure_gov_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
 
 
 # run functional tests: aws and BIGIPv15
@@ -355,6 +383,7 @@ test_functional_init_aws_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: aws and BIGIPv14
 test_functional_init_aws_v14:
@@ -373,6 +402,7 @@ test_functional_init_aws_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: gcp and BIGIPv15
 test_functional_init_gcp_v15:
@@ -391,6 +421,7 @@ test_functional_init_gcp_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: gcp and BIGIPv14
 test_functional_init_gcp_v14:
@@ -409,11 +440,50 @@ test_functional_init_gcp_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+
+# run functional tests: base package and BIGIPv15
+test_functional_init_base_v15:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "base"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v15"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+
+# run functional tests: base package and BIGIPv15
+test_functional_init_base_v14:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "base"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v14"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
 
 # Functional Tests - Execute phase (with no retries)
 .test_functional_execute_generic: &test_functional_execute_generic
     stage: functional_test_execute
-    image: python:3.7
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
     script:
         # install jq
         - apt-get update
@@ -431,7 +501,7 @@ test_functional_init_gcp_v14:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -466,6 +536,7 @@ test_functional_execute_azure_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
         - build_package
@@ -491,6 +562,7 @@ test_functional_execute_azure_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v14
         - build_package
@@ -519,6 +591,7 @@ test_functional_execute_azure_gov_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
         - build_package
@@ -547,6 +620,7 @@ test_functional_execute_azure_gov_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v14
         - build_package
@@ -568,6 +642,7 @@ test_functional_execute_aws_v15:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v15
         - build_package
@@ -588,6 +663,7 @@ test_functional_execute_aws_v14:
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v14
         - build_package
@@ -608,6 +684,7 @@ test_functional_execute_gcp_v15:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v15
         - build_package
@@ -627,9 +704,54 @@ test_functional_execute_gcp_v14:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v14
         - build_package
+
+# run base package tests
+test_functional_execute_base_v15:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v15"
+        ENV_PROVIDER_TESTS: "ignore"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v15
+        - build_package
+
+test_functional_execute_base_v14:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v14"
+        ENV_PROVIDER_TESTS: "ignore"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v14
+        - build_package
+
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
@@ -647,7 +769,7 @@ test_functional_execute_gcp_v14:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -673,6 +795,7 @@ test_functional_cleanup_azure_v15:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
 
@@ -693,6 +816,7 @@ test_functional_cleanup_azure_v14:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v14
 
@@ -724,6 +848,7 @@ test_functional_cleanup_azure_gov_v15:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
 
@@ -753,6 +878,7 @@ test_functional_cleanup_azure_gov_v14:
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v14
 
@@ -772,6 +898,7 @@ test_functional_cleanup_aws_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v15
 
@@ -790,6 +917,7 @@ test_functional_cleanup_aws_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "gcp"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v14
 
@@ -809,6 +937,7 @@ test_functional_cleanup_gcp_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v15
 
@@ -827,9 +956,49 @@ test_functional_cleanup_gcp_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "aws"
             - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v14
 
+
+# run functional tests: base
+test_functional_cleanup_base_v15:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v15"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v15
+
+test_functional_cleanup_base_v14:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v14"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v14
 
 # End of Funtional tests
 
@@ -844,7 +1013,7 @@ delete_container:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/

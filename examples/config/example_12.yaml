@@ -1,0 +1,31 @@
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: compute
+      field: name
+  - name: BIGIQ_ADMIN_PASS
+    type: secret
+    secretProvider:
+      type: KeyVault
+      environment: azure
+      vaultUrl: https://my-keyvault.vault.azure.net
+      secretId: my_azure_secret
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 500
+      - /usr/bin/setdb restjavad.useextramb true
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.16.0
+    - extensionType: as3
+      extensionVersion: 3.23.0
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: url
+      value: file:///examples/declarations/example_7_do.json
