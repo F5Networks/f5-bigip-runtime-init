@@ -200,7 +200,7 @@ publish_container:
         - docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -255,7 +255,7 @@ publish_container:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -501,7 +501,7 @@ test_functional_init_base_v14:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -769,7 +769,7 @@ test_functional_execute_base_v14:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
@@ -1013,7 +1013,7 @@ delete_container:
         - cm-official-docker-executor
     only:
         variables:
-            - $CI_COMMIT_REF_NAME == "master"
+            - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
