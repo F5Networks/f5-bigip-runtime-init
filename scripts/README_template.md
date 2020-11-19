@@ -25,6 +25,7 @@
       - [Azure (Terraform) snippet](#azure-terraform-snippet)
       - [AWS (Terraform) snippet](#aws-terraform-snippet)
       - [GCP (Terraform) snippet](#gcp-terraform-snippet)
+  - [Private Environments](#private-environments)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
     - [Logging](#logging)
@@ -137,21 +138,17 @@ The self extracting installer accepts the following parameters:
 ```
 --cloud  | -c                   : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
 --key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
---skip-verify                   : Disables RPM signature verification and AT metadata verification
---skip-toolchain-metadata-sync  : Disables automation toolchains metadata sync
+--skip-verify                   : Disables RPM signature verification
+--skip-toolchain-metadata-sync  : Disables downloading automation toolchain metadata from the Internet
 ```
 
-ex. Private Enviroments: By default, the installer tries to download the GPG key used to verify the package from F5 over the Internet: [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key). 
-
-Below is example if hosting the key locally.
+ex:
 ```
- curl https://mylocahost/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key'
+ curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws'
 ```
 
-ex. this is insecure
-```
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --skip-verify'
-```
+See [Private Environments](#private-environments) section below.
+
 
 ## Downloads
 Self-extracting installer, RPMs, and file hashes are available from the following locations:
@@ -462,6 +459,33 @@ f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 
 NOTE: ```--cloud gcp``` is passed to the installer to specify the environment 
 
+## Private Environments
+
+By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
+
+#### Disable Calls from the Installer
+
+Example (secure) of hosting the gpg key locally and disabling checking for latest Automation Tool Chain packages.
+```
+ curl https://myprivatehost/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key --skip-toolchain-metadata-sync'
+```
+
+Example (thisisinsecure) of skipping downloading the GPG key and checking for latest Automation Tool Chain packages, using a local copy of the metadata instead. 
+```
+curl https://myprivatehost/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --skip-verify --skip-toolchain-metadata-sync'
+```
+
+#### Disable Calls from the Command
+
+To disable the f5-bigip-runtime-init command from sending usage reporting, you can include the '--skip-telemetry' parameter.
+```
+f5-bigip-runtime-init -c /config/cloud/runtime-init-conf.yaml --skip-telemetry
+```
+
+Or, if using the `extension_services` feature to send declarations, by disabling phone home with the [autoPhonehome property](https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/schema-reference.html#system) in your Declarative Onboarding (DO) declaration.
+
+For more information on how to disable Automatic Phone Home, see this [Overview of the Automatic Update Check and Automatic Phone Home features](https://support.f5.com/csp/article/K15000#1).
+
 
 ## Troubleshooting
 ### F5 Automation Toolchain Components
@@ -502,15 +526,10 @@ Add the following to the beginning of user data to log startup events to a local
 ```
 mkdir -p  /var/log/cloud
 LOG_FILE=/var/log/cloud/startup-script.log
-touch $FILE
-
-exec 1<&-
-exec 2<&-
 npipe=/tmp/$$.tmp
 trap "rm -f $npipe" EXIT
 mknod $npipe p
-tee <$npipe -a $LOG_FILE &
-tee <$npipe -a /dev/ttyS0 &
+tee <$npipe -a $LOG_FILE /dev/ttyS0 &
 exec 1>&-
 exec 1>$npipe
 exec 2>&1
