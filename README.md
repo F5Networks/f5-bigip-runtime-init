@@ -612,7 +612,7 @@ Example of how to set the log level using an environment variable: ```export F5_
 
 #### Send output to log file and serial console
 
-Add the following to the beginning of user data to log startup events to a local file/serial console. See the simple [example](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/examples/simple/terraform/user_data.txt) for more information.
+Add the following to the beginning of user data to log startup events to a local file/serial console. See the simple [example](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/examples/simple/terraform/startup-script.tpl) for more information.
 
 ```
 mkdir -p  /var/log/cloud
