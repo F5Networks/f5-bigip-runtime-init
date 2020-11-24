@@ -26,6 +26,15 @@ runtime_parameters:
       type: network
       field: subnet-ipv4-cidr-block
       index: 1
+  - name: REGION
+    type: url
+    value: http://169.254.169.254/latest/dynamic/instance-identity/document
+    query: region
+    headers:
+      - name: Content-type
+        value: json
+      - name: User-Agent
+        value: bigip-ve
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -43,3 +52,6 @@ extension_services:
     - extensionType: do
       type: url
       value: file:///examples/declarations/example_6_do.json
+    - extensionType: as3
+      type: url
+      value: file:///examples/declarations/example_7_as3.json

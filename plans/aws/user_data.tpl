@@ -57,6 +57,15 @@ runtime_parameters:
       type: network
       field: subnet-ipv4-cidr-block
       index: 0
+  - name: REGION
+    type: url
+    value: http://169.254.169.254/latest/dynamic/instance-identity/document
+    query: region
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: func-test
 pre_onboard_enabled:
   - name: provision_modules
     type: inline
@@ -115,4 +124,4 @@ extension_services:
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-aws-cloudformation/examples/modules/failover_bigip/do.json
     - extensionType: as3
       type: url
-      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
+      value: https://f5-cft.s3.amazonaws.com/autoscale_as3_aws.json

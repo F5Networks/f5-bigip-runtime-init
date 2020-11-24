@@ -16,7 +16,7 @@
                     },
                     "type": {
                         "type": "string",
-                        "enum": ["static", "secret", "metadata"]
+                        "enum": ["static", "secret", "metadata", "url"]
                     },
                     "value": {
                         "type": "string",
@@ -107,11 +107,22 @@
                         ],
                         "required": ["environment", "type"],
                         "additionalProperties": false
+                    },
+                    "query": {
+                        "type": "string",
+                        "examples": ["region"]
+                    },
+                    "headers": {
+                        "type": "array"
                     }
                 },
                 "allOf": [
                     {
                         "if": { "properties": { "type": { "const": "static" } } },
+                        "then": { "required": ["value"] }
+                    },
+                    {
+                        "if": { "properties": { "type": { "const": "url" } } },
                         "then": { "required": ["value"] }
                     }
                 ],

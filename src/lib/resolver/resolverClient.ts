@@ -17,6 +17,7 @@
 
 'use strict';
 
+import * as jmesPath from 'jmespath';
 import Logger from '../logger';
 import { getCloudProvider } from '../cloud/cloudFactory';
 import * as utils from '../utils';
@@ -68,6 +69,11 @@ export class ResolverClient {
                 promises.push(this._resolveHelper(
                     parameters[i].name,
                     this._resolveMetadata(parameters[i])
+                ));
+            } else if (parameters[i].type === 'url') {
+                promises.push(this._resolveHelper(
+                    parameters[i].name,
+                    this._resolveUrl(parameters[i])
                 ));
             } else {
                 throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
@@ -184,5 +190,31 @@ export class ResolverClient {
             metadataMetadata.metadataProvider
         );
         return metadataValue;
+    }
+
+    async _resolveUrl(metadata): Promise<string> {
+        const options: {
+            method: string;
+            headers?: any;
+        } = {
+            method: 'GET',
+            headers: {}
+        };
+        if (metadata.headers !== undefined && metadata.headers.length > 0) {
+            metadata.headers.forEach((header) => {
+                options.headers[header.name] = header.value;
+            });
+        }
+        const response = await utils.makeRequest(metadata.value, options);
+        if ( metadata.query !== undefined ) {
+            try {
+                const searchResult = jmesPath.search(response.body, metadata.query);
+                return searchResult;
+            } catch (error) {
+                throw new Error(`Error caught while searching json using jmesPath; Json Document: ${JSON.stringify(response.body)} - Query: ${metadata.query} - Error ${error.message}`);
+            }
+        } else {
+            return response.body;
+        }
     }
 }

@@ -26,6 +26,7 @@ Type: `array`
 			 1. _"static"_
 			 2. _"secret"_
 			 3. _"metadata"_
+			 4. _"url"_
 	 - <b id="#/items/properties/value">value</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/value">path: #/items/properties/value</i>
@@ -107,6 +108,14 @@ Type: `array`
 					 1. _"0"_
 					 2. _"1"_
 					 3. _"2"_
+	 - <b id="#/items/properties/query">query</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/query">path: #/items/properties/query</i>
+		 - Example values: 
+			 1. _"region"_
+	 - <b id="#/items/properties/headers">headers</b>
+		 - Type: `array`
+		 - <i id="#/items/properties/headers">path: #/items/properties/headers</i>
 
 
 ### runtime_parameters: Configuration Examples
@@ -792,8 +801,9 @@ example_5:
           value: 'file:///examples/declarations/example_5_do.json'
 example_6:
   description: >-
-    Replaces variables used within DO declaration with properties from instance
-    metadata to configure hostname and self IP addresses on BIGIP device.
+    Replaces variables used within DO and AS3 declarations with properties from
+    instance metadata to configure hostname, self IP addresses and pool members
+    on BIGIP device.
   runtime_config:
     runtime_parameters:
       - name: HOST_NAME
@@ -823,6 +833,15 @@ example_6:
           type: network
           field: subnet-ipv4-cidr-block
           index: 1
+      - name: REGION
+        type: url
+        value: 'http://169.254.169.254/latest/dynamic/instance-identity/document'
+        query: region
+        headers:
+          - name: Content-type
+            value: json
+          - name: User-Agent
+            value: bigip-ve
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -840,6 +859,9 @@ example_6:
         - extensionType: do
           type: url
           value: 'file:///examples/declarations/example_6_do.json'
+        - extensionType: as3
+          type: url
+          value: 'file:///examples/declarations/example_7_as3.json'
 example_7:
   description: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP.
   runtime_config:
