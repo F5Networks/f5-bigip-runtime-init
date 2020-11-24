@@ -25,6 +25,7 @@
       - [Azure (Terraform) snippet](#azure-terraform-snippet)
       - [AWS (Terraform) snippet](#aws-terraform-snippet)
       - [GCP (Terraform) snippet](#gcp-terraform-snippet)
+  - [Runtime parameters](#runtime-parameters)
   - [Private Environments](#private-environments)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
@@ -550,6 +551,52 @@ f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 
 NOTE: ```--cloud gcp``` is passed to the installer to specify the environment 
 
+## Runtime parameters
+
+runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. There are a few types of parameters:
+  
+  * secret - fetches secret from Secret Vault 
+      ```yaml
+        runtime_parameters:
+          - name: ADMIN_PASS
+            type: secret
+            secretProvider:
+              environment: azure
+              type: KeyVault
+              vaultUrl: https://my-keyvault.vault.azure.net
+              secretId: mySecret01
+      ```
+  * metadata - fetches metadata from Metadata Service
+    ```yaml
+        runtime_parameters:
+          - name: MGMT_ROUTE
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: subnet-ipv4-cidr-block
+              index: 0
+    ```
+  * static - defines static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
+      ```yaml
+        runtime_parameters:
+          - name: AVAILABILITY_ZONE
+            type: static
+            value: us-west-2a
+      ```
+  * url - defines url to call to get metadata. This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query field is optional.
+    ```yaml
+        runtime_parameters:
+          - name: REGION
+            type: url
+            value: http://169.254.169.254/latest/dynamic/instance-identity/document
+            query: region
+            headers:
+              - name: Content-Type
+                value: json
+              - name: User-Agent
+                value: some-user-agent
+    ```
 ## Private Environments
 
 By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:

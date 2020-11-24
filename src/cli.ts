@@ -32,6 +32,7 @@ import { TelemetryClient } from './lib/telemetry/telemetryClient';
 const logger = Logger.getLogger();
 const executionResults = {};
 let telemetryClient;
+let statusCode = 0;
 
 export async function cli(): Promise<string> {
     /* eslint-disable no-await-in-loop */
@@ -190,13 +191,20 @@ export async function cli(): Promise<string> {
     return 'All operations finished successfully';
 }
 
+function exit(): void {
+    setTimeout(() => {
+        process.exit(statusCode);
+    }, 2000);
+}
+
 cli()
     .then((message) => {
         logger.info(message);
-        process.exit();
+        exit();
     })
     .catch((err) => {
         logger.error(err.message);
+        statusCode = 1;
         if (!program.skipTelemetry) {
             executionResults['endTime'] = (new Date()).toISOString();
             executionResults['result'] = 'FAILURE';
@@ -212,12 +220,12 @@ cli()
                     return telemetryClient.report(telemetryClient.createTelemetryData());
                 }).then(() => {
                 logger.info('F5 Teem report was successfully sent for failure case.');
-                logger.error(executionResults['resultSummary']);
-                process.exit(1);
+                logger.info(executionResults['resultSummary']);
+                exit();
             })
                 .catch((err2) => {
                     logger.error(err2.message);
-                    process.exit(1);
+                    exit();
                 });
         }
     });
