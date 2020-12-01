@@ -58,7 +58,7 @@ resulting in a complete overlay deployment tool for configuring a BIG-IP instanc
 
 From a high level overview, using this tool involves three steps:
 
-- Step 1: Download OR render inline a runtime-init configuration file (runtime-init-conf.yaml).
+- Step 1: Download OR render inline a Runtime Init configuration file (runtime-init-conf.yaml).
   ```sh
   curl -o /config/cloud/runtime-init-conf.yaml https://my-source-host/my-repo/bigip-configs/0.0.1/runtime-init-conf.yaml 
   ```
@@ -476,7 +476,7 @@ runtime_parameters allows to defined list of parameters and these parameters can
               vaultUrl: https://my-keyvault.vault.azure.net
               secretId: mySecret01
       ```
-  * metadata - fetches metadata from Metadata Service
+  * metadata - fetches common pre-defined metadata from the Metadata Service
     ```yaml
         runtime_parameters:
           - name: MGMT_ROUTE
@@ -487,14 +487,14 @@ runtime_parameters allows to defined list of parameters and these parameters can
               field: subnet-ipv4-cidr-block
               index: 0
     ```
-  * static - defines static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
+  * static - defines a static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
       ```yaml
         runtime_parameters:
           - name: AVAILABILITY_ZONE
             type: static
             value: us-west-2a
       ```
-  * url - defines url to call to get metadata. This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query field is optional.
+  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional.
     ```yaml
         runtime_parameters:
           - name: REGION
@@ -568,7 +568,7 @@ The following enviroment variables can be used for setting logging options:
 Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'```
 
 
-- By default, runtime will mask out (i.e. "********") the following common fields when logging:
+By default, runtime will mask out (i.e. "********") the following common fields when logging:
 ```json
     [
         "password",
@@ -583,28 +583,32 @@ Example of how to set the log level using an environment variable: ```export F5_
         "ciphertext",
         "protected",
         "secret",
+        "sharedSecret",
         "secretAccessKey",
         "apiAccessKey",
         "encodedCredentials",
+        "encodedToken",
         "oldPassword",
+        "newPassword",
+        "bindPassword",
         "checkBindPassword",
         "md5SignaturePassphrase"
     ]
 ```
-however, it is possible to extend this list by providing additional metadata (***field***) for Secret object to instruct Runtime init to which field the secret value is mapped to:
+However, it is possible to extend this list by providing additional metadata (***field***) for the Secret object:
 
 ```yaml
         runtime_parameters:
-          - name: ADMIN_PASS
+          - name: MY_SECRET
             type: secret
             secretProvider:
               environment: azure
               type: KeyVault
               vaultUrl: https://my-keyvault.vault.azure.net
               secretId: mySecret01
-              field: myCustomPassword
+              field: newCustomSecretField
 ``` 
-This example shows how to insturct Runtime Init to mask out myCustomPassword value.
+This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
 
 #### Send output to log file and serial console
 
