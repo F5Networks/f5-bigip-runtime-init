@@ -53,10 +53,14 @@ export const LOGGER = {
         "ciphertext",
         "protected",
         "secret",
+        "sharedSecret",
         "secretAccessKey",
         "apiAccessKey",
         "encodedCredentials",
+        "encodedToken",
         "oldPassword",
+        "newPassword",
+        "bindPassword",
         "checkBindPassword",
         "md5SignaturePassphrase"
     ]
