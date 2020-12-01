@@ -296,9 +296,10 @@ runtime_parameters:
       type: KeyVault
       vaultUrl: https://my-keyvault.vault.azure.net
       secretId: mySecret01
+      field: password
 ```
 
-When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the admin password). 
+When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the admin password). ***field*** provides field name to which this secret is map to and it instructs Runtime Init to masks the secret value in any logging outputs. 
 
 
 #### AWS (Terraform) snippet
@@ -565,6 +566,45 @@ The following enviroment variables can be used for setting logging options:
 ```
 
 Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'```
+
+
+- By default, runtime will mask out (i.e. "********") the following common fields when logging:
+```json
+    [
+        "password",
+        "localPassword",
+        "remotePassword",
+        "bigIqPassword",
+        "bigIpPassword",
+        "passphrase",
+        "cookiePassphrase",
+        "certificate",
+        "privateKey",
+        "ciphertext",
+        "protected",
+        "secret",
+        "secretAccessKey",
+        "apiAccessKey",
+        "encodedCredentials",
+        "oldPassword",
+        "checkBindPassword",
+        "md5SignaturePassphrase"
+    ]
+```
+however, it is possible to extend this list by providing additional metadata (***field***) for Secret object to instruct Runtime init to which field the secret value is mapped to:
+
+```yaml
+        runtime_parameters:
+          - name: ADMIN_PASS
+            type: secret
+            secretProvider:
+              environment: azure
+              type: KeyVault
+              vaultUrl: https://my-keyvault.vault.azure.net
+              secretId: mySecret01
+              field: myCustomPassword
+``` 
+This example shows how to insturct Runtime Init to mask out myCustomPassword value.
 
 #### Send output to log file and serial console
 

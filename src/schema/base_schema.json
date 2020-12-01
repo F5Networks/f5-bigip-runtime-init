@@ -48,6 +48,11 @@
                                 "type": "string",
                                 "pattern": "(https?://(.+?\\.)?vault\\.(azure|usgovcloudapi)\\.net(/[A-Za-z0-9\\-\\._~:/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)",
                                 "examples": ["https://my-keyvault.vault.azure.net", "https://my-keyvault.vault.usgovcloudapi.net"]
+                            },
+                            "field": {
+                                "description": "field name to which secret value is mapped to",
+                                "type": "string",
+                                "examples": ["bigiqPassword", "regKey"]
                             }
                         },
                         "allOf": [

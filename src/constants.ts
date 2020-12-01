@@ -42,11 +42,23 @@ export const LOGGER = {
     DEFAULT_LOG_TO_JSON: false,
     FIELDS_TO_HIDE: [
         "password",
+        "localPassword",
+        "remotePassword",
+        "bigIqPassword",
+        "bigIpPassword",
         "passphrase",
+        "cookiePassphrase",
         "certificate",
         "privateKey",
         "ciphertext",
-        "protected"
+        "protected",
+        "secret",
+        "secretAccessKey",
+        "apiAccessKey",
+        "encodedCredentials",
+        "oldPassword",
+        "checkBindPassword",
+        "md5SignaturePassphrase"
     ]
 };
 

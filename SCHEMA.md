@@ -74,6 +74,13 @@ Type: `array`
 					 1. _"https://my-keyvault.vault.azure.net"_
 					 2. _"https://my-keyvault.vault.usgovcloudapi.net"_
 				 - The value must match this pattern: `(https?://(.+?\.)?vault\.(azure|usgovcloudapi)\.net(/[A-Za-z0-9\-\._~:/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)`
+			 - <b id="#/items/properties/secretProvider/properties/field">field</b>
+				 - _field name to which secret value is mapped to_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/field">path: #/items/properties/secretProvider/properties/field</i>
+				 - Example values: 
+					 1. _"bigiqPassword"_
+					 2. _"regKey"_
 	 - <b id="#/items/properties/metadataProvider">metadataProvider</b>
 		 - Type: `object`
 		 - <i id="#/items/properties/metadataProvider">path: #/items/properties/metadataProvider</i>
@@ -441,46 +448,46 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
       - extensionType: as3
-        extensionVersion: 3.23.0
+        extensionVersion: 3.24.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
       - extensionType: as3
-        extensionVersion: 3.23.0
+        extensionVersion: 3.24.0
 hashed:
   description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
-        extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+        extensionVersion: 1.17.0
+        extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
       - extensionType: as3
-        extensionVersion: 3.23.0
-        extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+        extensionVersion: 3.24.0
+        extensionHash: eaef5c650da84f593d17939e3bb5d649097f60a6d302d6abc06951f2b4a986d9
 url:
   description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.17.0/f5-declarative-onboarding-1.17.0-3.noarch.rpm
       - extensionType: as3
-        extensionVersion: 3.23.0
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.23.0-5.noarch.rpm'
+        extensionVersion: 3.24.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.24.0-5.noarch.rpm'
 ilx:
   description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
       - extensionType: as3
-        extensionVersion: 3.23.0
+        extensionVersion: 3.24.0
       - extensionType: ilx
         extensionUrl: >-
           file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
@@ -652,11 +659,11 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
-          extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+          extensionVersion: 1.17.0
+          extensionHash: 484b34ecbbe6b97a3b7d3c547a6d9c234c9fc99766d07bed4384298437327f23
         - extensionType: as3
-          extensionVersion: 3.23.0
-          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+          extensionVersion: 3.24.0
+          extensionHash: 3dbb3e2cb170d2fc9ead746aa2df37518c0f38876debe33eec95cf928f91a329
     extension_services:
       service_operations:
         - extensionType: as3
@@ -678,9 +685,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.16.0-8.noarch.rpm
-          extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
-          extensionVersion: 1.16.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.17.0-3.noarch.rpm
+          extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
+          extensionVersion: 1.17.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.1.0
@@ -713,9 +720,9 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -754,9 +761,9 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -791,9 +798,9 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -851,9 +858,9 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -874,9 +881,9 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -929,9 +936,9 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1036,9 +1043,9 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1051,9 +1058,9 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1107,13 +1114,13 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
           verifyTls: false
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
-          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+          extensionHash: bc21ff6460e65610c50d8eb358155098f79a10371e69c166764735a38a3523cd
         - extensionType: ilx
           extensionUrl: >-
             file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
@@ -1166,9 +1173,9 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
