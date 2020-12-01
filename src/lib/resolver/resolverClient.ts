@@ -164,6 +164,9 @@ export class ResolverClient {
             { logger }
         );
         await _cloudClient.init();
+        if (secretMetadata.secretProvider.field !== undefined) {
+            constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
+        }
         const secretValue = await _cloudClient.getSecret(
             secretMetadata.secretProvider.secretId,
             secretMetadata.secretProvider

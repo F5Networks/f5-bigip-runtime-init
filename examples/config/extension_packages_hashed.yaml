@@ -2,8 +2,8 @@ description: Verifies and installs packages using specified hashes
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.16.0
-      extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+      extensionVersion: 1.17.0
+      extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
     - extensionType: as3
-      extensionVersion: 3.23.0
-      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+      extensionVersion: 3.24.0
+      extensionHash: eaef5c650da84f593d17939e3bb5d649097f60a6d302d6abc06951f2b4a986d9

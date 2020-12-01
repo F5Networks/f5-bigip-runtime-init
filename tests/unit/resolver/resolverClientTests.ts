@@ -102,6 +102,7 @@ describe('Resolver Client', () => {
                     environment: 'azure',
                     version: '6e86876be4ce46a49ec578dfda897593',
                     secretId: 'this-secret',
+                    field: 'sensitiveFieldName',
                     debug: true
                 }
             },

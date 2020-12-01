@@ -7,11 +7,11 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.16.0
-      extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+      extensionVersion: 1.17.0
+      extensionHash: 484b34ecbbe6b97a3b7d3c547a6d9c234c9fc99766d07bed4384298437327f23
     - extensionType: as3
-      extensionVersion: 3.23.0
-      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+      extensionVersion: 3.24.0
+      extensionHash: 3dbb3e2cb170d2fc9ead746aa2df37518c0f38876debe33eec95cf928f91a329
 extension_services:
   service_operations:
     - extensionType: as3

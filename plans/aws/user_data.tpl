@@ -30,6 +30,7 @@ runtime_parameters:
       type: SecretsManager
       secretId: ${secret_id}
       version: AWSCURRENT
+      field: password
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -108,11 +109,11 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.16.0
+      extensionVersion: 1.17.0
     - extensionType: as3
-      extensionVersion: 3.23.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
-      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+      extensionVersion: 3.24.0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+      extensionHash: df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4
     - extensionType: ilx
       extensionUrl: https://github.com/f5networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/fast/info
