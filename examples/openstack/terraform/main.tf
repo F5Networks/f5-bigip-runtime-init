@@ -3,11 +3,11 @@ data "openstack_networking_network_v2" "external_net" {
 }
 
 data "openstack_networking_network_v2" "internal_net" {
-  name = "internal"
+  name = var.internal_net
 }
 
 data "openstack_networking_network_v2" "mgmt_net" {
-  name = "mgmt"
+  name = var.mgmt_net
 }
 
 data "template_file" "bigip_init" {
@@ -25,7 +25,7 @@ data "template_file" "bigip_init" {
 resource "openstack_compute_instance_v2" "bigip1" {
   name      = var.hostname
   image_id  = var.image_id
-  flavor_id = "3"
+  flavor_id = var.flavor_id
 
   security_groups = ["default"]
 

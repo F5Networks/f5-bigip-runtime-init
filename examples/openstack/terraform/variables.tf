@@ -23,3 +23,6 @@ variable "gateway" {
 variable "image_id" {
   description = "Glance image_id"
 }
+variable "flavor_id" {
+  description = "Flavor (size) ID #"
+}
