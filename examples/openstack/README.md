@@ -2,7 +2,7 @@
 
 ## OpenStack
 
-Example of deploying in OpenStack
+Example of deploying in OpenStack.  This hard-codes many values (see main.tf for details).
 
 - Prereqs
     - Terraform

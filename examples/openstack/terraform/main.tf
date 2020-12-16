@@ -1,3 +1,15 @@
+#
+# Example of deploying a 3NIC BIG-IP in OpenStack
+#
+# Network ranges are hard-coded to /24
+# MTU is hard-coded for VXLAN network
+# security group set to default
+#
+# MGMT must be routable to the internet to download
+# bigip-runtime-init and A&O ToolChain.
+#
+# Default GW is expected to be 1.1 interface (2nd NIC)
+#
 data "openstack_networking_network_v2" "external_net" {
   name = var.external_net
 }
@@ -15,6 +27,9 @@ data "template_file" "bigip_init" {
   vars = {
     HOST_NAME        = var.hostname
     LICENSE          = var.license
+    # note that the password will be cached by tfstate
+    # in cloud-drive, and initially on the device
+    # not recommended for production
     PASSWORD	     = var.password
     SELF_IP_EXTERNAL = openstack_networking_port_v2.external_port.all_fixed_ips[0]
     SELF_IP_INTERNAL = openstack_networking_port_v2.internal_port.all_fixed_ips[0]
@@ -48,6 +63,7 @@ resource "openstack_networking_port_v2" "mgmt_port" {
   name           = "bigip1_mgmt"
   network_id     = data.openstack_networking_network_v2.mgmt_net.id
   admin_state_up = "true"
+  # this must not be a "direct" port, virtio is OK
 }
 
 resource "openstack_networking_port_v2" "external_port" {
