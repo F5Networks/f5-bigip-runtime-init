@@ -227,5 +227,7 @@ cli()
                     logger.error(err2.message);
                     exit();
                 });
+        } else {
+            exit();
         }
     });
