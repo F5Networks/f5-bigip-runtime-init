@@ -506,7 +506,6 @@ class ServiceClient {
         const config = options.config;
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
-
         const response = await utils.makeRequest(
             `${this.uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
@@ -518,12 +517,16 @@ class ServiceClient {
                 verifyTls: this._metadataClient._getVerifyTls()
             }
         );
-
         if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED) {
             await this._waitForTask(response.body.selfLink.split('https://localhost')[1]);
         }
 
-        return response;
+        if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED ||  response.code === constants.HTTP_STATUS_CODES.OK) {
+            return response;
+        } else {
+            logger.warn(`Task creation failed; response code: ${response.code}`);
+            return Promise.reject(new Error(utils.stringify(response.body)));
+        }
     }
 }
 

@@ -466,6 +466,22 @@ describe('BIG-IP Service Client', () => {
             })
             .catch(err => Promise.reject(err));
     });
+
+    it('should validate create method promise rejection on 400s', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/appsvcs/declare')
+            .reply(400, 'This is test error message');
+        return serviceClient.create()
+            .then(() => {
+                assert.fail();
+            })
+            .catch((err) => {
+                assert.ok(err.message.indexOf('This is test error message') !== -1);
+            });
+    });
 });
 
 describe('BIG-IP Toolchain Client', () => {
