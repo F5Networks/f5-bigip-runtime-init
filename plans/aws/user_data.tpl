@@ -111,7 +111,6 @@ extension_packages:
     - extensionType: do
       extensionVersion: 1.17.0
     - extensionType: as3
-      extensionVersion: 3.24.0
       extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
       extensionHash: df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4
     - extensionType: ilx

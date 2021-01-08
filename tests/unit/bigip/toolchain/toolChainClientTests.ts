@@ -365,6 +365,52 @@ describe('BIG-IP Package Client', () => {
             });
     }).timeout(300000);
 
+    it('should validate install failure when package hash is not matching', () => {
+        const standardToolchainOptions = {
+            extensionVersion: '3.17.0',
+            extensionHash: 'wrongHashValueHere',
+            maxRetries: 3,
+            retryInterval: 2500,
+            verifyTls: true
+        };
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(200, {
+                id: "1"
+            });
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .reply(200, {
+                id: '1',
+                status: 'FINISHED'
+            });
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/file-transfer/uploads/')
+            .reply(200);
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(30)
+            .reply(200, {
+                id: '1'
+            });
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            }
+        });
+        return packageClient.install()
+            .then((response) => {
+                assert.fail();
+            })
+            .catch((err) => {
+                assert.ok(err.message.indexOf('failed because RPM hash is not valid') !== -1);
+                nock.cleanAll();
+            });
+    }).timeout(300000);
+
     it('should validate installation failure due to max retries', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
