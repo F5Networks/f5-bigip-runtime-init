@@ -234,8 +234,11 @@
                         "allOf": [
                             {
                                 "if": { "properties": { "extensionType": { "const": "ilx" } } },
-                                "then": { "required": ["extensionUrl", "extensionVerificationEndpoint", "extensionVersion"] },
-                                "else": { "required": ["extensionVersion"] }
+                                "then": { "required": ["extensionUrl", "extensionVerificationEndpoint"] }
+                            },
+                            {
+                                "if": { "properties": { "extensionUrl": { "const": null } } },
+                                "then": { "required": ["extensionVersion"] }
                             }
                         ],
                         "required": ["extensionType"],

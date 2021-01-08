@@ -84,11 +84,13 @@ describe('System tests', () => {
 
     it('should verify AS3 installed', () => {
         const declaredAs3Version = postedBigIpRunTimeInitDeclaration.extension_packages.install_operations.filter(item => item.extensionType === 'as3')[0].extensionVersion;
-        const declaredPackageName = availablePackages.components.as3.versions[declaredAs3Version].packageName;
-
+        if (declaredAs3Version !== undefined) {
+            const declaredPackageName = availablePackages.components.as3.versions[declaredAs3Version].packageName;
+            assert.ok(installedPackages.filter(item => item.packageName === declaredPackageName).length > 0);
+            assert.ok(installedPackages.filter(item => item.version === declaredAs3Version).length > 0);
+        }
         assert.ok(installedPackages.filter(item => item.name === 'f5-appsvcs').length > 0);
-        assert.ok(installedPackages.filter(item => item.packageName === declaredPackageName).length > 0);
-        assert.ok(installedPackages.filter(item => item.version === declaredAs3Version).length > 0);
+
     });
 
     it('should verify DO installed', () => {

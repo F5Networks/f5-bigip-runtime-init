@@ -97,6 +97,7 @@ export async function cli(): Promise<string> {
     // perform install operations
     const extensionPackages = config.extension_packages || {};
     const installOperations = extensionPackages.install_operations || [];
+    const extensionsVersions = {};
     if (installOperations.length) {
         logger.info('Executing install operations.');
         for (let i = 0; i < installOperations.length; i += 1) {
@@ -105,6 +106,7 @@ export async function cli(): Promise<string> {
                 installOperations[i].extensionType,
                 installOperations[i]
             );
+            extensionsVersions[installOperations[i].extensionType] = installOperations[i].extensionVersion ? installOperations[i].extensionVersion: 'unknown';
             const response = await toolchainClient.package.isInstalled();
             if (response.isInstalled) {
                 logger.silly('package is already installed');
@@ -130,7 +132,7 @@ export async function cli(): Promise<string> {
                 mgmtClient,
                 serviceOperations[i].extensionType,
                 {
-                    version: serviceOperations[i].extensionVersion
+                    extensionVersion: extensionsVersions[serviceOperations[i].extensionType] ? extensionsVersions[serviceOperations[i].extensionType]: 'unknown'
                 }
             );
             // if the config is already an object, then use it as such,

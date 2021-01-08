@@ -310,9 +310,11 @@ class PackageClient {
             });
         }
 
-        // verify package
+        // verify package integrity
         if (this._metadataClient.getComponentHash()) {
-            utils.verifyHash(tmpFile, this._metadataClient.getComponentHash());
+            if(!utils.verifyHash(tmpFile, this._metadataClient.getComponentHash())) {
+                return Promise.reject(new Error(`Installation of ${this.component} failed because RPM hash is not valid`));
+            }
         }
 
         // upload to target
