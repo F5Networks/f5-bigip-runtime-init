@@ -88,6 +88,7 @@ export async function cli(): Promise<string> {
 
     // pre onboard
     // run before install operations in case they require out-of-band changes
+    await mgmtClient.isReady();
     const preOnboardEnabled = config.pre_onboard_enabled || [];
     if (preOnboardEnabled.length) {
         logger.info('Executing custom pre-onboard commands');
@@ -160,6 +161,7 @@ export async function cli(): Promise<string> {
     }
 
     // post onboard
+    await mgmtClient.isReady();
     const postOnboardEnabled = config.post_onboard_enabled || [];
     if (postOnboardEnabled.length) {
         logger.info('Executing custom post-onboard commands');
