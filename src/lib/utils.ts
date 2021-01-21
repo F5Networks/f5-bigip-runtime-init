@@ -37,7 +37,11 @@ const logger = Logger.getLogger();
  * @returns stringified data
  */
 export function stringify(data: object): string {
-    return JSON.stringify(data);
+    try {
+        return JSON.stringify(data);
+    } catch {
+        return data.toString();
+    }
 }
 
 /**
