@@ -297,7 +297,7 @@ remote_exec:
 ***
 ### pre_onboard_enabled: Schema
 
-_Used to specify commands which will be executed before extension package operations._
+_Used to specify commands which will be executed before extension package operations before BIG-IP is ready._
 
 Type: `array`
 
@@ -374,6 +374,79 @@ remote_exec:
       type: url
       commands:
         - 'https://the-delivery-location.com/remote_pre_onboard.sh'
+
+```
+***
+### bigip_ready_enabled: Schema
+
+_Used to specify commands which will be executed before extension package operations after BIG-IP and MCPD are up and running._
+
+Type: `array`
+
+<i id="#">path: #</i>
+
+ - **_Items_**
+ - Type: `object`
+ - <i id="#/items">path: #/items</i>
+ - **_Properties_**
+	 - <b id="#/items/properties/name">name</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/name">path: #/items/properties/name</i>
+		 - Example values: 
+			 1. _"my_preonboard_command"_
+			 2. _"example_local_exec"_
+			 3. _"provision_rest"_
+	 - <b id="#/items/properties/type">type</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/type">path: #/items/properties/type</i>
+		 - The value is restricted to the following: 
+			 1. _"inline"_
+			 2. _"file"_
+			 3. _"url"_
+	 - <b id="#/items/properties/command">command</b>
+		 - Type: `array`
+		 - <i id="#/items/properties/command">path: #/items/properties/command</i>
+			 - **_Items_**
+			 - Type: `string`
+			 - <i id="#/items/properties/command/items">path: #/items/properties/command/items</i>
+			 - Example values: 
+				 1. _"tmsh create net vlan external interfaces replace-all-with { 1.1 }"_
+				 2. _"tmsh create sys folder /LOCAL_ONLY device-group none traffic-group traffic-group-local-only"_
+				 3. _"tmsh save sys config"_
+	 - <b id="#/items/properties/verifyTls">verifyTls</b>
+		 - _For enabling secure site verification_
+		 - Type: `boolean`
+		 - <i id="#/items/properties/verifyTls">path: #/items/properties/verifyTls</i>
+		 - Example values: 
+			 1. _true_
+			 2. _false_
+
+
+### bigip_ready_enabled: Configuration Examples
+
+```yaml
+inline:
+  description: Runs commands specified inline
+  bigip_ready_enabled:
+    - name: example_inline_command
+      type: inline
+      commands:
+        - /usr/bin/setdb provision.extramb 500
+        - /usr/bin/setdb restjavad.useextramb true
+local_exec:
+  description: Runs commands from a local file
+  bigip_ready_enabled:
+    - name: example_local_exec
+      type: file
+      commands:
+        - /tmp/bigip_ready_enabled.sh
+remote_exec:
+  description: Runs commands from a URL
+  bigip_ready_enabled:
+    - name: example_remote_exec
+      type: url
+      commands:
+        - 'https://the-delivery-location.com/bigip_ready_enabled.sh'
 
 ```
 ***
@@ -656,6 +729,15 @@ example_1:
         commands:
           - /usr/bin/setdb provision.extramb 500
           - /usr/bin/setdb restjavad.useextramb true
+    bigip_ready_enabled:
+      - name: set_message_size
+        type: inline
+        commands:
+          - >-
+            /usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d
+            '{"maxMessageBodySize":134217728}' -X POST
+            http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
+            jq .
     extension_packages:
       install_operations:
         - extensionType: do

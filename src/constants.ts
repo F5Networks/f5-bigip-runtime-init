@@ -22,12 +22,17 @@ export const ENVIRONMENT_KEY_NAME= 'environment';
 
 export const HTTP_STATUS_CODES = {
     ACCEPTED: 202,
-    OK: 200
+    OK: 200,
+    UNPROCESSABLE: 422,
+    INTERNALS: 500
 };
 
 export const RETRY = {
+    LONG_COUNT: 150,
     DEFAULT_COUNT: 100,
-    DELAY_IN_MS: 10000
+    DELAY_IN_MS: 10000,
+    SHORT_COUNT: 20,
+    SHORT_DELAY_IN_MS: 1000
 };
 
 export const ENV_VARS = {

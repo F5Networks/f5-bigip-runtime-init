@@ -166,7 +166,7 @@
             }
         },
         "pre_onboard_enabled": {
-            "description": "Used to specify commands which will be executed before extension package operations.",
+            "description": "Used to specify commands which will be executed before extension package operations before BIG-IP is ready.",
             "type": "array",
             "items": {
                 "type": "object",
@@ -184,6 +184,35 @@
                         "items" : {
                             "type": "string",
                             "examples": ["/usr/bin/setdb provision.extramb 500", "/usr/bin/setdb restjavad.useextramb true", "/tmp/pre_onboard_script.sh"]
+                        }
+                    },
+                    "verifyTls": {
+                        "description": "For enabling secure site verification",
+                        "type": "boolean",
+                        "examples": ["true", "false"]
+                    }
+                }
+            }
+        },
+        "bigip_ready_enabled": {
+            "description": "Used to specify commands which will be executed before extension package operations after BIG-IP and MCPD are up and running.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "examples": ["my_preonboard_command", "example_local_exec", "provision_rest"]
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["inline", "file", "url"]
+                    },
+                    "command": {
+                        "type": "array",
+                        "items" : {
+                            "type": "string",
+                            "examples": [ "tmsh create net vlan external interfaces replace-all-with { 1.1 }", "tmsh create sys folder /LOCAL_ONLY device-group none traffic-group traffic-group-local-only", "tmsh save sys config" ]
                         }
                     },
                     "verifyTls": {

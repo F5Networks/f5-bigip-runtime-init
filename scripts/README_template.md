@@ -125,7 +125,8 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 | extension_packages	| none	| No | List of URLs to download and install iControl LX extension packages before onboarding. |
 | extension_services | none	| No |	List of declarations to to configure. |
 | runtime_parameters | none	| No	| List of runtime parameters to gather. |
-| pre_onboard_enabled | none | No	| List of commands to run before sending iControl LX declarations. |
+| pre_onboard_enabled | none | No	| List of commands to run before BIG-IP is ready. |
+| bigip_ready_enabled | none | No	| List of commands to run after BIG-IP and MCPD are up and running. |
 | post_onboard_enabled | none	| No	| List of commands to run after sending iControl LX declarations. |
 | post_hook | none | No  | Webhook to send upon completion. |
 

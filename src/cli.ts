@@ -74,6 +74,16 @@ export async function cli(): Promise<string> {
     }
     logger.info('Successfully validated declaration');
 
+    const resolver = new ResolverClient();
+
+    // pre onboard
+    // run before install operations in case they require out-of-band changes
+    const preOnboardEnabled = config.pre_onboard_enabled || [];
+    if (preOnboardEnabled.length) {
+        logger.info('Executing custom pre_onboard_enabled commands');
+        await resolver.resolveOnboardActions(preOnboardEnabled);
+    }
+
     // create management client
     const mgmtClient = new ManagementClient();
     // perform ready check
@@ -81,19 +91,17 @@ export async function cli(): Promise<string> {
     telemetryClient = new TelemetryClient(
             mgmtClient
     );
-    // resolve runtime parameters
-    const resolver = new ResolverClient();
+
     logger.info('Resolving parameters');
     const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters): undefined;
 
-    // pre onboard
-    // run before install operations in case they require out-of-band changes
-    await mgmtClient.isReady();
-    const preOnboardEnabled = config.pre_onboard_enabled || [];
-    if (preOnboardEnabled.length) {
-        logger.info('Executing custom pre-onboard commands');
-        await resolver.resolveOnboardActions(preOnboardEnabled);
+    const bigipReadyEnabled = config.bigip_ready_enabled || [];
+    if (bigipReadyEnabled.length) {
+        logger.info('Executing custom bigip_ready_enabled commands');
+        await resolver.resolveOnboardActions(bigipReadyEnabled);
     }
+
+    await mgmtClient.isReady();
 
     // perform install operations
     const extensionPackages = config.extension_packages || {};
@@ -164,7 +172,7 @@ export async function cli(): Promise<string> {
     await mgmtClient.isReady();
     const postOnboardEnabled = config.post_onboard_enabled || [];
     if (postOnboardEnabled.length) {
-        logger.info('Executing custom post-onboard commands');
+        logger.info('Executing custom post_onboard_enabled commands');
         await resolver.resolveOnboardActions(postOnboardEnabled);
     }
 

@@ -1,0 +1,22 @@
+inline:
+  description: Runs commands specified inline
+  bigip_ready_enabled:
+    - name: example_inline_command
+      type: inline
+      commands:
+        - /usr/bin/setdb provision.extramb 500
+        - /usr/bin/setdb restjavad.useextramb true
+local_exec:
+  description: Runs commands from a local file
+  bigip_ready_enabled:
+    - name: example_local_exec
+      type: file
+      commands:
+        - /tmp/bigip_ready_enabled.sh
+remote_exec:
+  description: Runs commands from a URL
+  bigip_ready_enabled:
+    - name: example_remote_exec
+      type: url
+      commands:
+        - https://the-delivery-location.com/bigip_ready_enabled.sh
