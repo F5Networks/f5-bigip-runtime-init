@@ -109,7 +109,7 @@ runtime_parameters:
         type: network
         field: ip
         index: 0
-pre_onboard_enabled:
+bigip_ready_enabled:
   - name: provision_modules
     type: inline
     commands:
@@ -119,6 +119,7 @@ pre_onboard_enabled:
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+pre_onboard_enabled:
   - name: example_inline_command
     type: inline
     commands:

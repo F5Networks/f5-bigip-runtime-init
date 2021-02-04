@@ -21,6 +21,7 @@ import assert from 'assert';
 import mock from 'mock-fs';
 import nock from 'nock';
 
+import * as constants from '../../../../src/constants';
 import { ManagementClient } from '../../../../src/lib/bigip/managementClient';
 import { ToolChainClient } from '../../../../src/lib/bigip/toolchain/toolChainClient';
 import * as installedPackages from '../../payloads/bigip_mgmt_shared_installed_packages.json';
@@ -182,7 +183,6 @@ describe('BIG-IP Package Client', () => {
             .catch(err => Promise.reject(err));
     });
 
-
     it('should validate isInsatlled method when package installed but not required update', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainOptions = {
@@ -244,6 +244,32 @@ describe('BIG-IP Package Client', () => {
             .catch(err => Promise.reject(err));
     });
 
+    it('should validate install failure with downloadToFile', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        constants.RETRY.SHORT_COUNT = 5;
+        nock('https://github.com')
+            .get('/F5Networks/f5-appsvcs-extension/releases/download/v3.17.0/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(constants.RETRY.SHORT_COUNT)
+            .replyWithError('ECONNRESET');
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            }
+        });
+        return packageClient.install()
+            .then(() => {
+                assert.fail();
+                nock.cleanAll();
+            })
+            .catch((err) => {
+                assert.ok(err.message.indexOf('ECONNRESET') !== -1 );
+                constants.RETRY.SHORT_COUNT = 50;
+                nock.cleanAll();
+            });
+    }).timeout(300000);
+
     it('should validate uninstall method', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
@@ -259,7 +285,44 @@ describe('BIG-IP Package Client', () => {
 
     });
 
-
+    it('should validate install failure with via URL', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const packageClient = toolChainClient.package;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/iapp/package-management-tasks')
+            .reply(200, {
+                id: "1"
+            });
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .reply(200, {
+                id: '1',
+                status: 'FINISHED'
+            });
+        nock('http://localhost:8100')
+            .get('/mgmt/shared/file-transfer/uploads/')
+            .reply(200);
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(30)
+            .reply(200, {
+                id: '1'
+            });
+        mock({
+            '/var/lib/cloud/icontrollx_installs': {
+                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            }
+        });
+        return packageClient.install()
+            .then((response) => {
+                assert.strictEqual(response.component, 'as3');
+                assert.strictEqual(response.version, '3.17.0');
+                assert.ok(response.installed);
+                nock.cleanAll();
+            })
+            .catch(err => Promise.reject(err));
+    }).timeout(300000);
 
     it('should validate install done via URL', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
@@ -300,6 +363,7 @@ describe('BIG-IP Package Client', () => {
             .catch(err => Promise.reject(err));
     }).timeout(300000);
 
+
     it('should validate install done via FILE', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', ilxToolchainOptions);
@@ -333,22 +397,27 @@ describe('BIG-IP Package Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
+        constants.RETRY.SHORT_COUNT = 5;
         nock('http://localhost:8100')
             .post('/mgmt/shared/iapp/package-management-tasks')
+            .times(constants.RETRY.SHORT_COUNT)
             .reply(200, {
                 id: "1"
             });
         nock('http://localhost:8100')
             .get('/mgmt/shared/iapp/package-management-tasks/1')
+            .times(constants.RETRY.SHORT_COUNT)
             .reply(200, {
                 id: '1',
                 status: 'FAILED'
             });
         nock('http://localhost:8100')
             .get('/mgmt/shared/file-transfer/uploads/')
+            .times(constants.RETRY.SHORT_COUNT)
             .reply(200);
         nock('http://localhost:8100')
             .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .times(constants.RETRY.SHORT_COUNT)
             .times(30)
             .reply(200, {
                 id: '1'
@@ -361,6 +430,7 @@ describe('BIG-IP Package Client', () => {
         return packageClient.install()
             .catch((err) => {
                 assert.ok(err.message.includes('RPM installation failed'));
+                constants.RETRY.SHORT_COUNT = 50;
                 nock.cleanAll();
             });
     }).timeout(300000);
@@ -402,7 +472,7 @@ describe('BIG-IP Package Client', () => {
             }
         });
         return packageClient.install()
-            .then((response) => {
+            .then(() => {
                 assert.fail();
             })
             .catch((err) => {
@@ -504,6 +574,70 @@ describe('BIG-IP Service Client', () => {
                 selfLink: 'https://localhost/tasks/myTask/1',
             });
         nock('http://localhost:8100')
+            .get('/tasks/myTask/1')
+            .reply(200);
+        return serviceClient.create()
+            .then((resp) => {
+                assert.strictEqual(resp.code, 202);
+            })
+            .catch(err => Promise.reject(err));
+    });
+
+
+    it('should validate create method when task is unprocessable', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/appsvcs/declare')
+            .reply(202, {
+                selfLink: 'https://localhost/tasks/myTask/1',
+            });
+        nock('http://localhost:8100')
+            .get('/tasks/myTask/1')
+            .reply(422);
+        return serviceClient.create()
+            .then(() => {
+                assert.fail()
+            })
+            .catch((err) => {
+                assert.ok(err.message.indexOf('Task with error') !== -1);
+            });
+    });
+
+    it('should validate create method when internal error for task', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/appsvcs/declare')
+            .reply(202, {
+                selfLink: 'https://localhost/tasks/myTask/1',
+            });
+        nock('http://localhost:8100')
+            .get('/tasks/myTask/1')
+            .reply(503);
+        return serviceClient.create()
+            .then(() => {
+                assert.fail()
+            })
+            .catch((err) => {
+                assert.ok(err.message.indexOf('Task with error') !== -1);
+            });
+    });
+
+    it('should validate create method with retries', () => {
+        const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
+        const serviceClient = toolChainClient.service;
+        nock('http://localhost:8100')
+            .post('/mgmt/shared/appsvcs/declare')
+            .reply(202, {
+                selfLink: 'https://localhost/tasks/myTask/1',
+            });
+        nock('http://localhost:8100')
+            .get('/tasks/myTask/1')
+            .reply(202)
             .get('/tasks/myTask/1')
             .reply(200);
         return serviceClient.create()

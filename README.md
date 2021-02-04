@@ -125,7 +125,8 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 | extension_packages	| none	| No | List of URLs to download and install iControl LX extension packages before onboarding. |
 | extension_services | none	| No |	List of declarations to to configure. |
 | runtime_parameters | none	| No	| List of runtime parameters to gather. |
-| pre_onboard_enabled | none | No	| List of commands to run before sending iControl LX declarations. |
+| pre_onboard_enabled | none | No	| List of commands to run before BIG-IP is ready. |
+| bigip_ready_enabled | none | No	| List of commands to run after BIG-IP and MCPD are up and running. |
 | post_onboard_enabled | none	| No	| List of commands to run after sending iControl LX declarations. |
 | post_hook | none | No  | Webhook to send upon completion. |
 
@@ -287,6 +288,11 @@ pre_onboard_enabled:
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+bigip_ready_enabled:
+  - name: set_message_size
+    type: inline
+    commands:
+      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
 extension_packages:
   install_operations:
     - extensionType: do

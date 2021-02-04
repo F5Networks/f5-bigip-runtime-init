@@ -74,6 +74,8 @@ export async function downloadToFile(url: string, file: string, options): Promis
         .catch(err => Promise.reject(err));
 }
 
+
+
 /**
  * Verifies that directory exists or create directory
  *
@@ -142,7 +144,7 @@ export async function retrier(
         thisContext?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
         maxRetries?: number;
         retryInterval?: number;
-    }): Promise<object> {
+    }): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
     options = options || {};
 
     const thisContext = options.thisContext || this;
@@ -158,6 +160,7 @@ export async function retrier(
             response = await func.apply(thisContext, args);
         } catch (err) {
             error = err;
+            logger.silly(`${err}`);
         }
 
         if (error === null) {
@@ -165,10 +168,12 @@ export async function retrier(
         } else {
             await new Promise(resolve => setTimeout(resolve, retryInterval));
             i += 1;
+            logger.silly(`Retrying... Attempts left: ${retryCount - i}`);
         }
     }
 
     if (error !== null) {
+        logger.silly(`All ${retryCount} retry attempts failed. Terminating execution.`);
         return Promise.reject(error);
     }
     return response;

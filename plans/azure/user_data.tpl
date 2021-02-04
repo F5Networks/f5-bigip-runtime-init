@@ -47,6 +47,7 @@ pre_onboard_enabled:
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+bigip_ready_enabled:
   - name: example_inline_command
     type: inline
     commands:
