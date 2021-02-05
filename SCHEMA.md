@@ -428,11 +428,14 @@ Type: `array`
 inline:
   description: Runs commands specified inline
   bigip_ready_enabled:
-    - name: example_inline_command
+    - name: set_message_size
       type: inline
       commands:
-        - /usr/bin/setdb provision.extramb 500
-        - /usr/bin/setdb restjavad.useextramb true
+        - >-
+          /usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d
+          '{"maxMessageBodySize":134217728}' -X POST
+          http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq
+          .
 local_exec:
   description: Runs commands from a local file
   bigip_ready_enabled:
