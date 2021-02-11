@@ -25,6 +25,7 @@
       - [Azure (Terraform) snippet](#azure-terraform-snippet)
       - [AWS (Terraform) snippet](#aws-terraform-snippet)
       - [GCP (Terraform) snippet](#gcp-terraform-snippet)
+  - [Runtime parameters](#runtime-parameters)
   - [Private Environments](#private-environments)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
@@ -57,7 +58,7 @@ resulting in a complete overlay deployment tool for configuring a BIG-IP instanc
 
 From a high level overview, using this tool involves three steps:
 
-- Step 1: Download OR render inline a runtime-init configuration file (runtime-init-conf.yaml).
+- Step 1: Download OR render inline a Runtime Init configuration file (runtime-init-conf.yaml).
   ```sh
   curl -o /config/cloud/runtime-init-conf.yaml https://my-source-host/my-repo/bigip-configs/0.0.1/runtime-init-conf.yaml 
   ```
@@ -119,14 +120,16 @@ F5 BIG-IP Runtime Init has been tested and validated with the following versions
 
 The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 
-| Attribute | Default Value | Required |	Description | 
+| Attribute | Default Value | Required |    Description | 
 | --- | --- | --- | --- | 
-| extension_packages	| none	| No | List of URLs to download and install iControl LX extension packages before onboarding. |
-| extension_services | none	| No |	List of declarations to to configure. |
-| runtime_parameters | none	| No	| List of runtime parameters to gather. |
-| pre_onboard_enabled | none | No	| List of commands to run before sending iControl LX declarations. |
-| post_onboard_enabled | none	| No	| List of commands to run after sending iControl LX declarations. |
+| pre_onboard_enabled | none | No   | List of commands to run that do not check if BIG-IP and MCPD are up and running. However, execution before BIG-IP is ready depends on cloud agent/download times/etc.  |
+| runtime_parameters | none | No    | List of runtime parameters to gather. |
+| bigip_ready_enabled | none | No   | List of commands to run after BIG-IP and MCPD are up and running. Example: tmsh commands, misc optimizations, etc. |
+| extension_packages    | none  | No | List of URLs to download and install iControl LX extension packages before onboarding. |
+| extension_services | none | No |  List of declarations to configure. |
+| post_onboard_enabled | none   | No    | List of commands to run after sending iControl LX declarations. |
 | post_hook | none | No  | Webhook to send upon completion. |
+
 
 ### Configuration Examples and Schema Documentation
 See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and configuration examples.
@@ -295,9 +298,10 @@ runtime_parameters:
       type: KeyVault
       vaultUrl: https://my-keyvault.vault.azure.net
       secretId: mySecret01
+      field: password
 ```
 
-When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the admin password). 
+When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the admin password). ***field*** provides field name to which this secret is map to and it instructs Runtime Init to masks the secret value in any logging outputs. 
 
 
 #### AWS (Terraform) snippet
@@ -349,8 +353,16 @@ curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
 
-NOTE: ```--cloud aws``` is passed to the installer to specify the environment 
-
+NOTES: 
+  - ```--cloud aws``` is passed to the installer to specify the environment 
+  - when extension package includes ```extensionUrl``` field, ```extensionVersion``` is not required; however, ```extensionVersion``` is required when package defined without ```extensionUrl```
+  ```yaml
+    extension_packages:
+      install_operations:
+        - extensionType: as3
+          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+    ```
+  
 The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
 
 ex.
@@ -459,6 +471,52 @@ f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 
 NOTE: ```--cloud gcp``` is passed to the installer to specify the environment 
 
+## Runtime parameters
+
+runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. There are a few types of parameters:
+  
+  * secret - fetches secret from Secret Vault 
+      ```yaml
+        runtime_parameters:
+          - name: ADMIN_PASS
+            type: secret
+            secretProvider:
+              environment: azure
+              type: KeyVault
+              vaultUrl: https://my-keyvault.vault.azure.net
+              secretId: mySecret01
+      ```
+  * metadata - fetches common pre-defined metadata from the Metadata Service
+    ```yaml
+        runtime_parameters:
+          - name: MGMT_ROUTE
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: subnet-ipv4-cidr-block
+              index: 0
+    ```
+  * static - defines a static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
+      ```yaml
+        runtime_parameters:
+          - name: AVAILABILITY_ZONE
+            type: static
+            value: us-west-2a
+      ```
+  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional.
+    ```yaml
+        runtime_parameters:
+          - name: REGION
+            type: url
+            value: http://169.254.169.254/latest/dynamic/instance-identity/document
+            query: region
+            headers:
+              - name: Content-Type
+                value: json
+              - name: User-Agent
+                value: some-user-agent
+    ```
 ## Private Environments
 
 By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
@@ -518,6 +576,49 @@ The following enviroment variables can be used for setting logging options:
 ```
 
 Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'```
+
+
+By default, runtime will mask out (i.e. "********") the following common fields when logging:
+```json
+    [
+        "password",
+        "localPassword",
+        "remotePassword",
+        "bigIqPassword",
+        "bigIpPassword",
+        "passphrase",
+        "cookiePassphrase",
+        "certificate",
+        "privateKey",
+        "ciphertext",
+        "protected",
+        "secret",
+        "sharedSecret",
+        "secretAccessKey",
+        "apiAccessKey",
+        "encodedCredentials",
+        "encodedToken",
+        "oldPassword",
+        "newPassword",
+        "bindPassword",
+        "checkBindPassword",
+        "md5SignaturePassphrase"
+    ]
+```
+However, it is possible to extend this list by providing additional metadata (***field***) for the Secret object:
+
+```yaml
+        runtime_parameters:
+          - name: MY_SECRET
+            type: secret
+            secretProvider:
+              environment: azure
+              type: KeyVault
+              vaultUrl: https://my-keyvault.vault.azure.net
+              secretId: mySecret01
+              field: newCustomSecretField
+``` 
+This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
 
 #### Send output to log file and serial console
 

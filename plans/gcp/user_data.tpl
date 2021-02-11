@@ -109,7 +109,7 @@ runtime_parameters:
         type: network
         field: ip
         index: 0
-pre_onboard_enabled:
+bigip_ready_enabled:
   - name: provision_modules
     type: inline
     commands:
@@ -119,6 +119,7 @@ pre_onboard_enabled:
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+pre_onboard_enabled:
   - name: example_inline_command
     type: inline
     commands:
@@ -158,10 +159,10 @@ extension_packages:
     - extensionType: do
       extensionVersion: 1.16.0
     - extensionType: as3
-      extensionVersion: 3.23.0
+      extensionVersion: 3.24.0
       verifyTls: false
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
-      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+      extensionHash: df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4
     - extensionType: ilx
       extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/fast/info

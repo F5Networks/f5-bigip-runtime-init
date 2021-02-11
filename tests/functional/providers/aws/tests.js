@@ -24,6 +24,7 @@ describe('Provider: AWS', () => {
     let testNewAuthData;
     let testHostName;
     let testMgmtIp;
+    let as3Declaration;
     before(function () {
         this.timeout(80000);
 
@@ -52,13 +53,25 @@ describe('Provider: AWS', () => {
             testHostName = response.hostname;
         })
         .then(() => {
-            const mgmtUri = '/mgmt/tm/sys/management-ip'; 
+            const mgmtUri = '/mgmt/tm/sys/management-ip';
             // getting mgmt-ip
             return funcUtils.getBigipApi(firstDut.ip, firstDut.port, testNewAuthData.token, mgmtUri);
         })
         .then((response) => {
             testMgmtIp = response.items[0].name.substring(0, response.items[0].name.length -3).replace(/[.]/g,'-')
+            return Promise.resolve();
         })
+        .then(() => {
+            return funcUtils.getInstalledDeclaration(
+                firstDut.ip,
+                firstDut.port,
+                testNewAuthData.token,
+                'as3'
+            )
+        })
+        .then((data) => {
+            as3Declaration = data
+         })
         .catch(err => Promise.reject(err));
     });
 
@@ -83,4 +96,9 @@ describe('Provider: AWS', () => {
     it('should confirm hostname was updated using DO', () => {
         assert.strictEqual(testHostName, 'ip-' + testMgmtIp + '.' + env.region + '.compute.internal');
     });
+
+    it ('should validate that runtime init resolve region correctly', () => {
+        assert.ok(!JSON.stringify(as3Declaration).includes('{{{REGION}}}'))
+    });
+
 });

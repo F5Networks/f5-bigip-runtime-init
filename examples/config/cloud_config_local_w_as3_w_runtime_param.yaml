@@ -1,49 +1,49 @@
 runtime_parameters:
-- name: AZURE_SERVICE_PRINCIPAL
-  type: secret
-  secretProvider:
-    environment: azure
-    type: KeyVault
-    vaultUrl: https://my-keyvault.vault.azure.net
-    secretId: my_azure_admin_secret
-    version: 6e86876be4ce46a49ec578dfda897593
-- name: LABEL_NAME
-  type: static
-  value: Sample 1
-- name: GCP_ROOT_PASSWORD
-  type: secret
-  secretProvider:
-    environment: gcp
-    type: SecretManager
-    secretId: my-secret-id-02
-    version: latest
-- name: AWS_ADMIN_PASSWORD
-  type: secret
-  secretProvider:
-    environment: aws
-    type: SecretsManager
-    secretId: my_azure_root_secret
-    version: AWSCURRENT
-- name: HOST_NAME
-  type: metadata
-  metadataProvider:
-    environment: azure
-    type: compute
-    field: name
-- name: SELF_IP_INTERNAL
-  type: metadata
-  metadataProvider:
-    environment: azure
-    type: network
-    field: ipv4
-    index: 1
-- name: SELF_IP_EXTERNAL
-  type: metadata
-  metadataProvider:
-    environment: azure
-    type: network
-    field: ipv4
-    index: 2
+  - name: AZURE_SERVICE_PRINCIPAL
+    type: secret
+    secretProvider:
+      environment: azure
+      type: KeyVault
+      vaultUrl: https://my-keyvault.vault.azure.net
+      secretId: my_azure_admin_secret
+      version: 6e86876be4ce46a49ec578dfda897593
+  - name: LABEL_NAME
+    type: static
+    value: Sample 1
+  - name: GCP_ROOT_PASSWORD
+    type: secret
+    secretProvider:
+      environment: gcp
+      type: SecretManager
+      secretId: my-secret-id-02
+      version: latest
+  - name: AWS_ADMIN_PASSWORD
+    type: secret
+    secretProvider:
+      environment: aws
+      type: SecretsManager
+      secretId: my_azure_root_secret
+      version: AWSCURRENT
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: compute
+      field: name
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 1
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 2
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -57,43 +57,43 @@ pre_onboard_enabled:
 post_onboard_enabled: []
 extension_packages:
   install_operations:
-  - extensionType: do
-    extensionVersion: 1.16.0
-    extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
-  - extensionType: as3
-    extensionVersion: 3.23.0
+    - extensionType: do
+      extensionVersion: 1.17.0
+      extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
+    - extensionType: as3
+      extensionVersion: 3.24.0
 extension_services:
   service_operations:
-  - extensionType: do
-    type: url
-    value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
-  - extensionType: as3
-    type: inline
-    value:
-      class: AS3
-      action: deploy
-      persist: true
-      declaration:
-        class: ADC
-        schemaVersion: 3.0.0
-        label: "{{{ LABEL_NAME }}}"
-        remark: Simple HTTP Service with Round-Robin Load Balancing
-        Sample_01:
-          class: Tenant
-          A1:
-            class: Application
-            template: http
-            serviceMain:
-              class: Service_HTTP
-              virtualAddresses:
-              - 10.0.1.10
-              pool: web_pool
-            web_pool:
-              class: Pool
-              monitors:
-              - http
-              members:
-              - servicePort: 80
-                serverAddresses:
-                - 192.0.1.10
-                - 192.0.1.11
+    - extensionType: do
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
+    - extensionType: as3
+      type: inline
+      value:
+        class: AS3
+        action: deploy
+        persist: true
+        declaration:
+          class: ADC
+          schemaVersion: 3.0.0
+          label: "{{{ LABEL_NAME }}}"
+          remark: Simple HTTP Service with Round-Robin Load Balancing
+          Sample_01:
+            class: Tenant
+            A1:
+              class: Application
+              template: http
+              serviceMain:
+                class: Service_HTTP
+                virtualAddresses:
+                  - 10.0.1.10
+                pool: web_pool
+              web_pool:
+                class: Pool
+                monitors:
+                  - http
+                members:
+                  - servicePort: 80
+                    serverAddresses:
+                      - 192.0.1.10
+                      - 192.0.1.11

@@ -14,7 +14,7 @@ example_5:
   description: Renders secret referenced within DO declaration to configure the admin password on a BIG-IP device in GCP.
   runtime_config:
 example_6:
-  description: Replaces variables used within DO declaration with properties from instance metadata to configure hostname and self IP addresses on BIGIP device.
+  description: Replaces variables used within DO and AS3 declarations with properties from instance metadata to configure hostname, self IP addresses and pool members on BIGIP device.
   runtime_config:
 example_7:
   description: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP.

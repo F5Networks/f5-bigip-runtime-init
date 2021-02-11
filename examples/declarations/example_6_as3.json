@@ -1,0 +1,75 @@
+{
+    "remark":"ASM_VS1",
+    "schemaVersion":"3.0.0",
+    "label":"ASM_VS1",
+    "class":"ADC",
+    "Sample_app_sec_Tenant":{
+        "class":"Tenant",
+        "Shared":{
+            "class":"Application",
+            "template":"shared",
+            "shared_pool":{
+                "class":"Pool",
+                "remark":"Service 1 shared pool",
+                "monitors":[
+                    "http"
+                ],
+                "members":[
+                    {
+                        "servicePort": 80,
+                        "addressDiscovery": "aws",
+                        "region": "{{{REGION}}}",
+                        "updateInterval": 20,
+                        "tagKey": "aws:cloudformation:logical-id",
+                        "tagValue": "appAutoscaleGroup",
+                        "addressRealm": "private"
+                    }
+                ]
+            }
+        },
+        "HTTPS_Service":{
+            "template":"https",
+            "class":"Application",
+            "serviceMain":{
+                "virtualAddresses":[
+                    "0.0.0.0"
+                ],
+                "snat":"auto",
+                "policyWAF":{
+                    "use":"WAFPolicy"
+                },
+                "pool":"/Sample_app_sec_Tenant/Shared/shared_pool",
+                "serverTLS":{
+                    "bigip":"/Common/clientssl"
+                },
+                "redirect80":false,
+                "class":"Service_HTTPS"
+            },
+            "WAFPolicy":{
+                "ignoreChanges":true,
+                "url":"https://raw.githubusercontent.com/f5devcentral/f5-asm-policy-templates/master/owasp_ready_template/owasp-no-auto-tune-v1.1.xml",
+                "class":"WAF_Policy"
+            }
+        },
+        "HTTP_Service":{
+            "template":"http",
+            "class":"Application",
+            "serviceMain":{
+                "class":"Service_HTTP",
+                "virtualAddresses":[
+                    "0.0.0.0"
+                ],
+                "snat":"auto",
+                "policyWAF":{
+                    "use":"WAFPolicy"
+                },
+                "pool":"/Sample_app_sec_Tenant/Shared/shared_pool"
+            },
+            "WAFPolicy":{
+                "ignoreChanges":true,
+                "url":"https://raw.githubusercontent.com/f5devcentral/f5-asm-policy-templates/master/owasp_ready_template/owasp-no-auto-tune-v1.1.xml",
+                "class":"WAF_Policy"
+            }
+        }
+    }
+}

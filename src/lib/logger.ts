@@ -141,7 +141,7 @@ export default class Logger{
             winston.format.printf(info => {
                 let message = info.message ? info.message : '';
                 for (const fieldName of constants.LOGGER.FIELDS_TO_HIDE) {
-                    message = message.replace(new RegExp(`"${fieldName}":.[^"]+`), `"${fieldName}":"********"`);
+                    message = message.replace(new RegExp(`"${fieldName}":.[^"]+`), `"${fieldName}":"********`);
                 }
                 return `${info.timestamp} [${process.pid}]: ${info.level}: ${message}`
             })

@@ -241,7 +241,7 @@ describe('Util', () => {
                 .get('/awesome_file.txt')
                 .replyWithError('Not found');
             return util.downloadToFile( 'https://fakedomain.com/awesome_file.txt', 'test_file.txt')
-                .catch(err => assert.ok(err.message.includes('Not found')));
+                .catch((err) => assert.ok(err.message.includes('Not found')));
         });
     })
 });

@@ -6,20 +6,26 @@ runtime_parameters:
       type: KeyVault
       vaultUrl: https://my-keyvault.vault.azure.net
       secretId: ${secret_id}
+      field: password
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+bigip_ready_enabled:
+  - name: set_message_size
+    type: inline
+    commands:
+      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.16.0
+      extensionVersion: 1.17.0
     - extensionType: as3
-      extensionVersion: 3.23.0
+      extensionVersion: 3.24.0
     - extensionType: ts
-      extensionVersion: 1.15.0
+      extensionVersion: 1.16.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -28,4 +34,3 @@ extension_services:
     - extensionType: as3
       type: url
       value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
-

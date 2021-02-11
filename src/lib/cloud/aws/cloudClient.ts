@@ -123,7 +123,7 @@ export class AwsCloudClient extends AbstractCloudClient {
         if (!type) {
             throw new Error('AWS Cloud Client metadata type is missing');
         }
-        
+
         if (type !== 'compute' && type !== 'network') {
             throw new Error('AWS Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
         }
@@ -134,27 +134,42 @@ export class AwsCloudClient extends AbstractCloudClient {
         if (type === 'compute'){
             return this._getInstanceCompute(field)
             .catch(err => Promise.reject(err));
-        } 
+        }
         if (type === 'network') {
             /** grab big-ip interface info */
-            const interfaceResponse = await utils.makeRequest(
-                `http://localhost:8100/mgmt/tm/net/interface`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Basic ${utils.base64('encode', 'admin:admin')}`
-                    },
-                    verifyTls: false
+            let mac;
+            let retries = 0;
+            const timer = ms => new Promise(res => setTimeout(res, ms));
+            while (true) {
+                const interfaceResponse = await utils.makeRequest(
+                    `http://localhost:8100/mgmt/tm/net/interface`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Basic ${utils.base64('encode', 'admin:admin')}`
+                        },
+                        verifyTls: false
+                    }
+                );
+                logger.silly(`Interface Response:  ${utils.stringify(interfaceResponse)}`);
+                const interfaceName = index === 0 ? 'mgmt' : `1.${index}`;
+                logger.info('Interface:' + interfaceName );
+                const interfaces = interfaceResponse.body.items;
+                const filtered = where(interfaces, { "name": interfaceName });
+                logger.silly(`filtered:  ${utils.stringify(filtered)}`);
+                mac = filtered[0]["macAddress"];
+                if (mac !== 'none') {
+                    logger.info('MAC address found for ' + interfaceName + ': ' + mac);
+                    break;
+                } else {
+                    retries++;
+                    if (retries > constants.RETRY.DEFAULT_COUNT) {
+                        return Promise.reject(new Error(`Failed to fetch MAC address for BIGIP interface ${interfaceName}.`))
+                    }
+                    logger.info(`MAC adddress is not populated on ${interfaceName} BIGIP interface. Trying to re-fecth interface data. Left attempts: ${constants.RETRY.DEFAULT_COUNT - retries}`);
+                    await timer(constants.RETRY.DELAY_IN_MS);
                 }
-            );
-            logger.debug('Interface Response:' + interfaceResponse);
-            const interfaceName = index === 0 ? 'mgmt' : `1.${index}`;
-            logger.info('Interface:' + interfaceName );
-            const interfaces = interfaceResponse.body.items;
-            const filtered = where(interfaces, { "name": interfaceName });
-            logger.debug('filtered:' + filtered);
-            const mac = filtered[0]["macAddress"];
-            logger.info('MAC address found for ' + interfaceName + ': ' + mac);
+            }
             /** manipulate returned data into ip/mask when field eq local-ipv4s */
             if (field === 'local-ipv4s') {
                 const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
@@ -167,7 +182,7 @@ export class AwsCloudClient extends AbstractCloudClient {
                 const ipMask = primaryIp + cidr.match(/(\/([0-9]{1,2}))/g);
                 logger.info('ip and mask for ' + mac + ': ' + ipMask);
                 return ipMask;
-            /** manipulate data to form gateway address when field eq subnet-ipv4-cidr-block */    
+            /** manipulate data to form gateway address when field eq subnet-ipv4-cidr-block */
             } else if (field === 'subnet-ipv4-cidr-block') {
                 const cidr = await this._getInstanceNetwork('subnet-ipv4-cidr-block', type, mac)
                 .catch(err => Promise.reject(err));
@@ -209,7 +224,7 @@ export class AwsCloudClient extends AbstractCloudClient {
      * Gets instance compute type metadata
      * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
      * Type compute supports all categories with base uri + /field
-     * 
+     *
      * @returns   - A Promise that will be resolved with metadata for the supplied field or
      *                          rejected if an error occurs
      */
@@ -231,7 +246,7 @@ export class AwsCloudClient extends AbstractCloudClient {
      * Gets instance network type metadata
      * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
      * Type network supports all categories with base uri + /network/interfaces/macs/<mac>/ where <mac> is determined by $index
-     * 
+     *
      * @returns   - A Promise that will be resolved with metadata for the supplied network field or
      *                          rejected if an error occurs
      */

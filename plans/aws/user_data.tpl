@@ -30,6 +30,7 @@ runtime_parameters:
       type: SecretsManager
       secretId: ${secret_id}
       version: AWSCURRENT
+      field: password
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -57,6 +58,15 @@ runtime_parameters:
       type: network
       field: subnet-ipv4-cidr-block
       index: 0
+  - name: REGION
+    type: url
+    value: http://169.254.169.254/latest/dynamic/instance-identity/document
+    query: region
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: func-test
 pre_onboard_enabled:
   - name: provision_modules
     type: inline
@@ -67,6 +77,7 @@ pre_onboard_enabled:
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+bigip_ready_enabled:
   - name: example_inline_command
     type: inline
     commands:
@@ -99,11 +110,10 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.16.0
+      extensionVersion: 1.17.0
     - extensionType: as3
-      extensionVersion: 3.23.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
-      extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+      extensionHash: df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4
     - extensionType: ilx
       extensionUrl: https://github.com/f5networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/fast/info
@@ -115,4 +125,4 @@ extension_services:
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-aws-cloudformation/examples/modules/failover_bigip/do.json
     - extensionType: as3
       type: url
-      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
+      value: https://f5-cft.s3.amazonaws.com/autoscale_as3_aws.json
