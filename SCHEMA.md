@@ -26,6 +26,7 @@ Type: `array`
 			 1. _"static"_
 			 2. _"secret"_
 			 3. _"metadata"_
+			 4. _"url"_
 	 - <b id="#/items/properties/value">value</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/value">path: #/items/properties/value</i>
@@ -73,6 +74,13 @@ Type: `array`
 					 1. _"https://my-keyvault.vault.azure.net"_
 					 2. _"https://my-keyvault.vault.usgovcloudapi.net"_
 				 - The value must match this pattern: `(https?://(.+?\.)?vault\.(azure|usgovcloudapi)\.net(/[A-Za-z0-9\-\._~:/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)`
+			 - <b id="#/items/properties/secretProvider/properties/field">field</b>
+				 - _field name to which secret value is mapped to_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/field">path: #/items/properties/secretProvider/properties/field</i>
+				 - Example values: 
+					 1. _"bigiqPassword"_
+					 2. _"regKey"_
 	 - <b id="#/items/properties/metadataProvider">metadataProvider</b>
 		 - Type: `object`
 		 - <i id="#/items/properties/metadataProvider">path: #/items/properties/metadataProvider</i>
@@ -107,6 +115,14 @@ Type: `array`
 					 1. _"0"_
 					 2. _"1"_
 					 3. _"2"_
+	 - <b id="#/items/properties/query">query</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/query">path: #/items/properties/query</i>
+		 - Example values: 
+			 1. _"region"_
+	 - <b id="#/items/properties/headers">headers</b>
+		 - Type: `array`
+		 - <i id="#/items/properties/headers">path: #/items/properties/headers</i>
 
 
 ### runtime_parameters: Configuration Examples
@@ -281,7 +297,7 @@ remote_exec:
 ***
 ### pre_onboard_enabled: Schema
 
-_Used to specify commands which will be executed before extension package operations._
+_Used to specify commands which will be executed before extension package operations before BIG-IP is ready._
 
 Type: `array`
 
@@ -361,6 +377,82 @@ remote_exec:
 
 ```
 ***
+### bigip_ready_enabled: Schema
+
+_Used to specify commands which will be executed before extension package operations after BIG-IP and MCPD are up and running._
+
+Type: `array`
+
+<i id="#">path: #</i>
+
+ - **_Items_**
+ - Type: `object`
+ - <i id="#/items">path: #/items</i>
+ - **_Properties_**
+	 - <b id="#/items/properties/name">name</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/name">path: #/items/properties/name</i>
+		 - Example values: 
+			 1. _"my_preonboard_command"_
+			 2. _"example_local_exec"_
+			 3. _"provision_rest"_
+	 - <b id="#/items/properties/type">type</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/type">path: #/items/properties/type</i>
+		 - The value is restricted to the following: 
+			 1. _"inline"_
+			 2. _"file"_
+			 3. _"url"_
+	 - <b id="#/items/properties/command">command</b>
+		 - Type: `array`
+		 - <i id="#/items/properties/command">path: #/items/properties/command</i>
+			 - **_Items_**
+			 - Type: `string`
+			 - <i id="#/items/properties/command/items">path: #/items/properties/command/items</i>
+			 - Example values: 
+				 1. _"tmsh create net vlan external interfaces replace-all-with { 1.1 }"_
+				 2. _"tmsh create sys folder /LOCAL_ONLY device-group none traffic-group traffic-group-local-only"_
+				 3. _"tmsh save sys config"_
+	 - <b id="#/items/properties/verifyTls">verifyTls</b>
+		 - _For enabling secure site verification_
+		 - Type: `boolean`
+		 - <i id="#/items/properties/verifyTls">path: #/items/properties/verifyTls</i>
+		 - Example values: 
+			 1. _true_
+			 2. _false_
+
+
+### bigip_ready_enabled: Configuration Examples
+
+```yaml
+inline:
+  description: Runs commands specified inline
+  bigip_ready_enabled:
+    - name: set_message_size
+      type: inline
+      commands:
+        - >-
+          /usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d
+          '{"maxMessageBodySize":134217728}' -X POST
+          http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq
+          .
+local_exec:
+  description: Runs commands from a local file
+  bigip_ready_enabled:
+    - name: example_local_exec
+      type: file
+      commands:
+        - /tmp/bigip_ready_enabled.sh
+remote_exec:
+  description: Runs commands from a URL
+  bigip_ready_enabled:
+    - name: example_remote_exec
+      type: url
+      commands:
+        - 'https://the-delivery-location.com/bigip_ready_enabled.sh'
+
+```
+***
 ### extension_packages: Schema
 
 _Used to specify Automation Toolchain packages to be installed on device._
@@ -432,46 +524,46 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
       - extensionType: as3
-        extensionVersion: 3.23.0
+        extensionVersion: 3.24.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
       - extensionType: as3
-        extensionVersion: 3.23.0
+        extensionVersion: 3.24.0
 hashed:
   description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
-        extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+        extensionVersion: 1.17.0
+        extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
       - extensionType: as3
-        extensionVersion: 3.23.0
-        extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+        extensionVersion: 3.24.0
+        extensionHash: eaef5c650da84f593d17939e3bb5d649097f60a6d302d6abc06951f2b4a986d9
 url:
   description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.17.0/f5-declarative-onboarding-1.17.0-3.noarch.rpm
       - extensionType: as3
-        extensionVersion: 3.23.0
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.23.0-5.noarch.rpm'
+        extensionVersion: 3.24.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.24.0-5.noarch.rpm'
 ilx:
   description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.16.0
+        extensionVersion: 1.17.0
       - extensionType: as3
-        extensionVersion: 3.23.0
+        extensionVersion: 3.24.0
       - extensionType: ilx
         extensionUrl: >-
           file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
@@ -640,14 +732,23 @@ example_1:
         commands:
           - /usr/bin/setdb provision.extramb 500
           - /usr/bin/setdb restjavad.useextramb true
+    bigip_ready_enabled:
+      - name: set_message_size
+        type: inline
+        commands:
+          - >-
+            /usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d
+            '{"maxMessageBodySize":134217728}' -X POST
+            http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
+            jq .
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
-          extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
+          extensionVersion: 1.17.0
+          extensionHash: 484b34ecbbe6b97a3b7d3c547a6d9c234c9fc99766d07bed4384298437327f23
         - extensionType: as3
-          extensionVersion: 3.23.0
-          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+          extensionVersion: 3.24.0
+          extensionHash: 3dbb3e2cb170d2fc9ead746aa2df37518c0f38876debe33eec95cf928f91a329
     extension_services:
       service_operations:
         - extensionType: as3
@@ -669,9 +770,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.16.0-8.noarch.rpm
-          extensionHash: 536eccb9dbf40aeabd31e64da8c5354b57d893286ddc6c075ecc9273fcca10a1
-          extensionVersion: 1.16.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.17.0-3.noarch.rpm
+          extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
+          extensionVersion: 1.17.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.1.0
@@ -704,9 +805,9 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -745,9 +846,9 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -782,9 +883,9 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -792,8 +893,9 @@ example_5:
           value: 'file:///examples/declarations/example_5_do.json'
 example_6:
   description: >-
-    Replaces variables used within DO declaration with properties from instance
-    metadata to configure hostname and self IP addresses on BIGIP device.
+    Replaces variables used within DO and AS3 declarations with properties from
+    instance metadata to configure hostname, self IP addresses and pool members
+    on BIGIP device.
   runtime_config:
     runtime_parameters:
       - name: HOST_NAME
@@ -823,6 +925,15 @@ example_6:
           type: network
           field: subnet-ipv4-cidr-block
           index: 1
+      - name: REGION
+        type: url
+        value: 'http://169.254.169.254/latest/dynamic/instance-identity/document'
+        query: region
+        headers:
+          - name: Content-type
+            value: json
+          - name: User-Agent
+            value: bigip-ve
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -832,14 +943,17 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
           type: url
           value: 'file:///examples/declarations/example_6_do.json'
+        - extensionType: as3
+          type: url
+          value: 'file:///examples/declarations/example_7_as3.json'
 example_7:
   description: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP.
   runtime_config:
@@ -852,9 +966,9 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -907,9 +1021,9 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1014,9 +1128,9 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1029,9 +1143,9 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1085,13 +1199,13 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
           verifyTls: false
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm
-          extensionHash: de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+          extensionHash: bc21ff6460e65610c50d8eb358155098f79a10371e69c166764735a38a3523cd
         - extensionType: ilx
           extensionUrl: >-
             file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
@@ -1144,9 +1258,9 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.16.0
+          extensionVersion: 1.17.0
         - extensionType: as3
-          extensionVersion: 3.23.0
+          extensionVersion: 3.24.0
     extension_services:
       service_operations:
         - extensionType: do

@@ -11,8 +11,10 @@
 /* eslint-disable global-require */
 import assert from 'assert';
 import sinon from 'sinon';
+import nock from 'nock';
 import { ResolverClient } from '../../../src/lib/resolver/resolverClient';
 sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
+
 
 describe('Resolver Client', () => {
     let runtimeParameters;
@@ -25,6 +27,27 @@ describe('Resolver Client', () => {
     });
 
     beforeEach(() => {
+        nock.cleanAll();
+        nock('http://169.254.169.254')
+            .get('/latest/dynamic/instance-identity/document')
+            .reply(200, {
+                "accountId" : "0000000001",
+                "architecture" : "x86_64",
+                "availabilityZone" : "us-west-2a",
+                "billingProducts" : null,
+                "devpayProductCodes" : null,
+                "marketplaceProductCodes" : [ "asdasdasfavzxcz" ],
+                "imageId" : "ami-000001",
+                "instanceId" : "i-0a43ae03d7f8e8f42",
+                "instanceType" : "m5.xlarge",
+                "kernelId" : null,
+                "pendingTime" : "2020-11-19T21:20:26Z",
+                "privateIp" : "10.0.0.165",
+                "ramdiskId" : null,
+                "region" : "us-west-2",
+                "version" : "2017-09-30"
+            });
+
         onboardActions = [
             {
                 name: "test_inline_command",
@@ -65,6 +88,13 @@ describe('Resolver Client', () => {
                 }
             },
             {
+                name: 'REGION',
+                type: 'url',
+                value: 'http://169.254.169.254/latest/dynamic/instance-identity/document',
+                query: 'region',
+                headers: [ { name: 'Content-Type', value: 'json'}]
+            },
+            {
                 name: 'AZURE_PASS',
                 type: 'secret',
                 secretProvider: {
@@ -72,6 +102,7 @@ describe('Resolver Client', () => {
                     environment: 'azure',
                     version: '6e86876be4ce46a49ec578dfda897593',
                     secretId: 'this-secret',
+                    field: 'sensitiveFieldName',
                     debug: true
                 }
             },
@@ -123,10 +154,11 @@ describe('Resolver Client', () => {
         });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 3);
+                assert.ok(Object.keys(results).length === 4);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AWS_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.AZURE_PASS, 'StrongPassword2010+');
+                assert.strictEqual(results.REGION, 'us-west-2');
             });
     });
 
@@ -136,7 +168,7 @@ describe('Resolver Client', () => {
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 3);
+                assert.ok(Object.keys(results).length === 4);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
@@ -154,7 +186,7 @@ describe('Resolver Client', () => {
         });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 3);
+                assert.ok(Object.keys(results).length === 4);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
             });
@@ -164,6 +196,7 @@ describe('Resolver Client', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('');
+        resolver._resolveUrl = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
                 assert.ok(Object.keys(results).length === 1);
@@ -257,4 +290,23 @@ describe('Resolver Client', () => {
                 assert.ok(error.message.includes('Unexpected onboard action type'))
             });
     });
+
+    it('should validate _resolveUrl throw error when invalida JSON', () => {
+        const resolver = new ResolverClient();
+        nock.cleanAll();
+        runtimeParameters = [
+            {
+                name: 'REGION',
+                type: 'url',
+                value: 'http://169.254.169.254/my-test'
+            }
+        ];
+        nock('http://169.254.169.254')
+            .get('/my-test')
+            .reply(200, 'us-west');
+        return resolver.resolveRuntimeParameters(runtimeParameters)
+            .then((results) => assert.strictEqual(results.REGION, 'us-west'))
+            .catch(() => assert.ok(false))
+    });
+
 });

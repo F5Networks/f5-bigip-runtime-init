@@ -222,19 +222,18 @@ publish_container:
         - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}
         # Collecting deployment metadata
         - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 150 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
-        - MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
-        - USERNAME=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
-        - PASSWORD=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
-        - DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .deploymentId -r)
-        - SECRET_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .secret_id -r)
-        - NAME=$(cat package.json | jq .name -r)
-        - VERSION=$(cat package.json | jq -r ".version")
-        - RELEASE=$(cat package.json | jq -r ".release")
-        # dhcp must be disalbe to workaround DO bug https://github.com/F5Networks/f5-declarative-onboarding/issues/129
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "modify sys global-settings mgmt-dhcp disabled"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "save sys config"
-        # end of workaround
-        # Installing RPM and executing
+        - export MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
+        - export USERNAME=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
+        - export PASSWORD=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
+        - export DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .deploymentId -r)
+        - export SECRET_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .secret_id -r)
+        - export NAME=$(cat package.json | jq .name -r)
+        - export VERSION=$(cat package.json | jq -r ".version")
+        - export RELEASE=$(cat package.json | jq -r ".release")
+        - echo "Verifying that BIGIP is ready to accept commands"
+        - bash tests/scripts/verify_bash_available.sh
+        - if [[ $? != 0 ]]; then exit 1; fi
+        - echo "Installing RPM and executing"
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
         # Workaround: copying over declaration to support bigip version with no user-data support
         - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml

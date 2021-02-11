@@ -1,6 +1,6 @@
 {
     "name": "f5-bigip-runtime-init",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "release": "1",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "F5 Cloud Solutions",
@@ -40,7 +40,8 @@
         "mustache": "^4.0.0",
         "request": "^2.88.2",
         "uuid": "^8.2.0",
-        "winston": "^3.3.3"
+        "winston": "^3.3.3",
+        "jmespath": "^0.15.0"
     },
     "dependencyMap": {
         "common": {
@@ -51,7 +52,8 @@
             "@f5devcentral/f5-teem": "^1.4.6",
             "js-yaml": "^3.13.1",
             "mustache": "^4.0.0",
-            "request": "^2.88.0"
+            "request": "^2.88.0",
+            "jmespath": "^0.15.0"
         },
         "gcp": {
             "google-auth-library": "^5.6.1",

@@ -305,21 +305,34 @@ class PackageClient {
         } else {
             utils.verifyDirectory(constants.TMP_DIR);
             tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
-            await utils.downloadToFile(downloadUrl, tmpFile, {
-                verifyTls: this._metadataClient._getVerifyTls()
-            });
+            logger.silly(`Downloading file: ${downloadUrl}`);
+            await utils.retrier(
+                utils.downloadToFile,
+                [downloadUrl, tmpFile, { verifyTls: this._metadataClient._getVerifyTls() }],
+                {
+                    thisContext: this,
+                    maxRetries: constants.RETRY.SHORT_COUNT,
+                    retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+                });
         }
-
-        // verify package
+        // verify package integrity
         if (this._metadataClient.getComponentHash()) {
-            utils.verifyHash(tmpFile, this._metadataClient.getComponentHash());
+            if(!utils.verifyHash(tmpFile, this._metadataClient.getComponentHash())) {
+                return Promise.reject(new Error(`Installation of ${this.component} failed because RPM hash is not valid`));
+            }
         }
-
         // upload to target
         if (urlObject.pathname.indexOf(constants.DOWNLOADS_DIR) === -1) {
-            await this._uploadRpm(tmpFile);
+            logger.silly(`Uploading RPM.`);
+            await utils.retrier(
+                this._uploadRpm,
+                [tmpFile],
+                {
+                    thisContext: this,
+                    maxRetries: constants.RETRY.SHORT_COUNT,
+                    retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+                });
         }
-
         // install on target
         await this._installRpm(`${constants.DOWNLOADS_DIR}/${downloadPackageName}`);
 
@@ -431,8 +444,10 @@ class ServiceClient {
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
             return Promise.resolve(taskResponse);
+        } else if (taskResponse.code === constants.HTTP_STATUS_CODES.UNPROCESSABLE || taskResponse.code >= constants.HTTP_STATUS_CODES.INTERNALS) {
+            return Promise.resolve(taskResponse);
         }
-        return Promise.reject(new Error(`Task state has not passed: ${taskResponse.code}`));
+        return Promise.reject(`Task is still in progress; status code: ${taskResponse.code}`);
     }
 
     /**
@@ -448,11 +463,17 @@ class ServiceClient {
      * @returns Task response
      */
     async _waitForTask(taskUri: string): Promise<void> {
-        await utils.retrier(this._checkTaskState, [taskUri], {
+        const taskResponse = await utils.retrier(this._checkTaskState, [taskUri], {
             thisContext: this,
             maxRetries: this.maxRetries,
             retryInterval: this.retryInterval
         });
+        if (taskResponse.code === undefined) {
+            throw new Error(`Task response does not include status code: ${taskResponse}`);
+        }
+        if (taskResponse.code !== constants.HTTP_STATUS_CODES.OK) {
+            throw new Error(`Task with error: ${JSON.stringify(taskResponse)}`);
+        }
     }
 
     /**
@@ -506,7 +527,6 @@ class ServiceClient {
         const config = options.config;
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
-
         const response = await utils.makeRequest(
             `${this.uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
@@ -518,12 +538,16 @@ class ServiceClient {
                 verifyTls: this._metadataClient._getVerifyTls()
             }
         );
-
         if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED) {
             await this._waitForTask(response.body.selfLink.split('https://localhost')[1]);
         }
 
-        return response;
+        if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED ||  response.code === constants.HTTP_STATUS_CODES.OK) {
+            return response;
+        } else {
+            logger.warn(`Task creation failed; response code: ${response.code}`);
+            return Promise.reject(new Error(utils.stringify(response.body)));
+        }
     }
 }
 
