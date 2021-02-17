@@ -205,7 +205,7 @@ export function loadData(location: string, options?: {
                 url: location,
                 method: 'GET',
                 strictSSL: options.verifyTls ? options.verifyTls : true
-            }, (error, resp, body) => {
+            }, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
                 if (error) {
                     reject(error);
                 } else {
@@ -299,7 +299,7 @@ export async function makeRequest(uri: string, options?: {
         code: number;
         body: any;
     } = await new Promise((resolve, reject) => {
-        retrier(request, [requestOptions, (error, resp, body) => {
+        retrier(request, [requestOptions, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
             if (error) {
                 reject(error);
             } else {

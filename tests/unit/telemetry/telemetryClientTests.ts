@@ -178,7 +178,7 @@ describe('Telemetry Client', () => {
             .reply(200);
         telemetryClient.sendPostHook(postHookConfig)
             .then(() => {
-                assert.strictEqual(systemInfo, postHookConfig);
+                assert.notStrictEqual(systemInfo, postHookConfig);
             });
     });
 

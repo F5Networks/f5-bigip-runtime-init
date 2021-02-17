@@ -29,6 +29,7 @@ describe('CloudClient - AWS', () => {
 
     beforeEach(() => {
         cloudClient = new AwsCloudClient();
+        cloudClient.accountId = '1234543';
         cloudClient.secretsManager = sinon.stub();
         cloudClient.secretsManager.getSecretValue = sinon.stub().callsFake(() => ({
             promise(): Promise<object>{
@@ -131,6 +132,10 @@ describe('CloudClient - AWS', () => {
             .catch((err) => {
                 assert.strictEqual(err.message, expectedError);
             });
+    });
+
+    it('should validate getCustomerId', () => {
+        assert.strictEqual(cloudClient.getCustomerId(), '1234543');
     });
 
     it('should validate getCloudName', () => {
