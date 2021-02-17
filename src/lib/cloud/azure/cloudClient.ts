@@ -22,6 +22,7 @@ import { ManagedIdentityCredential } from '@azure/identity';
 import * as constants from '../../../constants';
 import { AbstractCloudClient } from '../abstract/cloudClient'
 import Logger from "../../logger";
+import where = require('lodash.where');
 import * as utils from '../../utils';
 
 export class AzureCloudClient extends AbstractCloudClient {
@@ -121,6 +122,7 @@ export class AzureCloudClient extends AbstractCloudClient {
     }): Promise<string> {
         const type = options ? options.type : undefined;
         const index = options ? options.index : undefined;
+        const logger = Logger.getLogger();
 
         if (!field) {
             throw new Error('Azure Cloud Client metadata field is missing');
@@ -161,11 +163,58 @@ export class AzureCloudClient extends AbstractCloudClient {
                 result = response.body[field];
             }
         } else if (type === 'network') {
-            ipAddress = response.body.interface[index][field].ipAddress[0].privateIpAddress;
-            prefix = response.body.interface[index][field].subnet[0].prefix;
-            result = `${ipAddress}/${prefix}`;
-        }
+            /** grab big-ip interface info */
+            let mac;
+            let retries = 0;
+            const timer = ms => new Promise(res => setTimeout(res, ms)); /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
+            while (true) {
+                const interfaceResponse = await utils.makeRequest(
+                    `http://localhost:8100/mgmt/tm/net/interface`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Basic ${utils.base64('encode', 'admin:admin')}`
+                        },
+                        verifyTls: false
+                    }
+                );
+                logger.silly(`Interface Response:  ${utils.stringify(interfaceResponse)}`);
+                const interfaceName = index === 0 ? 'mgmt' : `1.${index}`;
+                logger.info('Interface:' + interfaceName );
+                const interfaces = interfaceResponse.body.items;
+                const filtered = where(interfaces, { "name": interfaceName });
+                logger.silly(`filtered:  ${utils.stringify(filtered)}`);
+                mac = filtered[0]["macAddress"];
+                if (mac !== 'none') {
+                    logger.info('MAC address found for ' + interfaceName + ': ' + mac);
+                    break;
+                } else {
+                    retries++;
+                    if (retries > constants.RETRY.DEFAULT_COUNT) {
+                        return Promise.reject(new Error(`Failed to fetch MAC address for BIGIP interface ${interfaceName}.`))
+                    }
+                    logger.info(`MAC adddress is not populated on ${interfaceName} BIGIP interface. Trying to re-fecth interface data. Left attempts: ${constants.RETRY.DEFAULT_COUNT - retries}`);
+                    await timer(constants.RETRY.DELAY_IN_MS);
+                }
+            }
 
+            const localMac = mac.toLowerCase().replace(/:/g, '');
+            const interfaces = response.body.interface;
+            
+            for (let i = 0; i < interfaces.length; i += 1) {
+                const metadataMac = interfaces[i]["macAddress"].toLowerCase();
+                if (localMac === metadataMac) {
+                    logger.info(`Local interface ${index} MAC address ${localMac} matches Azure network interface ${i} MAC address ${metadataMac}`);
+                    ipAddress = interfaces[i][field].ipAddress[0].privateIpAddress;
+                    prefix = interfaces[i][field].subnet[0].prefix;
+                    result = `${ipAddress}/${prefix}`;
+                    break;
+                }
+            }
+        }
+        if (!(result)) {
+            throw new Error('Could not get value from Azure metadata.');
+        }
         return result;
     }
 }

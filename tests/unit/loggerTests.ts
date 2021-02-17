@@ -40,6 +40,12 @@ describe('Logger', function() {
         logger.silly('this is silly message');
     });
 
+    it('should validate when no message is set', function() {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
+        logger = Logger.getLogger();
+        assert.strictEqual(Logger.winstonLogger.level, 'info');
+        logger.info('');
+    });
 
     it('should validate that silly and debug messages are shown', function() {
         sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });

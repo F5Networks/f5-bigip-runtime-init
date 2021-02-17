@@ -65,7 +65,8 @@
         },
         "azure": {
             "@azure/keyvault-secrets": "^4.0.2",
-            "@azure/identity": "^1.0.2"
+            "@azure/identity": "^1.0.2",
+            "lodash.where": "^3.1.0"
         }
     },
     "devDependencies": {

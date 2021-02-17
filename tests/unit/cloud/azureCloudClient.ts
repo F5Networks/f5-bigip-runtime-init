@@ -12,6 +12,7 @@ import assert from 'assert';
 import sinon from 'sinon';
 import nock from 'nock';
 import { AzureCloudClient } from '../../../src/lib/cloud/azure/cloudClient'
+import * as bigipMgmtNetInterfacesResponse from '../payloads/bigip_mgmt_net_interface.json';
 const cloud = 'azure';
 
 describe('CloudClient - Azure', () => {
@@ -26,6 +27,7 @@ describe('CloudClient - Azure', () => {
     beforeEach(() => {
         cloudClient = new AzureCloudClient();
         cloudClient._credentials = sinon.stub();
+        cloudClient.customerId = '1234543';
         cloudClient.SecretClient = sinon.stub().returns({
             getSecret: sinon.stub().resolves({ value: 'StrongPassword2010!' })
         });
@@ -45,6 +47,14 @@ describe('CloudClient - Azure', () => {
     });
 
     it('should validate init', () => cloudClient.init());
+
+    it('should validate getCustomerId', () => {
+        assert.strictEqual(cloudClient.getCustomerId(), '1234543');
+    });
+
+    it('should validate getCloudName', () => {
+        assert.strictEqual(cloudClient.getCloudName(), cloud);
+    });
 
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(
         'the-secret-name', {
@@ -158,7 +168,7 @@ describe('CloudClient - Azure', () => {
             });
     });
 
-    it('should validate getMetadata when compute type is provided', () => {
+    it('should validate getMetadata when compute type name field is provided', () => {
         nock('http://169.254.169.254')
             .get('/metadata/instance/compute?api-version=2017-08-01')
             .reply(200, { name: 'ru65wrde-vm0' });
@@ -169,10 +179,55 @@ describe('CloudClient - Azure', () => {
             });
     });
 
-    it('should validate getMetadata when network type is provided', () => {
+    it('should validate getMetadata when compute type vmId field is provided', () => {
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/compute?api-version=2017-08-01')
+            .reply(200, { vmId: 'XXXX-XXXX-XXXX-XXXX' });
+
+        cloudClient.getMetadata('vmId', { type: 'compute' })
+            .then((result) => {
+                assert.strictEqual(result, 'XXXX-XXXX-XXXX-XXXX');
+            });
+    });
+
+    it('should fail getMetadata when mac address is not matched', () => {
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, bigipMgmtNetInterfacesResponse );
         nock('http://169.254.169.254')
             .get('/metadata/instance/network?api-version=2017-08-01')
-            .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] } }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] } }] });
+            .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] }, macAddress:'FA163ED0B0DF' }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] } , macAddress:'abcdexp'}] });
+
+        cloudClient.getMetadata('ipv4', { type: 'network', index: 1 })
+            .then(() => {
+                assert.fail();
+            })
+            .catch((error) => {
+                assert.ok(error.message.includes('Could not get value from Azure metadata'));
+            });
+    });
+
+    it('should validate getMetadata when network type is provided for mgmt interface', () => {
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, bigipMgmtNetInterfacesResponse );
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/network?api-version=2017-08-01')
+            .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] }, macAddress:'FA163ED0B0DF' }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] } , macAddress:'FA163EC5BE3D'}] });
+
+        cloudClient.getMetadata('ipv4', { type: 'network', index: 0 })
+            .then((result) => {
+                assert.strictEqual(result, '10.0.0.4/24');
+            });
+    });
+
+    it('should validate getMetadata when network type is provided', () => {
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, bigipMgmtNetInterfacesResponse );
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/network?api-version=2017-08-01')
+            .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] }, macAddress:'FA163ED0B0DF' }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] } , macAddress:'FA163EC5BE3D'}] });
 
         cloudClient.getMetadata('ipv4', { type: 'network', index: 1 })
             .then((result) => {
