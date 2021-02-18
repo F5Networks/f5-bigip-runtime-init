@@ -81,11 +81,11 @@ cp /tmp/f5-appsvcs-templates-1.1.0-1.noarch.rpm /var/lib/cloud/icontrollx_instal
 
 cat << 'EOF' > /config/onboard_config.yaml
 ---
-pre_onboard_enabled:
-  - name: provision_modules
+bigip_ready_enabled:
+  - name: provision_asm
     type: inline
     commands:
-      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
+      - tmsh modify sys provision asm level nominal
   - name: provision_rest
     type: inline
     commands:
@@ -105,6 +105,10 @@ pre_onboard_enabled:
     type: url
     commands:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_pre_onboard.sh
+  - name: save_sys_config
+    type: inline
+    commands:
+      - tmsh save sys config
 post_onboard_enabled:
   - name: example_inline_command
     type: inline
@@ -127,6 +131,8 @@ post_onboard_enabled:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_post_onboard.sh
 extension_packages:
   install_operations:
+    - extensionType: do
+      extensionVersion: 1.17.0
     - extensionType: as3
       extensionVersion: 3.24.0
       verifyTls: false
