@@ -26,6 +26,7 @@ HELP_MENU()
     echo "    --key   | -k                          : Provides location for GPG key used for verifying signature on RPM file"
     echo "    --skip-verify                         : Disables RPM signature verification and AT metadata verification"
     echo "    --skip-toolchain-metadata-sync        : Disables automation toolchains metadata sync"
+    echo "    --telemetry-params                    : Specifies telemerty parameters"
     exit 1
 }
 
@@ -48,6 +49,10 @@ do
 	SKIP_AT_METADATA_SYNC=y
 	shift
 	;;
+    --telemetry-params)
+	TELEMETRY_PARAMS=$2
+	shift
+	;;
     -h | --help)
 	HELP_MENU
 	;;
@@ -68,6 +73,13 @@ if [[ ! "${SUPPORTED_CLOUDS[@]}" =~ "${CLOUD}" ]]; then
 fi
 
 NAME="f5-bigip-runtime-init"
+
+# Processing TELEMETRY parameters and storing them into file for future use
+rm /config/cloud/telemetry_install_params.tmp  2> /dev/null
+for string in $(echo $TELEMETRY_PARAMS | tr ',' '\n')
+do
+    echo $string >> /config/cloud/telemetry_install_params.tmp
+done
 
 rpm_filename=$(ls | grep $CLOUD | grep -v "sha256")
 rpm_sha256_filename=$(ls | grep $CLOUD | grep "sha256")

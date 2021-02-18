@@ -17,6 +17,7 @@ export const TMP_DIR = '/var/lib/cloud/icontrollx_installs';
 
 export const TELEMETRY_TYPE= `${NAME}-data`;
 export const TELEMETRY_TYPE_VERSION= '1';
+export const TELEMETRY_INSTALL_DATA_FILE='/config/cloud/telemetry_install_params.tmp';
 export const ENVIRONMENT_KEY_NAME= 'environment';
 
 

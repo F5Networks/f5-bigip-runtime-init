@@ -12,6 +12,7 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import nock from 'nock';
+import mock from 'mock-fs';
 import { ManagementClient } from '../../../src/lib/bigip/managementClient';
 import { TelemetryClient } from '../../../src/lib/telemetry/telemetryClient';
 import * as pkgjson from '../../../package.json';
@@ -180,6 +181,22 @@ describe('Telemetry Client', () => {
             .then(() => {
                 assert.notStrictEqual(systemInfo, postHookConfig);
             });
+    });
+
+    it('should validate _getInstallParameters method', () => {
+        mock({
+            '/config/cloud/': {
+                'telemetry_install_params.tmp': 'key01:value01\nkey02:value02'
+            }
+        });
+
+        const result = telemetryClient._getInstallParameters();
+        assert.ok(result.length == 2);
+        assert.strictEqual(result[0].key, 'key01');
+        assert.strictEqual(result[0].value, 'value01');
+        assert.strictEqual(result[1].key, 'key02');
+        assert.strictEqual(result[1].value, 'value02');
+        mock.restore();
     });
 
     it('should validate sendPostHook rejects on failed request', () => {
