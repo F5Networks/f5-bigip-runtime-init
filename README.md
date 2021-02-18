@@ -143,6 +143,7 @@ The self extracting installer accepts the following parameters:
 --key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
 --skip-verify                   : Disables RPM signature verification
 --skip-toolchain-metadata-sync  : Disables downloading automation toolchain metadata from the Internet
+--telemetry-params              : Specifies telemerty parameters as key:value pairs; (key01:value01,key02:value02)"
 ```
 
 ex:
