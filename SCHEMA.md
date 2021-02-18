@@ -359,7 +359,6 @@ inline:
           /tmp/pre_onboard_script.sh
         - /usr/bin/setdb provision.extramb 500
         - /usr/bin/setdb restjavad.useextramb true
-        - 'echo ''sys provision asm { level nominal }'' >> bigip_base.conf'
 local_exec:
   description: Runs commands from a local file
   pre_onboard_enabled:

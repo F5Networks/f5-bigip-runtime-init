@@ -69,12 +69,21 @@
         "/usr/bin/setdb provision.extramb 500",
         "/usr/bin/setdb restjavad.useextramb true"
       ]
-    },
+    }
+  ],
+  "bigip_ready_enabled": [
     {
-      "name": "provision_modules",
+      "name": "provision_asm_module",
       "type": "inline",
       "commands": [
-        "echo 'sys provision asm { level nominal }' >> bigip_base.conf"
+        "tmsh modify sys provision asm level nominal"
+      ]
+    },
+    {
+      "name": "save_sys_config",
+      "type": "inline",
+      "commands": [
+        "tmsh save sys config"
       ]
     }
   ],

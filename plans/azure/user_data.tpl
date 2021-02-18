@@ -38,16 +38,16 @@ runtime_parameters:
       field: ipv4
       index: 2
 pre_onboard_enabled:
-  - name: provision_modules
-    type: inline
-    commands:
-      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
 bigip_ready_enabled:
+  - name: provision_asm
+    type: inline
+    commands:
+      - tmsh modify sys provision asm level nominal
   - name: example_inline_command
     type: inline
     commands:
@@ -62,6 +62,10 @@ bigip_ready_enabled:
     type: url
     commands:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_pre_onboard.sh
+  - name: save_sys_config
+    type: inline
+    commands:
+      - tmsh save sys config
 post_onboard_enabled:
   - name: example_inline_command
     type: inline

@@ -113,12 +113,16 @@ bigip_ready_enabled:
   - name: provision_modules
     type: inline
     commands:
-      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
+      - tmsh modify sys provision asm level nominal
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+  - name: save_sys_config
+    type: inline
+    commands:
+      - tmsh save sys config
 pre_onboard_enabled:
   - name: example_inline_command
     type: inline
