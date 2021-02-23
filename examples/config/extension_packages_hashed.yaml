@@ -7,3 +7,6 @@ extension_packages:
     - extensionType: as3
       extensionVersion: 3.24.0
       extensionHash: eaef5c650da84f593d17939e3bb5d649097f60a6d302d6abc06951f2b4a986d9
+    - extensionType: fast
+      extensionVersion: 1.5.0
+      extensionHash: 57c05971d56200824398d8c678f67e65d74ea534348e55ab7c793a270c57ed3c

@@ -10,6 +10,8 @@ extension_packages:
       extensionVersion: 1.17.0
     - extensionType: as3
       extensionVersion: 3.24.0
+    - extensionType: fast
+      extensionVersion: 1.5.0
 post_hook:
   - name: example_webhook
     type: webhook

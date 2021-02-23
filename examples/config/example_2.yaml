@@ -20,7 +20,7 @@
       {
         "extensionType": "ilx",
         "extensionUrl": "file:///var/config/rest/downloads/myIlxApp.rpm",
-        "extensionVersion": "1.1.0",
+        "extensionVersion": "1.0.0",
         "extensionVerificationEndpoint": "/mgmt/shared/myIlxApp/info",
         "extensionHash": "de615341b91beaed59195dceefc122932580d517600afce1ba8d3770dfe42d28"
       }

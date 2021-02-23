@@ -13,10 +13,10 @@ tmsh create auth user ${admin_username} password ${admin_password} shell tmsh pa
 # save config
 tmsh save sys config
 
-/bin/curl -L -o /tmp/f5-appsvcs-templates-1.1.0-1.noarch.rpm https://github.com/f5networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+/bin/curl -L -o /tmp/hello-world-0.1.0-0001.noarch.rpm https://github.com/f5devcentral/f5-ilx-example/releases/download/v1.0.0/hello-world-0.1.0-0001.noarch.rpm
 
-mkdir -p /var/lib/cloud/icontrollx_installs
-cp /tmp/f5-appsvcs-templates-1.1.0-1.noarch.rpm /var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
+mkdir -p /var/config/rest/downloads
+cp /tmp/hello-world-0.1.0-0001.noarch.rpm /var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm
 
 mkdir /config/cloud
 
@@ -118,10 +118,12 @@ extension_packages:
     - extensionType: as3
       extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
       extensionHash: df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4
+    - extensionType: fast
+      extensionVersion: 1.5.0
     - extensionType: ilx
-      extensionUrl: https://github.com/f5networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm
-      extensionVerificationEndpoint: /mgmt/shared/fast/info
-      extensionVersion: 1.1.0
+      extensionUrl: file:///var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm
+      extensionVerificationEndpoint: /mgmt/shared/echo
+      extensionVersion: 0.1.0
 extension_services:
   service_operations:
     - extensionType: do

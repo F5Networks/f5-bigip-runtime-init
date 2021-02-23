@@ -27,6 +27,8 @@
       - [GCP (Terraform) snippet](#gcp-terraform-snippet)
   - [Runtime parameters](#runtime-parameters)
   - [Private Environments](#private-environments)
+      - [Disable Calls from the Installer](#disable-calls-from-the-installer)
+      - [Disable Calls from the Command](#disable-calls-from-the-command)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
     - [Logging](#logging)
@@ -88,7 +90,7 @@ The installer script will do the following:
 
 Based on the content of the provided YAML or JSON conifguration file, F5 BIG-IP Runtime Init will do the following:
 
-- Download, verify, and install F5 Automation Toolchain components (DO, AS3, TS, and CFE) from package metadata, URLs, or local files
+- Download, verify, and install F5 Automation Toolchain components (DO, AS3, FAST, TS, and CFE) from package metadata, URLs, or local files
 - Download, verify, and install custom iApp LX packages from URLs or local files
 - Accept Automation Toolchain declarations from URLs or local files
 - Get secrets from cloud provider secret management APIs (Azure KeyVault, AWS Secret Manager, GCP Secrets Manager)
@@ -112,8 +114,8 @@ F5 BIG-IP Runtime Init has been tested and validated with the following versions
 
 | BIG-IP Version | Build Number |
 | --- | --- |
-| 15.1.0 | 0.0.4 |
-| 14.1.2 | 0.0.6 |
+| 15.1.2.1 | 0.0.10 |
+| 14.1.3 | 0.0.7 |
 
 
 ## Configuration
@@ -301,6 +303,8 @@ extension_packages:
       extensionVersion: 1.17.0
     - extensionType: as3
       extensionVersion: 3.24.0
+    - extensionType: fast
+      extensionVersion: 1.5.0
     - extensionType: ts
       extensionVersion: 1.16.0
 extension_services:
@@ -401,6 +405,8 @@ extension_packages:
       extensionVersion: 1.17.0
     - extensionType: as3
       extensionVersion: 3.24.0
+    - extensionType: fast
+      extensionVersion: 1.5.0
     - extensionType: ts
       extensionVersion: 1.16.0
 extension_services:
@@ -547,6 +553,8 @@ extension_packages:
       extensionVersion: 1.17.0
     - extensionType: as3
       extensionVersion: 3.24.0
+    - extensionType: fast
+      extensionVersion: 1.5.0
     - extensionType: ts
       extensionVersion: 1.16.0
 extension_services:
@@ -649,6 +657,7 @@ F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG
 Help with troubleshooting individual Automation Toolchain components can be found at F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/):
 - DO: https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/troubleshooting.html
 - AS3: https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest/userguide/troubleshooting.html
+- FAST: https://clouddocs.f5.com/products/extensions/f5-appsvcs-templates/latest/userguide/troubleshooting.html
 - TS: https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/userguide/troubleshooting.html
 - CFE: https://clouddocs.f5.com/products/extensions/f5-cloud-failover/latest/userguide/troubleshooting.html
 
