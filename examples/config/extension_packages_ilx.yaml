@@ -5,7 +5,9 @@ extension_packages:
       extensionVersion: 1.17.0
     - extensionType: as3
       extensionVersion: 3.24.0
+    - extensionType: fast
+      extensionVersion: 1.5.0
     - extensionType: ilx
-      extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm
-      extensionVersion: 1.1.0
-      extensionVerificationEndpoint: /mgmt/shared/fast/info
+      extensionUrl: file:///var/config/rest/downloads/myIlxApp.rpm
+      extensionVersion: 1.0.0
+      extensionVerificationEndpoint: /mgmt/shared/myIlxApp/info

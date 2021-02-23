@@ -235,7 +235,7 @@
                         "properties": {
                             "extensionType": {
                                 "type": "string",
-                                "enum": ["do", "as3", "ts", "cf", "ilx"]
+                                "enum": ["do", "as3", "ts", "cf", "fast", "ilx"]
                             },
                             "extensionVersion": {
                                 "type": "string",
@@ -253,7 +253,7 @@
                             "extensionUrl": {
                                 "type": "string",
                                 "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]+\\.(rpm)$",
-                                "examples": ["https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm", "file:///var/lib/cloud/icontrollx_installs/f5-declarative-onboarding-1.10.0-2.noarch.rpm"]
+                                "examples": ["https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm", "file:///var/config/rest/downloads/f5-declarative-onboarding-1.10.0-2.noarch.rpm"]
                             },
                             "extensionVerificationEndpoint": {
                                 "type": "string",
@@ -290,7 +290,7 @@
                         "properties": {
                             "extensionType": {
                                 "type": "string",
-                                "enum": ["do", "as3", "ts", "cf"]
+                                "enum": ["do", "as3", "ts", "fast", "cf"]
                             },
                             "type": {
                                 "$comment": "url in case of local file (file:) or remote (https: or http:) and inline in case the declaration is part of the config file",

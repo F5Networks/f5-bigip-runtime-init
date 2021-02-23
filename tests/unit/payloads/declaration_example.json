@@ -124,8 +124,8 @@
       },
       {
         "extensionType": "ilx",
-        "extensionUrl": "file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm",
-        "extensionVerificationEndpoint": "/mgmt/shared/fast/info"
+        "extensionUrl": "file:///var/lib/cloud/icontrollx_installs/hello-world-0.1.0-0001.noarch.rpm ",
+        "extensionVerificationEndpoint": "/mgmt/shared/echo"
       }
     ]
   },

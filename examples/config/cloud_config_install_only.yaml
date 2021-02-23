@@ -41,9 +41,15 @@
         "extensionHash": "df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4"
       },
       {
+        "extensionType": "fast",
+        "extensionVersion": "1.5.0",
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.5.0/f5-appsvcs-templates-1.5.0-1.noarch.rpm",
+        "extensionHash": "57c05971d56200824398d8c678f67e65d74ea534348e55ab7c793a270c57ed3c"
+      },
+      {
         "extensionType": "ilx",
-        "extensionUrl": "file:///var/config/rest/downloads/f5-appsvcs-templates-1.1.0-1.noarch.rpm",
-        "extensionVerificationEndpoint": "/mgmt/shared/fast/info"
+        "extensionUrl": "file:///var/config/rest/downloads/myIlxApp.rpm",
+        "extensionVerificationEndpoint": "/mgmt/shared/myIlxApp/info"
       }
     ]
   }
