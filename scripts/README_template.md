@@ -363,7 +363,7 @@ NOTES:
     extension_packages:
       install_operations:
         - extensionType: as3
-          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
     ```
   
 The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
