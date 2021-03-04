@@ -296,17 +296,19 @@ bigip_ready_enabled:
   - name: set_message_size
     type: inline
     commands:
-      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
+      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
+        -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
+        jq .'
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
+      extensionVersion: 1.19.0
     - extensionType: as3
-      extensionVersion: 3.24.0
+      extensionVersion: 3.26.0
     - extensionType: fast
-      extensionVersion: 1.5.0
+      extensionVersion: 1.7.0
     - extensionType: ts
-      extensionVersion: 1.16.0
+      extensionVersion: 1.18.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -402,13 +404,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
+      extensionVersion: 1.19.0
     - extensionType: as3
-      extensionVersion: 3.24.0
+      extensionVersion: 3.26.0
     - extensionType: fast
-      extensionVersion: 1.5.0
+      extensionVersion: 1.7.0
     - extensionType: ts
-      extensionVersion: 1.16.0
+      extensionVersion: 1.18.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -433,7 +435,7 @@ NOTES:
     extension_packages:
       install_operations:
         - extensionType: as3
-          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
     ```
   
 The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
@@ -550,13 +552,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
+      extensionVersion: 1.19.0
     - extensionType: as3
-      extensionVersion: 3.24.0
+      extensionVersion: 3.26.0
     - extensionType: fast
-      extensionVersion: 1.5.0
+      extensionVersion: 1.7.0
     - extensionType: ts
-      extensionVersion: 1.16.0
+      extensionVersion: 1.18.0
 extension_services:
   service_operations:
     - extensionType: do

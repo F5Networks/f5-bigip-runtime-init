@@ -8,18 +8,20 @@ bigip_ready_enabled:
   - name: set_message_size
     type: inline
     commands:
-      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
+      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
+        -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
+        jq .'
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
-      extensionHash: 484b34ecbbe6b97a3b7d3c547a6d9c234c9fc99766d07bed4384298437327f23
+      extensionVersion: 1.19.0
+      extensionHash: 15c1b919954a91b9ad1e469f49b7a0915b20de494b7a032da9eb258bbb7b6c49
     - extensionType: as3
-      extensionVersion: 3.24.0
-      extensionHash: 3dbb3e2cb170d2fc9ead746aa2df37518c0f38876debe33eec95cf928f91a329
+      extensionVersion: 3.26.0
+      extensionHash: b33a96c84b77cff60249b7a53b6de29cc1e932d7d94de80cc77fb69e0b9a45a0
     - extensionType: fast
-      extensionVersion: 1.5.0
-      extensionHash: 57c05971d56200824398d8c678f67e65d74ea534348e55ab7c793a270c57ed3c
+      extensionVersion: 1.7.0
+      extensionHash: 9c617f5bb1bb0d08ec095ce568a6d5d2ef162e504cd183fe3540586200f9d950
 extension_services:
   service_operations:
     - extensionType: as3
