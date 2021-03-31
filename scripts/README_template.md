@@ -579,7 +579,10 @@ The following enviroment variables can be used for setting logging options:
     {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
 ```
 
-Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'```
+Example of how to set the log level using an environment variable:
+```bash
+export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'
+```
 
 
 By default, runtime will mask out (i.e. "********") the following common fields when logging:
