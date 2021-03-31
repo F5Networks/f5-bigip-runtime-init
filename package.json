@@ -1,6 +1,6 @@
 {
     "name": "f5-bigip-runtime-init",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "release": "1",
     "description": "Cloud Onboarder for F5 BIG-IP",
     "author": "F5 Cloud Solutions",
@@ -41,7 +41,9 @@
         "request": "^2.88.2",
         "uuid": "^8.2.0",
         "winston": "^3.3.3",
-        "jmespath": "^0.15.0"
+        "jmespath": "^0.15.0",
+        "y18n": "4.0.1",
+        "xmldom": ">= 0.5.x"
     },
     "dependencyMap": {
         "common": {
@@ -70,7 +72,6 @@
         }
     },
     "devDependencies": {
-        "@azure/keyvault-secrets": "^4.0.2",
         "@azure/ms-rest-nodeauth": "^3.0.1",
         "@f5devcentral/eslint-config-f5-atg": "^0.1.1",
         "@types/assert": "^1.4.6",
