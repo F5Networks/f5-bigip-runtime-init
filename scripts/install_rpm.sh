@@ -18,6 +18,18 @@ SUPPORTED_CLOUDS=(aws azure gcp all base)
 GPG_PUB_KEY_LOCATION="https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key"
 SKIP_VERIFICATION=""
 
+# Retries settings for making https requests using curl command line tool
+
+RETRY=${HTTP_RETRY:-12}
+RETRY_MAX_TIME=${HTTP_RETRY_MAX_TIME:-60}
+MAX_TIME=${HTTP_MAX_TIME:-5}
+
+echo "HTTP Retry Settings:"
+echo "RETRY: $RETRY"
+echo "RETRY_MAX_TIME: $RETRY_MAX_TIME"
+echo "MAX_TIME: $MAX_TIME"
+
+
 HELP_MENU()
 {
     echo "Usage: $0 [params]"
@@ -112,7 +124,7 @@ fi
 if [[ -z $SKIP_VERIFICATION ]]; then
     echo "Verifying signature..."
     echo "GPG PUB Key location: $GPG_PUB_KEY_LOCATION"
-    curl --retry 5 --retry-max-time 25 --max-time 5 --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key
+    curl --retry $RETRY --retry-max-time $RETRY_MAX_TIME --max-time $MAX_TIME --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key
     rpm --import /var/tmp/gpg.key
     rpm --checksig $rpm_filename | grep "rsa sha1 (md5) pgp md5 OK"
     if [[ $? -ne 0 ]]; then
@@ -147,7 +159,7 @@ mv $NAME-$CLOUD/* /tmp/$NAME
 if [[ -z $SKIP_AT_METADATA_SYNC ]]; then
     echo "Getting lastest AT metadata."
     # try to get the latest metadata
-    curl --retry 5 --retry-max-time 25 --max-time 5 --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
+    curl --retry $RETRY --retry-max-time $RETRY_MAX_TIME --max-time $MAX_TIME --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
     cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')

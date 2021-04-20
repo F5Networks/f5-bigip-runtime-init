@@ -153,6 +153,14 @@ ex:
  curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws'
 ```
 
+The installer allows to configure HTTP requests retries to make installation robust and tolerant to a network instability. This can be done using the following environment variables:
+
+| Environment variable | Description | Default Value |
+| --- | --- | --- |
+| HTTP_RETRY | Number of retries before script will fail.  | 12 |
+| HTTP_RETRY_MAX_TIME | The retry timer (in seconds) is reset before the first transfer attempt. | 60 |
+| HTTP_MAX_TIME | Maximum time in seconds that you allow the whole operation to take. | 5 |
+
 See [Private Environments](#private-environments) section below.
 
 

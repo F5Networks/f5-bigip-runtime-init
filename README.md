@@ -153,6 +153,14 @@ ex:
  curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.2.1/dist/f5-bigip-runtime-init-1.2.1-1.gz.run -o f5-bigip-runtime-init-1.2.1-1.gz.run && bash f5-bigip-runtime-init-1.2.1-1.gz.run -- '--cloud aws'
 ```
 
+The installer allows to configure HTTP requests retries to make installation robust and tolerant to a network instability. This can be done using the following environment variables:
+
+| Environment variable | Description | Default Value |
+| --- | --- | --- |
+| HTTP_RETRY | Number of retries before script will fail.  | 12 |
+| HTTP_RETRY_MAX_TIME | The retry timer (in seconds) is reset before the first transfer attempt. | 60 |
+| HTTP_MAX_TIME | Maximum time in seconds that you allow the whole operation to take. | 5 |
+
 See [Private Environments](#private-environments) section below.
 
 
@@ -302,13 +310,13 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.19.0
+      extensionVersion: 1.20.0
     - extensionType: as3
-      extensionVersion: 3.26.0
+      extensionVersion: 3.27.0
     - extensionType: fast
-      extensionVersion: 1.7.0
+      extensionVersion: 1.8.0
     - extensionType: ts
-      extensionVersion: 1.18.0
+      extensionVersion: 1.19.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -404,13 +412,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.19.0
+      extensionVersion: 1.20.0
     - extensionType: as3
-      extensionVersion: 3.26.0
+      extensionVersion: 3.27.0
     - extensionType: fast
-      extensionVersion: 1.7.0
+      extensionVersion: 1.8.0
     - extensionType: ts
-      extensionVersion: 1.18.0
+      extensionVersion: 1.19.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -552,13 +560,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.19.0
+      extensionVersion: 1.20.0
     - extensionType: as3
-      extensionVersion: 3.26.0
+      extensionVersion: 3.27.0
     - extensionType: fast
-      extensionVersion: 1.7.0
+      extensionVersion: 1.8.0
     - extensionType: ts
-      extensionVersion: 1.18.0
+      extensionVersion: 1.19.0
 extension_services:
   service_operations:
     - extensionType: do
