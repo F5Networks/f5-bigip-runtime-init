@@ -301,7 +301,7 @@ class PackageClient {
 
         let tmpFile = '';
         if (urlObject.protocol === 'file:') {
-                tmpFile = urlObject.pathname.replace(/\/$/, '');
+            tmpFile = urlObject.pathname.replace(/\/$/, '');
         } else {
             utils.verifyDirectory(constants.TMP_DIR);
             tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
