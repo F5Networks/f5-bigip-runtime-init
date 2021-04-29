@@ -11,6 +11,7 @@ Packager: F5 Networks <support@f5.com>
 %description
 F5 BIGIP Runtime Init installs extensions and configures BIGIP system. This package is for %{cloud} cloud
 
+%define _binaries_in_noarch_packages_terminate_build   0
 %define APP_INSTALL_DIR /%{name}
 
 
