@@ -110,6 +110,8 @@ export async function cli(): Promise<string> {
     if (installOperations.length) {
         logger.info('Executing install operations.');
         for (let i = 0; i < installOperations.length; i += 1) {
+            installOperations[i]['maxRetries'] = constants.RETRY.TINY_COUNT;
+            installOperations[i]['retryInterval'] = constants.RETRY.AVAILABLE_DELAY_IN_MS;
             const toolchainClient = new ToolChainClient(
                 mgmtClient,
                 installOperations[i].extensionType,
@@ -122,16 +124,43 @@ export async function cli(): Promise<string> {
                 if (response.reinstallRequired) {
                     logger.silly('installed package version is not matched; package requires update/re-install');
                     await toolchainClient.package.uninstall();
-                    await mgmtClient.isReady();
                     await toolchainClient.package.install();
+                    try {
+                        logger.info(`Validating - ${installOperations[i].extensionType} extension is available.`);
+                        await toolchainClient.service.isAvailable();
+                    } catch (e) {
+                        // Workaround for AS3 issue https://github.com/F5Networks/f5-appsvcs-extension/issues/450
+                        logger.info(`${installOperations[i].extensionType} extension is not available. Attempt to restart restnoded.`);
+                        await utils.runShellCommand('bigstart restart restnoded');
+                        await mgmtClient.isReady();
+                        logger.info(`Validating - ${installOperations[i].extensionType} extension is available after restnoded restart.`);
+                        await toolchainClient.service.isAvailable();
+                        // end of workaround
+                    }
                 }
             } else {
+
                 await toolchainClient.package.install();
+                try {
+                    logger.info(`Validating - ${installOperations[i].extensionType} extension is available.`);
+                    await toolchainClient.service.isAvailable();
+                } catch (e) {
+                    // Workaround for AS3 issue https://github.com/F5Networks/f5-appsvcs-extension/issues/450
+                    logger.info(`${installOperations[i].extensionType} extension  is not available. Attempt to restart restnoded.`);
+                    await utils.runShellCommand('bigstart restart restnoded');
+                    await mgmtClient.isReady();
+                    logger.info(`Validating - ${installOperations[i].extensionType} extension  is available after restnoded restart.`);
+                    await toolchainClient.service.isAvailable();
+                    // end of workaround
+                }
             }
+            logger.silly(`Extension installation delay is set to ${constants.RETRY.EXTENSION_INSTALL_DELAY_IN_MS} milliseconds`);
+            await new Promise(resolve => setTimeout(resolve, parseInt(constants.RETRY.EXTENSION_INSTALL_DELAY_IN_MS)));
         }
     }
 
     // perform service operations
+    await mgmtClient.isReady();
     const extensionSevices = config.extension_services || {};
     const serviceOperations = extensionSevices.service_operations || [];
     if (serviceOperations.length) {
