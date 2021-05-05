@@ -208,7 +208,11 @@ export class ResolverClient {
                 options.headers[header.name] = header.value;
             });
         }
-        const response = await utils.makeRequest(metadata.value, options);
+        const response = await utils.retrier(utils.makeRequest, [metadata.value, options], {
+            thisContext: this,
+            maxRetries: constants.RETRY.SHORT_COUNT,
+            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+        });
         if ( metadata.query !== undefined ) {
             try {
                 const searchResult = jmesPath.search(response.body, metadata.query);

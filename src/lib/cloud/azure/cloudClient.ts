@@ -145,15 +145,16 @@ export class AzureCloudClient extends AbstractCloudClient {
         let ipAddress: string;
         let prefix: string;
 
-        const response = await utils.makeRequest(
-            `http://169.254.169.254/metadata/instance/${type}?api-version=2017-08-01`,
-            {
-                method: 'GET',
-                headers: {
-                    Metadata: 'true'
-                }
+        const response = await utils.retrier(utils.makeRequest, [`http://169.254.169.254/metadata/instance/${type}?api-version=2017-08-01`, {
+            method: 'GET',
+            headers: {
+                Metadata: 'true'
             }
-        );
+        }], {
+            thisContext: this,
+            maxRetries: constants.RETRY.SHORT_COUNT,
+            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+        });
 
         if (type === 'compute') {
             if (field === 'name') {
@@ -200,7 +201,7 @@ export class AzureCloudClient extends AbstractCloudClient {
 
             const localMac = mac.toLowerCase().replace(/:/g, '');
             const interfaces = response.body.interface;
-            
+
             for (let i = 0; i < interfaces.length; i += 1) {
                 const metadataMac = interfaces[i]["macAddress"].toLowerCase();
                 if (localMac === metadataMac) {
