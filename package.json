@@ -34,16 +34,16 @@
         "google-auth-library": "^6.1.1",
         "googleapis": "^61.0.0",
         "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
-        "jmespath": "^0.15.0",
         "js-yaml": "^3.13.1",
-        "lodash": "^4.17.21",
+        "lodash": "^4.17.20",
         "lodash.where": "^3.1.0",
         "mustache": "^4.0.0",
         "request": "^2.88.2",
         "uuid": "^8.2.0",
         "winston": "^3.3.3",
-        "xmldom": ">= 0.5.x",
-        "y18n": "4.0.1"
+        "jmespath": "^0.15.0",
+        "y18n": "4.0.1",
+        "xmldom": ">= 0.5.x"
     },
     "dependencyMap": {
         "common": {
@@ -124,9 +124,7 @@
         ]
     },
     "auditProcessor": {
-        "whitelist": [
-            "1674"
-        ]
+        "whitelist": []
     },
     "keywords": [
         "f5",
