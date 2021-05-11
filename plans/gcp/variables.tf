@@ -77,7 +77,7 @@ variable "vm_instance01_name" {
 
 variable "bigip_version" {
   description = "The BIG-IP version for the virtual machine"
-  default     = "f5-bigip-15-1-0-4-0-0-6-payg-best-25mbps-200618231635"
+  default     = "f5-bigip-15-1-2-1-0-0-10-payg-good-25mbps-210115160742"
 }
 
 variable "instance_size" {

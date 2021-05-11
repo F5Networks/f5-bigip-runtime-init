@@ -37,6 +37,14 @@ runtime_parameters:
       type: network
       field: ipv4
       index: 2
+  - name: GATEWAY
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 2
+      ipcalc: first
 pre_onboard_enabled:
   - name: provision_rest
     type: inline

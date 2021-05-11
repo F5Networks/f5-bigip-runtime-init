@@ -18,6 +18,7 @@
 'use strict';
 
 import * as jmesPath from 'jmespath';
+import * as netmask from 'netmask';
 import Logger from '../logger';
 import { getCloudProvider } from '../cloud/cloudFactory';
 import * as utils from '../utils';
@@ -192,6 +193,13 @@ export class ResolverClient {
             metadataMetadata.metadataProvider.field,
             metadataMetadata.metadataProvider
         );
+
+        if (metadataMetadata.metadataProvider.type === 'network') {
+            if (metadataMetadata.metadataProvider.ipcalc !== undefined && metadataValue.split('.').length === 4 ){
+                logger.silly(`ipcalc function resolved ${metadataMetadata.metadataProvider.ipcalc} element: ${new netmask.Netmask(metadataValue)[metadataMetadata.metadataProvider.ipcalc]} of provided IPv4 CIDR`);
+                return new netmask.Netmask(metadataValue)[metadataMetadata.metadataProvider.ipcalc];
+            }
+        }
         return metadataValue;
     }
 

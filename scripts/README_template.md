@@ -508,6 +508,58 @@ runtime_parameters allows to defined list of parameters and these parameters can
               field: subnet-ipv4-cidr-block
               index: 0
     ```
+    In a case when returned metadata is in form  IPv4 CIDR block (i.e. 10.0.0.5/24), it can be transformed using ipcalc functionality:
+    
+    The following example uses ipcalc to get the first useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as GATEWAY.
+    ```yaml
+        runtime_parameters:
+          - name: GATEWAY
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: local-ipv4s
+              index: 0
+              ipcalc: first
+    ```
+    This example uses ipcalc to get the last useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as LAST_ADDRESS.
+    
+    ```yaml
+        runtime_parameters:
+          - name: LAST_ADDRESS
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: local-ipv4s
+              index: 0
+              ipcalc: last
+    ```
+    
+    The following examples demonstrates how get number of ip addresses in CIDR of the first AWS subnet and resolves it to a runtime parameter named as NETWORK_SIZE
+    
+    ```yaml
+        runtime_parameters:
+          - name: NETWORK_SIZE
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: local-ipv4s
+              index: 0
+              ipcalc: size
+    ```    
+    
+    The ipcalc functionality provides the following transformation options: 
+       * base      - The base address of the network block as a string (eg: 216.240.32.0). Base does not give an indication of the size of the network block.
+       * mask      - The netmask as a string (eg: 255.255.255.0).
+       * hostmask  - The host mask which is the opposite of the netmask (eg: 0.0.0.255).
+       * bitmask   - The netmask as a number of bits in the network portion of the address for this block (eg: 24).
+       * size      - The number of IP addresses in a block (eg: 256).
+       * broadcast - The blocks broadcast address (eg: 192.168.1.0/24 => 192.168.1.255).
+       * first     - First useable address.
+       * last      - Last useable address.
+
   * static - defines a static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
       ```yaml
         runtime_parameters:

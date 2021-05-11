@@ -79,6 +79,10 @@
                               	"type": "string",
                                 "examples": ["name", "hostname", "ipv4", "local-ipv4s", "subnet-ipv4-cidr-block"]
                             },
+                            "ipcalc": {
+                                "type": "string",
+                                "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last"]
+                            },
                             "index": {
                               	"type": "integer",
                                 "examples": ["0", "1", "2"]
