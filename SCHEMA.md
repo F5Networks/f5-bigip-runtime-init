@@ -108,6 +108,18 @@ Type: `array`
 					 3. _"ipv4"_
 					 4. _"local-ipv4s"_
 					 5. _"subnet-ipv4-cidr-block"_
+			 - <b id="#/items/properties/metadataProvider/properties/ipcalc">ipcalc</b>
+				 - Type: `string`
+				 - <i id="#/items/properties/metadataProvider/properties/ipcalc">path: #/items/properties/metadataProvider/properties/ipcalc</i>
+				 - The value is restricted to the following: 
+					 1. _"base"_
+					 2. _"mask"_
+					 3. _"bitmask"_
+					 4. _"hostmask"_
+					 5. _"broadcast"_
+					 6. _"size"_
+					 7. _"first"_
+					 8. _"last"_
 			 - <b id="#/items/properties/metadataProvider/properties/index">index</b>
 				 - Type: `integer`
 				 - <i id="#/items/properties/metadataProvider/properties/index">path: #/items/properties/metadataProvider/properties/index</i>

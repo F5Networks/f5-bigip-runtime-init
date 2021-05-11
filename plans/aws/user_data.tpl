@@ -44,6 +44,22 @@ runtime_parameters:
       type: network
       field: local-ipv4s
       index: 1
+  - name: GATEWAY
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: network
+      field: local-ipv4s
+      index: 1
+      ipcalc: first
+  - name: ADDRESS_SIZE
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: network
+      field: local-ipv4s
+      index: 1
+      ipcalc: size
   - name: DEFAULT_ROUTE
     type: metadata
     metadataProvider:

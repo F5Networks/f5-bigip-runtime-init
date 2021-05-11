@@ -109,6 +109,14 @@ runtime_parameters:
         type: network
         field: ip
         index: 0
+  - name: GATEWAY
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 0
+        ipcalc: first
 bigip_ready_enabled:
   - name: provision_modules
     type: inline
