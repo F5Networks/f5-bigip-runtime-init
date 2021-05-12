@@ -392,6 +392,8 @@ runtime_parameters:
 
 When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named ```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
 
+Note that if logging level is set to debug, secrets used by inline commands may appear in the BIG-IP logs as part of the commands or their outputs.
+
 
 #### GCP (Terraform) snippet
 
