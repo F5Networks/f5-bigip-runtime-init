@@ -282,7 +282,23 @@ describe('Resolver Client', () => {
         resolver.utilsRef.verifyDirectory = sinon.stub();
         resolver.utilsRef.runShellCommand = sinon.stub().resolves('');
         resolver.utilsRef.downloadToFile = sinon.stub().resolves('');
-        return resolver.resolveOnboardActions(onboardActions)
+        return resolver.resolveOnboardActions(onboardActions, true)
+            .then(() => {
+                assert.ok(resolver.utilsRef.verifyDirectory.called);
+                assert.ok(resolver.utilsRef.runShellCommand.called);
+                assert.ok(resolver.utilsRef.downloadToFile.called);
+            })
+            .catch(() => {
+                assert.ok(false);
+            });
+    });
+
+    it('should validate resolveOnboardActions with no secrets in actions', () => {
+        const resolver = new ResolverClient();
+        resolver.utilsRef.verifyDirectory = sinon.stub();
+        resolver.utilsRef.runShellCommand = sinon.stub().resolves('');
+        resolver.utilsRef.downloadToFile = sinon.stub().resolves('');
+        return resolver.resolveOnboardActions(onboardActions, false)
             .then(() => {
                 assert.ok(resolver.utilsRef.verifyDirectory.called);
                 assert.ok(resolver.utilsRef.runShellCommand.called);

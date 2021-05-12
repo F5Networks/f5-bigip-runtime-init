@@ -96,20 +96,39 @@ export class ResolverClient {
      * Resolves onboard actions
      *
      * @param actions                 - list of on-board actions need to be performed on BIGIP device
+     * @param containsSecrets         - whether this set of actions contains a secret or not
      *
      *
      * @returns                       - resolves when all actions completed
      */
-    async resolveOnboardActions(actions: OnboardActions[]): Promise<void> {
+    async resolveOnboardActions(actions: OnboardActions[], containsSecrets = false): Promise<void> {
         this.utilsRef.verifyDirectory(constants.CUSTOM_ONBOARD_CONFIG_DIR);
         for (let i = 0; i < actions.length; i += 1) {
             for (let j = 0; j < actions[i].commands.length; j += 1) {
                 if (actions[i].type === 'inline') {
-                    logger.debug(`Executing inline shell command: ${actions[i].commands[j]}`);
+                    if (containsSecrets){
+                        logger.info(`Executing inline shell command`);
+                        logger.debug(`command: ${actions[i].commands[j]}`);
+                    }
+                    else{
+                        logger.info(`Executing inline shell command: ${actions[i].commands[j]}`);
+                    }
                     const response = await this.utilsRef.runShellCommand(actions[i].commands[j]);
-                    logger.info(`Shell command: ${actions[i].commands[j]} execution completed; response: ${response}`);
+                    if (containsSecrets){
+                        logger.info(`Shell command: One or more commands contains a secret, skipping logging command and output`);
+                        logger.debug(`${actions[i].commands[j]} execution completed; response: ${response}`);
+                    }
+                    else{
+                        logger.info(`Shell command: ${actions[i].commands[j]} execution completed; response: ${response}`);
+                    }
                 } else if (actions[i].type === 'url' || actions[i].type === 'file') {
-                    logger.debug(`Executing bash script ${actions[i].commands[j]}`);
+                    if (containsSecrets){
+                        logger.info(`Executing bash script`);
+                        logger.debug(`script: ${actions[i].commands[j]}`);
+                    }
+                    else{
+                        logger.info(`Executing bash script ${actions[i].commands[j]}`);
+                    }
                     let base64ScriptName;
                     if (actions[i].type === 'url') {
                         base64ScriptName = `${constants.CUSTOM_ONBOARD_CONFIG_DIR}${Buffer.from(`${actions[i].name}_${j}`).toString('base64')}`;
@@ -120,7 +139,13 @@ export class ResolverClient {
                         base64ScriptName = actions[i].commands[j];
                     }
                     const response = await this.utilsRef.runShellCommand(`bash ${base64ScriptName}`);
-                    logger.info(`Bash script: ${actions[i].name} execution completed; response: ${response}`);
+                    if (containsSecrets){
+                        logger.info(`Bash script: One or more commands contains a secret, skipping logging command and output`);
+                        logger.debug(`${actions[i].name} execution completed; response: ${response}`);
+                    }
+                    else{
+                        logger.info(`Bash script: ${actions[i].name} execution completed; response: ${response}`);
+                    }
 
                 } else {
                     throw new Error(`Unexpected onboard action type. Must be one of [ file, url, command ]. Recieved: ${actions[i].type}`);

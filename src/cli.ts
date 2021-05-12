@@ -33,6 +33,7 @@ const logger = Logger.getLogger();
 const executionResults = {};
 let telemetryClient;
 let statusCode = 0;
+let containsSecrets = false;
 
 export async function cli(): Promise<string> {
     /* eslint-disable no-await-in-loop */
@@ -106,10 +107,15 @@ export async function cli(): Promise<string> {
     logger.info('Resolving parameters');
     const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters): undefined;
 
-    const bigipReadyEnabled = config.bigip_ready_enabled || [];
+    let bigipReadyEnabled = config.bigip_ready_enabled || [];
+    containsSecrets = utils.checkForSecrets(JSON.stringify(bigipReadyEnabled));
+    // rendering secrets if provided
+    if (resolvedRuntimeParams) {
+        bigipReadyEnabled = JSON.parse(await utils.renderData(JSON.stringify(bigipReadyEnabled), resolvedRuntimeParams));
+    }
     if (bigipReadyEnabled.length) {
         logger.info('Executing custom bigip_ready_enabled commands');
-        await resolver.resolveOnboardActions(bigipReadyEnabled);
+        await resolver.resolveOnboardActions(bigipReadyEnabled, containsSecrets);
     }
 
     await mgmtClient.isReady();
@@ -210,10 +216,15 @@ export async function cli(): Promise<string> {
 
     // post onboard
     await mgmtClient.isReady();
-    const postOnboardEnabled = config.post_onboard_enabled || [];
+    let postOnboardEnabled = config.post_onboard_enabled || [];
+    containsSecrets = utils.checkForSecrets(JSON.stringify(postOnboardEnabled));
+    // rendering secrets if provided
+    if (resolvedRuntimeParams) {
+        postOnboardEnabled = JSON.parse(await utils.renderData(JSON.stringify(postOnboardEnabled), resolvedRuntimeParams));
+    }
     if (postOnboardEnabled.length) {
         logger.info('Executing custom post_onboard_enabled commands');
-        await resolver.resolveOnboardActions(postOnboardEnabled);
+        await resolver.resolveOnboardActions(postOnboardEnabled, containsSecrets);
     }
 
 

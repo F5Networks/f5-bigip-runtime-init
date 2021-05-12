@@ -56,6 +56,18 @@ describe('Util', () => {
         });
     });
 
+    describe('checkForSecrets', () => {
+        it('should validate checkForSecrets with correct inputs', async () => {
+            const response = await util.checkForSecrets('{{ TEST_VALUE }} - TRUE');
+            assert.strictEqual(response, true);
+        });
+
+        it('should validate checkForSecrets with correct inputs - false', async () => {
+            const response = await util.checkForSecrets('Just a statement');
+            assert.strictEqual(response, false);
+        });
+    });
+
     describe('makeRequest', () => {
         afterEach(() => {
             if(!nock.isDone()) {
