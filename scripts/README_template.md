@@ -45,7 +45,7 @@
 
 The F5 BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. 
 
-By providing a single convenient yaml or json-based configuration file which
+By providing a single convenient yaml (1.2 spec) or json-based configuration file which
 * leverages [F5 Automation Tool Chain](https://www.f5.com/pdf/products/automation-toolchain-overview.pdf) declarations that are easier to author, validate and maintain as code (vs. bigip.conf files)
 * renders secrets from public cloud vaults
 * renders runtime variables from metadata services

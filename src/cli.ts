@@ -43,17 +43,21 @@ export async function cli(): Promise<string> {
     program.parse(process.argv);
 
     let config;
+    let loadError;
     logger.info(`Configuration file: ${program.configFile}`);
     try {
         try {
             // Attempt to load as YAML file
             config = yaml.safeLoad(fs.readFileSync(program.configFile, 'utf8'));
         } catch (e){
-            // If YAML load file, attempt to load as JSON file
+            logger.error(`Attempt to load YAML config failed: ${e}`);
+            // If YAML load fail, attempt to load as JSON file
             config = JSON.parse(fs.readFileSync(program.configFile, 'utf8'));
         }
     } catch (e) {
-        logger.error(`Configuration load error: ${e}`);
+        logger.error(`Attempt to load JSON config failed: ${e}`);
+        loadError = 'Provided config file is not valid YAML (1.2 spec) or JSON document. See logs for more details.';
+        logger.error(loadError);
         config  = 'INVALID_CONFIG_FILE_TYPE'
     }
 
@@ -65,6 +69,13 @@ export async function cli(): Promise<string> {
     } else {
         logger.info('F5 Telemetry is disabled.');
     }
+
+    // checking if config load was successfull or not
+    if (loadError) {
+        const error = new Error(loadError);
+        return Promise.reject(error);
+    }
+
     logger.info('Validating provided declaration');
     const validator = new Validator();
     const validation = validator.validate(config);
