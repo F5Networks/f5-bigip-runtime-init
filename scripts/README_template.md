@@ -689,6 +689,49 @@ However, it is possible to extend this list by providing additional metadata (**
 ``` 
 This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
 
+
+By default, runtime will mask out (i.e. "********") the following common fields when logging:
+```json
+    [
+        "password",
+        "localPassword",
+        "remotePassword",
+        "bigIqPassword",
+        "bigIpPassword",
+        "passphrase",
+        "cookiePassphrase",
+        "certificate",
+        "privateKey",
+        "ciphertext",
+        "protected",
+        "secret",
+        "sharedSecret",
+        "secretAccessKey",
+        "apiAccessKey",
+        "encodedCredentials",
+        "encodedToken",
+        "oldPassword",
+        "newPassword",
+        "bindPassword",
+        "checkBindPassword",
+        "md5SignaturePassphrase"
+    ]
+```
+However, it is possible to extend this list by providing additional metadata (***field***) for the Secret object:
+
+```yaml
+        runtime_parameters:
+          - name: MY_SECRET
+            type: secret
+            secretProvider:
+              environment: azure
+              type: KeyVault
+              vaultUrl: https://my-keyvault.vault.azure.net
+              secretId: mySecret01
+              field: newCustomSecretField
+``` 
+This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
+
 #### Send output to log file and serial console
 
 Add the following to the beginning of user data to log startup events to a local file/serial console. See the simple [example](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/examples/simple/terraform/startup-script.tpl) for more information.
