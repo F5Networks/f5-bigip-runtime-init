@@ -18,6 +18,7 @@
 'use strict';
 
 import Logger from '../logger';
+import * as fs from 'fs';
 import { ManagementClient } from '../bigip/managementClient';
 import * as F5Teem from '@f5devcentral/f5-teem';
 import * as utils from '../utils';
@@ -58,6 +59,10 @@ export class TelemetryClient {
       cloudName: string;
       customerId: string;
     };
+    installParameters: [{
+        key: string;
+        value: string;
+    }];
     systemInfo: {
         id: string;
         product: string;
@@ -128,6 +133,7 @@ export class TelemetryClient {
         this.operation = undefined;
         this.systemInfo = undefined;
         this.cloudInfo = undefined;
+        this.installParameters = undefined;
     }
 
     async init(options): Promise<void> {
@@ -141,6 +147,7 @@ export class TelemetryClient {
         logger.info(JSON.stringify(this.systemInfo));
         this.cloudInfo = await this._getCloudInfo();
         this.operation = this._getOperationInfo(options);
+        this.installParameters = this._getInstallParameters(options);
     }
 
     _getOperationInfo(options): {
@@ -241,10 +248,28 @@ export class TelemetryClient {
                 "result": this.operation.result,
                 "resultSummary": this.operation.resultSummary,
                 "startTime": this.operation.startTime,
-                "endTime": this.operation.endTime
+                "endTime": this.operation.endTime,
+                "installParams": this.installParameters
             }
         };
         return telemetryData;
+    }
+
+    _getInstallParameters (config): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
+        const result = [];
+        let data = [];
+        if (fs.existsSync(constants.TELEMETRY_INSTALL_DATA_FILE)) {
+            data = fs.readFileSync(constants.TELEMETRY_INSTALL_DATA_FILE, 'utf8').split('\n');
+        }
+        data.forEach((item) => {
+            if (item && item.indexOf(':') != -1) {
+                result.push({
+                    key: item.split(':')[0],
+                    value: item.split(':')[1]
+                })
+            }
+        });
+        return result;
     }
 
     _getExtensionPackages(config): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */

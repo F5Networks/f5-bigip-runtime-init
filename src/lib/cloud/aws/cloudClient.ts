@@ -139,7 +139,7 @@ export class AwsCloudClient extends AbstractCloudClient {
             /** grab big-ip interface info */
             let mac;
             let retries = 0;
-            const timer = ms => new Promise(res => setTimeout(res, ms));
+            const timer = ms => new Promise(res => setTimeout(res, ms)); /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
             while (true) {
                 const interfaceResponse = await utils.makeRequest(
                     `http://localhost:8100/mgmt/tm/net/interface`,

@@ -126,6 +126,28 @@ describe('Resolver Client', () => {
                 }
             },
             {
+                name: 'AZURE_GATEWAY_IP',
+                type: 'metadata',
+                metadataProvider: {
+                    ipcalc: 'first',
+                    type: 'network',
+                    environment: 'azure',
+                    field: 'ipv4',
+                    index: 1
+                }
+            },
+            {
+                name: 'AZURE_BITMASK',
+                type: 'metadata',
+                metadataProvider: {
+                    ipcalc: 'bitmask',
+                    type: 'network',
+                    environment: 'azure',
+                    field: 'ipv4',
+                    index: 1
+                }
+            },
+            {
                 name: 'SOME_NAME',
                 type: 'static',
                 value: 'SOME VALUE'
@@ -168,13 +190,13 @@ describe('Resolver Client', () => {
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 4);
+                assert.ok(Object.keys(results).length === 6);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
     });
 
-    it('should validate self IP metadata resolveRuntimeParameters', () => {
+    it('should validate self IP metadata and ipcalc resolveRuntimeParameters', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver.getCloudProvider = sinon.stub().callsFake(() => {
@@ -186,9 +208,11 @@ describe('Resolver Client', () => {
         });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 4);
+                assert.ok(Object.keys(results).length === 6);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
+                assert.strictEqual(results.AZURE_GATEWAY_IP, '10.0.1.1');
+                assert.strictEqual(results.AZURE_BITMASK, 24);
             });
     });
 
@@ -258,7 +282,23 @@ describe('Resolver Client', () => {
         resolver.utilsRef.verifyDirectory = sinon.stub();
         resolver.utilsRef.runShellCommand = sinon.stub().resolves('');
         resolver.utilsRef.downloadToFile = sinon.stub().resolves('');
-        return resolver.resolveOnboardActions(onboardActions)
+        return resolver.resolveOnboardActions(onboardActions, true)
+            .then(() => {
+                assert.ok(resolver.utilsRef.verifyDirectory.called);
+                assert.ok(resolver.utilsRef.runShellCommand.called);
+                assert.ok(resolver.utilsRef.downloadToFile.called);
+            })
+            .catch(() => {
+                assert.ok(false);
+            });
+    });
+
+    it('should validate resolveOnboardActions with no secrets in actions', () => {
+        const resolver = new ResolverClient();
+        resolver.utilsRef.verifyDirectory = sinon.stub();
+        resolver.utilsRef.runShellCommand = sinon.stub().resolves('');
+        resolver.utilsRef.downloadToFile = sinon.stub().resolves('');
+        return resolver.resolveOnboardActions(onboardActions, false)
             .then(() => {
                 assert.ok(resolver.utilsRef.verifyDirectory.called);
                 assert.ok(resolver.utilsRef.runShellCommand.called);

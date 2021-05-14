@@ -18,6 +18,23 @@ SUPPORTED_CLOUDS=(aws azure gcp all base)
 GPG_PUB_KEY_LOCATION="https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key"
 SKIP_VERIFICATION=""
 
+# usage: logger "log message"
+logger() {
+    echo "$(date "+%Y-%m-%dT%H:%M:%S") - ${1}"
+}
+
+# Retries settings for making https requests using curl command line tool
+RETRY=${HTTP_RETRY:-3}
+RETRY_MAX_TIME=${HTTP_RETRY_MAX_TIME:-180}
+MAX_TIME=${HTTP_MAX_TIME:-5}
+RETRY_DELAY=${HTTP_RETRY_DELAY:-60}
+
+logger "HTTP Retry Settings:"
+logger "RETRY: $RETRY"
+logger "RETRY_MAX_TIME: $RETRY_MAX_TIME"
+logger "MAX_TIME: $MAX_TIME"
+logger "RETRY_DELAY: $RETRY_DELAY"
+
 HELP_MENU()
 {
     echo "Usage: $0 [params]"
@@ -26,6 +43,7 @@ HELP_MENU()
     echo "    --key   | -k                          : Provides location for GPG key used for verifying signature on RPM file"
     echo "    --skip-verify                         : Disables RPM signature verification and AT metadata verification"
     echo "    --skip-toolchain-metadata-sync        : Disables automation toolchains metadata sync"
+    echo "    --telemetry-params                    : Specifies telemerty parameters"
     exit 1
 }
 
@@ -48,6 +66,10 @@ do
 	SKIP_AT_METADATA_SYNC=y
 	shift
 	;;
+    --telemetry-params)
+	TELEMETRY_PARAMS=$2
+	shift
+	;;
     -h | --help)
 	HELP_MENU
 	;;
@@ -62,21 +84,24 @@ do
 done
 
 if [[ ! "${SUPPORTED_CLOUDS[@]}" =~ "${CLOUD}" ]]; then
-    echo "--cloud parameter value is not in one of allowed values. Please see help menu for more details"
+    logger "--cloud parameter value is not in one of allowed values. Please see help menu for more details"
     HELP_MENU
     exit 1;
 fi
 
 NAME="f5-bigip-runtime-init"
 
+# Processing TELEMETRY parameters and storing them into file for future use
+rm /config/cloud/telemetry_install_params.tmp  2> /dev/null
+for string in $(echo $TELEMETRY_PARAMS | tr ',' '\n')
+do
+    echo $string >> /config/cloud/telemetry_install_params.tmp
+done
+
 rpm_filename=$(ls | grep $CLOUD | grep -v "sha256")
 rpm_sha256_filename=$(ls | grep $CLOUD | grep "sha256")
 install_location="/tmp/${NAME}"
 utility_location="/usr/local/bin/${NAME}"
-# usage: logger "log message"
-logger() {
-    echo "${1}"
-}
 
 # usage: platform_check
 # returns: LINUX|BIGIP
@@ -85,57 +110,61 @@ platform_check() {
     if [ -f "/VERSION" ]; then
         platform="BIGIP"
     fi
-    echo ${platform}
+    logger ${platform}
 }
 
-echo "Running RPM install script."
+logger "Running RPM install script."
 
-echo "Verifying RPM file integrity..."
+logger "Verifying RPM file integrity..."
 cat $rpm_sha256_filename | sha256sum -c | grep OK
 if [[ $? -ne 0 ]]; then
-    echo "Couldn't verify the f5-bigip-runtime-init package, exiting."
+    logger "Couldn't verify the f5-bigip-runtime-init package, exiting."
     exit 1
 fi
 
 if [[ -z $SKIP_VERIFICATION ]]; then
-    echo "Verifying signature..."
-    echo "GPG PUB Key location: $GPG_PUB_KEY_LOCATION"
-    curl --retry 5 --retry-max-time 25 --max-time 5 --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key
+    logger "Verifying signature..."
+    logger "GPG PUB Key location: $GPG_PUB_KEY_LOCATION"
+    for i in {1..24}; do
+        curl --retry-delay $RETRY_DELAY --retry $RETRY --retry-max-time $RETRY_MAX_TIME --max-time $MAX_TIME --location $GPG_PUB_KEY_LOCATION --output /var/tmp/gpg.key && break || sleep 5
+    done
     rpm --import /var/tmp/gpg.key
     rpm --checksig $rpm_filename | grep "rsa sha1 (md5) pgp md5 OK"
     if [[ $? -ne 0 ]]; then
-        echo "Couldn't verify the f5-bigip-runtime-init package signature"
+        logger "Couldn't verify the f5-bigip-runtime-init package signature"
         exit 1
     fi
 else
-    echo "Skipping RPM signature verification"
+    logger "Skipping RPM signature verification"
 fi
 
-echo "Checking if package is already installed"
+logger "Checking if package is already installed"
 if [[ -d $install_location && -f $utility_location && ! -z "$(ls -A $install_location)" ]]; then
-    echo "Package is already installed and utility is created. Exiting with status:0"
+    logger "Package is already installed and utility is created. Exiting with status:0"
     exit 0
 else
-    echo "Package is not installed. Preparing for installation."
+    logger "Package is not installed. Preparing for installation."
     if [[ -d $install_location ]]; then
-        echo "Install location $install_location already exists"
-        echo "Clearing out install location: $install_location"
+        logger "Install location $install_location already exists"
+        logger "Clearing out install location: $install_location"
         find ${install_location} -type f -delete
         sleep 1
     else
-        echo "Install location $install_location does not exist. Creating install location."
+        logger "Install location $install_location does not exist. Creating install location."
         mkdir -p $install_location
     fi
 fi
 
-echo "Install package $rpm_filename"
+logger "Install package $rpm_filename"
 rpm2cpio $rpm_filename | cpio -idmv
 mv $NAME-$CLOUD/* /tmp/$NAME
 
 if [[ -z $SKIP_AT_METADATA_SYNC ]]; then
-    echo "Getting lastest AT metadata."
+    logger "Getting lastest AT metadata."
     # try to get the latest metadata
-    curl --retry 5 --retry-max-time 25 --max-time 5 --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json
+    for i in {1..24}; do
+        curl --retry-delay $RETRY_DELAY --retry $RETRY --retry-max-time $RETRY_MAX_TIME --max-time $MAX_TIME --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json && break || sleep 5
+    done
     cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')
@@ -144,13 +173,13 @@ if [[ -z $SKIP_AT_METADATA_SYNC ]]; then
             rm toolchain_metadata_tmp.json
         fi
     else
-        echo "Couldn't get the latest toolchain metadata, using local copy."
+        logger "Couldn't get the latest toolchain metadata, using local copy."
     fi
 else
-    echo "Skipping verification for AT Metadata, using local copy."
+    logger "Skipping verification for AT Metadata, using local copy."
 fi
 
-echo "Creating command utility."
+logger "Creating command utility."
 if [[ "$(platform_check)" == "LINUX" ]]; then
     echo "node ${install_location}/src/cli.js \"\$@\"" > ${utility_location}
     chmod 744 ${utility_location}
@@ -160,4 +189,4 @@ else
     chmod 744 ${utility_location}
     mount -o remount,ro /usr
 fi
-echo "RPM installation is completed."
+logger "RPM installation is completed."

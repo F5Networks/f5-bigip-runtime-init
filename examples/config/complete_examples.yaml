@@ -1,11 +1,11 @@
 example_1:
-  description: Verifies and installs Automation Toolchain components (DO, AS3) on a local BIG-IP and then configures AS3 from a local declaration file.
+  description: Verifies and installs Automation Toolchain components (DO, AS3, FAST) on a local BIG-IP and then configures AS3 from a local declaration file.
   runtime_config:
 example_2:
-  description: Verifies and installs DO and myIlxApp RPMs from local directories and configures DO from a local declaration file. Install operations with an extensionUrl value that points to a local file stored on BIGIP system.
+  description: Verifies and installs DO and myIlxApp RPMs from local directories and configures DO from a local declaration file. Install operations with an extensionUrl value that points to a local file stored on BIG-IP system.
   runtime_config:
 example_3:
-  description: Installs DO and AS3 on a local BIG-IP and renders the Azure service principal secret into an AS3 declaration downloaded from a URL.
+  description: Installs DO, AS3, and FAST on a local BIG-IP and renders the Azure service principal secret into an AS3 declaration downloaded from a URL.
   runtime_config:
 example_4:
   description: Renders secret referenced within DO declaration to configure the admin password on a BIG-IP device in AWS.
@@ -14,10 +14,10 @@ example_5:
   description: Renders secret referenced within DO declaration to configure the admin password on a BIG-IP device in GCP.
   runtime_config:
 example_6:
-  description: Replaces variables used within DO and AS3 declarations with properties from instance metadata to configure hostname, self IP addresses and pool members on BIGIP device.
+  description: Replaces variables used within DO and AS3 declarations with properties from instance metadata to configure hostname, self IP addresses and pool members on BIG-IP device.
   runtime_config:
 example_7:
-  description: Installs AS3 and DO and uses an inline AS3 declaration to setup the BIG-IP.
+  description: Installs AS3, DO, and FAST and uses an inline AS3 declaration to setup the BIG-IP.
   runtime_config:
 example_8:
   description: Using runtime parameters with inline Automation Toolchain declarations.
