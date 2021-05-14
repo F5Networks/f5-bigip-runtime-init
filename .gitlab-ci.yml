@@ -73,6 +73,29 @@ cleanup_publish_rpms_dev_cdn:
     tags:
         - cm-official-docker-executor
 
+# Cleanup artifactory images when matching branch no longer present on gitlab
+cleanup_artifactory_images:
+    stage: process
+    only:
+        variables:
+            - $CLEANUP_ARTIFACTORY == "true"
+    except:
+        variables:
+            - $RUN_FUNCTIONAL_TESTS == "true"
+    script:
+        # install jq
+        - apt-get update
+        - apt-get install -y jq
+        # find branches in project and images in artifactory
+        - curl -k -H "PRIVATE-TOKEN:${DAILY_TEST_TOKEN}" "https://${GITLAB_URL}/api/v4/projects/${CI_PROJECT_ID}/repository/branches" | jq -r .[].name > branches.txt
+        - cat branches.txt
+        - curl -k -u "${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD}" -X GET "https://${ARTIFACTORY_SERVER}/artifactory/api/docker/ecosystems-cloudsolutions-docker-dev/v2/deployment-tool-runtime-init/tags/list" | jq -r .tags[] > artifactory_tags.txt
+        - cat artifactory_tags.txt
+        - diff=$(comm -23 artifactory_tags.txt branches.txt)
+        - for d in $diff; do if [[ $d != "latest" ]]; then echo removing image ${d}; curl -k -u "${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD}" -X DELETE "https://${ARTIFACTORY_SERVER}/artifactory/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init/${d}"; fi; done
+    tags:
+        - cm-official-docker-executor
+
 # lint package
 lint_package:
     stage: test
@@ -194,8 +217,8 @@ publish_container:
     stage: functional_test_publish
     script:
         - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
-        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA} .
-        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA}
+        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME} .
+        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME}
     tags:
         - docker-executor
     only:
@@ -214,7 +237,7 @@ publish_container:
 # Functional Tests - Initialization phase (with 1 retries in a case of any failures)
 .test_functional_init_generic: &test_functional_init_generic
     stage: functional_test_init
-    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA}
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME}
     retry:
         max: 1
     script:
@@ -245,7 +268,7 @@ publish_container:
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
         # End of Workaround.
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD}'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --telemetry-params testKey01:testValue01,testKey02:testValue02'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config"
         # Attempt to re-run self-executable and runtime-init
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
@@ -755,7 +778,7 @@ test_functional_execute_base_v14:
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
     stage: functional_test_cleanup
-    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_SHORT_SHA}
+    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME}
     retry:
         max: 1
     when: always
@@ -1000,26 +1023,6 @@ test_functional_cleanup_base_v14:
         - test_functional_init_base_v14
 
 # End of Funtional tests
-
-delete_container:
-    stage: functional_test_cleanup_container
-    script:
-        # delete tag
-        - curl -u ${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD} -X DELETE "https://${ARTIFACTORY_SERVER}/artifactory/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init/${CI_COMMIT_SHORT_SHA}"
-        # list/verify tags
-        - curl -u ${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD} "https://${ARTIFACTORY_SERVER}/artifactory/api/docker/ecosystems-cloudsolutions-docker-dev/v2/deployment-tool-runtime-init/tags/list"
-    tags:
-        - cm-official-docker-executor
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME == "main"
-            - $CI_COMMIT_REF_NAME == "develop"
-            - $RUN_FUNCTIONAL_TESTS == "true"
-            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
-    except:
-        variables:
-            - $CLEANUP_DEVELOP_CDN == "true"
-            - $PUBLISH_RPM == "true"
 
 # Publish RPM's to CDN
 publish_rpms_dev_cdn:

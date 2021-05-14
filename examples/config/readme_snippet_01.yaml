@@ -17,15 +17,24 @@ bigip_ready_enabled:
   - name: set_message_size
     type: inline
     commands:
-      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
+      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
+        -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
+        jq .'
+      - f5mku -r {{{ ADMIN_PASS }}}
+  - name: reset_master_key
+    type: inline
+    commands:
+      - f5mku -r {{{ ADMIN_PASS }}}
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
+      extensionVersion: 1.20.0
     - extensionType: as3
-      extensionVersion: 3.24.0
+      extensionVersion: 3.27.0
+    - extensionType: fast
+      extensionVersion: 1.8.0
     - extensionType: ts
-      extensionVersion: 1.16.0
+      extensionVersion: 1.19.0
 extension_services:
   service_operations:
     - extensionType: do

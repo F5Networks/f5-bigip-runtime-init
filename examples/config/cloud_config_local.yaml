@@ -47,18 +47,23 @@ pre_onboard_enabled:
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
-  - name: provision_modules
+bigip_ready_enabled:
+  - name: provision_asm_module
     type: inline
     commands:
-      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
+      - tmsh modify sys provision asm level nominal
+  - name: save_sys_config
+    type: inline
+    commands:
+      - tmsh save sys config
 post_onboard_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
-      extensionHash: a359aa8aa14dc565146d4ccc413f169f1e8d02689559c5e4a652f91609a55fbb
+      extensionVersion: 1.20.0
+      extensionHash: 02d29e99f76b1f9e2c99d4aee6dc73873f78735f430fe53139ca51c2d5f1fead
     - extensionType: as3
-      extensionVersion: 3.24.0
+      extensionVersion: 3.27.0
 extension_services:
   service_operations:
     - extensionType: do

@@ -267,9 +267,9 @@ resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
   settings             = <<SETTINGS
     {
       "fileUris": [
-        "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm"
+        "https://github.com/f5devcentral/f5-ilx-example/releases/download/v1.0.0/hello-world-0.1.0-0001.noarch.rpm"
       ],
-      "commandToExecute": "mkdir /config/cloud; cp /config/onboard_config.yaml /config/cloud/onboard_config.yaml; mkdir -p /var/lib/cloud/icontrollx_installs; cp f5-appsvcs-templates-1.1.0-1.noarch.rpm /var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm"
+      "commandToExecute": "mkdir -p /config/cloud /var/config/rest/downloads; cp /config/onboard_config.yaml /config/cloud/onboard_config.yaml; cp hello-world-0.1.0-0001.noarch.rpm /var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm"
     }
 
 SETTINGS

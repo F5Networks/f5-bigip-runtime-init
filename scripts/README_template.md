@@ -27,6 +27,8 @@
       - [GCP (Terraform) snippet](#gcp-terraform-snippet)
   - [Runtime parameters](#runtime-parameters)
   - [Private Environments](#private-environments)
+      - [Disable Calls from the Installer](#disable-calls-from-the-installer)
+      - [Disable Calls from the Command](#disable-calls-from-the-command)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
     - [Logging](#logging)
@@ -43,7 +45,7 @@
 
 The F5 BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. 
 
-By providing a single convenient yaml or json-based configuration file which
+By providing a single convenient yaml (1.2 spec) or json-based configuration file which
 * leverages [F5 Automation Tool Chain](https://www.f5.com/pdf/products/automation-toolchain-overview.pdf) declarations that are easier to author, validate and maintain as code (vs. bigip.conf files)
 * renders secrets from public cloud vaults
 * renders runtime variables from metadata services
@@ -88,7 +90,7 @@ The installer script will do the following:
 
 Based on the content of the provided YAML or JSON conifguration file, F5 BIG-IP Runtime Init will do the following:
 
-- Download, verify, and install F5 Automation Toolchain components (DO, AS3, TS, and CFE) from package metadata, URLs, or local files
+- Download, verify, and install F5 Automation Toolchain components (DO, AS3, FAST, TS, and CFE) from package metadata, URLs, or local files
 - Download, verify, and install custom iApp LX packages from URLs or local files
 - Accept Automation Toolchain declarations from URLs or local files
 - Get secrets from cloud provider secret management APIs (Azure KeyVault, AWS Secret Manager, GCP Secrets Manager)
@@ -112,8 +114,8 @@ F5 BIG-IP Runtime Init has been tested and validated with the following versions
 
 | BIG-IP Version | Build Number |
 | --- | --- |
-| 15.1.0 | 0.0.4 |
-| 14.1.2 | 0.0.6 |
+| 15.1.2.1 | 0.0.10 |
+| 14.1.3 | 0.0.7 |
 
 
 ## Configuration
@@ -143,12 +145,21 @@ The self extracting installer accepts the following parameters:
 --key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
 --skip-verify                   : Disables RPM signature verification
 --skip-toolchain-metadata-sync  : Disables downloading automation toolchain metadata from the Internet
+--telemetry-params              : Specifies telemerty parameters as key:value pairs; (key01:value01,key02:value02)"
 ```
 
 ex:
 ```
  curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws'
 ```
+
+The installer allows to configure HTTP requests retries to make installation robust and tolerant to a network instability. This can be done using the following environment variables:
+
+| Environment variable | Description | Default Value |
+| --- | --- | --- |
+| HTTP_RETRY | Number of retries before script will fail.  | 12 |
+| HTTP_RETRY_MAX_TIME | The retry timer (in seconds) is reset before the first transfer attempt. | 60 |
+| HTTP_MAX_TIME | Maximum time in seconds that you allow the whole operation to take. | 5 |
 
 See [Private Environments](#private-environments) section below.
 
@@ -360,7 +371,7 @@ NOTES:
     extension_packages:
       install_operations:
         - extensionType: as3
-          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
+          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
     ```
   
 The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
@@ -380,6 +391,8 @@ runtime_parameters:
 ```
 
 When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named ```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
+
+Note that if logging level is set to debug, secrets used by inline commands may appear in the BIG-IP logs as part of the commands or their outputs.
 
 
 #### GCP (Terraform) snippet
@@ -497,6 +510,58 @@ runtime_parameters allows to defined list of parameters and these parameters can
               field: subnet-ipv4-cidr-block
               index: 0
     ```
+    In a case when returned metadata is in form  IPv4 CIDR block (i.e. 10.0.0.5/24), it can be transformed using ipcalc functionality:
+    
+    The following example uses ipcalc to get the first useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as GATEWAY.
+    ```yaml
+        runtime_parameters:
+          - name: GATEWAY
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: local-ipv4s
+              index: 0
+              ipcalc: first
+    ```
+    This example uses ipcalc to get the last useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as LAST_ADDRESS.
+    
+    ```yaml
+        runtime_parameters:
+          - name: LAST_ADDRESS
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: local-ipv4s
+              index: 0
+              ipcalc: last
+    ```
+    
+    The following examples demonstrates how get number of ip addresses in CIDR of the first AWS subnet and resolves it to a runtime parameter named as NETWORK_SIZE
+    
+    ```yaml
+        runtime_parameters:
+          - name: NETWORK_SIZE
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: network
+              field: local-ipv4s
+              index: 0
+              ipcalc: size
+    ```    
+    
+    The ipcalc functionality provides the following transformation options: 
+       * base      - The base address of the network block as a string (eg: 216.240.32.0). Base does not give an indication of the size of the network block.
+       * mask      - The netmask as a string (eg: 255.255.255.0).
+       * hostmask  - The host mask which is the opposite of the netmask (eg: 0.0.0.255).
+       * bitmask   - The netmask as a number of bits in the network portion of the address for this block (eg: 24).
+       * size      - The number of IP addresses in a block (eg: 256).
+       * broadcast - The blocks broadcast address (eg: 192.168.1.0/24 => 192.168.1.255).
+       * first     - First useable address.
+       * last      - Last useable address.
+
   * static - defines a static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
       ```yaml
         runtime_parameters:
@@ -552,6 +617,7 @@ F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG
 Help with troubleshooting individual Automation Toolchain components can be found at F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/):
 - DO: https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/troubleshooting.html
 - AS3: https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest/userguide/troubleshooting.html
+- FAST: https://clouddocs.f5.com/products/extensions/f5-appsvcs-templates/latest/userguide/troubleshooting.html
 - TS: https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/userguide/troubleshooting.html
 - CFE: https://clouddocs.f5.com/products/extensions/f5-cloud-failover/latest/userguide/troubleshooting.html
 
@@ -575,7 +641,53 @@ The following enviroment variables can be used for setting logging options:
     {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
 ```
 
-Example of how to set the log level using an environment variable: ```export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'```
+Example of how to set the log level using an environment variable:
+```bash
+export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'
+```
+
+
+By default, runtime will mask out (i.e. "********") the following common fields when logging:
+```json
+    [
+        "password",
+        "localPassword",
+        "remotePassword",
+        "bigIqPassword",
+        "bigIpPassword",
+        "passphrase",
+        "cookiePassphrase",
+        "certificate",
+        "privateKey",
+        "ciphertext",
+        "protected",
+        "secret",
+        "sharedSecret",
+        "secretAccessKey",
+        "apiAccessKey",
+        "encodedCredentials",
+        "encodedToken",
+        "oldPassword",
+        "newPassword",
+        "bindPassword",
+        "checkBindPassword",
+        "md5SignaturePassphrase"
+    ]
+```
+However, it is possible to extend this list by providing additional metadata (***field***) for the Secret object:
+
+```yaml
+        runtime_parameters:
+          - name: MY_SECRET
+            type: secret
+            secretProvider:
+              environment: azure
+              type: KeyVault
+              vaultUrl: https://my-keyvault.vault.azure.net
+              secretId: mySecret01
+              field: newCustomSecretField
+``` 
+This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
 
 
 By default, runtime will mask out (i.e. "********") the following common fields when logging:

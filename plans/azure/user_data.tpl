@@ -37,17 +37,25 @@ runtime_parameters:
       type: network
       field: ipv4
       index: 2
+  - name: GATEWAY
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 2
+      ipcalc: first
 pre_onboard_enabled:
-  - name: provision_modules
-    type: inline
-    commands:
-      - echo 'sys provision asm { level nominal }' >> bigip_base.conf
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
 bigip_ready_enabled:
+  - name: provision_asm
+    type: inline
+    commands:
+      - tmsh modify sys provision asm level nominal
   - name: example_inline_command
     type: inline
     commands:
@@ -62,6 +70,10 @@ bigip_ready_enabled:
     type: url
     commands:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_pre_onboard.sh
+  - name: save_sys_config
+    type: inline
+    commands:
+      - tmsh save sys config
 post_onboard_enabled:
   - name: example_inline_command
     type: inline
@@ -85,16 +97,18 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.17.0
+      extensionVersion: 1.19.0
     - extensionType: as3
-      extensionVersion: 3.24.0
+      extensionVersion: 3.26.0
       verifyTls: false
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm
-      extensionHash: df786fc755c5de6f3fcc47638caf3db4c071fcd9cf37855de78fd7e25e5117b4
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
+      extensionHash: b33a96c84b77cff60249b7a53b6de29cc1e932d7d94de80cc77fb69e0b9a45a0
+    - extensionType: fast
+      extensionVersion: 1.7.0
     - extensionType: ilx
-      extensionUrl: file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm
-      extensionVerificationEndpoint: /mgmt/shared/fast/info
-      extensionVersion: 1.1.0
+      extensionUrl: file:///var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm
+      extensionVerificationEndpoint: /mgmt/shared/echo
+      extensionVersion: 0.1.0
 extension_services:
   service_operations:
     - extensionType: do

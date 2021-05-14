@@ -7,6 +7,7 @@
  */
 
 import packageInfo from '../package.json';
+import * as process from 'process';
 
 export const VERSION = packageInfo.version;
 export const NAME = packageInfo.name;
@@ -17,6 +18,7 @@ export const TMP_DIR = '/var/lib/cloud/icontrollx_installs';
 
 export const TELEMETRY_TYPE= `${NAME}-data`;
 export const TELEMETRY_TYPE_VERSION= '1';
+export const TELEMETRY_INSTALL_DATA_FILE='/config/cloud/telemetry_install_params.tmp';
 export const ENVIRONMENT_KEY_NAME= 'environment';
 
 
@@ -31,8 +33,11 @@ export const RETRY = {
     LONG_COUNT: 150,
     DEFAULT_COUNT: 100,
     DELAY_IN_MS: 10000,
+    AVAILABLE_DELAY_IN_MS: 3000,
     SHORT_COUNT: 20,
-    SHORT_DELAY_IN_MS: 1000
+    TINY_COUNT: 10,
+    SHORT_DELAY_IN_MS: 1000,
+    EXTENSION_INSTALL_DELAY_IN_MS: process.env.F5_BIGIP_RUNTIME_EXTENSION_INSTALL_DELAY_IN_MS || '10000'
 };
 
 export const ENV_VARS = {

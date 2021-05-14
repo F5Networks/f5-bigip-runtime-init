@@ -42,9 +42,9 @@ const standardToolchainOptions = {
 };
 
 const ilxToolchainOptions = {
-    extensionVersion: '1.1.0',
-    extensionUrl: 'file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm',
-    extensionVerificationEndpoint: '/mgmt/shared/fast/info',
+    extensionVersion: '0.1.0',
+    extensionUrl: 'file:///var/lib/cloud/icontrollx_installs/hello-world-0.1.0-0001.noarch.rpm',
+    extensionVerificationEndpoint: '/mgmt/shared/echo',
     maxRetries: 3,
     retryInterval: 2500
 };
@@ -95,7 +95,7 @@ describe('BIG-IP Metadata Client', () => {
 
     it('should return the download URL for an iLX package', () => {
         const component = 'ilx';
-        const url = 'file:///var/lib/cloud/icontrollx_installs/f5-appsvcs-templates-1.1.0-1.noarch.rpm';
+        const url = 'file:///var/lib/cloud/icontrollx_installs/hello-world-0.1.0-0001.noarch.rpm';
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, ilxToolchainOptions);
 
@@ -131,7 +131,7 @@ describe('BIG-IP Metadata Client', () => {
 
     it('should return the info endpoint for an iLX package', () => {
         const component = 'ilx';
-        const infoEndpoint = '/mgmt/shared/fast/info';
+        const infoEndpoint = '/mgmt/shared/echo';
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, ilxToolchainOptions);
 
@@ -162,7 +162,7 @@ describe('BIG-IP Package Client', () => {
         assert.strictEqual(packageClient.version, standardToolchainOptions.extensionVersion);
     });
 
-    it('should validate isInsatlled method when package is not installed', () => {
+    it('should validate isInstalled method when package is not installed', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
@@ -183,7 +183,7 @@ describe('BIG-IP Package Client', () => {
             .catch(err => Promise.reject(err));
     });
 
-    it('should validate isInsatlled method when package installed but not required update', () => {
+    it('should validate isInstalled method when package installed but not required update', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainOptions = {
             extensionType: 'as3',
@@ -214,7 +214,7 @@ describe('BIG-IP Package Client', () => {
     });
 
 
-    it('should validate isInsatlled method when package installed and required update', () => {
+    it('should validate isInstalled method when package installed and required update', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainOptions = {
             extensionType: 'as3',
@@ -381,13 +381,13 @@ describe('BIG-IP Package Client', () => {
             });
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-templates-1.1.0-1.noarch.rpm': '12345'
+                'hello-world-0.1.0-0001.noarch.rpm': '12345'
             }
         });
         return packageClient.install()
             .then((response) => {
                 assert.strictEqual(response.component, 'as3');
-                assert.strictEqual(response.version,'1.1.0');
+                assert.strictEqual(response.version,'0.1.0');
                 assert.ok(response.installed);
             })
             .catch(err => Promise.reject(err));

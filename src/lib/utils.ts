@@ -205,7 +205,7 @@ export function loadData(location: string, options?: {
                 url: location,
                 method: 'GET',
                 strictSSL: options.verifyTls ? options.verifyTls : true
-            }, (error, resp, body) => {
+            }, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
                 if (error) {
                     reject(error);
                 } else {
@@ -226,13 +226,28 @@ export function loadData(location: string, options?: {
 /**
  * Renders secrets
  *
- * @param data                    - String with token to replace
+ * @param template                - String with token to replace
  * @param value                   - token name to secret value map (JSON)
  *
  * @returns {promise} Returns string with replaced tokens
  */
 export async function renderData(template: string, value: object): Promise<string> {
     return Mustache.render(template, value);
+}
+
+/**
+ * Checks for secrets
+ *
+ * @param template                - String with possible tokens
+ *
+ * @returns true/false based on whether string has secret or not
+ */
+export function checkForSecrets(template: string): boolean {
+    const parsed = Mustache.parse(template);
+    if (parsed.length > 1) {
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -299,7 +314,7 @@ export async function makeRequest(uri: string, options?: {
         code: number;
         body: any;
     } = await new Promise((resolve, reject) => {
-        retrier(request, [requestOptions, (error, resp, body) => {
+        retrier(request, [requestOptions, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
             if (error) {
                 reject(error);
             } else {
