@@ -1097,7 +1097,7 @@ publish_to_github:
         # Execute Release script to push source to github repo
         - ./scripts/publish_github.sh
 
-trigger_downstream_templates_tests:
+trigger_downstream_templates_tests_azure:
     stage: release_trigger_template_tests
     only:
       - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
@@ -1105,5 +1105,15 @@ trigger_downstream_templates_tests:
         RELEASE_RUNTIME_INIT_TESTS: "true"
         VERSION: $CI_COMMIT_REF_NAME
     trigger:
-        project: cloudsolutions/f5-cloud-factory
-        branch: master
+        project: cloudsolutions/automation-templates/f5-azure-arm-templates-v2
+        branch: main
+trigger_downstream_templates_tests_aws:
+    stage: release_trigger_template_tests
+    only:
+      - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
+    variables:
+        RELEASE_RUNTIME_INIT_TESTS: "true"
+        VERSION: $CI_COMMIT_REF_NAME
+    trigger:
+        project: cloudsolutions/automation-templates/f5-aws-cloudformation-v2
+        branch: main
