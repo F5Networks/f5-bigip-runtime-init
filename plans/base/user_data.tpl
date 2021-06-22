@@ -81,6 +81,10 @@ cp /tmp/hello-world-0.1.0-0001.noarch.rpm /var/config/rest/downloads/hello-world
 
 cat << 'EOF' > /config/onboard_config.yaml
 ---
+controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
+    logToJson: true
 bigip_ready_enabled:
   - name: provision_asm
     type: inline

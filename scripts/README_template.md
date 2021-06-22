@@ -624,22 +624,47 @@ Help with troubleshooting individual Automation Toolchain components can be foun
 ### Logging
 The default log location is /var/log/cloud/bigIpRuntimeInit.log. This location can be customized (see below). 
 
-The following enviroment variables can be used for setting logging options: 
-- F5_BIGIP_RUNTIME_INIT_LOG_LEVEL (string) - Defines log level
-```json
-    { 
-      error: 0, 
-      warn: 1, 
-      info: 2, 
-      debug: 5, 
-      silly: 6 
-    }
-```
-- F5_BIGIP_RUNTIME_INIT_LOG_FILENAME (string) - Defines path to log file (i.e. /var/log/cloud/bigIpRuntimeInit.log)
-- F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON (boolean) - Defines if logs should be output in JSON format:
-```json
-    {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
-```
+The logging settings can be configured using controls directive or enviroment variables: 
+
+- Log level: 
+    * Using controls directive: 
+    ```yaml
+     controls:
+        logLevel: silly
+    ```
+
+    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_LEVEL (string)
+    
+    ```json
+        { 
+          error: 0, 
+          warn: 1, 
+          info: 2, 
+          debug: 5, 
+          silly: 6 
+        }
+    ```
+- Log filename:
+    * Using controls directive:
+     ```yaml
+     controls:
+        logFilename: /var/log/cloud/bigIpRuntimeInit.log
+    ```    
+    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_FILENAME (string) 
+    
+- Log to JSON:
+
+    * Using controls directive:
+  
+        ```yaml
+        controls:
+          logToJson: true
+        ```
+    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON (boolean)
+
+    ```json
+        {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
+    ```
 
 Example of how to set the log level using an environment variable:
 ```bash

@@ -29,7 +29,7 @@ import { ManagementClient } from './lib/bigip/managementClient';
 import { ToolChainClient } from './lib/bigip/toolchain/toolChainClient';
 import { TelemetryClient } from './lib/telemetry/telemetryClient';
 
-const logger = Logger.getLogger();
+let logger = Logger.getLogger();
 const executionResults = {};
 let telemetryClient;
 let statusCode = 0;
@@ -62,6 +62,29 @@ export async function cli(): Promise<string> {
         config  = 'INVALID_CONFIG_FILE_TYPE'
     }
 
+    // checking if config load was successfull or not
+    if (loadError) {
+        const error = new Error(loadError);
+        return Promise.reject(error);
+    }
+
+    // processing Runtime Init controls
+    logger.info('Processing controls parameters');
+    if (config.controls) {
+        if (config.controls.logLevel) {
+            process.env.F5_BIGIP_RUNTIME_INIT_LOG_LEVEL = config.controls.logLevel;
+            logger = Logger.getLogger();
+        }
+        if (config.controls.logFilename) {
+            process.env.F5_BIGIP_RUNTIME_INIT_LOG_FILENAME = config.controls.logFilename;
+            logger = Logger.getLogger();
+        }
+        if (config.controls.logToJson) {
+            process.env.F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON = config.controls.logToJson;
+            logger = Logger.getLogger();
+        }
+    }
+
     if (!program.skipTelemetry){
         logger.silly('F5 Telemetry is enabled.');
         executionResults['configFile'] = program.configFile;
@@ -69,12 +92,6 @@ export async function cli(): Promise<string> {
         executionResults['config'] = config;
     } else {
         logger.info('F5 Telemetry is disabled.');
-    }
-
-    // checking if config load was successfull or not
-    if (loadError) {
-        const error = new Error(loadError);
-        return Promise.reject(error);
     }
 
     logger.info('Validating provided declaration');
@@ -85,6 +102,7 @@ export async function cli(): Promise<string> {
         return Promise.reject(error);
     }
     logger.info('Successfully validated declaration');
+
 
     const resolver = new ResolverClient();
 

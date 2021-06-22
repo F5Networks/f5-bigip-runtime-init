@@ -1,5 +1,45 @@
 ## F5 BIG-IP Runtime Init Schema and Examples
 
+### controls: Schema
+
+_Runtime Init controls used for setting logLevel and other Runtime Init settings_
+
+Type: `object`
+
+<i id="#">path: #</i>
+
+**_Properties_**
+
+ - <b id="#/properties/logLevel">logLevel</b>
+	 - Type: `string`
+	 - <i id="#/properties/logLevel">path: #/properties/logLevel</i>
+	 - The value is restricted to the following: 
+		 1. _"debug"_
+		 2. _"info"_
+		 3. _"silly"_
+		 4. _"warn"_
+		 5. _"error"_
+ - <b id="#/properties/logFilename">logFilename</b>
+	 - Type: `string`
+	 - <i id="#/properties/logFilename">path: #/properties/logFilename</i>
+	 - Example values: 
+		 1. _"/var/log/cloud/bigIpRuntimeInit.log"_
+ - <b id="#/properties/logToJson">logToJson</b>
+	 - Type: `boolean`
+	 - <i id="#/properties/logToJson">path: #/properties/logToJson</i>
+	 - The value is restricted to the following: 
+		 1. _true_
+		 2. _false_
+
+
+### controls: Configuration Examples
+
+```yaml
+controls:
+  logLevel: silly
+
+```
+***
 ### runtime_parameters: Schema
 
 _Runtime parameters used to render Automation Toolchain declarations._

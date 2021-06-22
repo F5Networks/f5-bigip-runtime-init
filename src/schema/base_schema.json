@@ -4,6 +4,24 @@
     "description": "F5 BIG-IP Runtime Init Schema",
     "type": "object",
     "properties": {
+        "controls": {
+            "description": "Runtime Init controls used for setting logLevel and other Runtime Init settings",
+            "type": "object",
+            "properties": {
+                "logLevel": {
+                    "type": "string",
+                    "enum": [ "debug", "info", "silly", "warn", "error"]
+                },
+                "logFilename": {
+                    "type": "string",
+                    "examples": [ "/var/log/cloud/bigIpRuntimeInit.log" ]
+                },
+                "logToJson": {
+                    "type": "boolean",
+                    "enum": [ true, false ]
+                }
+            }
+        },
         "runtime_parameters": {
             "description": "Runtime parameters used to render Automation Toolchain declarations.",
             "type": "array",
