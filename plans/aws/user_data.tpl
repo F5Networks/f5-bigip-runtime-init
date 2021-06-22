@@ -22,6 +22,10 @@ mkdir /config/cloud
 
 cat << 'EOF' > /config/cloud/onboard_config.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
+  logToJson: true
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
