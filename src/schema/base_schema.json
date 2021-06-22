@@ -27,27 +27,108 @@
                         "properties": {
                             "environment": {
                                 "type": "string",
-                                "enum": ["gcp", "aws", "azure"]
+                                "enum": ["gcp", "aws", "azure", "hashicorp"]
                             },
                             "type": {
                                 "type": "string",
-                                "enum": ["SecretsManager", "SecretManager", "default", "KeyVault"]
+                                "enum": ["SecretsManager", "SecretManager", "default", "KeyVault", "Vault"]
                             },
                             "secretId": {
-                                "description": "ID or name of the secret in the secret manager of the specified cloud",
+                                "description": "ID or name of the secret in the secret manager of the specified environment",
                                 "type": "string",
-                                "examples": ["mySecretId", "test-document-01"]
+                                "examples": ["mySecretId", "test-document-01", "secret/foo"]
                             },
                             "version": {
                                 "description": "Version identifier for the secret to be retrieved",
                                 "type": "string",
-                                "examples": ["AWSCURRENT", "1.0"]
+                                "examples": ["AWSCURRENT", "1.0", "1"]
                             },
                             "vaultUrl": {
                                 "description": "URL of the Azure Key Vault",
                                 "type": "string",
                                 "pattern": "(https?://(.+?\\.)?vault\\.(azure|usgovcloudapi)\\.net(/[A-Za-z0-9\\-\\._~:/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)",
                                 "examples": ["https://my-keyvault.vault.azure.net", "https://my-keyvault.vault.usgovcloudapi.net"]
+                            },
+                            "vaultServer": {
+                                "description": "URL of the Hashicorp Vault server",
+                                "type": "string",
+                                "pattern": "^(https?|http?):\/\/[^\\s$.?#].[^\\s]*$",
+                                "examples": ["https://my-vault-server:8200", "http://1.2.3.4:8200"]
+                            },
+                            "namespace": {
+                                "description": "Hashicorp Vault namespace used",
+                                "type": "string",
+                                "examples": ["ns1/", "ns1/ns2/"]
+                            },
+                            "secretsEngine": {
+                                "description": "Hashicorp Vault secrets engine used",
+                                "type": "string",
+                                "enum": ["kv2"]
+                            },
+                            "authBackend": {
+                                "description": "Hashicorp Vault authentication backend used",
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "description": "Hashicorp Vault auth backend type",
+                                        "type": "string",
+                                        "enum": ["approle"]
+                                    },
+                                    "roleId": {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "enum": ["url", "inline"]
+                                            },
+                                            "value": {
+                                                "description": "Hashicorp Vault approle role ID",
+                                                "type": "string",
+                                                "examples": ["9c9b8014-d2e1-11eb-b8bc-0242ac130003", "file:///path/to/role-id"]
+                                            }
+                                        },
+                                        "allOf": [
+                                            {
+                                                "if": { "properties": { "type": { "const": "url" } } },
+                                                "then": { "properties": { "value": { "type": "string", "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
+                                            },
+                                            {
+                                                "if": { "properties": { "type": { "const": "inline" } } },
+                                                "then": { "properties": { "value": { "type": "object"} }, "required": ["value"] }
+                                            }
+                                        ]
+                                    },
+                                    "secretId": {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string",
+                                                "enum": ["url", "inline"]
+                                            },
+                                            "value": {
+                                                "description": "Hashicorp Vault approle secret ID",
+                                                "type": "string",
+                                                "examples": ["9c9b84a6-d2e1-11eb-b8bc-0242ac130003", "file:///path/to/secret-id"]
+                                            }
+                                        },
+                                        "allOf": [
+                                            {
+                                                "if": { "properties": { "type": { "const": "url" } } },
+                                                "then": { "properties": { "value": { "type": "string", "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
+                                            },
+                                            {
+                                                "if": { "properties": { "type": { "const": "inline" } } },
+                                                "then": { "properties": { "value": { "type": "object"} }, "required": ["value"] }
+                                            }
+                                        ]
+                                    }
+                                },
+                                "allOf": [
+                                    {
+                                        "if": { "properties": { "type": { "const": "approle" } } },
+                                        "then": { "required": ["roleId", "secretId"] }
+                                    }
+                                ]
                             },
                             "field": {
                                 "description": "field name to which secret value is mapped to",
@@ -59,6 +140,10 @@
                             {
                                 "if": { "properties": { "environment": { "const": "azure" } } },
                                 "then": { "required": ["vaultUrl"] }
+                            },
+                            {
+                                "if": { "properties": { "environment": { "const": "hashicorp" } } },
+                                "then": { "required": ["vaultServer", "secretsEngine", "authBackend"] }
                             }
                         ],
                         "required": ["environment", "type", "secretId"],

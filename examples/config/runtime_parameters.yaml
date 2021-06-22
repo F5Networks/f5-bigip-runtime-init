@@ -88,3 +88,25 @@ gcp:
         environment: gcp
         type: compute
         field: name
+hashicorp:
+  description: Hashicorp Vault Example
+  runtime_parameters:
+  - name: ADMIN_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: http://127.0.0.1:8200
+      namespace: ns1/
+      secretsEngine: kv2
+      secretId: secret/foo
+      field: password
+      version: 1
+      authBackend:
+        type: approle
+        roleId:
+          type: url
+          value: file:///path/to/role-id
+        secretId:
+          type: inline
+          value: secret-id

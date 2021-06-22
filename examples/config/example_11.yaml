@@ -1,7 +1,7 @@
-extension_packages: {install_operations: [{extensionType: "do", extensionVersion: "1.20.0",
-      extensionHash: "02d29e99f76b1f9e2c99d4aee6dc73873f78735f430fe53139ca51c2d5f1fead"},
-    {extensionType: "as3", extensionUrl: "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.27.0/f5-appsvcs-3.27.0-3.noarch.rpm",
-      extensionVersion: "3.27.0", verifyTls: false}, {extensionType: "ilx", extensionUrl: "file:///var/config/rest/downloads/myIlxApp.rpm",
+extension_packages: {install_operations: [{extensionType: "do", extensionVersion: "1.21.0",
+      extensionHash: "4fbf99d9dd15ab9f3c639f7cc009935b659a5c00c9f4895884e971da0d3326a4"},
+    {extensionType: "as3", extensionUrl: "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm",
+      extensionVersion: "3.28.0", verifyTls: false}, {extensionType: "ilx", extensionUrl: "file:///var/config/rest/downloads/myIlxApp.rpm",
       extensionVersion: "1.0.0", extensionVerificationEndpoint: "/mgmt/shared/myIlxApp/info"}]}
 extension_services: {service_operations: [{extensionType: "do", type: "url", value: "https://cdn.f5.com/product/cloudsolutions/declarations/autoscale-waf/autoscale_do_payg.json",
       verifyTls: false}, {extensionType: "as3", type: "url", value: "https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json"}]}
