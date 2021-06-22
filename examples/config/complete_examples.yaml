@@ -34,3 +34,6 @@ example_11:
 example_12:
   description: Licenses BIG-IP device using BIG-IQ utility offering and authenticating with credentials stored in Azure KeyVault.
   runtime_config:
+example_13:
+  description: Renders the admin password using Hashicorp Vault approle authentication.
+  runtime_config:

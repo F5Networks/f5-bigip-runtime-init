@@ -132,14 +132,14 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.19.0
+      extensionVersion: 1.21.0
     - extensionType: as3
-      extensionVersion: 3.26.0
+      extensionVersion: 3.28.0
       verifyTls: false
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
-      extensionHash: b33a96c84b77cff60249b7a53b6de29cc1e932d7d94de80cc77fb69e0b9a45a0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm
+      extensionHash: b45f1762dbec90e953f825c4f7b3628f44c2404af627f2400dccc4996ef98979
     - extensionType: fast
-      extensionVersion: 1.7.0
+      extensionVersion: 1.9.0
     - extensionType: ilx
       extensionUrl: file:///var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/echo

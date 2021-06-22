@@ -74,17 +74,18 @@ runtime_parameters:
 extension_packages: 
   install_operations:
     - extensionType: do
-      extensionVersion: v1.19.0
-      extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.19.0/f5-declarative-onboarding-1.19.0-2.noarch.rpm
+      extensionVersion: v1.21.0
+      extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.0/f5-declarative-onboarding-1.21.0-3.noarch.rpm
     - extensionType: as3
-      extensionVersion: v3.26.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
+      extensionVersion: v3.28.0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm
     - extensionType: ts
-      extensionVersion: v1.18.0
-      extensionUrl: https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.18.0/f5-telemetry-1.18.0-2.noarch.rpm
+      extensionVersion: v1.20.0
+      extensionUrl: https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.0/f5-telemetry-1.20.0-3.noarch.rpm
     - extensionType: cf
-      extensionVersion: v1.7.1
-      extensionUrl: https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.7.1/f5-cloud-failover-1.7.1-1.noarch.rpm
+      extensionVersion: v1.8.0
+      extensionUrl: https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.8.0/f5-cloud-failover-1.8.0-0.noarch.rpm
+
 extension_services: 
   service_operations:
     - extensionType: do

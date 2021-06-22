@@ -2,17 +2,22 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: secret
     secretProvider:
-      type: SecretsManager
-      environment: gcp
-      version: latest
-      secretId: my-secret-id-01
-  - name: ROOT_PASS
-    type: secret
-    secretProvider:
-      type: SecretsManager
-      environment: gcp
-      version: latest
-      secretId: my-secret-id-02
+      type: Vault
+      environment: hashicorp
+      vaultServer: http://127.0.0.1:8200
+      namespace: ns1/
+      secretsEngine: kv2
+      secretId: secret/foo
+      field: password
+      version: 1
+      authBackend:
+        type: approle
+        roleId:
+          type: url
+          value: file:///path/to/role-id
+        secretId:
+          type: inline
+          value: secret-id
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -27,8 +32,5 @@ extension_packages:
       extensionVersion: 3.28.0
     - extensionType: fast
       extensionVersion: 1.9.0
-extension_services:
-  service_operations:
-    - extensionType: do
-      type: url
-      value: file:///examples/declarations/example_5_do.json
+    - extensionType: ts
+      extensionVersion: 1.20.0

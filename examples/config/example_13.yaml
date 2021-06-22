@@ -1,17 +1,23 @@
 runtime_parameters:
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-      environment: azure
-      type: compute
-      field: name
-  - name: BIGIQ_ADMIN_PASS
+  - name: ADMIN_PASS
     type: secret
     secretProvider:
-      type: KeyVault
-      environment: azure
-      vaultUrl: https://my-keyvault.vault.azure.net
-      secretId: my_azure_secret
+      type: Vault
+      environment: hashicorp
+      vaultServer: http://127.0.0.1:8200
+      namespace: ns1/
+      secretsEngine: kv2
+      secretId: secret/foo
+      field: password
+      version: 1
+      authBackend:
+        type: approle
+        roleId:
+          type: url
+          value: file:///path/to/role-id
+        secretId:
+          type: inline
+          value: secret-id
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
