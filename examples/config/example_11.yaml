@@ -1,5 +1,5 @@
-extension_packages: {install_operations: [{extensionType: "do", extensionVersion: "1.21.0",
-      extensionHash: "4fbf99d9dd15ab9f3c639f7cc009935b659a5c00c9f4895884e971da0d3326a4"},
+extension_packages: {install_operations: [{extensionType: "do", extensionVersion: "1.21.1",
+      extensionHash: "4ddf98bfec0f6272ac1c76a81b806fc1f16bae03f39a74e2468b2b0e7b96be09"},
     {extensionType: "as3", extensionUrl: "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm",
       extensionVersion: "3.28.0", verifyTls: false}, {extensionType: "ilx", extensionUrl: "file:///var/config/rest/downloads/myIlxApp.rpm",
       extensionVersion: "1.0.0", extensionVerificationEndpoint: "/mgmt/shared/myIlxApp/info"}]}

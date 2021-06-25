@@ -1,2 +1,4 @@
 controls:
   logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
+  logToJson: true

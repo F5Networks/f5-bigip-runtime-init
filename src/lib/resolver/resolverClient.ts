@@ -23,6 +23,7 @@ import Logger from '../logger';
 import { getCloudProvider } from '../cloud/cloudFactory';
 import * as utils from '../utils';
 import * as constants from '../../constants';
+import {HashicorpVaultClient} from "../provider/secret";
 
 const logger = Logger.getLogger();
 
@@ -185,18 +186,25 @@ export class ResolverClient {
      * @returns                    - resolves with secret value
      */
     async _resolveSecret(secretMetadata): Promise<string> {
-        const _cloudClient = await this.getCloudProvider(
-            secretMetadata.secretProvider.environment,
-            { logger }
-        );
-        await _cloudClient.init();
-        if (secretMetadata.secretProvider.field !== undefined) {
-            constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
+        let secretValue;
+        if (secretMetadata.secretProvider.environment === 'hashicorp') {
+            const hashicorpVaultClient = new HashicorpVaultClient();
+            await hashicorpVaultClient.login(secretMetadata);
+            secretValue = await hashicorpVaultClient.getSecret(secretMetadata);
+        } else {
+            const _cloudClient = await this.getCloudProvider(
+                secretMetadata.secretProvider.environment,
+                { logger }
+            );
+            await _cloudClient.init();
+            if (secretMetadata.secretProvider.field !== undefined) {
+                constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
+            }
+            secretValue = await _cloudClient.getSecret(
+                secretMetadata.secretProvider.secretId,
+                secretMetadata.secretProvider
+            );
         }
-        const secretValue = await _cloudClient.getSecret(
-            secretMetadata.secretProvider.secretId,
-            secretMetadata.secretProvider
-        );
         return secretValue;
     }
 
