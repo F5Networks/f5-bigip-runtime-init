@@ -304,7 +304,7 @@ logger "Enabling app role auth"
 vault auth enable approle
 
 logger "Creating app role for runtime init"
-vault write auth/approle/role/runtime-init-role secret_id_ttl=60m token_num_uses=10 token_ttl=60m token_max_ttl=60m secret_id_num_uses=10 policies="default","test"
+vault write auth/approle/role/runtime-init-role secret_id_ttl=360m token_num_uses=100 token_ttl=60m token_max_ttl=60m secret_id_num_uses=100 policies="default","test"
 
 logger "Getting role-id for runtime-init-role"
 role_id=$(vault read -format=json auth/approle/role/runtime-init-role/role-id > /tmp/role-id)

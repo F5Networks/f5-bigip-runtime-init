@@ -1,10 +1,10 @@
 # AWS region and AZs in which to deploy
 variable "aws_region" {
-  default = "us-east-1"
+  default = "us-west-2"
 }
 
 variable "availability_zones" {
-  default = "us-east-1a"
+  default = "us-west-2a"
 }
 
 # All resources will be tagged with this

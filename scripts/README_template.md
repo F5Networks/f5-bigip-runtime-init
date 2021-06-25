@@ -124,6 +124,7 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 
 | Attribute | Default Value | Required |    Description | 
 | --- | --- | --- | --- | 
+| controls | none | No    | List of runtime controls settings. |
 | pre_onboard_enabled | none | No   | List of commands to run that do not check if BIG-IP and MCPD are up and running. However, execution before BIG-IP is ready depends on cloud agent/download times/etc.  |
 | runtime_parameters | none | No    | List of runtime parameters to gather. |
 | bigip_ready_enabled | none | No   | List of commands to run after BIG-IP and MCPD are up and running. Example: tmsh commands, misc optimizations, etc. |

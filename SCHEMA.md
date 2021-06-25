@@ -37,6 +37,8 @@ Type: `object`
 ```yaml
 controls:
   logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
+  logToJson: true
 
 ```
 ***
@@ -94,14 +96,19 @@ Type: `array`
 					 3. _"default"_
 					 4. _"KeyVault"_
 					 5. _"Vault"_
-			 - <b id="#/items/properties/secretProvider/properties/secretId">secretId</b> `required`
+			 - <b id="#/items/properties/secretProvider/properties/secretId">secretId</b>
 				 - _ID or name of the secret in the secret manager of the specified environment_
 				 - Type: `string`
 				 - <i id="#/items/properties/secretProvider/properties/secretId">path: #/items/properties/secretProvider/properties/secretId</i>
 				 - Example values: 
 					 1. _"mySecretId"_
 					 2. _"test-document-01"_
-					 3. _"secret/foo"_
+			 - <b id="#/items/properties/secretProvider/properties/secretPath">secretPath</b>
+				 - _Path to secret object in Hashicorp Vault_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/secretPath">path: #/items/properties/secretProvider/properties/secretPath</i>
+				 - Example values: 
+					 1. _"secret/foo"_
 			 - <b id="#/items/properties/secretProvider/properties/version">version</b>
 				 - _Version identifier for the secret to be retrieved_
 				 - Type: `string`
@@ -184,6 +191,7 @@ Type: `array`
 								 - Example values: 
 									 1. _"9c9b84a6-d2e1-11eb-b8bc-0242ac130003"_
 									 2. _"file:///path/to/secret-id"_
+									 3. _"https://path/to/secret-id"_
 			 - <b id="#/items/properties/secretProvider/properties/field">field</b>
 				 - _field name to which secret value is mapped to_
 				 - Type: `string`
@@ -668,7 +676,7 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.21.0
+        extensionVersion: 1.21.1
       - extensionType: as3
         extensionVersion: 3.28.0
       - extensionType: fast
@@ -678,7 +686,7 @@ versioned:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.21.0
+        extensionVersion: 1.21.1
       - extensionType: as3
         extensionVersion: 3.28.0
       - extensionType: fast
@@ -688,8 +696,8 @@ hashed:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.21.0
-        extensionHash: 4fbf99d9dd15ab9f3c639f7cc009935b659a5c00c9f4895884e971da0d3326a4
+        extensionVersion: 1.21.1
+        extensionHash: 4ddf98bfec0f6272ac1c76a81b806fc1f16bae03f39a74e2468b2b0e7b96be09
       - extensionType: as3
         extensionVersion: 3.28.0
         extensionHash: b45f1762dbec90e953f825c4f7b3628f44c2404af627f2400dccc4996ef98979
@@ -701,9 +709,9 @@ url:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.21.0
+        extensionVersion: 1.21.1
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.0/f5-declarative-onboarding-1.21.0-3.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.1/f5-declarative-onboarding-1.21.1-2.noarch.rpm
       - extensionType: as3
         extensionVersion: 3.28.0
         extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.28.0-3.noarch.rpm'
@@ -716,7 +724,7 @@ ilx:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.21.0
+        extensionVersion: 1.21.1
       - extensionType: as3
         extensionVersion: 3.28.0
       - extensionType: fast
@@ -901,8 +909,8 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
-          extensionHash: 4fbf99d9dd15ab9f3c639f7cc009935b659a5c00c9f4895884e971da0d3326a4
+          extensionVersion: 1.21.1
+          extensionHash: 4ddf98bfec0f6272ac1c76a81b806fc1f16bae03f39a74e2468b2b0e7b96be09
         - extensionType: as3
           extensionVersion: 3.28.0
           extensionHash: b45f1762dbec90e953f825c4f7b3628f44c2404af627f2400dccc4996ef98979
@@ -930,9 +938,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.21.0-3.noarch.rpm
-          extensionHash: 4fbf99d9dd15ab9f3c639f7cc009935b659a5c00c9f4895884e971da0d3326a4
-          extensionVersion: 1.21.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.21.1-2.noarch.rpm
+          extensionHash: 4ddf98bfec0f6272ac1c76a81b806fc1f16bae03f39a74e2468b2b0e7b96be09
+          extensionVersion: 1.21.1
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -965,7 +973,7 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1008,7 +1016,7 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1047,7 +1055,7 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1109,7 +1117,7 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1136,7 +1144,7 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1193,7 +1201,7 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1302,7 +1310,7 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1319,7 +1327,7 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1342,8 +1350,8 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
-          extensionHash: 4fbf99d9dd15ab9f3c639f7cc009935b659a5c00c9f4895884e971da0d3326a4
+          extensionVersion: 1.21.1
+          extensionHash: 4ddf98bfec0f6272ac1c76a81b806fc1f16bae03f39a74e2468b2b0e7b96be09
         - extensionType: as3
           extensionUrl: >-
             https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm
@@ -1435,7 +1443,7 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast
@@ -1477,7 +1485,7 @@ example_13:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.21.0
+          extensionVersion: 1.21.1
         - extensionType: as3
           extensionVersion: 3.28.0
         - extensionType: fast

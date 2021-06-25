@@ -54,7 +54,12 @@
                             "secretId": {
                                 "description": "ID or name of the secret in the secret manager of the specified environment",
                                 "type": "string",
-                                "examples": ["mySecretId", "test-document-01", "secret/foo"]
+                                "examples": ["mySecretId", "test-document-01"]
+                            },
+                            "secretPath": {
+                                "description": "Path to secret object in Hashicorp Vault",
+                                "type": "string",
+                                "examples": ["secret/foo"]
                             },
                             "version": {
                                 "description": "Version identifier for the secret to be retrieved",
@@ -108,11 +113,11 @@
                                         "allOf": [
                                             {
                                                 "if": { "properties": { "type": { "const": "url" } } },
-                                                "then": { "properties": { "value": { "type": "string", "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
+                                                "then": { "properties": { "value": { "type": "string", "pattern": "^(http?|https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
                                             },
                                             {
                                                 "if": { "properties": { "type": { "const": "inline" } } },
-                                                "then": { "properties": { "value": { "type": "object"} }, "required": ["value"] }
+                                                "then": { "properties": { "value": { "type": "string"} }, "required": ["value"] }
                                             }
                                         ]
                                     },
@@ -126,17 +131,17 @@
                                             "value": {
                                                 "description": "Hashicorp Vault approle secret ID",
                                                 "type": "string",
-                                                "examples": ["9c9b84a6-d2e1-11eb-b8bc-0242ac130003", "file:///path/to/secret-id"]
+                                                "examples": ["9c9b84a6-d2e1-11eb-b8bc-0242ac130003", "file:///path/to/secret-id", "https://path/to/secret-id"]
                                             }
                                         },
                                         "allOf": [
                                             {
                                                 "if": { "properties": { "type": { "const": "url" } } },
-                                                "then": { "properties": { "value": { "type": "string", "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
+                                                "then": { "properties": { "value": { "type": "string", "pattern": "^(http?|https?|file):\/\/[^\\s$.?#].[^\\s]*$"} }, "required": ["value"] }
                                             },
                                             {
                                                 "if": { "properties": { "type": { "const": "inline" } } },
-                                                "then": { "properties": { "value": { "type": "object"} }, "required": ["value"] }
+                                                "then": { "properties": { "value": { "type": "string"} }, "required": ["value"] }
                                             }
                                         ]
                                     }
@@ -161,10 +166,10 @@
                             },
                             {
                                 "if": { "properties": { "environment": { "const": "hashicorp" } } },
-                                "then": { "required": ["vaultServer", "secretsEngine", "authBackend"] }
+                                "then": { "required": ["vaultServer", "secretsEngine", "authBackend", "secretPath"] }
                             }
                         ],
-                        "required": ["environment", "type", "secretId"],
+                        "required": ["environment", "type"],
                         "additionalProperties": false
                     },
                     "metadataProvider": {

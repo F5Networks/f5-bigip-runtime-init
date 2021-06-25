@@ -184,6 +184,61 @@ describe('Resolver Client', () => {
             });
     });
 
+    it('should validate resolveRuntimeParameters for hashicorp case', () => {
+        const resolver = new ResolverClient();
+        nock('http://1.1.1.1:8200')
+            .post('/v1/auth/approle/login')
+            .reply(200,
+                {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"",
+                    "renewable":false,"lease_duration":0,"data":null,
+                    "wrap_info":null,"warnings":null,
+                    "auth":{"client_token":"this-is-test-token-value",
+                        "accessor":"DR8vhrYNUK7CrkRvextEn4CN",
+                        "policies":["default","test"],
+                        "token_policies":["default","test"],
+                        "metadata":{"role_name":"runtime-init-role"},
+                        "lease_duration":3600,"renewable":true,
+                        "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159",
+                        "token_type":"service",
+                        "orphan":true}
+                });
+        nock('http://1.1.1.1:8200')
+            .get('/v1/kv/data/credential')
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+        runtimeParameters = [
+            {
+                name: 'SECRET_FROM_HASHICORP_VAULT',
+                type: 'secret',
+                secretProvider: {
+                    type: 'Vault',
+                    environment: 'hashicorp',
+                    vaultServer: 'http://1.1.1.1:8200',
+                    secretsEngine: 'kv2',
+                    secretPath: 'kv/data/credential',
+                    field: 'password',
+                    version: '1',
+                    authBackend: {
+                        type: 'approle',
+                        roleId: {
+                            type: 'inline',
+                            value: 'qweq-qweq-qwe'
+                        },
+                        secretId: {
+                            type: 'inline',
+                            value: 'ewq-eq-eqw'
+                        }
+                    }
+                }
+            }
+        ];
+        return resolver.resolveRuntimeParameters(runtimeParameters)
+            .then((results) => {
+                assert.ok(Object.keys(results).length === 1);
+                assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'], 'b1gAdminPazz');
+            });
+    });
+
+
     it('should validate resolveRuntimeParameters no secret match', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
