@@ -16,6 +16,7 @@
 CLOUD="base"
 SUPPORTED_CLOUDS=(aws azure gcp all base)
 GPG_PUB_KEY_LOCATION="https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key"
+TOOLCHAIN_METADATA_FILE_URL="https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json"
 SKIP_VERIFICATION=""
 
 # usage: logger "log message"
@@ -41,6 +42,7 @@ HELP_MENU()
     echo "params can be one or more of the following:"
     echo "    --cloud | -c                          : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, integrations with Public Clouds (AWS, Azure or/and GCP) are disabled"
     echo "    --key   | -k                          : Provides location for GPG key used for verifying signature on RPM file"
+    echo "    --toolchain-metadata-file-url         : Provides overriding delivery url for toolchain extension metadata file"
     echo "    --skip-verify                         : Disables RPM signature verification and AT metadata verification"
     echo "    --skip-toolchain-metadata-sync        : Disables automation toolchains metadata sync"
     echo "    --telemetry-params                    : Specifies telemerty parameters"
@@ -56,6 +58,10 @@ do
 	;;
     --key | -k)
 	GPG_PUB_KEY_LOCATION="$2"
+        if ! shift 2; then HELP_MENU; exit 1; fi
+	;;
+	--toolchain-metadata-file-url )
+	TOOLCHAIN_METADATA_FILE_URL="$2"
         if ! shift 2; then HELP_MENU; exit 1; fi
 	;;
     --skip-verify)
@@ -160,21 +166,23 @@ rpm2cpio $rpm_filename | cpio -idmv
 mv $NAME-$CLOUD/* /tmp/$NAME
 
 if [[ -z $SKIP_AT_METADATA_SYNC ]]; then
-    logger "Getting lastest AT metadata."
+    logger "Getting lastest AT metadata at $TOOLCHAIN_METADATA_FILE_URL"
+    touch toolchain_metadata_tmp.json
     # try to get the latest metadata
     for i in {1..24}; do
-        curl --retry-delay $RETRY_DELAY --retry $RETRY --retry-max-time $RETRY_MAX_TIME --max-time $MAX_TIME --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json --output toolchain_metadata_tmp.json && break || sleep 5
+        curl --retry-delay $RETRY_DELAY --retry $RETRY --retry-max-time $RETRY_MAX_TIME --max-time $MAX_TIME --location $TOOLCHAIN_METADATA_FILE_URL --output toolchain_metadata_tmp.json && break || sleep 5
     done
     cat toolchain_metadata_tmp.json | jq empty > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         diff=$(jq -n --slurpfile latest toolchain_metadata_tmp.json --slurpfile current ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json '$latest != $current')
         if [[ $diff == "true" ]]; then
             cp toolchain_metadata_tmp.json ${install_location}/src/lib/bigip/toolchain/toolchain_metadata.json
-            rm toolchain_metadata_tmp.json
         fi
+
     else
         logger "Couldn't get the latest toolchain metadata, using local copy."
     fi
+    rm toolchain_metadata_tmp.json
 else
     logger "Skipping verification for AT Metadata, using local copy."
 fi

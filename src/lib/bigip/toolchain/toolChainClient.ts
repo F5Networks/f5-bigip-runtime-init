@@ -294,9 +294,17 @@ class PackageClient {
         installed: boolean;
     }> {
         logger.info(`Installing - ${this.component} ${this.version}`);
+        let downloadUrl;
+        let urlObject;
+        try {
+            downloadUrl = this._metadataClient.getDownloadUrl();
+            urlObject = url.parse(downloadUrl);
+        } catch (e) {
+            const message = `${this.component} version ${this.version} is not found in metadata file. Verify toolchain_metadata.json includes ${this.component}:${this.version} package.`;
+            logger.error(message);
+            return Promise.reject(new Error(message));
+        }
 
-        const downloadUrl = this._metadataClient.getDownloadUrl();
-        const urlObject = url.parse(downloadUrl);
         const downloadPackageName = this._metadataClient.getDownloadPackageName();
 
         let tmpFile = '';

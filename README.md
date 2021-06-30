@@ -145,6 +145,7 @@ The self extracting installer accepts the following parameters:
 --cloud  | -c                   : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
 --key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
 --skip-verify                   : Disables RPM signature verification
+--toolchain-metadata-file-url   : Provides overriding delivery url for toolchain extension metadata file
 --skip-toolchain-metadata-sync  : Disables downloading automation toolchain metadata from the Internet
 --telemetry-params              : Specifies telemerty parameters as key:value pairs; (key01:value01,key02:value02)"
 ```
@@ -316,13 +317,13 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.21.1
+      extensionVersion: 1.22.0
     - extensionType: as3
-      extensionVersion: 3.28.0
+      extensionVersion: 3.29.0
     - extensionType: fast
-      extensionVersion: 1.9.0
+      extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.20.0
+      extensionVersion: 1.21.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -418,13 +419,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.21.1
+      extensionVersion: 1.22.0
     - extensionType: as3
-      extensionVersion: 3.28.0
+      extensionVersion: 3.29.0
     - extensionType: fast
-      extensionVersion: 1.9.0
+      extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.20.0
+      extensionVersion: 1.21.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -568,13 +569,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.21.1
+      extensionVersion: 1.22.0
     - extensionType: as3
-      extensionVersion: 3.28.0
+      extensionVersion: 3.29.0
     - extensionType: fast
-      extensionVersion: 1.9.0
+      extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.20.0
+      extensionVersion: 1.21.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -730,6 +731,14 @@ Help with troubleshooting individual Automation Toolchain components can be foun
 - FAST: https://clouddocs.f5.com/products/extensions/f5-appsvcs-templates/latest/userguide/troubleshooting.html
 - TS: https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/userguide/troubleshooting.html
 - CFE: https://clouddocs.f5.com/products/extensions/f5-cloud-failover/latest/userguide/troubleshooting.html
+
+### Extension metadata file
+F5 BIGIP Runtime Init uses the "extension metadata" file (JSON document) to identify package delivery url for each F5 Automation Toolchain extension. Each Runtime Init build includes extension metadata file and it is stored under the following directory: src/lib/bigip/toolchain/toolchain_metadata.json
+
+The latest "extension metadata" file is published on F5 CDN under the following location: https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json 
+As a part of the installation workflow, by default, Runtime Init would fetch the latest available version of the extension metadata and will replace the built-in file; however providing "--skip-toolchain-metadata-sync" flag to the Runtime Init installation allows to skip extension metadata sync, and then Runtime Init would utilize the built-in extension metadata file. 
+
+In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery url for the "extension metadata" file using "--toolchain-metadata-file-url" parameter. See the [Installer](#installer) section for more details. 
 
 ### Logging
 The default log location is /var/log/cloud/bigIpRuntimeInit.log. This location can be customized (see below). 

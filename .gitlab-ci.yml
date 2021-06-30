@@ -268,7 +268,7 @@ publish_container:
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
         # End of Workaround.
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --telemetry-params testKey01:testValue01,testKey02:testValue02'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config"
         # Attempt to re-run self-executable and runtime-init
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
