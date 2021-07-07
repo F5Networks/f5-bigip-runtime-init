@@ -71,14 +71,14 @@ runtime_parameters:
     headers:
        - name: Metadata-Flavor
          value: Google
-extension_packages: 
+extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: v1.21.0
+      extensionVersion: v1.22.0
       extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.0/f5-declarative-onboarding-1.21.0-3.noarch.rpm
     - extensionType: as3
-      extensionVersion: v3.28.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm
+      extensionVersion: v3.29.0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.29.0/f5-appsvcs-3.29.0-3.noarch.rpm
     - extensionType: ts
       extensionVersion: v1.20.0
       extensionUrl: https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.0/f5-telemetry-1.20.0-3.noarch.rpm
@@ -86,7 +86,7 @@ extension_packages:
       extensionVersion: v1.8.0
       extensionUrl: https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.8.0/f5-cloud-failover-1.8.0-0.noarch.rpm
 
-extension_services: 
+extension_services:
   service_operations:
     - extensionType: do
       type: inline
@@ -195,7 +195,7 @@ tmsh create sys management-route defaultManagementRoute network default gateway 
 tmsh modify sys global-settings remote-host add { metadata.google.internal { hostname metadata.google.internal addr 169.254.169.254 } }
 tmsh save /sys config
 
-# Begin as usual.... 
+# Begin as usual....
 for i in {1..30}; do
    curl -fv --retry 1 --connect-timeout 5 -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.2.0/dist/f5-bigip-runtime-init-1.2.0-1.gz.run -o "/var/config/rest/downloads/f5-bigip-runtime-init.gz.run" && break || sleep 10
 done

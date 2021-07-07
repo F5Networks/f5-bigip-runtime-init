@@ -345,10 +345,15 @@
         }
       },
       "versions": {
+        "1.20.1": {
+          "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.1/f5-telemetry-1.20.1-1.noarch.rpm",
+          "packageName": "f5-telemetry-1.20.1-1.noarch",
+          "latest": true
+        },
         "1.21.0": {
           "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.21.0/f5-telemetry-1.21.0-1.noarch.rpm",
           "packageName": "f5-telemetry-1.21.0-1.noarch",
-          "latest": true
+          "latest": false
         },
         "1.20.0": {
           "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.0/f5-telemetry-1.20.0-3.noarch.rpm",
@@ -493,10 +498,15 @@
         }
       },
       "versions": {
+        "1.9.0": {
+          "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.9.0/f5-cloud-failover-1.9.0-0.noarch.rpm",
+          "packageName": "f5-cloud-failover-1.9.0-0.noarch",
+          "latest": true
+        },
         "1.8.0": {
           "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.8.0/f5-cloud-failover-1.8.0-0.noarch.rpm",
           "packageName": "f5-cloud-failover-1.8.0-0.noarch",
-          "latest": true
+          "latest": false
         },
         "1.7.1": {
           "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.7.1/f5-cloud-failover-1.7.1-1.noarch.rpm",

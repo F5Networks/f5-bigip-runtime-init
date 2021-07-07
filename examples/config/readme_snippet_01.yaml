@@ -34,7 +34,7 @@ extension_packages:
     - extensionType: fast
       extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.21.0
+      extensionVersion: 1.20.1
 extension_services:
   service_operations:
     - extensionType: do
