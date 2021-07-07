@@ -12,6 +12,7 @@
   - [Overview](#overview)
   - [Features](#features)
   - [Prerequisites](#prerequisites)
+  - [Caveats and Limitations](#caveats-and-limitations)
   - [Validated BIG-IP versions](#validated-big-ip-versions)
   - [Configuration](#configuration)
     - [Configuration Examples and Schema Documentation](#configuration-examples-and-schema-documentation)
@@ -31,6 +32,7 @@
       - [Disable Calls from the Command](#disable-calls-from-the-command)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
+    - [Extension metadata file](#extension-metadata-file)
     - [Logging](#logging)
       - [Send output to log file and serial console](#send-output-to-log-file-and-serial-console)
   - [Documentation](#documentation)
@@ -108,6 +110,11 @@ Based on the content of the provided YAML or JSON conifguration file, F5 BIG-IP 
 - Access to the cloud provider metadata service, if rendering metadata runtime parameters
 - An IAM identity associated to the BIG-IP instance(s) with sufficient roles/permissions for accessing cloud provider APIs
 
+
+## Caveats and Limitations
+- If leveraging the extension_services parameter to send DO declarations, the declarations cannot contain directives that will trigger a reboot. For example, a reboot would occur for any declaration that:
+  - contains a disk_class
+  - provisions a module (for example, APM) that creates a disk volume
 
 ## Validated BIG-IP versions
 F5 BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
@@ -323,7 +330,7 @@ extension_packages:
     - extensionType: fast
       extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.21.0
+      extensionVersion: 1.20.1
 extension_services:
   service_operations:
     - extensionType: do
@@ -425,7 +432,7 @@ extension_packages:
     - extensionType: fast
       extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.21.0
+      extensionVersion: 1.20.1
 extension_services:
   service_operations:
     - extensionType: do
@@ -575,7 +582,7 @@ extension_packages:
     - extensionType: fast
       extensionVersion: 1.10.0
     - extensionType: ts
-      extensionVersion: 1.21.0
+      extensionVersion: 1.20.1
 extension_services:
   service_operations:
     - extensionType: do
@@ -722,6 +729,7 @@ For more information on how to disable Automatic Phone Home, see this [Overview 
 
 
 ## Troubleshooting
+
 ### F5 Automation Toolchain Components
 F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below).  
 
