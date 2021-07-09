@@ -1,0 +1,32 @@
+{
+    "schemaVersion": "1.0.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "{{{ HOST_NAME }}}.test",
+        "myProvisioning": {
+            "class": "Provision",
+            "ltm": "nominal",
+            "asm": "nominal"
+        },
+        "admin": {
+            "class": "User",
+            "userType": "regular",
+            "password": "{{ ADMIN_PASS }}",
+            "shell": "bash"
+        },
+        "vaultadmin": {
+            "class": "User",
+            "userType": "regular",
+            "password": "{{ ROOT_PASS }}",
+            "shell": "bash"
+        },
+        "dbvars": {
+            "class": "DbVariables",
+            "provision.extramb": 500,
+            "restjavad.useextramb": true
+    }
+    }
+}

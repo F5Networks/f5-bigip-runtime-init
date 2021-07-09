@@ -35,6 +35,24 @@ runtime_parameters:
       secretId: ${secret_id}
       version: AWSCURRENT
       field: password
+  - name: ROOT_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: password
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_secret_id
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -148,7 +166,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: url
-      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-aws-cloudformation/examples/modules/failover_bigip/do.json
+      value: https://khanna.s3.amazonaws.com/aws_do_template_w_root.json
     - extensionType: as3
       type: url
       value: https://f5-cft.s3.amazonaws.com/autoscale_as3_aws.json

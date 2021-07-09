@@ -1,14 +1,18 @@
 //--------------------------------------------------------------------
 // Resources
 
+resource "random_id" "my_id" {
+  byte_length = 4
+}
+
 ## Vault Server IAM Config
 resource "aws_iam_instance_profile" "vault-server" {
-  name = "${var.environment_name}-vault-server-instance-profile"
+  name = "${var.environment_name}-vault-server-instance-profile-${random_id.my_id.id}"
   role = aws_iam_role.vault-server.name
 }
 
 resource "aws_iam_role" "vault-server" {
-  name               = "${var.environment_name}-vault-server-role"
+  name               = "${var.environment_name}-vault-server-role-${random_id.my_id.id}"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
@@ -20,17 +24,17 @@ resource "aws_iam_role_policy" "vault-server" {
 
 # Vault Client IAM Config
 resource "aws_iam_instance_profile" "vault-transit" {
-  name = "${var.environment_name}-vault-transit-instance-profile"
+  name = "${var.environment_name}-vault-transit-instance-profile-${random_id.my_id.id}"
   role = aws_iam_role.vault-transit.name
 }
 
 resource "aws_iam_role" "vault-transit" {
-  name               = "${var.environment_name}-vault-transit-role"
+  name               = "${var.environment_name}-vault-transit-role-${random_id.my_id.id}"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy" "vault-transit" {
-  name   = "${var.environment_name}-vault-transit-role-policy"
+  name   = "${var.environment_name}-vault-transit-role-policy-${random_id.my_id.id}"
   role   = aws_iam_role.vault-transit.id
   policy = data.aws_iam_policy_document.vault-transit.json
 }

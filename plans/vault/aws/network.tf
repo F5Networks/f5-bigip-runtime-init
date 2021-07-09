@@ -10,6 +10,7 @@ module "vault_demo_vpc" {
 
   tags = {
     Name = "${var.environment_name}-vpc"
+    delete = "True"
   }
 }
 

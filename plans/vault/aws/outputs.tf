@@ -34,7 +34,7 @@ output "vault_server_public_ip" {
 
 output "vault_server_public_http" {
   description = "Public HTTP of the Vault server"
-  value       = "http://${aws_instance.vault-server[0].public_ip}:8200/"
+  value       = "http://${aws_instance.vault-server[0].public_ip}:8200"
 }
 
 output "role_id" {

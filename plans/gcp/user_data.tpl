@@ -93,6 +93,24 @@ runtime_parameters:
         environment: gcp
         version: latest
         secretId: secret-01-${deployment_id}
+  - name: ROOT_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: password
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_secret_id
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -189,7 +207,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: url
-      value: https://ak-f5-cft.s3-us-west-2.amazonaws.com/f5-bigip-runtime-init/gcp_do.json
+      value: https://khanna.s3.amazonaws.com/gcp_do_template_w_vault.json
       verifyTls: false
     - extensionType: as3
       type: url
