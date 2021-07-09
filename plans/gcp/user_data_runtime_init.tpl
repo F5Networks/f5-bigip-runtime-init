@@ -39,6 +39,24 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: static
     value: ${admin_password}
+  - name: ROOT_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: password
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_secret_id
   - name: HOST_NAME
     type: url
     value: http://169.254.169.254/computeMetadata/v1/instance/hostname

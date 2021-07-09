@@ -34,3 +34,4 @@ npm-debug.log
 
 # Test artifacts
 tmp/
+plans/azure/.terraform.lock.hcl

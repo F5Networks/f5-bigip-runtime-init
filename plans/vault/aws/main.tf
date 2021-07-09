@@ -40,6 +40,7 @@ resource "aws_instance" "vault-transit" {
 
   tags = {
     Name = "${var.environment_name}-vault-transit"
+    delete = "True"
   }
 
   lifecycle {
@@ -77,6 +78,7 @@ resource "aws_instance" "vault-server" {
   tags = {
     Name = "${var.environment_name}-vault-server-${var.vault_server_names[count.index]}"
     cluster_name = "raft-test"
+    delete = "True"
   }
 
   lifecycle {

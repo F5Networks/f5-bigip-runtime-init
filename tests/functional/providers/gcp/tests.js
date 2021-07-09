@@ -88,4 +88,12 @@ describe('Provider: Google', () => {
     it('should confirm hostname was updated using DO', () => {
         assert.ok(testHostName.includes('.test'));
     });
+
+    it('should login using new vaultadmin password', () => funcUtils.getAuthToken(firstDut.ip, firstDut.port, 'vaultadmin', 'b1gAdminPazz')
+        .then((data) => {
+            assert.ok('token' in data);
+        })
+        .catch((err) => {
+            assert.ok(!err);
+        }));
 });

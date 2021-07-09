@@ -5,6 +5,7 @@ resource "aws_security_group" "testing" {
 
   tags = {
     Name = var.environment_name
+    delete = "True"
   }
 
   # SSH
