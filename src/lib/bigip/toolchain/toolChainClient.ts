@@ -311,7 +311,13 @@ class PackageClient {
         if (urlObject.protocol === 'file:') {
             tmpFile = urlObject.pathname.replace(/\/$/, '');
         } else {
-            utils.verifyDirectory(constants.TMP_DIR);
+            logger.silly(`Verifying download directory: ${constants.TMP_DIR}`);
+            await utils.retrier(utils.verifyDirectory, [constants.TMP_DIR],
+                {
+                    thisContext: this,
+                    maxRetries: constants.RETRY.SHORT_COUNT,
+                    retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+                });
             tmpFile = `${constants.TMP_DIR}/${downloadPackageName}`;
             logger.silly(`Downloading file: ${downloadUrl}`);
             await utils.retrier(
