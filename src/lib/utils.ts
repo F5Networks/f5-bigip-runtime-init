@@ -77,19 +77,6 @@ export async function downloadToFile(url: string, file: string, options): Promis
 
 
 /**
- * Verifies that directory exists or create directory
- *
- * @param directory
- *
- * @returns void
- */
-export function verifyDirectory(directory): void {
-    if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, { recursive: true });
-    }
-}
-
-/**
  * Verify file against provided hash
  *
  * @param file local file location
@@ -189,9 +176,9 @@ export async function retrier(
  * @returns Returns loaded data
  */
 export function loadData(location: string, options?: {
-                            locationType?: string;
-                            verifyTls?: boolean;
-                         }): Promise<object> {
+    locationType?: string;
+    verifyTls?: boolean;
+}): Promise<object> {
     options = options || {};
     const locationType = options.locationType;
     const urlObject = URL.parse(location);
@@ -265,6 +252,23 @@ export async function runShellCommand(command): Promise<string> {
         return stderr;
     }
     return stdout;
+}
+
+
+/**
+ * Verifies that directory exists or create directory
+ *
+ * @param directory
+ *
+ * @returns {Promise}
+ */
+export async function verifyDirectory(directory): Promise<void> {
+    if (!fs.existsSync(directory)) {
+        const response = await runShellCommand(`mkdir -p ${directory}`);
+        logger.silly(`verifyDirectory executed mkdir -p ${directory}; response: ${response}`);
+        return Promise.resolve();
+    }
+    return Promise.resolve();
 }
 
 /**
