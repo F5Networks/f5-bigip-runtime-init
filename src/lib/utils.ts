@@ -44,6 +44,18 @@ export function stringify(data: object): string {
     }
 }
 
+
+export function convertTo(data, type): any {
+    if (type === 'string') {
+        return data.toString();
+    } else if (type === 'number') {
+        return parseInt(data);
+    } else if (type === 'boolean') {
+        return !!data;
+    }
+    return data;
+}
+
 /**
  * Download HTTP payload to file
  *
@@ -323,7 +335,11 @@ export async function makeRequest(uri: string, options?: {
                 reject(error);
             } else {
                 try {
-                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                    if (body.indexOf('{') !== -1 && body.indexOf('}') !== -1) {
+                        resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                    } else {
+                        resolve({ code: resp.statusCode, body: body });
+                    }
                 } catch (e) {
                     resolve({ code: resp.statusCode, body: body });
                 }

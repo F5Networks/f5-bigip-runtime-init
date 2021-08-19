@@ -33,6 +33,7 @@
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
     - [Extension metadata file](#extension-metadata-file)
+    - [Controls](#controls)
     - [Logging](#logging)
       - [Send output to log file and serial console](#send-output-to-log-file-and-serial-console)
   - [Documentation](#documentation)
@@ -324,13 +325,13 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.22.0
+      extensionVersion: 1.23.0
     - extensionType: as3
-      extensionVersion: 3.29.0
+      extensionVersion: 3.30.0
     - extensionType: fast
-      extensionVersion: 1.10.0
+      extensionVersion: 1.11.0
     - extensionType: ts
-      extensionVersion: 1.20.1
+      extensionVersion: 1.22.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -426,13 +427,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.22.0
+      extensionVersion: 1.23.0
     - extensionType: as3
-      extensionVersion: 3.29.0
+      extensionVersion: 3.30.0
     - extensionType: fast
-      extensionVersion: 1.10.0
+      extensionVersion: 1.11.0
     - extensionType: ts
-      extensionVersion: 1.20.1
+      extensionVersion: 1.22.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -576,13 +577,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.22.0
+      extensionVersion: 1.23.0
     - extensionType: as3
-      extensionVersion: 3.29.0
+      extensionVersion: 3.30.0
     - extensionType: fast
-      extensionVersion: 1.10.0
+      extensionVersion: 1.11.0
     - extensionType: ts
-      extensionVersion: 1.20.1
+      extensionVersion: 1.22.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -671,6 +672,7 @@ runtime_parameters allows to defined list of parameters and these parameters can
     ```    
     
     The ipcalc functionality provides the following transformation options: 
+       * address   - The provided address without netmask prefix.
        * base      - The base address of the network block as a string (eg: 216.240.32.0). Base does not give an indication of the size of the network block.
        * mask      - The netmask as a string (eg: 255.255.255.0).
        * hostmask  - The host mask which is the opposite of the netmask (eg: 0.0.0.255).
@@ -694,12 +696,19 @@ runtime_parameters allows to defined list of parameters and these parameters can
             type: url
             value: http://169.254.169.254/latest/dynamic/instance-identity/document
             query: region
+            returnType: string
+            ipcalc: size
             headers:
               - name: Content-Type
                 value: json
               - name: User-Agent
                 value: some-user-agent
     ```
+    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
+        * string - returns value as string
+        * number - returns value as number
+        * boolean - returns value as boolean
+    
 ## Private Environments
 
 By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
@@ -747,6 +756,21 @@ The latest "extension metadata" file is published on F5 CDN under the following 
 As a part of the installation workflow, by default, Runtime Init would fetch the latest available version of the extension metadata and will replace the built-in file; however providing "--skip-toolchain-metadata-sync" flag to the Runtime Init installation allows to skip extension metadata sync, and then Runtime Init would utilize the built-in extension metadata file. 
 
 In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery url for the "extension metadata" file using "--toolchain-metadata-file-url" parameter. See the [Installer](#installer) section for more details. 
+
+### Controls
+Runtime init declaration provides a list of controls intended for tuning Runtime Init execution: 
+
+```yaml
+     controls:
+        logLevel: silly
+        logFilename: /var/log/cloud/bigIpRuntimeInit.log
+        logToJson: true
+        extensionInstallDelayInMs: 60000
+```
+ * extensionInstallDelayInMs - defines a delay between extensions installations. 
+ * logLevel - defines log level.
+ * logFilename - defines path to log file.
+ * logToJson - defines when log is outputed into JSON format.
 
 ### Logging
 The default log location is /var/log/cloud/bigIpRuntimeInit.log. This location can be customized (see below). 

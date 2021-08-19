@@ -68,8 +68,8 @@
             "lodash.where": "^3.1.0"
         },
         "azure": {
-            "@azure/keyvault-secrets": "^4.0.2",
-            "@azure/identity": "^1.0.2",
+            "@azure/keyvault-secrets": "4.3.0",
+            "@azure/identity": "1.4.0",
             "lodash.where": "^3.1.0"
         }
     },
@@ -128,7 +128,8 @@
     "auditProcessor": {
         "whitelist": [
             "1677",
-            "1674"
+            "1674",
+            "1769"
         ]
     },
     "keywords": [

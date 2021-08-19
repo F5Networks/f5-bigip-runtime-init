@@ -70,7 +70,7 @@ export async function cli(): Promise<string> {
 
     // processing Runtime Init controls
     logger.info('Processing controls parameters');
-    if (config.controls) {
+    if (config !== undefined && config.controls) {
         if (config.controls.logLevel) {
             process.env.F5_BIGIP_RUNTIME_INIT_LOG_LEVEL = config.controls.logLevel;
             logger = Logger.getLogger();
@@ -81,6 +81,10 @@ export async function cli(): Promise<string> {
         }
         if (config.controls.logToJson) {
             process.env.F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON = config.controls.logToJson;
+            logger = Logger.getLogger();
+        }
+        if (config.controls.extensionInstallDelayInMs) {
+            process.env.F5_BIGIP_RUNTIME_EXTENSION_INSTALL_DELAY_IN_MS = config.controls.extensionInstallDelayInMs;
             logger = Logger.getLogger();
         }
     }

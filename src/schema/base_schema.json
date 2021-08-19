@@ -19,6 +19,10 @@
                 "logToJson": {
                     "type": "boolean",
                     "enum": [ true, false ]
+                },
+                "extensionInstallDelayInMs": {
+                    "type": "number",
+                    "examples": [ 60000, 1000, 600]
                 }
             }
         },
@@ -35,6 +39,14 @@
                     "type": {
                         "type": "string",
                         "enum": ["static", "secret", "metadata", "url"]
+                    },
+                    "returnType": {
+                        "type": "string",
+                        "enum": ["string", "number", "boolean"]
+                    },
+                    "ipcalc": {
+                        "type": "string",
+                        "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last", "address"]
                     },
                     "value": {
                         "type": "string",
@@ -189,7 +201,7 @@
                             },
                             "ipcalc": {
                                 "type": "string",
-                                "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last"]
+                                "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last", "address"]
                             },
                             "index": {
                               	"type": "integer",
