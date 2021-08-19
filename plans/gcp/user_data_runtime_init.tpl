@@ -92,11 +92,11 @@ runtime_parameters:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: v1.22.0
+      extensionVersion: v1.23.0
       extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.0/f5-declarative-onboarding-1.21.0-3.noarch.rpm
     - extensionType: as3
-      extensionVersion: v3.29.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.29.0/f5-appsvcs-3.29.0-3.noarch.rpm
+      extensionVersion: v3.30.0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm
     - extensionType: ts
       extensionVersion: v1.20.0
       extensionUrl: https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.0/f5-telemetry-1.20.0-3.noarch.rpm

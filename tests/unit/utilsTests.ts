@@ -56,6 +56,25 @@ describe('Util', () => {
         });
     });
 
+    describe('convertTo', () => {
+        it('should validate convertTo for string', async () => {
+            const result = util.convertTo(111, 'string');
+            assert.ok(typeof result === 'string');
+        });
+        it('should validate convertTo for number', async () => {
+            const result = util.convertTo('111', 'number');
+            assert.ok(typeof result === 'number');
+        });
+        it('should validate convertTo for boolean', async () => {
+            const result = util.convertTo('true', 'boolean');
+            assert.ok(typeof result === 'boolean');
+        });
+        it('should validate convertTo without datatype', async () => {
+            const result = util.convertTo('9058358705045800063');
+            assert.ok(typeof result === 'string');
+        });
+    });
+
     describe('checkForSecrets', () => {
         it('should validate checkForSecrets with correct inputs', async () => {
             const response = await util.checkForSecrets('{{ TEST_VALUE }} - TRUE');

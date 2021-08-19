@@ -47,6 +47,19 @@ describe('Resolver Client', () => {
                 "region" : "us-west-2",
                 "version" : "2017-09-30"
             });
+        nock('http://169.254.169.254')
+            .get('/latest/dynamic/instance-networks/document')
+            .reply(200, {
+                "accountId" : "0000000001",
+                "ipaddress": "192.168.1.22/24",
+                "instanceId" : "i-0a43ae03d7f8e8f42",
+                "kernelId" : null,
+                "pendingTime" : "2020-11-19T21:20:26Z",
+                "privateIp" : "10.0.0.165",
+                "ramdiskId" : null,
+                "region" : "us-west-2",
+                "version" : "2017-09-30"
+            });
 
         onboardActions = [
             {
@@ -95,6 +108,14 @@ describe('Resolver Client', () => {
                 headers: [ { name: 'Content-Type', value: 'json'}]
             },
             {
+                name: 'NETWORK_SIZE_URL',
+                type: 'url',
+                value: 'http://169.254.169.254/latest/dynamic/instance-networks/document',
+                query: 'ipaddress',
+                ipcalc: 'size',
+                headers: [ { name: 'Content-Type', value: 'json'}]
+            },
+            {
                 name: 'AZURE_PASS',
                 type: 'secret',
                 secretProvider: {
@@ -119,6 +140,17 @@ describe('Resolver Client', () => {
                 name: 'AZURE_SELF_IP',
                 type: 'metadata',
                 metadataProvider: {
+                    type: 'network',
+                    environment: 'azure',
+                    field: 'ipv4',
+                    index: 1
+                }
+            },
+            {
+                name: 'AZURE_SELF_IP_ADDRESS',
+                type: 'metadata',
+                metadataProvider: {
+                    ipcalc: 'address',
                     type: 'network',
                     environment: 'azure',
                     field: 'ipv4',
@@ -151,6 +183,12 @@ describe('Resolver Client', () => {
                 name: 'SOME_NAME',
                 type: 'static',
                 value: 'SOME VALUE'
+            },
+            {
+                name: 'NETWORK_SIZE_STATIC',
+                type: 'static',
+                value: '192.168.1.22/24',
+                ipcalc: 'size'
             }
         ];
     });
@@ -176,11 +214,13 @@ describe('Resolver Client', () => {
         });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 4);
+                assert.strictEqual(Object.keys(results).length, 6);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AWS_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.AZURE_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.REGION, 'us-west-2');
+                assert.strictEqual(results.NETWORK_SIZE_URL, 256);
+                assert.strictEqual(results.NETWORK_SIZE_STATIC, 256);
             });
     });
 
@@ -245,7 +285,7 @@ describe('Resolver Client', () => {
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 6);
+                assert.strictEqual(Object.keys(results).length, 9);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
@@ -263,11 +303,12 @@ describe('Resolver Client', () => {
         });
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 6);
+                assert.strictEqual(Object.keys(results).length, 9);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
                 assert.strictEqual(results.AZURE_GATEWAY_IP, '10.0.1.1');
                 assert.strictEqual(results.AZURE_BITMASK, 24);
+                assert.strictEqual(results.AZURE_SELF_IP_ADDRESS, '10.0.1.4');
             });
     });
 
@@ -278,8 +319,9 @@ describe('Resolver Client', () => {
         resolver._resolveUrl = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters)
             .then((results) => {
-                assert.ok(Object.keys(results).length === 1);
+                assert.strictEqual(Object.keys(results).length, 2);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
+                assert.strictEqual(results.NETWORK_SIZE_STATIC, 256);
             });
     });
 
@@ -404,4 +446,21 @@ describe('Resolver Client', () => {
             .catch(() => assert.ok(false))
     });
 
+    it('should validate _resolveUrl works correctly when fetched string value is bigger than supported number data type', () => {
+        const resolver = new ResolverClient();
+        nock.cleanAll();
+        runtimeParameters = [
+            {
+                name: 'TEST_PASSWORD',
+                type: 'url',
+                value: 'http://169.254.169.254/my-test-password'
+            }
+        ];
+        nock('http://169.254.169.254')
+            .get('/my-test-password')
+            .reply(200, '9058358705045800063');
+        return resolver.resolveRuntimeParameters(runtimeParameters)
+            .then((results) => assert.strictEqual(results.TEST_PASSWORD, '9058358705045800063'))
+            //.catch(() => assert.ok(false))
+    });
 });

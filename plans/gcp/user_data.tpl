@@ -85,6 +85,7 @@ controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
   logToJson: true
+  extensionInstallDelayInMs: 6000
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -111,14 +112,22 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
+  - name: INSTANCE_ID
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/id
+    headers:
+        - name: Metadata-Flavor
+          value: Google
   - name: HOST_NAME
     type: metadata
+    returnType: string
     metadataProvider:
         environment: gcp
         type: compute
         field: name
   - name: SELF_IP_INTERNAL
     type: metadata
+    returnType: string
     metadataProvider:
         environment: gcp
         type: network
@@ -131,6 +140,14 @@ runtime_parameters:
         type: network
         field: ip
         index: 0
+  - name: SELF_IP_EXTERNAL_ADDRESS
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 0
+        ipcalc: address
   - name: GATEWAY
     type: metadata
     metadataProvider:
@@ -191,14 +208,14 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.22.0
+      extensionVersion: 1.23.0
     - extensionType: as3
-      extensionVersion: 3.29.0
+      extensionVersion: 3.30.0
       verifyTls: false
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.29.0/f5-appsvcs-3.29.0-3.noarch.rpm
-      extensionHash: bcbba79b42b700b8d2b46937b65e6d09b035515a7a7e40aaeebb360fcfe7aa66
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm
+      extensionHash: 47cc7bb6962caf356716e7596448336302d1d977715b6147a74a142dc43b391b
     - extensionType: fast
-      extensionVersion: 1.10.0
+      extensionVersion: 1.11.0
     - extensionType: ilx
       extensionUrl: file:///var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/echo
