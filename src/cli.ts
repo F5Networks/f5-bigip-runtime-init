@@ -70,6 +70,7 @@ export async function cli(): Promise<string> {
 
     // processing Runtime Init controls
     logger.info('Processing controls parameters');
+    let delayInstallTimeInMs = constants.RETRY.EXTENSION_INSTALL_DELAY_IN_MS;
     if (config !== undefined && config.controls) {
         if (config.controls.logLevel) {
             process.env.F5_BIGIP_RUNTIME_INIT_LOG_LEVEL = config.controls.logLevel;
@@ -84,8 +85,7 @@ export async function cli(): Promise<string> {
             logger = Logger.getLogger();
         }
         if (config.controls.extensionInstallDelayInMs) {
-            process.env.F5_BIGIP_RUNTIME_EXTENSION_INSTALL_DELAY_IN_MS = config.controls.extensionInstallDelayInMs;
-            logger = Logger.getLogger();
+            delayInstallTimeInMs = config.controls.extensionInstallDelayInMs;
         }
     }
 
@@ -193,8 +193,8 @@ export async function cli(): Promise<string> {
                     // end of workaround
                 }
             }
-            logger.silly(`Extension installation delay is set to ${constants.RETRY.EXTENSION_INSTALL_DELAY_IN_MS} milliseconds`);
-            await new Promise(resolve => setTimeout(resolve, parseInt(constants.RETRY.EXTENSION_INSTALL_DELAY_IN_MS)));
+            logger.silly(`Extension installation delay is set to ${delayInstallTimeInMs} milliseconds`);
+            await new Promise(resolve => setTimeout(resolve, parseInt(delayInstallTimeInMs)));
         }
     }
 
