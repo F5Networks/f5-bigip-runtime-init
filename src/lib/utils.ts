@@ -44,6 +44,18 @@ export function stringify(data: object): string {
     }
 }
 
+
+export function convertTo(data, type): any {
+    if (type === 'string') {
+        return data.toString();
+    } else if (type === 'number') {
+        return parseInt(data);
+    } else if (type === 'boolean') {
+        return !!data;
+    }
+    return data;
+}
+
 /**
  * Download HTTP payload to file
  *
@@ -75,19 +87,6 @@ export async function downloadToFile(url: string, file: string, options): Promis
 }
 
 
-
-/**
- * Verifies that directory exists or create directory
- *
- * @param directory
- *
- * @returns void
- */
-export function verifyDirectory(directory): void {
-    if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, { recursive: true });
-    }
-}
 
 /**
  * Verify file against provided hash
@@ -189,9 +188,9 @@ export async function retrier(
  * @returns Returns loaded data
  */
 export function loadData(location: string, options?: {
-                            locationType?: string;
-                            verifyTls?: boolean;
-                         }): Promise<object> {
+    locationType?: string;
+    verifyTls?: boolean;
+}): Promise<object> {
     options = options || {};
     const locationType = options.locationType;
     const urlObject = URL.parse(location);
@@ -267,6 +266,23 @@ export async function runShellCommand(command): Promise<string> {
     return stdout;
 }
 
+
+/**
+ * Verifies that directory exists or create directory
+ *
+ * @param directory
+ *
+ * @returns {Promise}
+ */
+export async function verifyDirectory(directory): Promise<void> {
+    if (!fs.existsSync(directory)) {
+        const response = await runShellCommand(`mkdir -p ${directory}`);
+        logger.silly(`verifyDirectory executed mkdir -p ${directory}; response: ${response}`);
+        return Promise.resolve();
+    }
+    return Promise.resolve();
+}
+
 /**
  * Make request (HTTP)
  *
@@ -319,7 +335,11 @@ export async function makeRequest(uri: string, options?: {
                 reject(error);
             } else {
                 try {
-                    resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                    if (body.indexOf('{') !== -1 && body.indexOf('}') !== -1) {
+                        resolve({ code: resp.statusCode, body: JSON.parse(body) });
+                    } else {
+                        resolve({ code: resp.statusCode, body: body });
+                    }
                 } catch (e) {
                     resolve({ code: resp.statusCode, body: body });
                 }

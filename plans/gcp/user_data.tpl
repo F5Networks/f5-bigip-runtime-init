@@ -81,6 +81,11 @@ cp /tmp/hello-world-0.1.0-0001.noarch.rpm /var/config/rest/downloads/hello-world
 
 cat << 'EOF' > /config/onboard_config.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
+  logToJson: true
+  extensionInstallDelayInMs: 6000
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -89,14 +94,40 @@ runtime_parameters:
         environment: gcp
         version: latest
         secretId: secret-01-${deployment_id}
+  - name: ROOT_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: password
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_secret_id
+  - name: INSTANCE_ID
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/id
+    headers:
+        - name: Metadata-Flavor
+          value: Google
   - name: HOST_NAME
     type: metadata
+    returnType: string
     metadataProvider:
         environment: gcp
         type: compute
         field: name
   - name: SELF_IP_INTERNAL
     type: metadata
+    returnType: string
     metadataProvider:
         environment: gcp
         type: network
@@ -109,6 +140,14 @@ runtime_parameters:
         type: network
         field: ip
         index: 0
+  - name: SELF_IP_EXTERNAL_ADDRESS
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 0
+        ipcalc: address
   - name: GATEWAY
     type: metadata
     metadataProvider:
@@ -169,14 +208,14 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.19.0
+      extensionVersion: 1.23.0
     - extensionType: as3
-      extensionVersion: 3.26.0
+      extensionVersion: 3.30.0
       verifyTls: false
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
-      extensionHash: b33a96c84b77cff60249b7a53b6de29cc1e932d7d94de80cc77fb69e0b9a45a0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm
+      extensionHash: 47cc7bb6962caf356716e7596448336302d1d977715b6147a74a142dc43b391b
     - extensionType: fast
-      extensionVersion: 1.7.0
+      extensionVersion: 1.11.0
     - extensionType: ilx
       extensionUrl: file:///var/config/rest/downloads/hello-world-0.1.0-0001.noarch.rpm
       extensionVerificationEndpoint: /mgmt/shared/echo
@@ -185,7 +224,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: url
-      value: https://ak-f5-cft.s3-us-west-2.amazonaws.com/f5-bigip-runtime-init/gcp_do.json
+      value: https://khanna.s3.amazonaws.com/gcp_do_template_w_vault.json
       verifyTls: false
     - extensionType: as3
       type: url

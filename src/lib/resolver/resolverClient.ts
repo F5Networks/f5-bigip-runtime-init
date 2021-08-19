@@ -23,6 +23,7 @@ import Logger from '../logger';
 import { getCloudProvider } from '../cloud/cloudFactory';
 import * as utils from '../utils';
 import * as constants from '../../constants';
+import {HashicorpVaultClient} from "../provider/secret";
 
 const logger = Logger.getLogger();
 
@@ -30,6 +31,8 @@ interface RuntimeParameter {
     type: string;
     name: string;
     value: string;
+    returnType: string;
+    ipcalc: string;
 }
 
 interface OnboardActions {
@@ -46,6 +49,7 @@ export class ResolverClient {
     constructor(){
         this.utilsRef = utils;
     }
+
     /**
      * Resolves runtime parameters
      *
@@ -60,7 +64,11 @@ export class ResolverClient {
         const promises = [];
         for (let i = 0; i < parameters.length; i += 1) {
             if (parameters[i].type === 'static') {
-                results[parameters[i].name] = parameters[i].value;
+                if (parameters[i].ipcalc !== undefined && parameters[i].value.split('.').length === 4 ){
+                    results[parameters[i].name] = this._resolveIpcalc(parameters[i].ipcalc, parameters[i].value, parameters[i].returnType);
+                } else {
+                    results[parameters[i].name] = utils.convertTo(parameters[i].value, parameters[i].returnType);
+                }
             } else if (parameters[i].type === 'secret') {
                 promises.push(this._resolveHelper(
                     parameters[i].name,
@@ -185,19 +193,26 @@ export class ResolverClient {
      * @returns                    - resolves with secret value
      */
     async _resolveSecret(secretMetadata): Promise<string> {
-        const _cloudClient = await this.getCloudProvider(
-            secretMetadata.secretProvider.environment,
-            { logger }
-        );
-        await _cloudClient.init();
-        if (secretMetadata.secretProvider.field !== undefined) {
-            constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
+        let secretValue;
+        if (secretMetadata.secretProvider.environment === 'hashicorp') {
+            const hashicorpVaultClient = new HashicorpVaultClient();
+            await hashicorpVaultClient.login(secretMetadata);
+            secretValue = await hashicorpVaultClient.getSecret(secretMetadata);
+        } else {
+            const _cloudClient = await this.getCloudProvider(
+                secretMetadata.secretProvider.environment,
+                { logger }
+            );
+            await _cloudClient.init();
+            if (secretMetadata.secretProvider.field !== undefined) {
+                constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
+            }
+            secretValue = await _cloudClient.getSecret(
+                secretMetadata.secretProvider.secretId,
+                secretMetadata.secretProvider
+            );
         }
-        const secretValue = await _cloudClient.getSecret(
-            secretMetadata.secretProvider.secretId,
-            secretMetadata.secretProvider
-        );
-        return secretValue;
+        return utils.convertTo(secretValue, secretMetadata.returnType);
     }
 
     /**
@@ -218,14 +233,10 @@ export class ResolverClient {
             metadataMetadata.metadataProvider.field,
             metadataMetadata.metadataProvider
         );
-
-        if (metadataMetadata.metadataProvider.type === 'network') {
-            if (metadataMetadata.metadataProvider.ipcalc !== undefined && metadataValue.split('.').length === 4 ){
-                logger.silly(`ipcalc function resolved ${metadataMetadata.metadataProvider.ipcalc} element: ${new netmask.Netmask(metadataValue)[metadataMetadata.metadataProvider.ipcalc]} of provided IPv4 CIDR`);
-                return new netmask.Netmask(metadataValue)[metadataMetadata.metadataProvider.ipcalc];
-            }
+        if (metadataMetadata.metadataProvider.ipcalc !== undefined && metadataValue.split('.').length === 4 ){
+            return this._resolveIpcalc(metadataMetadata.metadataProvider.ipcalc, metadataValue, metadataMetadata.returnType);
         }
-        return metadataValue;
+        return utils.convertTo(metadataValue, metadataMetadata.returnType);
     }
 
     async _resolveUrl(metadata): Promise<string> {
@@ -249,12 +260,38 @@ export class ResolverClient {
         if ( metadata.query !== undefined ) {
             try {
                 const searchResult = jmesPath.search(response.body, metadata.query);
-                return searchResult;
+
+                if (metadata.ipcalc !== undefined && searchResult.split('.').length === 4 ){
+                    return this._resolveIpcalc(metadata.ipcalc, searchResult, metadata.returnType);
+                }
+                return utils.convertTo(searchResult, metadata.returnType);
             } catch (error) {
                 throw new Error(`Error caught while searching json using jmesPath; Json Document: ${JSON.stringify(response.body)} - Query: ${metadata.query} - Error ${error.message}`);
             }
         } else {
-            return response.body;
+            if (metadata.ipcalc !== undefined && response.split('.').length === 4 ){
+                return this._resolveIpcalc(metadata.ipcalc, response, metadata.returnType);
+            }
+            return utils.convertTo(response.body, metadata.returnType);
+        }
+    }
+
+    /**
+     * Resolves ipcalc value
+     *
+     * @param ipcalcMethod         - ipcalc method
+     * @oaram networkValue         - network value (i.e. 10.0.0.2/24)
+     * @oaram returnType           - return type
+     *
+     *
+     * @returns                    - returns result of ipcalc calculation
+     */
+    _resolveIpcalc(ipcalcMethod, networkValue, returnType): string {
+        logger.silly(`ipcalc function resolved ${ipcalcMethod} element: ${new netmask.Netmask(networkValue)[ipcalcMethod]} of provided IPv4 CIDR`);
+        if (ipcalcMethod === 'address') {
+            return utils.convertTo(networkValue.split('/')[0], returnType);
+        } else {
+            return utils.convertTo(new netmask.Netmask(networkValue)[ipcalcMethod], returnType);
         }
     }
 }

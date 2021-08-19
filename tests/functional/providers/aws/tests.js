@@ -93,6 +93,14 @@ describe('Provider: AWS', () => {
             assert.ok(!err);
         }));
 
+    it('should login using new vaultadmin password', () => funcUtils.getAuthToken(firstDut.ip, firstDut.port, 'vaultadmin', 'b1gAdminPazz')
+        .then((data) => {
+            assert.ok('token' in data);
+        })
+        .catch((err) => {
+            assert.ok(!err);
+        }));
+
     it('should confirm hostname was updated using DO', () => {
         assert.strictEqual(testHostName, 'ip-' + testMgmtIp + '.' + env.region + '.compute.internal');
     });

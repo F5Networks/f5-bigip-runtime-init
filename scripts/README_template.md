@@ -12,6 +12,7 @@
   - [Overview](#overview)
   - [Features](#features)
   - [Prerequisites](#prerequisites)
+  - [Caveats and Limitations](#caveats-and-limitations)
   - [Validated BIG-IP versions](#validated-big-ip-versions)
   - [Configuration](#configuration)
     - [Configuration Examples and Schema Documentation](#configuration-examples-and-schema-documentation)
@@ -31,6 +32,8 @@
       - [Disable Calls from the Command](#disable-calls-from-the-command)
   - [Troubleshooting](#troubleshooting)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
+    - [Extension metadata file](#extension-metadata-file)
+    - [Controls](#controls)
     - [Logging](#logging)
       - [Send output to log file and serial console](#send-output-to-log-file-and-serial-console)
   - [Documentation](#documentation)
@@ -109,6 +112,11 @@ Based on the content of the provided YAML or JSON conifguration file, F5 BIG-IP 
 - An IAM identity associated to the BIG-IP instance(s) with sufficient roles/permissions for accessing cloud provider APIs
 
 
+## Caveats and Limitations
+- If leveraging the extension_services parameter to send DO declarations, the declarations cannot contain directives that will trigger a reboot. For example, a reboot would occur for any declaration that:
+  - contains a disk_class
+  - provisions a module (for example, APM) that creates a disk volume
+
 ## Validated BIG-IP versions
 F5 BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
 
@@ -124,6 +132,7 @@ The F5 BIG-IP Runtime Init configuration consists of the following attributes:
 
 | Attribute | Default Value | Required |    Description | 
 | --- | --- | --- | --- | 
+| controls | none | No    | List of runtime controls settings. |
 | pre_onboard_enabled | none | No   | List of commands to run that do not check if BIG-IP and MCPD are up and running. However, execution before BIG-IP is ready depends on cloud agent/download times/etc.  |
 | runtime_parameters | none | No    | List of runtime parameters to gather. |
 | bigip_ready_enabled | none | No   | List of commands to run after BIG-IP and MCPD are up and running. Example: tmsh commands, misc optimizations, etc. |
@@ -144,6 +153,7 @@ The self extracting installer accepts the following parameters:
 --cloud  | -c                   : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
 --key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
 --skip-verify                   : Disables RPM signature verification
+--toolchain-metadata-file-url   : Provides overriding delivery url for toolchain extension metadata file
 --skip-toolchain-metadata-sync  : Disables downloading automation toolchain metadata from the Internet
 --telemetry-params              : Specifies telemerty parameters as key:value pairs; (key01:value01,key02:value02)"
 ```
@@ -553,6 +563,7 @@ runtime_parameters allows to defined list of parameters and these parameters can
     ```    
     
     The ipcalc functionality provides the following transformation options: 
+       * address   - The provided address without netmask prefix.
        * base      - The base address of the network block as a string (eg: 216.240.32.0). Base does not give an indication of the size of the network block.
        * mask      - The netmask as a string (eg: 255.255.255.0).
        * hostmask  - The host mask which is the opposite of the netmask (eg: 0.0.0.255).
@@ -576,12 +587,19 @@ runtime_parameters allows to defined list of parameters and these parameters can
             type: url
             value: http://169.254.169.254/latest/dynamic/instance-identity/document
             query: region
+            returnType: string
+            ipcalc: size
             headers:
               - name: Content-Type
                 value: json
               - name: User-Agent
                 value: some-user-agent
     ```
+    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
+        * string - returns value as string
+        * number - returns value as number
+        * boolean - returns value as boolean
+    
 ## Private Environments
 
 By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
@@ -611,6 +629,7 @@ For more information on how to disable Automatic Phone Home, see this [Overview 
 
 
 ## Troubleshooting
+
 ### F5 Automation Toolchain Components
 F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below).  
 
@@ -621,25 +640,73 @@ Help with troubleshooting individual Automation Toolchain components can be foun
 - TS: https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/userguide/troubleshooting.html
 - CFE: https://clouddocs.f5.com/products/extensions/f5-cloud-failover/latest/userguide/troubleshooting.html
 
+### Extension metadata file
+F5 BIGIP Runtime Init uses the "extension metadata" file (JSON document) to identify package delivery url for each F5 Automation Toolchain extension. Each Runtime Init build includes extension metadata file and it is stored under the following directory: src/lib/bigip/toolchain/toolchain_metadata.json
+
+The latest "extension metadata" file is published on F5 CDN under the following location: https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json 
+As a part of the installation workflow, by default, Runtime Init would fetch the latest available version of the extension metadata and will replace the built-in file; however providing "--skip-toolchain-metadata-sync" flag to the Runtime Init installation allows to skip extension metadata sync, and then Runtime Init would utilize the built-in extension metadata file. 
+
+In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery url for the "extension metadata" file using "--toolchain-metadata-file-url" parameter. See the [Installer](#installer) section for more details. 
+
+### Controls
+Runtime init declaration provides a list of controls intended for tuning Runtime Init execution: 
+
+```yaml
+     controls:
+        logLevel: silly
+        logFilename: /var/log/cloud/bigIpRuntimeInit.log
+        logToJson: true
+        extensionInstallDelayInMs: 60000
+```
+ * extensionInstallDelayInMs - defines a delay between extensions installations. 
+ * logLevel - defines log level.
+ * logFilename - defines path to log file.
+ * logToJson - defines when log is outputed into JSON format.
+
 ### Logging
 The default log location is /var/log/cloud/bigIpRuntimeInit.log. This location can be customized (see below). 
 
-The following enviroment variables can be used for setting logging options: 
-- F5_BIGIP_RUNTIME_INIT_LOG_LEVEL (string) - Defines log level
-```json
-    { 
-      error: 0, 
-      warn: 1, 
-      info: 2, 
-      debug: 5, 
-      silly: 6 
-    }
-```
-- F5_BIGIP_RUNTIME_INIT_LOG_FILENAME (string) - Defines path to log file (i.e. /var/log/cloud/bigIpRuntimeInit.log)
-- F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON (boolean) - Defines if logs should be output in JSON format:
-```json
-    {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
-```
+The logging settings can be configured using controls directive or enviroment variables: 
+
+- Log level: 
+    * Using controls directive: 
+    ```yaml
+     controls:
+        logLevel: silly
+    ```
+
+    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_LEVEL (string)
+    
+    ```json
+        { 
+          error: 0, 
+          warn: 1, 
+          info: 2, 
+          debug: 5, 
+          silly: 6 
+        }
+    ```
+- Log filename:
+    * Using controls directive:
+     ```yaml
+     controls:
+        logFilename: /var/log/cloud/bigIpRuntimeInit.log
+    ```    
+    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_FILENAME (string) 
+    
+- Log to JSON:
+
+    * Using controls directive:
+  
+        ```yaml
+        controls:
+          logToJson: true
+        ```
+    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON (boolean)
+
+    ```json
+        {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
+    ```
 
 Example of how to set the log level using an environment variable:
 ```bash

@@ -241,6 +241,34 @@ publish_container:
     retry:
         max: 1
     script:
+        - current_dir=$(pwd)
+        - echo "*** Configuring SSH"
+        - eval $(ssh-agent -s)
+        - echo "$SSH_KEY" | sed 's/\\n/\n/g' | ssh-add -
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        # - printf '%s\n' '${SSH_KEY}' >> dewpt.pem
+        # - chmod 600 dewpt.pem
+        # deploy hashicorp vault and exit out of the folder
+        - cd /deployment-tool/plans/vault/aws
+        - terraform init
+        - terraform apply -auto-approve
+        - cd $current_dir
+        # sleep
+        - sleep 3m
+        # get Hashicorp vault details and place them in user_data file
+        - export VAULT_MGMT_IP=$(cat /deployment-tool/plans/vault/aws/terraform.tfstate | jq .outputs.vault_server_public_ip.value -r)
+        - export VAULT_SERVER_PUBLIC_HTTP=$(cat /deployment-tool/plans/vault/aws/terraform.tfstate | jq .outputs.vault_server_public_http.value -r)
+        - export VAULT_APP_ROLE=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id')
+        - export VAULT_SECRET_ID=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
+        # debugging the values
+        - echo $VAULT_MGMT_IP
+        - echo $VAULT_SERVER_PUBLIC_HTTP
+        - echo $VAULT_APP_ROLE
+        - echo $VAULT_SECRET_ID
+        - sed -i "s \vault_server_public_http $VAULT_SERVER_PUBLIC_HTTP g" /deployment-tool/plans/${CLOUD}/user_data.tpl
+        - sed -i "s/\vault_app_role/$VAULT_APP_ROLE/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
+        - sed -i "s/\vault_secret_id/$VAULT_SECRET_ID/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
         # deploy environment - required artifacts will be place in output folder
         - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}
         # Collecting deployment metadata
@@ -268,7 +296,7 @@ publish_container:
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
         # End of Workaround.
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --telemetry-params testKey01:testValue01,testKey02:testValue02'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config"
         # Attempt to re-run self-executable and runtime-init
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
@@ -1097,7 +1125,7 @@ publish_to_github:
         # Execute Release script to push source to github repo
         - ./scripts/publish_github.sh
 
-trigger_downstream_templates_tests:
+trigger_downstream_templates_tests_azure:
     stage: release_trigger_template_tests
     only:
       - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
@@ -1105,5 +1133,15 @@ trigger_downstream_templates_tests:
         RELEASE_RUNTIME_INIT_TESTS: "true"
         VERSION: $CI_COMMIT_REF_NAME
     trigger:
-        project: cloudsolutions/f5-cloud-factory
-        branch: master
+        project: cloudsolutions/automation-templates/f5-azure-arm-templates-v2
+        branch: main
+trigger_downstream_templates_tests_aws:
+    stage: release_trigger_template_tests
+    only:
+      - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
+    variables:
+        RELEASE_RUNTIME_INIT_TESTS: "true"
+        VERSION: $CI_COMMIT_REF_NAME
+    trigger:
+        project: cloudsolutions/automation-templates/f5-aws-cloudformation-v2
+        branch: main

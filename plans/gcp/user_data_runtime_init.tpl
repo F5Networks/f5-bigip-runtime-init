@@ -39,6 +39,24 @@ runtime_parameters:
   - name: ADMIN_PASS
     type: static
     value: ${admin_password}
+  - name: ROOT_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: password
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_secret_id
   - name: HOST_NAME
     type: url
     value: http://169.254.169.254/computeMetadata/v1/instance/hostname
@@ -71,21 +89,22 @@ runtime_parameters:
     headers:
        - name: Metadata-Flavor
          value: Google
-extension_packages: 
+extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: v1.19.0
-      extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.19.0/f5-declarative-onboarding-1.19.0-2.noarch.rpm
+      extensionVersion: v1.23.0
+      extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.0/f5-declarative-onboarding-1.21.0-3.noarch.rpm
     - extensionType: as3
-      extensionVersion: v3.26.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
+      extensionVersion: v3.30.0
+      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm
     - extensionType: ts
-      extensionVersion: v1.18.0
-      extensionUrl: https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.18.0/f5-telemetry-1.18.0-2.noarch.rpm
+      extensionVersion: v1.20.0
+      extensionUrl: https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.0/f5-telemetry-1.20.0-3.noarch.rpm
     - extensionType: cf
-      extensionVersion: v1.7.1
-      extensionUrl: https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.7.1/f5-cloud-failover-1.7.1-1.noarch.rpm
-extension_services: 
+      extensionVersion: v1.8.0
+      extensionUrl: https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.8.0/f5-cloud-failover-1.8.0-0.noarch.rpm
+
+extension_services:
   service_operations:
     - extensionType: do
       type: inline
@@ -194,7 +213,7 @@ tmsh create sys management-route defaultManagementRoute network default gateway 
 tmsh modify sys global-settings remote-host add { metadata.google.internal { hostname metadata.google.internal addr 169.254.169.254 } }
 tmsh save /sys config
 
-# Begin as usual.... 
+# Begin as usual....
 for i in {1..30}; do
    curl -fv --retry 1 --connect-timeout 5 -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.2.0/dist/f5-bigip-runtime-init-1.2.0-1.gz.run -o "/var/config/rest/downloads/f5-bigip-runtime-init.gz.run" && break || sleep 10
 done

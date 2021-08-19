@@ -36,8 +36,8 @@ post_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.20.0
+      extensionVersion: 1.23.0
     - extensionType: as3
-      extensionVersion: 3.27.0
+      extensionVersion: 3.30.0
     - extensionType: fast
-      extensionVersion: 1.8.0
+      extensionVersion: 1.11.0

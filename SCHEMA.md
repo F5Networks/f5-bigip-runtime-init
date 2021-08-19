@@ -1,5 +1,54 @@
 ## F5 BIG-IP Runtime Init Schema and Examples
 
+### controls: Schema
+
+_Runtime Init controls used for setting logLevel and other Runtime Init settings_
+
+Type: `object`
+
+<i id="#">path: #</i>
+
+**_Properties_**
+
+ - <b id="#/properties/logLevel">logLevel</b>
+	 - Type: `string`
+	 - <i id="#/properties/logLevel">path: #/properties/logLevel</i>
+	 - The value is restricted to the following: 
+		 1. _"debug"_
+		 2. _"info"_
+		 3. _"silly"_
+		 4. _"warn"_
+		 5. _"error"_
+ - <b id="#/properties/logFilename">logFilename</b>
+	 - Type: `string`
+	 - <i id="#/properties/logFilename">path: #/properties/logFilename</i>
+	 - Example values: 
+		 1. _"/var/log/cloud/bigIpRuntimeInit.log"_
+ - <b id="#/properties/logToJson">logToJson</b>
+	 - Type: `boolean`
+	 - <i id="#/properties/logToJson">path: #/properties/logToJson</i>
+	 - The value is restricted to the following: 
+		 1. _true_
+		 2. _false_
+ - <b id="#/properties/extensionInstallDelayInMs">extensionInstallDelayInMs</b>
+	 - Type: `number`
+	 - <i id="#/properties/extensionInstallDelayInMs">path: #/properties/extensionInstallDelayInMs</i>
+	 - Example values: 
+		 1. `60000`
+		 2. `1000`
+		 3. `600`
+
+
+### controls: Configuration Examples
+
+```yaml
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
+  logToJson: true
+
+```
+***
 ### runtime_parameters: Schema
 
 _Runtime parameters used to render Automation Toolchain declarations._
@@ -27,6 +76,26 @@ Type: `array`
 			 2. _"secret"_
 			 3. _"metadata"_
 			 4. _"url"_
+	 - <b id="#/items/properties/returnType">returnType</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/returnType">path: #/items/properties/returnType</i>
+		 - The value is restricted to the following: 
+			 1. _"string"_
+			 2. _"number"_
+			 3. _"boolean"_
+	 - <b id="#/items/properties/ipcalc">ipcalc</b>
+		 - Type: `string`
+		 - <i id="#/items/properties/ipcalc">path: #/items/properties/ipcalc</i>
+		 - The value is restricted to the following: 
+			 1. _"base"_
+			 2. _"mask"_
+			 3. _"bitmask"_
+			 4. _"hostmask"_
+			 5. _"broadcast"_
+			 6. _"size"_
+			 7. _"first"_
+			 8. _"last"_
+			 9. _"address"_
 	 - <b id="#/items/properties/value">value</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/value">path: #/items/properties/value</i>
@@ -44,6 +113,7 @@ Type: `array`
 					 1. _"gcp"_
 					 2. _"aws"_
 					 3. _"azure"_
+					 4. _"hashicorp"_
 			 - <b id="#/items/properties/secretProvider/properties/type">type</b> `required`
 				 - Type: `string`
 				 - <i id="#/items/properties/secretProvider/properties/type">path: #/items/properties/secretProvider/properties/type</i>
@@ -52,13 +122,20 @@ Type: `array`
 					 2. _"SecretManager"_
 					 3. _"default"_
 					 4. _"KeyVault"_
-			 - <b id="#/items/properties/secretProvider/properties/secretId">secretId</b> `required`
-				 - _ID or name of the secret in the secret manager of the specified cloud_
+					 5. _"Vault"_
+			 - <b id="#/items/properties/secretProvider/properties/secretId">secretId</b>
+				 - _ID or name of the secret in the secret manager of the specified environment_
 				 - Type: `string`
 				 - <i id="#/items/properties/secretProvider/properties/secretId">path: #/items/properties/secretProvider/properties/secretId</i>
 				 - Example values: 
 					 1. _"mySecretId"_
 					 2. _"test-document-01"_
+			 - <b id="#/items/properties/secretProvider/properties/secretPath">secretPath</b>
+				 - _Path to secret object in Hashicorp Vault_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/secretPath">path: #/items/properties/secretProvider/properties/secretPath</i>
+				 - Example values: 
+					 1. _"secret/foo"_
 			 - <b id="#/items/properties/secretProvider/properties/version">version</b>
 				 - _Version identifier for the secret to be retrieved_
 				 - Type: `string`
@@ -66,6 +143,7 @@ Type: `array`
 				 - Example values: 
 					 1. _"AWSCURRENT"_
 					 2. _"1.0"_
+					 3. _"1"_
 			 - <b id="#/items/properties/secretProvider/properties/vaultUrl">vaultUrl</b>
 				 - _URL of the Azure Key Vault_
 				 - Type: `string`
@@ -74,6 +152,73 @@ Type: `array`
 					 1. _"https://my-keyvault.vault.azure.net"_
 					 2. _"https://my-keyvault.vault.usgovcloudapi.net"_
 				 - The value must match this pattern: `(https?://(.+?\.)?vault\.(azure|usgovcloudapi)\.net(/[A-Za-z0-9\-\._~:/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)`
+			 - <b id="#/items/properties/secretProvider/properties/vaultServer">vaultServer</b>
+				 - _URL of the Hashicorp Vault server_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/vaultServer">path: #/items/properties/secretProvider/properties/vaultServer</i>
+				 - Example values: 
+					 1. _"https://my-vault-server:8200"_
+					 2. _"http://1.2.3.4:8200"_
+				 - The value must match this pattern: `^(https?|http?)://[^\s$.?#].[^\s]*$`
+			 - <b id="#/items/properties/secretProvider/properties/namespace">namespace</b>
+				 - _Hashicorp Vault namespace used_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/namespace">path: #/items/properties/secretProvider/properties/namespace</i>
+				 - Example values: 
+					 1. _"ns1/"_
+					 2. _"ns1/ns2/"_
+			 - <b id="#/items/properties/secretProvider/properties/secretsEngine">secretsEngine</b>
+				 - _Hashicorp Vault secrets engine used_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/secretsEngine">path: #/items/properties/secretProvider/properties/secretsEngine</i>
+				 - The value is restricted to the following: 
+					 1. _"kv2"_
+			 - <b id="#/items/properties/secretProvider/properties/authBackend">authBackend</b>
+				 - _Hashicorp Vault authentication backend used_
+				 - Type: `object`
+				 - <i id="#/items/properties/secretProvider/properties/authBackend">path: #/items/properties/secretProvider/properties/authBackend</i>
+				 - **_Properties_**
+					 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/type">type</b>
+						 - _Hashicorp Vault auth backend type_
+						 - Type: `string`
+						 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/type">path: #/items/properties/secretProvider/properties/authBackend/properties/type</i>
+						 - The value is restricted to the following: 
+							 1. _"approle"_
+					 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/roleId">roleId</b>
+						 - Type: `object`
+						 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/roleId">path: #/items/properties/secretProvider/properties/authBackend/properties/roleId</i>
+						 - **_Properties_**
+							 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/roleId/properties/type">type</b>
+								 - Type: `string`
+								 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/roleId/properties/type">path: #/items/properties/secretProvider/properties/authBackend/properties/roleId/properties/type</i>
+								 - The value is restricted to the following: 
+									 1. _"url"_
+									 2. _"inline"_
+							 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/roleId/properties/value">value</b>
+								 - _Hashicorp Vault approle role ID_
+								 - Type: `string`
+								 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/roleId/properties/value">path: #/items/properties/secretProvider/properties/authBackend/properties/roleId/properties/value</i>
+								 - Example values: 
+									 1. _"9c9b8014-d2e1-11eb-b8bc-0242ac130003"_
+									 2. _"file:///path/to/role-id"_
+					 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/secretId">secretId</b>
+						 - Type: `object`
+						 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/secretId">path: #/items/properties/secretProvider/properties/authBackend/properties/secretId</i>
+						 - **_Properties_**
+							 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/type">type</b>
+								 - Type: `string`
+								 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/type">path: #/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/type</i>
+								 - The value is restricted to the following: 
+									 1. _"url"_
+									 2. _"inline"_
+							 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/value">value</b>
+								 - _Hashicorp Vault approle secret ID_
+								 - Type: `string`
+								 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/value">path: #/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/value</i>
+								 - Example values: 
+									 1. _"9c9b84a6-d2e1-11eb-b8bc-0242ac130003"_
+									 2. _"file:///path/to/secret-id"_
+									 3. _"https://path/to/secret-id"_
 			 - <b id="#/items/properties/secretProvider/properties/field">field</b>
 				 - _field name to which secret value is mapped to_
 				 - Type: `string`
@@ -120,6 +265,7 @@ Type: `array`
 					 6. _"size"_
 					 7. _"first"_
 					 8. _"last"_
+					 9. _"address"_
 			 - <b id="#/items/properties/metadataProvider/properties/index">index</b>
 				 - Type: `integer`
 				 - <i id="#/items/properties/metadataProvider/properties/index">path: #/items/properties/metadataProvider/properties/index</i>
@@ -230,6 +376,28 @@ gcp:
         environment: gcp
         type: compute
         field: name
+hashicorp:
+  description: Hashicorp Vault Example
+  runtime_parameters:
+    - name: ADMIN_PASS
+      type: secret
+      secretProvider:
+        type: Vault
+        environment: hashicorp
+        vaultServer: 'http://127.0.0.1:8200'
+        namespace: ns1/
+        secretsEngine: kv2
+        secretId: secret/foo
+        field: password
+        version: 1
+        authBackend:
+          type: approle
+          roleId:
+            type: url
+            value: 'file:///path/to/role-id'
+          secretId:
+            type: inline
+            value: secret-id
 
 ```
 ***
@@ -536,59 +704,59 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.20.0
+        extensionVersion: 1.23.0
       - extensionType: as3
-        extensionVersion: 3.27.0
+        extensionVersion: 3.30.0
       - extensionType: fast
-        extensionVersion: 1.8.0
+        extensionVersion: 1.11.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.20.0
+        extensionVersion: 1.23.0
       - extensionType: as3
-        extensionVersion: 3.27.0
+        extensionVersion: 3.30.0
       - extensionType: fast
-        extensionVersion: 1.8.0
+        extensionVersion: 1.11.0
 hashed:
   description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.20.0
-        extensionHash: 02d29e99f76b1f9e2c99d4aee6dc73873f78735f430fe53139ca51c2d5f1fead
+        extensionVersion: 1.23.0
+        extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
       - extensionType: as3
-        extensionVersion: 3.27.0
-        extensionHash: 67b922b0f1c61222ba571ff8cadfe7cbd34dd94712fc1c778efd27448c5992a9
+        extensionVersion: 3.30.0
+        extensionHash: 47cc7bb6962caf356716e7596448336302d1d977715b6147a74a142dc43b391b
       - extensionType: fast
-        extensionVersion: 1.8.0
-        extensionHash: cc96297ff5349d33ba84ea500f9f55c6d1f82ebaf97d61dbef44e371b146f79a
+        extensionVersion: 1.11.0
+        extensionHash: 1816159f73f684d0b81f60341d7eda4907b2bbf72ca80cae2dcae2d1b059d3ce
 url:
   description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.20.0
+        extensionVersion: 1.23.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.20.0/f5-declarative-onboarding-1.20.0-2.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.23.0/f5-declarative-onboarding-1.23.0-4.noarch.rpm
       - extensionType: as3
-        extensionVersion: 3.27.0
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.27.0-3.noarch.rpm'
+        extensionVersion: 3.30.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.30.0-5.noarch.rpm'
       - extensionType: fast
-        extensionVersion: 1.8.0
+        extensionVersion: 1.11.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.8.0/f5-appsvcs-templates-1.8.0-1.noarch.rpm
+          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.11.0/f5-appsvcs-templates-1.11.0-1.noarch.rpm
 ilx:
   description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.20.0
+        extensionVersion: 1.23.0
       - extensionType: as3
-        extensionVersion: 3.27.0
+        extensionVersion: 3.30.0
       - extensionType: fast
-        extensionVersion: 1.8.0
+        extensionVersion: 1.11.0
       - extensionType: ilx
         extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
         extensionVersion: 1.0.0
@@ -769,14 +937,14 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
-          extensionHash: 02d29e99f76b1f9e2c99d4aee6dc73873f78735f430fe53139ca51c2d5f1fead
+          extensionVersion: 1.23.0
+          extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
         - extensionType: as3
-          extensionVersion: 3.27.0
-          extensionHash: 67b922b0f1c61222ba571ff8cadfe7cbd34dd94712fc1c778efd27448c5992a9
+          extensionVersion: 3.30.0
+          extensionHash: 47cc7bb6962caf356716e7596448336302d1d977715b6147a74a142dc43b391b
         - extensionType: fast
-          extensionVersion: 1.8.0
-          extensionHash: cc96297ff5349d33ba84ea500f9f55c6d1f82ebaf97d61dbef44e371b146f79a
+          extensionVersion: 1.11.0
+          extensionHash: 1816159f73f684d0b81f60341d7eda4907b2bbf72ca80cae2dcae2d1b059d3ce
     extension_services:
       service_operations:
         - extensionType: as3
@@ -798,9 +966,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.20.0-2.noarch.rpm
-          extensionHash: 02d29e99f76b1f9e2c99d4aee6dc73873f78735f430fe53139ca51c2d5f1fead
-          extensionVersion: 1.20.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.23.0-4.noarch.rpm
+          extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
+          extensionVersion: 1.23.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -833,11 +1001,11 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -876,11 +1044,11 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -915,11 +1083,11 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -977,11 +1145,11 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1004,11 +1172,11 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1061,11 +1229,11 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1170,11 +1338,11 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1187,11 +1355,11 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1210,12 +1378,12 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
-          extensionHash: 02d29e99f76b1f9e2c99d4aee6dc73873f78735f430fe53139ca51c2d5f1fead
+          extensionVersion: 1.23.0
+          extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
         - extensionType: as3
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.27.0/f5-appsvcs-3.27.0-3.noarch.rpm
-          extensionVersion: 3.27.0
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm
+          extensionVersion: 3.30.0
           verifyTls: false
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
@@ -1303,11 +1471,53 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.20.0
+          extensionVersion: 1.23.0
         - extensionType: as3
-          extensionVersion: 3.27.0
+          extensionVersion: 3.30.0
         - extensionType: fast
-          extensionVersion: 1.8.0
+          extensionVersion: 1.11.0
+    extension_services:
+      service_operations:
+        - extensionType: do
+          type: url
+          value: 'file:///examples/declarations/example_7_do.json'
+example_13:
+  description: Renders the admin password using Hashicorp Vault approle authentication.
+  runtime_config:
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: Vault
+          environment: hashicorp
+          vaultServer: 'http://127.0.0.1:8200'
+          namespace: ns1/
+          secretsEngine: kv2
+          secretId: secret/foo
+          field: password
+          version: 1
+          authBackend:
+            type: approle
+            roleId:
+              type: url
+              value: 'file:///path/to/role-id'
+            secretId:
+              type: inline
+              value: secret-id
+    pre_onboard_enabled:
+      - name: provision_rest
+        type: inline
+        commands:
+          - /usr/bin/setdb provision.extramb 500
+          - /usr/bin/setdb restjavad.useextramb true
+    extension_packages:
+      install_operations:
+        - extensionType: do
+          extensionVersion: 1.23.0
+        - extensionType: as3
+          extensionVersion: 3.30.0
+        - extensionType: fast
+          extensionVersion: 1.11.0
     extension_services:
       service_operations:
         - extensionType: do
