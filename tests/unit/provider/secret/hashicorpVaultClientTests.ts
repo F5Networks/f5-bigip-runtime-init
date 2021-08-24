@@ -85,6 +85,16 @@ describe('Resolver Client', () => {
                 assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
             });
     });
+
+    it('should validate login method when verifyTls=true with inline secretId and roleId', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        secretMetadata.verifyTls = true;
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
+            });
+    });
+
     /* eslint-disable  @typescript-eslint/camelcase */
     it('should validate login method with inline secretId and url for roleId as json', () => {
         const hashicorpClient = new HashicorpVaultClient();
@@ -105,6 +115,7 @@ describe('Resolver Client', () => {
         const hashicorpClient = new HashicorpVaultClient();
         secretMetadata.secretProvider.authBackend.roleId.type = 'url';
         secretMetadata.secretProvider.authBackend.roleId.value = 'https://somedomain.com/document.foo';
+        secretMetadata.verifyTls = true;
         nock('https://somedomain.com')
             .get('/document.foo')
             .reply(200, 'roleId-test-value' );
@@ -173,4 +184,19 @@ describe('Resolver Client', () => {
             });
     });
 
+    it('should validate getSecret method with verifyTls=true', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        nock('http://1.1.1.1:8200')
+            .get('/v1/kv/data/credential')
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+        secretMetadata.verifyTls = true;
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
+                return hashicorpClient.getSecret(secretMetadata)
+            })
+            .then((secretValue) => {
+                assert.strictEqual(secretValue, 'b1gAdminPazz')
+            });
+    });
 });

@@ -21,6 +21,7 @@ import Logger from "../../logger";
 import * as utils from "../../utils";
 import * as constants from "../../../constants";
 import * as fs from "fs";
+import {bool} from "aws-sdk/clients/signer";
 
 const logger = Logger.getLogger();
 
@@ -47,20 +48,22 @@ export class HashicorpVaultClient {
      */
     /* eslint-disable  @typescript-eslint/camelcase */
     async login(secretMetadata): Promise<void> {
-        await this._resolveId(secretMetadata.secretProvider.authBackend.roleId, 'roleId');
-        await this._resolveId(secretMetadata.secretProvider.authBackend.secretId, 'secretId');
+        await this._resolveId(secretMetadata.secretProvider.authBackend.roleId, 'roleId', secretMetadata);
+        await this._resolveId(secretMetadata.secretProvider.authBackend.secretId, 'secretId', secretMetadata);
 
         const options: {
             method: string;
             headers?: any;
             body: any;
+            verifyTls?: boolean;
         } = {
             method: 'POST',
             headers: {},
             body: {
                 role_id: this.roleId,
                 secret_id: this.secretId
-            }
+            },
+            verifyTls: secretMetadata.verifyTls ? secretMetadata.verifyTls : true
         };
         const loginResponse = await utils.retrier(utils.makeRequest, [secretMetadata.secretProvider.vaultServer + '/v1/auth/approle/login', options], {
             thisContext: this,
@@ -82,11 +85,12 @@ export class HashicorpVaultClient {
      *
      * @param metadata             - role metadata
      * @param type                 - role or secret
+     * @param options.verifyTls    - enables secure site verification
      *
      *
      * @returns                    - resolves with role id value
      */
-    async _resolveId(metadata, type): Promise<void> {
+    async _resolveId(metadata, type, options?): Promise<void> {
         if (metadata.type === 'url') {
             let content;
             if (metadata.value.indexOf('file://') !== -1) {
@@ -95,7 +99,8 @@ export class HashicorpVaultClient {
                 const response = await this.utilsRef.retrier(utils.makeRequest,
                     [metadata.value,
                         {
-                            method: 'GET'
+                            method: 'GET',
+                            verifyTls: options.verifyTls ? options.verifyTls : true
                         }], {
                         thisContext: this,
                         maxRetries: constants.RETRY.SHORT_COUNT,
@@ -154,11 +159,13 @@ export class HashicorpVaultClient {
         const options: {
             method: string;
             headers?: any;
+            verifyTls?: boolean;
         } = {
             method: 'GET',
             headers: {
                 'X-Vault-Token': this.clientToken
-            }
+            },
+            verifyTls: secretMetadata.verifyTls ? secretMetadata.verifyTls : true
         };
         const secretResponse = await this.utilsRef.retrier(utils.makeRequest,
             [`${secretMetadata.secretProvider.vaultServer}/v${secretMetadata.secretProvider.version}/${secretMetadata.secretProvider.secretPath}`,
@@ -167,7 +174,7 @@ export class HashicorpVaultClient {
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
         });
-        return Promise.resolve(secretResponse.body.data.data.password)
+        return Promise.resolve(secretResponse.body.data.data[secretMetadata.secretProvider.field])
     }
 
 }

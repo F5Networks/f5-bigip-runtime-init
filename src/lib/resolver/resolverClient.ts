@@ -204,13 +204,13 @@ export class ResolverClient {
                 { logger }
             );
             await _cloudClient.init();
-            if (secretMetadata.secretProvider.field !== undefined) {
-                constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
-            }
             secretValue = await _cloudClient.getSecret(
                 secretMetadata.secretProvider.secretId,
                 secretMetadata.secretProvider
             );
+        }
+        if (secretMetadata.secretProvider.field !== undefined) {
+            constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
         }
         return utils.convertTo(secretValue, secretMetadata.returnType);
     }
@@ -243,9 +243,11 @@ export class ResolverClient {
         const options: {
             method: string;
             headers?: any;
+            verifyTls?: boolean;
         } = {
             method: 'GET',
-            headers: {}
+            headers: {},
+            verifyTls: metadata.verifyTls ? metadata.verifyTls : true
         };
         if (metadata.headers !== undefined && metadata.headers.length > 0) {
             metadata.headers.forEach((header) => {
