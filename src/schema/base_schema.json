@@ -44,6 +44,11 @@
                         "type": "string",
                         "enum": ["string", "number", "boolean"]
                     },
+                    "verifyTls": {
+                        "description": "For enabling secure site verification",
+                        "type": "boolean",
+                        "examples": ["true", "false"]
+                    },
                     "ipcalc": {
                         "type": "string",
                         "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last", "address"]
@@ -89,11 +94,6 @@
                                 "type": "string",
                                 "pattern": "^(https?|http?):\/\/[^\\s$.?#].[^\\s]*$",
                                 "examples": ["https://my-vault-server:8200", "http://1.2.3.4:8200"]
-                            },
-                            "namespace": {
-                                "description": "Hashicorp Vault namespace used",
-                                "type": "string",
-                                "examples": ["ns1/", "ns1/ns2/"]
                             },
                             "secretsEngine": {
                                 "description": "Hashicorp Vault secrets engine used",
