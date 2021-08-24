@@ -128,11 +128,18 @@ export default class Logger{
      * Gets logging format
      */
     private static _getLoggingFormat(): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
+        const isLogToJson = Boolean(process.env[constants.ENV_VARS['LOG_TO_JSON']]);
         if (constants.ENV_VARS['LOG_TO_JSON'] in process.env) {
-            if (Boolean(process.env[constants.ENV_VARS['LOG_TO_JSON']])) {
+            if (isLogToJson) {
                 return winston.format.combine(
                     winston.format.timestamp(),
-                    winston.format.json()
+                    winston.format.printf(info => {
+                        let message = info.message ? info.message : '';
+                        for (const fieldName of constants.LOGGER.FIELDS_TO_HIDE) {
+                            message = message.replace(new RegExp(`"${fieldName}":.[^"]+`, 'g'), `"${fieldName}":"********`);
+                        }
+                        return `{"message":${message},"level":"${info.level}","pid":"${process.pid}"}`
+                    })
                 )
             }
         }
@@ -141,7 +148,7 @@ export default class Logger{
             winston.format.printf(info => {
                 let message = info.message ? info.message : '';
                 for (const fieldName of constants.LOGGER.FIELDS_TO_HIDE) {
-                    message = message.replace(new RegExp(`"${fieldName}":.[^"]+`), `"${fieldName}":"********`);
+                    message = message.replace(new RegExp(`"${fieldName}":.[^"]+`, 'g'), `"${fieldName}":"********`);
                 }
                 return `${info.timestamp} [${process.pid}]: ${info.level}: ${message}`
             })

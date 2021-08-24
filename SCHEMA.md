@@ -83,6 +83,13 @@ Type: `array`
 			 1. _"string"_
 			 2. _"number"_
 			 3. _"boolean"_
+	 - <b id="#/items/properties/verifyTls">verifyTls</b>
+		 - _For enabling secure site verification_
+		 - Type: `boolean`
+		 - <i id="#/items/properties/verifyTls">path: #/items/properties/verifyTls</i>
+		 - Example values: 
+			 1. _true_
+			 2. _false_
 	 - <b id="#/items/properties/ipcalc">ipcalc</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/ipcalc">path: #/items/properties/ipcalc</i>
@@ -160,13 +167,6 @@ Type: `array`
 					 1. _"https://my-vault-server:8200"_
 					 2. _"http://1.2.3.4:8200"_
 				 - The value must match this pattern: `^(https?|http?)://[^\s$.?#].[^\s]*$`
-			 - <b id="#/items/properties/secretProvider/properties/namespace">namespace</b>
-				 - _Hashicorp Vault namespace used_
-				 - Type: `string`
-				 - <i id="#/items/properties/secretProvider/properties/namespace">path: #/items/properties/secretProvider/properties/namespace</i>
-				 - Example values: 
-					 1. _"ns1/"_
-					 2. _"ns1/ns2/"_
 			 - <b id="#/items/properties/secretProvider/properties/secretsEngine">secretsEngine</b>
 				 - _Hashicorp Vault secrets engine used_
 				 - Type: `string`
