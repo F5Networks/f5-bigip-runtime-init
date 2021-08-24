@@ -21,7 +21,6 @@ import Logger from "../../logger";
 import * as utils from "../../utils";
 import * as constants from "../../../constants";
 import * as fs from "fs";
-import {bool} from "aws-sdk/clients/signer";
 
 const logger = Logger.getLogger();
 
