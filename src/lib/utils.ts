@@ -72,7 +72,7 @@ export async function downloadToFile(url: string, file: string, options): Promis
         request({
             url: url,
             method: 'GET',
-            strictSSL: options.verifyTls ? options.verifyTls : true
+            strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
         })
             .on('error', (err) => {
                 reject(err);
@@ -203,7 +203,7 @@ export function loadData(location: string, options?: {
             retrier(request, [{
                 url: location,
                 method: 'GET',
-                strictSSL: options.verifyTls ? options.verifyTls : true
+                strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
             }, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
                 if (error) {
                     reject(error);
@@ -321,7 +321,7 @@ export async function makeRequest(uri: string, options?: {
             options.headers || {}
         ),
         body: options.body || null,
-        strictSSL: options.verifyTls ? options.verifyTls : true
+        strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
     };
 
     logger.silly(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.strictSSL}`);
@@ -351,7 +351,13 @@ export async function makeRequest(uri: string, options?: {
         });
     });
 
-    logger.silly(`Request response: ${response.code} ${stringify(response.body)}`);
+    if (new RegExp(constants.LOGGER.ENDPOINTS_TO_HIDE_RESPONSE.join("|")).test(uri)) {
+        logger.silly(`Request response: ${response.code}`);
+    } else {
+        logger.silly(`Request response: ${response.code} ${stringify(response.body)}`);
+    }
+
+
 
     return { code: response.code, body: response.body };
 }
