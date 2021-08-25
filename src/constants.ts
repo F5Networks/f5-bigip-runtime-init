@@ -72,7 +72,13 @@ export const LOGGER = {
         "newPassword",
         "bindPassword",
         "checkBindPassword",
-        "md5SignaturePassphrase"
+        "md5SignaturePassphrase",
+        "client_token",
+        "roleId",
+        "secretId"
+    ],
+    ENDPOINTS_TO_HIDE_RESPONSE: [
+        "/v1/auth/approle/login"
     ]
 };
 

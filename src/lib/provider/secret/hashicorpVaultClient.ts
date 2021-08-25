@@ -62,7 +62,7 @@ export class HashicorpVaultClient {
                 role_id: this.roleId,
                 secret_id: this.secretId
             },
-            verifyTls: secretMetadata.verifyTls ? secretMetadata.verifyTls : true
+            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true
         };
         const loginResponse = await utils.retrier(utils.makeRequest, [secretMetadata.secretProvider.vaultServer + '/v1/auth/approle/login', options], {
             thisContext: this,
@@ -99,7 +99,7 @@ export class HashicorpVaultClient {
                     [metadata.value,
                         {
                             method: 'GET',
-                            verifyTls: options.verifyTls ? options.verifyTls : true
+                            verifyTls: options.verifyTls !== undefined ? options.verifyTls : true
                         }], {
                         thisContext: this,
                         maxRetries: constants.RETRY.SHORT_COUNT,
@@ -164,8 +164,9 @@ export class HashicorpVaultClient {
             headers: {
                 'X-Vault-Token': this.clientToken
             },
-            verifyTls: secretMetadata.verifyTls ? secretMetadata.verifyTls : true
+            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true
         };
+
         const secretResponse = await this.utilsRef.retrier(utils.makeRequest,
             [`${secretMetadata.secretProvider.vaultServer}/v${secretMetadata.secretProvider.version}/${secretMetadata.secretProvider.secretPath}`,
                 options], {
