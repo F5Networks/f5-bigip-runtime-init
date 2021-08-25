@@ -25,7 +25,7 @@ import * as utils from '../utils';
 import * as constants from '../../constants';
 import {HashicorpVaultClient} from "../provider/secret";
 
-const logger = Logger.getLogger();
+let logger = Logger.getLogger();
 
 interface RuntimeParameter {
     type: string;
@@ -33,6 +33,9 @@ interface RuntimeParameter {
     value: string;
     returnType: string;
     ipcalc: string;
+    secretProvider: {
+        field: string;
+    };
 }
 
 interface OnboardActions {
@@ -62,6 +65,7 @@ export class ResolverClient {
     async resolveRuntimeParameters(parameters: RuntimeParameter[]): Promise<any> {
         const results = {};
         const promises = [];
+        this._preProcessParametersValues(parameters);
         for (let i = 0; i < parameters.length; i += 1) {
             if (parameters[i].type === 'static') {
                 if (parameters[i].ipcalc !== undefined && parameters[i].value.split('.').length === 4 ){
@@ -209,9 +213,6 @@ export class ResolverClient {
                 secretMetadata.secretProvider
             );
         }
-        if (secretMetadata.secretProvider.field !== undefined) {
-            constants.LOGGER.FIELDS_TO_HIDE.push(secretMetadata.secretProvider.field);
-        }
         return utils.convertTo(secretValue, secretMetadata.returnType);
     }
 
@@ -247,7 +248,7 @@ export class ResolverClient {
         } = {
             method: 'GET',
             headers: {},
-            verifyTls: metadata.verifyTls ? metadata.verifyTls : true
+            verifyTls: metadata.verifyTls !== undefined ? metadata.verifyTls : true
         };
         if (metadata.headers !== undefined && metadata.headers.length > 0) {
             metadata.headers.forEach((header) => {
@@ -295,5 +296,23 @@ export class ResolverClient {
         } else {
             return utils.convertTo(new netmask.Netmask(networkValue)[ipcalcMethod], returnType);
         }
+    }
+
+    /**
+     * Pre-processes runtime parameters before resolving them
+     *
+     * @param parameters          - runtime parameters
+     *
+     *
+     */
+    _preProcessParametersValues(parameters: RuntimeParameter[]): void {
+        for (let i = 0; i < parameters.length; i += 1) {
+            if (parameters[i].type === 'secret') {
+                if (parameters[i].secretProvider.field !== undefined) {
+                    constants.LOGGER.FIELDS_TO_HIDE.push(parameters[i].secretProvider.field);
+                }
+            }
+        }
+        logger = Logger.getLogger();
     }
 }

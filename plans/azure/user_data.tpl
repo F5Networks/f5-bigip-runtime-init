@@ -17,6 +17,7 @@ runtime_parameters:
       secretId: test-azure-admin-secret
   - name: ROOT_PASS
     type: secret
+    verifyTls: false
     secretProvider:
       type: Vault
       environment: hashicorp
