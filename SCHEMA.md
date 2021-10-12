@@ -1504,6 +1504,25 @@ example_13:
             secretId:
               type: inline
               value: secret-id
+      - name: SECOND_PASS
+        type: secret
+        secretProvider:
+          type: Vault
+          environment: hashicorp
+          vaultServer: 'http://127.0.0.1:8200'
+          namespace: ns1/
+          secretsEngine: kv2
+          secretId: secret/bar
+          field: data
+          version: 1
+          authBackend:
+            type: approle
+            roleId:
+              type: url
+              value: 'file:///path/to/role-id'
+            secretId:
+              type: inline
+              value: secret-id
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1521,7 +1540,31 @@ example_13:
     extension_services:
       service_operations:
         - extensionType: do
-          type: url
-          value: 'file:///examples/declarations/example_7_do.json'
+          type: inline
+          value:
+            schemaVersion: 1.0.0
+            class: Device
+            async: true
+            label: my BIG-IP declaration for declarative onboarding
+            Common:
+              class: Tenant
+              hostname: '{{ HOST_NAME }}.local'
+              admin:
+                class: User
+                userType: regular
+                password: '{{ ADMIN_PASS }}'
+                shell: bash
+              admin2:
+                class: User
+                userType: regular
+                password: '{{ SECOND_PASS.admin2_password }}'
+                shell: bash
+                partitionAccess:
+                  all-partitions:
+                    role: admin
+              dbvars:
+                class: DbVariables
+                provision.extramb: 500
+                restjavad.useextramb: true
 
 ```

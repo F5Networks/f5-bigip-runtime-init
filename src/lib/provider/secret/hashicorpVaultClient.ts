@@ -154,7 +154,7 @@ export class HashicorpVaultClient {
      *
      * @returns                       - resolves when login call is completed
      */
-    async getSecret(secretMetadata): Promise<string> {
+    async getSecret(secretMetadata): Promise<any> {
         const options: {
             method: string;
             headers?: any;
@@ -174,7 +174,11 @@ export class HashicorpVaultClient {
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
         });
-        return Promise.resolve(secretResponse.body.data.data[secretMetadata.secretProvider.field])
+        if (secretMetadata.secretProvider.field === 'data') {
+            return Promise.resolve(secretResponse.body.data.data)
+        } else {
+            return Promise.resolve(secretResponse.body.data.data[secretMetadata.secretProvider.field])
+        }
     }
 
 }

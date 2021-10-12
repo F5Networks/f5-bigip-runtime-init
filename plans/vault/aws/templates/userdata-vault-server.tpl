@@ -293,7 +293,7 @@ sleep 10
 
 logger "Enabling kv-v2 secrets engine and inserting secret"
 vault secrets enable -path=kv kv-v2
-vault kv put kv/credential password=b1gAdminPazz
+vault kv put kv/credential password=b1gAdminPazz bigiq_admin_password=thisIsTestPassword123 bigiq_admin_username=asdasfdar212@
 
 logger "Creating policy"
 echo 'path "kv/*" {

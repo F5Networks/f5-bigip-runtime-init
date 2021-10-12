@@ -34,6 +34,25 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
+  - name: SECOND_PASS
+    type: secret
+    verifyTls: false
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: data
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_secret_id
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -129,9 +148,79 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://khanna.s3.amazonaws.com/azure_do_template_w_vault.json
-      verifyTls: false
+      type: inline
+      value: 
+        schemaVersion: 1.0.0
+        class: Device
+        async: true
+        label: my BIG-IP declaration for declarative onboarding
+        Common:
+          class: Tenant
+          hostname: '{{ HOST_NAME }}.local'
+          internal:
+            class: VLAN
+            tag: 4093
+            mtu: 1500
+            interfaces:
+              - name: '1.2'
+                tagged: true
+          internal-self:
+            class: SelfIp
+            address: '{{{ SELF_IP_INTERNAL }}}'
+            vlan: internal
+            allowService: default
+            trafficGroup: traffic-group-local-only
+          external:
+            class: VLAN
+            tag: 4094
+            mtu: 1500
+            interfaces:
+              - name: '1.1'
+                tagged: true
+          external-self:
+            class: SelfIp
+            address: '{{{ SELF_IP_EXTERNAL }}}'
+            vlan: external
+            allowService: default
+            trafficGroup: traffic-group-local-only
+          myDns:
+            class: DNS
+            nameServers:
+              - 8.8.8.8
+          myNtp:
+            class: NTP
+            servers:
+              - 0.pool.ntp.org
+            timezone: UTC
+          myProvisioning:
+            class: Provision
+            ltm: nominal
+            asm: nominal
+          admin:
+            class: User
+            userType: regular
+            password: '{{ ADMIN_PASS }}'
+            shell: bash
+          vaultadmin:
+            class: User
+            userType: regular
+            password: '{{ ROOT_PASS }}'
+            shell: bash
+            partitionAccess:
+              all-partitions:
+                role: admin
+          vaultadmin2:
+            class: User
+            userType: regular
+            password: '{{ SECOND_PASS.bigiq_admin_password }}'
+            shell: bash
+            partitionAccess:
+              all-partitions:
+                role: admin
+          dbvars:
+            class: DbVariables
+            provision.extramb: 500
+            restjavad.useextramb: true
     - extensionType: as3
       type: url
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json

@@ -196,7 +196,7 @@ export class ResolverClient {
      *
      * @returns                    - resolves with secret value
      */
-    async _resolveSecret(secretMetadata): Promise<string> {
+    async _resolveSecret(secretMetadata): Promise<any> {
         let secretValue;
         if (secretMetadata.secretProvider.environment === 'hashicorp') {
             const hashicorpVaultClient = new HashicorpVaultClient();
