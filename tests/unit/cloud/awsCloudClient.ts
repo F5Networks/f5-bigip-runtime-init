@@ -329,6 +329,21 @@ describe('CloudClient - AWS', () => {
                 assert.fail(error);
             });
     });
+
+    it('should validate getMetadata when network type is provided with subnet-ipv4-cidr-block using index 0', () => {
+        cloudClient._getInstanceNetwork = sinon.stub().resolves('10.0.33.8/29');
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, bigipMgmtNetInterfacesResponse );
+        cloudClient.getMetadata('subnet-ipv4-cidr-block', { type: 'network', index: 0 })
+            .then((result) => {
+                assert.strictEqual(result, '10.0.33.9');
+            })
+            .catch((error) => {
+                assert.fail(error);
+            });
+    });
+
     it('should validate getMetadata when network type is provided with subnet-ipv4-cidr-block using index 0', () => {
         nock('https://169.254.169.254')
             .get('/latest/meta-data/network/interfaces/macs/fa:16:3e:d0:b0:df/subnet-ipv4-cidr-block')
@@ -465,7 +480,7 @@ describe('CloudClient - AWS', () => {
                     secretsManager: sinon.stub()
                 }));
             });
-        const expectedError = 'cannot contact AWS metadata service';
+        const expectedError = 'Invalid net address: {"region":"some-aws-region","instanceId":"some-instance-id"}';
         return cloudClient.getMetadata('subnet-ipv4-cidr-block', { type: 'network', index: 1 })
             .then(() => {
                 // eslint-disable-next-line arrow-body-style
