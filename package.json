@@ -75,8 +75,9 @@
     },
     "devDependencies": {
         "@azure/ms-rest-nodeauth": "^3.0.1",
-        "@f5devcentral/eslint-config-f5-atg": "^0.1.1",
+        "@f5devcentral/eslint-config-f5-atg": "^0.1.4",
         "@types/assert": "^1.4.6",
+        "@types/memory-cache": "^0.2.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.11.0",
         "@types/sinon": "^9.0.0",
@@ -129,7 +130,9 @@
         "whitelist": [
             "1677",
             "1674",
-            "1769"
+            "1769",
+            "1002401",
+            "1002531"
         ]
     },
     "keywords": [

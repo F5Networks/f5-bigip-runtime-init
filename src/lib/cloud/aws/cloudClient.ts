@@ -19,6 +19,7 @@
 
 import * as AWS from 'aws-sdk';
 import * as constants from '../../../constants';
+import * as netmask from 'netmask';
 import { AbstractCloudClient } from '../abstract/cloudClient';
 import Logger from '../../logger';
 import where = require('lodash.where');
@@ -182,14 +183,11 @@ export class AwsCloudClient extends AbstractCloudClient {
                 const ipMask = primaryIp + cidr.match(/(\/([0-9]{1,2}))/g);
                 logger.info('ip and mask for ' + mac + ': ' + ipMask);
                 return ipMask;
-            /** manipulate data to form gateway address when field eq subnet-ipv4-cidr-block */
             } else if (field === 'subnet-ipv4-cidr-block') {
-                const cidr = await this._getInstanceNetwork('subnet-ipv4-cidr-block', type, mac)
-                .catch(err => Promise.reject(err));
-                logger.info('CIDR block for ' + mac + ':' + cidr);
-                const gateway = cidr.match(/([0-9]{1,3}\.){2}[0-9]{1,3}/g) + '.1';
-                logger.info('gateway for ' + mac + ':' + gateway);
-                return gateway;
+                const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
+                    .catch(err => Promise.reject(err));
+                logger.debug('CIDR block for ' + mac + ': ' + getInstanceNetwork);
+                return new netmask.Netmask(getInstanceNetwork)['first'];
             } else {
                 const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
                 .catch(err => Promise.reject(err));
