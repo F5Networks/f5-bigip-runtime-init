@@ -82,4 +82,12 @@ describe('Provider: Azure', () => {
         .catch((err) => {
             assert.ok(!err);
         }));
+
+    it('should login using new vaultadmin2 password', () => funcUtils.getAuthToken(firstDut.ip, firstDut.port, 'vaultadmin2', 'thisIsTestPassword123')
+        .then((data) => {
+            assert.ok('token' in data);
+        })
+        .catch((err) => {
+            assert.ok(!err);
+        }));
 });

@@ -618,6 +618,60 @@ runtime_parameters allows to defined list of parameters and these parameters can
               vaultUrl: https://my-keyvault.vault.azure.net
               secretId: mySecret01
       ```
+  * secret (Hashicorp Vault) - fetches secret from Hashicorp Vault using App Role authentication
+
+    The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples):
+      ```yaml
+        runtime_parameters:
+          - name: ADMIN_PASS
+            type: secret
+            secretProvider:
+              type: Vault
+              environment: hashicorp
+              vaultServer: http://127.0.0.1:8200
+              namespace: ns1/
+              secretsEngine: kv2
+              secretId: secret/credential
+              field: data
+              version: 1
+              authBackend:
+                type: approle
+                roleId:
+                  type: url
+                  value: file:///path/to/role-id
+                secretId:
+                  type: inline
+                  value: secret-id
+      ...
+        extension_services:
+          service_operations:
+            - extensionType: do
+              type: inline
+              value: 
+                schemaVersion: 1.0.0
+                class: Device
+                async: true
+                label: my BIG-IP declaration for declarative onboarding
+                Common:
+                  class: Tenant
+                  hostname: '{{{ HOST_NAME }}}.local'
+                  foo:
+                    class: User
+                    userType: regular
+                    password: '{{{ ADMIN_PASS.foo_password }}}'
+                    shell: bash
+                    partitionAccess:
+                      all-partitions:
+                        role: admin
+                  bar:
+                    class: User
+                    userType: regular
+                    password: '{{{ ADMIN_PASS.bar_password }}}'
+                    shell: bash
+                    partitionAccess:
+                      all-partitions:
+                        role: admin
+      ```
   * metadata - fetches common pre-defined metadata from the Metadata Service
     ```yaml
         runtime_parameters:

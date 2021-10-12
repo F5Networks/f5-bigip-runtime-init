@@ -14,7 +14,6 @@ import sinon from 'sinon';
 import nock from 'nock';
 import { HashicorpVaultClient } from '../../../../src/lib/provider/secret/hashicorpVaultClient';
 
-
 describe('Resolver Client', () => {
 
     let secretMetadata;
@@ -104,8 +103,6 @@ describe('Resolver Client', () => {
         nock('https://somedomain.com')
             .get('/document.foo')
             .reply(200, { role_id: 'roleId-test-value' });
-
-
         return hashicorpClient.login(secretMetadata)
             .then(() => {
                 assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
@@ -134,8 +131,6 @@ describe('Resolver Client', () => {
         nock('https://somedomain.com')
             .get('/document.foo')
             .reply(200, { role_id: 'secretId-test-value' });
-
-
         return hashicorpClient.login(secretMetadata)
             .then(() => {
                 assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
@@ -158,6 +153,8 @@ describe('Resolver Client', () => {
     it('should validate invalid login method', () => {
         nock.cleanAll();
         const hashicorpClient = new HashicorpVaultClient();
+        secretMetadata.secretProvider.authBackend.roleId.value = 'this_is_an_invalid_roleId';
+        secretMetadata.secretProvider.authBackend.secretId.value = 'this_is_an_invalid_secretId';
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
             .reply(403, {"result": "Access Denied"});
@@ -174,7 +171,7 @@ describe('Resolver Client', () => {
         const hashicorpClient = new HashicorpVaultClient();
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
-            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz","bigiq_admin_password":"thisIsTestPassword123","bigiq_admin_username":"asdasfdar212@"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
         return hashicorpClient.login(secretMetadata)
             .then(() => {
                 assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
@@ -189,7 +186,7 @@ describe('Resolver Client', () => {
         const hashicorpClient = new HashicorpVaultClient();
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
-            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz","bigiq_admin_password":"thisIsTestPassword123","bigiq_admin_username":"asdasfdar212@"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
         secretMetadata.verifyTls = true;
         return hashicorpClient.login(secretMetadata)
             .then(() => {
@@ -205,7 +202,7 @@ describe('Resolver Client', () => {
         const hashicorpClient = new HashicorpVaultClient();
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
-            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz","bigiq_admin_password":"thisIsTestPassword123","bigiq_admin_username":"asdasfdar212@"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
         secretMetadata.verifyTls = false;
         return hashicorpClient.login(secretMetadata)
             .then(() => {
@@ -214,6 +211,23 @@ describe('Resolver Client', () => {
             })
             .then((secretValue) => {
                 assert.strictEqual(secretValue, 'b1gAdminPazz')
+            });
+    });
+
+    it('should validate getSecret method with data field provided', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        secretMetadata.secretProvider.field = 'data';
+        nock('http://1.1.1.1:8200')
+            .get('/v1/kv/data/credential')
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz","bigiq_admin_password":"thisIsTestPassword123","bigiq_admin_username":"asdasfdar212@"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+        secretMetadata.verifyTls = false;
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
+                return hashicorpClient.getSecret(secretMetadata)
+            })
+            .then((secretValue) => {
+                assert.strictEqual(secretValue.password, 'b1gAdminPazz')
             });
     });
 });

@@ -42,6 +42,17 @@
                 }
             }
         },
+        "vaultadmin2": {
+            "class": "User",
+            "userType": "regular",
+            "password": "{{ SECOND_PASS.bigiq_admin_password }}",
+            "shell": "bash",
+            "partitionAccess": {
+                "all-partitions": {
+                    "role": "admin"
+                }
+            }
+        },
         "myProvisioning": {
             "class": "Provision",
             "ltm": "nominal",

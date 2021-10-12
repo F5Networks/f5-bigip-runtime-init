@@ -23,6 +23,17 @@
             "password": "{{ ROOT_PASS }}",
             "shell": "bash"
         },
+        "vaultadmin2": {
+            "class": "User",
+            "userType": "regular",
+            "password": "{{ SECOND_PASS.bigiq_admin_password }}",
+            "shell": "bash",
+            "partitionAccess": {
+                "all-partitions": {
+                    "role": "admin"
+                }
+            }
+        },
         "dbvars": {
             "class": "DbVariables",
             "provision.extramb": 500,

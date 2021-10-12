@@ -106,6 +106,8 @@ lint_package:
     tags:
         - cm-official-docker-executor
     except:
+        refs:
+            - schedules
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
 
@@ -119,6 +121,8 @@ test_audit:
     tags:
         - cm-official-docker-executor
     except:
+        refs:
+            - schedules
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
 
@@ -131,6 +135,8 @@ unit_tests:
     tags:
         - cm-official-docker-executor
     except:
+        refs:
+            - schedules
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
 
@@ -151,6 +157,9 @@ check_content:
         - git secrets --scan
     tags:
         - cm-official-docker-executor
+    except:
+        refs:
+            - schedules
 
 # generate README.md and SCHEMA.md
 check_schema:
@@ -161,6 +170,9 @@ check_schema:
         - if git diff | grep 'diff --git'; then exit 1; else exit 0; fi
     tags:
         - cm-official-docker-executor
+    except:
+        refs:
+            - schedules
 
 # verifies all examples use the latest AT Components versions
 check_at_components_metadata:
@@ -175,7 +187,9 @@ check_at_components_metadata:
         - if git diff | grep 'diff --git'; then exit 1; else exit 0; fi
     tags:
         - cm-official-docker-executor
-
+    except:
+        refs:
+            - schedules
 
 # checks links in README
 check_links:
@@ -185,6 +199,9 @@ check_links:
         - validate make link_check
     tags:
         - cm-official-docker-executor
+    except:
+        refs:
+            - schedules
 
 # build package
 build_package:
@@ -272,7 +289,7 @@ publish_container:
         # deploy environment - required artifacts will be place in output folder
         - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}
         # Collecting deployment metadata
-        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 150 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 1000 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - export MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
         - export USERNAME=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
         - export PASSWORD=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
