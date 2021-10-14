@@ -18,6 +18,7 @@ runtime_parameters:
         secretId:
           type: inline
           value: secret-id
+          unwrap: true
   - name: SECOND_PASS
     type: secret
     secretProvider:

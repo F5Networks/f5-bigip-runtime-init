@@ -511,7 +511,10 @@ runtime_parameters allows to defined list of parameters and these parameters can
       ```
   * secret (Hashicorp Vault) - fetches secret from Hashicorp Vault using App Role authentication
 
-    The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples):
+    The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples). 
+    
+    **NOTE**: When the authBackend.secretId.unwrap attribute is set to **true** (recommended), the secretId value must be in the form of a wrapping token. F5 BIG-IP Runtime Init will unwrap this token to retrieve the actual secret ID. This eliminates the need to pass the secret ID in the declaration. See the Hashicorp Vault [documentation](https://learn.hashicorp.com/tutorials/vault/approle-best-practices#approle-response-wrapping) for more information.
+    
       {{=<% %>=}}
       ```yaml
         runtime_parameters:
@@ -534,6 +537,7 @@ runtime_parameters allows to defined list of parameters and these parameters can
                 secretId:
                   type: inline
                   value: secret-id
+                  unwrap: true
       ...
         extension_services:
           service_operations:

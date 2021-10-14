@@ -278,14 +278,19 @@ publish_container:
         - export VAULT_SERVER_PUBLIC_HTTP=$(cat /deployment-tool/plans/vault/aws/terraform.tfstate | jq .outputs.vault_server_public_http.value -r)
         - export VAULT_APP_ROLE=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id')
         - export VAULT_SECRET_ID=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
+        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/wrapped-secret-id | jq -r .wrap_info.token')
+        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/wrapped-secret-id-2 | jq -r .wrap_info.token')
         # debugging the values
         - echo $VAULT_MGMT_IP
         - echo $VAULT_SERVER_PUBLIC_HTTP
         - echo $VAULT_APP_ROLE
         - echo $VAULT_SECRET_ID
+        - echo $VAULT_WRAPPED_SECRET_ID
+        - echo $VAULT_WRAPPED_SECRET_ID_2
         - sed -i "s \vault_server_public_http $VAULT_SERVER_PUBLIC_HTTP g" /deployment-tool/plans/${CLOUD}/user_data.tpl
         - sed -i "s/\vault_app_role/$VAULT_APP_ROLE/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
         - sed -i "s/\vault_secret_id/$VAULT_SECRET_ID/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
+        - sed -i "s/\vault_wrapped_secret_id/$VAULT_WRAPPED_SECRET_ID/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
         # deploy environment - required artifacts will be place in output folder
         - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}
         # Collecting deployment metadata
@@ -316,8 +321,12 @@ publish_container:
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config"
         # Attempt to re-run self-executable and runtime-init
+        # Using updated config because wrapped Vault token can only be used once
+        - sed "s/${VAULT_WRAPPED_SECRET_ID}/${VAULT_WRAPPED_SECRET_ID_2}/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
+        - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config --skip-telemetry"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config_update --skip-telemetry"
     tags:
         - cm-official-docker-executor
     only:

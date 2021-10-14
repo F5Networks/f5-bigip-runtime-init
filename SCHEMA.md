@@ -219,6 +219,13 @@ Type: `array`
 									 1. _"9c9b84a6-d2e1-11eb-b8bc-0242ac130003"_
 									 2. _"file:///path/to/secret-id"_
 									 3. _"https://path/to/secret-id"_
+							 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/unwrap">unwrap</b>
+								 - _For unwrapping a wrapped secret ID_
+								 - Type: `boolean`
+								 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/unwrap">path: #/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/unwrap</i>
+								 - Example values: 
+									 1. _true_
+									 2. _false_
 			 - <b id="#/items/properties/secretProvider/properties/field">field</b>
 				 - _field name to which secret value is mapped to_
 				 - Type: `string`
@@ -398,6 +405,7 @@ hashicorp:
           secretId:
             type: inline
             value: secret-id
+            unwrap: true
 
 ```
 ***
@@ -1504,6 +1512,7 @@ example_13:
             secretId:
               type: inline
               value: secret-id
+              unwrap: true
       - name: SECOND_PASS
         type: secret
         secretProvider:
