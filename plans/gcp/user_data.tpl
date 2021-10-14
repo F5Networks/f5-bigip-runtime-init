@@ -112,6 +112,7 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
+          unwrap: false
   - name: SECOND_PASS
     type: secret
     secretProvider:
@@ -129,7 +130,8 @@ runtime_parameters:
           value: vault_app_role
         secretId:
           type: inline
-          value: vault_secret_id
+          value: vault_wrapped_secret_id
+          unwrap: true
   - name: INSTANCE_ID
     type: url
     value: http://169.254.169.254/computeMetadata/v1/instance/id

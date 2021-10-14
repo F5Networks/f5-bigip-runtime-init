@@ -38,10 +38,43 @@ export class HashicorpVaultClient {
     }
 
     /**
+     * Does call to Hashicorp Vault for unwrapping wrapped secret ID
+     *
+     * @param token          - token to unwrap
+     * @param metadata       - metadata required for interacting with Hashicorp Vault
+     *
+     * @returns              - resolves with secret ID value
+     */
+    async _unwrapSecretId(token, secretMetadata): Promise<string> {
+        logger.info(`Unwrapping token...`);
+        const options: {
+            method: string;
+            headers?: any;
+            verifyTls?: boolean;
+        } = {
+            method: 'POST',
+            headers: {
+                'X-Vault-Token': token
+            },
+            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true
+        };
+
+        const unwrapResponse = await this.utilsRef.retrier(utils.makeRequest,
+            [`${secretMetadata.secretProvider.vaultServer}/v${secretMetadata.secretProvider.version}/sys/wrapping/unwrap`,
+                options], {
+            thisContext: this,
+            maxRetries: constants.RETRY.SHORT_COUNT,
+            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+        });
+
+        return Promise.resolve(unwrapResponse.body.data.secret_id)
+    }
+
+    /**
      * Does login call to Hashicorp Vault for getting secure token
-     *
+     * 
      * @param secretMetadata          - metadata required for interacting with Hashicorp Vault
-     *
+     * @param secretMetadata          - metadata required for interacting with Hashicorp Vault
      *
      * @returns                       - resolves when login call is completed
      */
@@ -140,6 +173,14 @@ export class HashicorpVaultClient {
                 this.roleId =  metadata.value;
             } else {
                 throw new Error(`Recieved invalid type while resolving id for hashicorp vault`);
+            }
+        }
+        metadata.unwrap = metadata.unwrap !== undefined ? metadata.unwrap : true
+        if (type === 'secretId' && metadata.unwrap) {
+            try {
+                this.secretId = await this._unwrapSecretId(this.secretId, options);
+            } catch (e){
+                throw new Error(`Could not unwrap token`);
             }
         }
         return Promise.resolve();

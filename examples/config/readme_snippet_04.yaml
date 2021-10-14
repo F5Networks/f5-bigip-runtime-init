@@ -18,6 +18,7 @@ runtime_parameters:
         secretId:
           type: inline
           value: secret-id
+          unwrap: true
 pre_onboard_enabled:
   - name: provision_rest
     type: inline

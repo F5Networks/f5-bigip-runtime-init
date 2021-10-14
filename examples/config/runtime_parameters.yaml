@@ -110,3 +110,4 @@ hashicorp:
         secretId:
           type: inline
           value: secret-id
+          unwrap: true

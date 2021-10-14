@@ -311,6 +311,13 @@ role_id=$(vault read -format=json auth/approle/role/runtime-init-role/role-id > 
 
 logger "Creating secret-id for runtime-init role"
 secret_id=$(vault write -format=json -f auth/approle/role/runtime-init-role/secret-id > /tmp/secret-id)
+
+logger "Creating wrapped secret-id for runtime-init role"
+wrapped_secret_id=$(vault write -format=json -wrap-ttl=120m -force auth/approle/role/runtime-init-role/secret-id > /tmp/wrapped-secret-id)
+
+logger "Creating second wrapped secret-id for runtime-init role"
+wrapped_secret_id_2=$(vault write -format=json -wrap-ttl=120m -force auth/approle/role/runtime-init-role/secret-id > /tmp/wrapped-secret-id-2)
+
 %{ endif }
 
 logger "Complete"

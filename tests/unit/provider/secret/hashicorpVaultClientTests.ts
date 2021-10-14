@@ -43,7 +43,8 @@ describe('Resolver Client', () => {
                     },
                     secretId: {
                         type: 'inline',
-                        value: 'ewq-eq-eqw'
+                        value: 'ewq-eq-eqw',
+                        unwrap: true
                     }
                 }
             },
@@ -51,6 +52,22 @@ describe('Resolver Client', () => {
             verifyTls: true,
             name: 'TEST'
         };
+        nock('http://1.1.1.1:8200')
+            .post('/v1/sys/wrapping/unwrap')
+            .reply(200,
+                {
+                    "request_id": "794d6246-1349-cb90-dc31-befd0fbadf95",
+                    "lease_id": "",
+                    "renewable": false,
+                    "lease_duration": 0,
+                    "data": {
+                      "secret_id": "67e53555-a456-cead-9060-847dfd3b1b55",
+                      "secret_id_accessor": "a26d5bc6-8088-3895-1372-58a311c4d83a"
+                    },
+                    "wrap_info": null,
+                    "warnings": null,
+                    "auth": null
+                });
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
             .reply(200,
@@ -150,11 +167,30 @@ describe('Resolver Client', () => {
             });
     });
 
-    it('should validate invalid login method', () => {
+    it('should validate invalid login method with wrapped secret ID', () => {
+        nock.cleanAll();
+        const hashicorpClient = new HashicorpVaultClient();
+        nock('http://1.1.1.1:8200')
+            .post('/v1/sys/wrapping/unwrap')
+            .reply(200, { "request_id": "794d6246-1349-cb90-dc31-befd0fbadf95", "lease_id": "", "renewable": false, "lease_duration": 0, "data": { "secret_id": "this_is_an_invalid_secretId", "secret_id_accessor": "this_is_an_invalid_secret_accessor" }, "wrap_info": null, "warnings": null, "auth": null });
+        nock('http://1.1.1.1:8200')
+            .post('/v1/auth/approle/login')
+            .reply(403, {"result": "Access Denied"});
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.fail();
+            })
+            .catch((err) => {
+                assert.ok(err.message.indexOf('Problem with getting client token from HashicorpVaultClient') !== -1);
+            });
+    });
+
+    it('should validate invalid login method with unwrapped secret ID', () => {
         nock.cleanAll();
         const hashicorpClient = new HashicorpVaultClient();
         secretMetadata.secretProvider.authBackend.roleId.value = 'this_is_an_invalid_roleId';
         secretMetadata.secretProvider.authBackend.secretId.value = 'this_is_an_invalid_secretId';
+        secretMetadata.secretProvider.authBackend.secretId.unwrap = false;
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
             .reply(403, {"result": "Access Denied"});

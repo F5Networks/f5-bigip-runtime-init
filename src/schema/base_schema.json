@@ -144,6 +144,11 @@
                                                 "description": "Hashicorp Vault approle secret ID",
                                                 "type": "string",
                                                 "examples": ["9c9b84a6-d2e1-11eb-b8bc-0242ac130003", "file:///path/to/secret-id", "https://path/to/secret-id"]
+                                            },
+                                            "unwrap": {
+                                                "description": "For unwrapping a wrapped secret ID",
+                                                "type": "boolean",
+                                                "examples": ["true", "false"]
                                             }
                                         },
                                         "allOf": [

@@ -54,6 +54,7 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
+          unwrap: false 
   - name: SECOND_PASS
     type: secret
     secretProvider:
@@ -71,7 +72,8 @@ runtime_parameters:
           value: vault_app_role
         secretId:
           type: inline
-          value: vault_secret_id
+          value: vault_wrapped_secret_id
+          unwrap: true
   - name: HOST_NAME
     type: metadata
     metadataProvider:

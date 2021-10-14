@@ -233,20 +233,7 @@ describe('Resolver Client', () => {
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
             .times(3)
-            .reply(200,
-                {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"",
-                    "renewable":false,"lease_duration":0,"data":null,
-                    "wrap_info":null,"warnings":null,
-                    "auth":{"client_token":"this-is-test-token-value",
-                        "accessor":"DR8vhrYNUK7CrkRvextEn4CN",
-                        "policies":["default","test"],
-                        "token_policies":["default","test"],
-                        "metadata":{"role_name":"runtime-init-role"},
-                        "lease_duration":3600,"renewable":true,
-                        "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159",
-                        "token_type":"service",
-                        "orphan":true}
-                });
+            .reply(200, {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"", "renewable":false,"lease_duration":0,"data":null, "wrap_info":null,"warnings":null, "auth":{"client_token":"this-is-test-token-value", "accessor":"DR8vhrYNUK7CrkRvextEn4CN", "policies":["default","test"], "token_policies":["default","test"], "metadata":{"role_name":"runtime-init-role"}, "lease_duration":3600,"renewable":true, "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159", "token_type":"service", "orphan":true} });
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
             .times(3)
@@ -271,7 +258,8 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: false
                         }
                     }
                 }
@@ -295,7 +283,8 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: false
                         }
                     }
                 }
@@ -319,7 +308,8 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: false
                         }
                     }
                 }
@@ -339,21 +329,11 @@ describe('Resolver Client', () => {
         logger = Logger.getLogger();
         const resolver = new ResolverClient();
         nock('http://1.1.1.1:8200')
+            .post('/v1/sys/wrapping/unwrap')
+            .reply(200, { "request_id": "794d6246-1349-cb90-dc31-befd0fbadf95", "lease_id": "", "renewable": false, "lease_duration": 0, "data": { "secret_id": "ewq-eq-eqw", "secret_id_accessor": "a26d5bc6-8088-3895-1372-58a311c4d83a" }, "wrap_info": null, "warnings": null, "auth": null });
+        nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
-            .reply(200,
-                {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"",
-                    "renewable":false,"lease_duration":0,"data":null,
-                    "wrap_info":null,"warnings":null,
-                    "auth":{"client_token":"this-is-test-token-value",
-                        "accessor":"DR8vhrYNUK7CrkRvextEn4CN",
-                        "policies":["default","test"],
-                        "token_policies":["default","test"],
-                        "metadata":{"role_name":"runtime-init-role"},
-                        "lease_duration":3600,"renewable":true,
-                        "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159",
-                        "token_type":"service",
-                        "orphan":true}
-                });
+            .reply(200, {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"", "renewable":false,"lease_duration":0,"data":null, "wrap_info":null,"warnings":null, "auth":{"client_token":"this-is-test-token-value", "accessor":"DR8vhrYNUK7CrkRvextEn4CN", "policies":["default","test"], "token_policies":["default","test"], "metadata":{"role_name":"runtime-init-role"}, "lease_duration":3600,"renewable":true, "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159", "token_type":"service", "orphan":true} });
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
             .reply(200, {"request_id":"fa302a64-0852-4245-1883-782fe8b5b504","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"secret0":"b1gAdminPazz","secret1":"thisIsTestPassword123","secret2":"asdasfdar212@"},"metadata":{"created_time":"2021-08-08T12:16:00.931168619Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
@@ -377,7 +357,8 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: true
                         }
                     }
                 }
