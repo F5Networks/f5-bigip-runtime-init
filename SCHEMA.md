@@ -60,7 +60,7 @@ Type: `array`
  - **_Items_**
  - Type: `object`
  - <i id="#/items">path: #/items</i>
- - This schema accepts additional properties.
+ - This schema <u>does not</u> accept additional properties.
  - **_Properties_**
 	 - <b id="#/items/properties/name">name</b> `required`
 		 - Type: `string`
@@ -111,7 +111,7 @@ Type: `array`
 	 - <b id="#/items/properties/secretProvider">secretProvider</b>
 		 - Type: `object`
 		 - <i id="#/items/properties/secretProvider">path: #/items/properties/secretProvider</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/items/properties/secretProvider/properties/environment">environment</b> `required`
 				 - Type: `string`
@@ -236,7 +236,7 @@ Type: `array`
 	 - <b id="#/items/properties/metadataProvider">metadataProvider</b>
 		 - Type: `object`
 		 - <i id="#/items/properties/metadataProvider">path: #/items/properties/metadataProvider</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/items/properties/metadataProvider/properties/environment">environment</b> `required`
 				 - Type: `string`
@@ -648,7 +648,7 @@ Type: `object`
 
 <i id="#">path: #</i>
 
-This schema accepts additional properties.
+This schema <u>does not</u> accept additional properties.
 
 **_Properties_**
 
@@ -659,7 +659,7 @@ This schema accepts additional properties.
 		 - **_Items_**
 		 - Type: `object`
 		 - <i id="#/properties/install_operations/items">path: #/properties/install_operations/items</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/properties/install_operations/items/properties/extensionType">extensionType</b> `required`
 				 - Type: `string`
@@ -780,7 +780,7 @@ Type: `object`
 
 <i id="#">path: #</i>
 
-This schema accepts additional properties.
+This schema <u>does not</u> accept additional properties.
 
 **_Properties_**
 
@@ -791,7 +791,7 @@ This schema accepts additional properties.
 		 - **_Items_**
 		 - Type: `object`
 		 - <i id="#/properties/service_operations/items">path: #/properties/service_operations/items</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/properties/service_operations/items/properties/extensionType">extensionType</b>
 				 - Type: `string`
