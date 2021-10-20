@@ -17,10 +17,14 @@
         "build": "bash scripts/build_package.sh",
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
         "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{ts,tsx}'",
+        "preinstall": "npx npm-force-resolutions",
         "unit-tests": "mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
         "test": "nyc mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
         "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
         "check-test-coverage": "nyc check-coverage"
+    },
+    "resolutions": {
+        "ansi-regex": "^5.0.1"
     },
     "dependencies": {
         "@azure/identity": "^1.0.2",
@@ -128,10 +132,6 @@
     },
     "auditProcessor": {
         "whitelist": [
-            "1677",
-            "1674",
-            "1769",
-            "1002401",
             "1002531"
         ]
     },
