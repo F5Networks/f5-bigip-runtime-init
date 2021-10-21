@@ -116,5 +116,4 @@ describe('Provider: AWS', () => {
     it ('should validate that runtime init resolve region correctly', () => {
         assert.ok(!JSON.stringify(as3Declaration).includes('{{{REGION}}}'))
     });
-
 });

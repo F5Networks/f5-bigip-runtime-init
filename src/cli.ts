@@ -127,7 +127,7 @@ export async function cli(): Promise<string> {
     );
 
     logger.info('Resolving parameters');
-    const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters): undefined;
+    const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters, {}, 0): undefined;
 
     let bigipReadyEnabled = config.bigip_ready_enabled || [];
     containsSecrets = utils.checkForSecrets(JSON.stringify(bigipReadyEnabled));
