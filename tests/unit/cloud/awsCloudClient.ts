@@ -31,6 +31,7 @@ describe('CloudClient - AWS', () => {
         cloudClient = new AwsCloudClient();
         cloudClient.accountId = '1234543';
         cloudClient.secretsManager = sinon.stub();
+        cloudClient._sessionToken = 'TEST_SESSION_TOKEN';
         cloudClient.secretsManager.getSecretValue = sinon.stub().callsFake(() => ({
             promise(): Promise<object>{
                 return Promise.resolve({ SecretString: 'StrongPassword2010!' });
@@ -56,7 +57,7 @@ describe('CloudClient - AWS', () => {
     it('should validate init', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -68,6 +69,7 @@ describe('CloudClient - AWS', () => {
             region: 'some-aws-region',
             instanceId: 'some-instance-id'
         });
+        cloudClient._fetchMetadataSessionToken = sinon.stub().resolves('TEST_SESSION_TOKEN');
         return cloudClient.init()
             .then(() => {
                 assert.strictEqual(cloudClient.region, 'some-aws-region');
@@ -75,7 +77,7 @@ describe('CloudClient - AWS', () => {
     });
 
     it('should validate init metadata request promise rejection', () => {
-
+        cloudClient._fetchMetadataSessionToken = sinon.stub().resolves('TEST_SESSION_TOKEN');
         cloudClient._getInstanceIdentityDoc = sinon.stub().rejects(new Error('Test Rejection'));
         return cloudClient.init()
             .then(() => {
@@ -88,7 +90,7 @@ describe('CloudClient - AWS', () => {
     it('should call _getInstanceIdentityDoc to get instance data', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -100,7 +102,7 @@ describe('CloudClient - AWS', () => {
         .then(() => {
             assert.strictEqual(metadataPathRequest, '/latest/dynamic/instance-identity/document');
         })
-        .catch(() => {
+        .catch((err) => {
             assert.fail();
         });
     });
@@ -108,7 +110,7 @@ describe('CloudClient - AWS', () => {
     it('_metadata should reject upon error with _getInstanceIdentityDoc', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -121,7 +123,7 @@ describe('CloudClient - AWS', () => {
             .then(() => {
                 // eslint-disable-next-line arrow-body-style
                 cloudClient._metadata.request = sinon.stub()
-                    .callsFake((path, callback) => {
+                    .callsFake((path, headers, callback) => {
                         callback(new Error(expectedError));
                     });
                 return cloudClient._getInstanceIdentityDoc();
@@ -244,6 +246,7 @@ describe('CloudClient - AWS', () => {
     });
 
     it('should validate getMetadata when compute type is provided', () => {
+        cloudClient._sessionToken = 'TEST_SESSION_TOKEN';
         nock('https://169.254.169.254')
             .get('/latest/meta-data/hostname')
             .reply(200, 'ru65wrde_vm0' );
@@ -256,10 +259,43 @@ describe('CloudClient - AWS', () => {
             });
     });
 
+    it('should call _fetchMetadataSessionToken to get session token', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                metadataPathRequest = path;
+                callback(null, 'TEST_SESSION_TOKEN');
+            });
+        cloudClient._fetchMetadataSessionToken()
+            .then(() => {
+                assert.strictEqual(metadataPathRequest, '/latest/api/token');
+                assert.strictEqual(cloudClient._sessionToken, 'TEST_SESSION_TOKEN');
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
+
+    it('should call _fetchMetadataSessionToken to validate error case', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                metadataPathRequest = path;
+                callback(true, 'TEST_SESSION_TOKEN');
+            });
+        cloudClient._fetchMetadataSessionToken()
+            .then(() => {
+                assert.fail();
+            })
+            .catch(() => {
+                assert.ok(true);
+            });
+    });
+
     it('should call _getInstanceCompute to get instance data', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, 'ru65wrde-vm0');
             });
@@ -285,7 +321,7 @@ describe('CloudClient - AWS', () => {
     it('_metadata should reject upon error when using _getInstanceCompute', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -298,7 +334,7 @@ describe('CloudClient - AWS', () => {
             .then(() => {
                 // eslint-disable-next-line arrow-body-style
                 cloudClient._metadata.request = sinon.stub()
-                    .callsFake((path, callback) => {
+                    .callsFake((path, headers, callback) => {
                         callback(new Error(expectedError));
                     });
                 return cloudClient._getInstanceCompute('hostname');
@@ -379,7 +415,7 @@ describe('CloudClient - AWS', () => {
     it('should call _getInstanceNetwork to get instance data', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, '10.0.0.1');
             });
@@ -408,7 +444,7 @@ describe('CloudClient - AWS', () => {
             .reply(200, bigipMgmtNetInterfacesResponse );
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -421,7 +457,7 @@ describe('CloudClient - AWS', () => {
             .then(() => {
                 // eslint-disable-next-line arrow-body-style
                 cloudClient._metadata.request = sinon.stub()
-                    .callsFake((path, callback) => {
+                    .callsFake((path, headers, callback) => {
                         callback(new Error(expectedError));
                     });
                 return cloudClient._getInstanceNetwork('interface-id');
@@ -440,7 +476,7 @@ describe('CloudClient - AWS', () => {
             .reply(200, bigipMgmtNetInterfacesResponse );
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -453,7 +489,7 @@ describe('CloudClient - AWS', () => {
             .then(() => {
                 // eslint-disable-next-line arrow-body-style
                 cloudClient._metadata.request = sinon.stub()
-                    .callsFake((path, callback) => {
+                    .callsFake((path, headers, callback) => {
                         callback(new Error(expectedError));
                     });
                 return cloudClient._getInstanceNetwork('local-ipv4s');
@@ -472,7 +508,7 @@ describe('CloudClient - AWS', () => {
             .reply(200, bigipMgmtNetInterfacesResponse );
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
-            .callsFake((path, callback) => {
+            .callsFake((path, headers, callback) => {
                 metadataPathRequest = path;
                 callback(null, JSON.stringify({
                     region: 'some-aws-region',
@@ -485,7 +521,7 @@ describe('CloudClient - AWS', () => {
             .then(() => {
                 // eslint-disable-next-line arrow-body-style
                 cloudClient._metadata.request = sinon.stub()
-                    .callsFake((path, callback) => {
+                    .callsFake((path, headers, callback) => {
                         callback(new Error(expectedError));
                     });
                 return cloudClient._getInstanceNetwork('subnet-ipv4-cidr-block');

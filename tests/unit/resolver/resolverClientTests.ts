@@ -32,6 +32,7 @@ describe('Resolver Client', () => {
         nock.cleanAll();
         nock('http://169.254.169.254')
             .get('/latest/dynamic/instance-identity/document')
+            .times(10)
             .reply(200, {
                 "accountId" : "0000000001",
                 "architecture" : "x86_64",
@@ -61,6 +62,17 @@ describe('Resolver Client', () => {
                 "ramdiskId" : null,
                 "region" : "us-west-2",
                 "version" : "2017-09-30"
+            });
+        nock('http://169.254.169.254')
+            .put('/latest/api/token')
+            .times(10)
+            .reply(200, 'TEST_SESSION_TOKEN');
+        nock('http://169.254.169.254')
+            .get('/metadata/instance?api-version=2017-08-01')
+            .reply(200, {
+                'compute': {
+                    'subscriptionId': 'test_subscriptionId'
+                }
             });
 
         onboardActions = [
@@ -93,6 +105,19 @@ describe('Resolver Client', () => {
 
         runtimeParameters = [
             {
+                name: 'REGION',
+                type: 'url',
+                value: 'http://169.254.169.254/latest/dynamic/instance-identity/document',
+                query: 'region',
+                headers: [ { name: 'Content-Type', value: 'json' }, { name: 'method', value: 'GET' }, { name: 'X-aws-ec2-metadata-token', value: '{{{AWS_SESSION_TOKEN}}}' } ]
+            },
+            {
+                name: 'AWS_SESSION_TOKEN',
+                type: 'url',
+                value: 'http://169.254.169.254/latest/api/token',
+                headers: [ { name: 'Content-Type', value: 'json'}, { name: 'method', value: 'PUT'}, { name: 'X-aws-ec2-metadata-token-ttl-seconds', value: 21600} ]
+            },
+            {
                 name: 'AWS_PASS',
                 type: 'secret',
                 secretProvider: {
@@ -103,11 +128,13 @@ describe('Resolver Client', () => {
                 }
             },
             {
-                name: 'REGION',
-                type: 'url',
-                value: 'http://169.254.169.254/latest/dynamic/instance-identity/document',
-                query: 'region',
-                headers: [ { name: 'Content-Type', value: 'json'}]
+                name: 'AZURE_HOST_NAME',
+                type: 'metadata',
+                metadataProvider: {
+                    type: 'compute',
+                    environment: 'azure',
+                    field: 'name'
+                }
             },
             {
                 name: 'NETWORK_SIZE_URL',
@@ -127,15 +154,6 @@ describe('Resolver Client', () => {
                     secretId: 'this-secret',
                     field: 'sensitiveFieldName',
                     debug: true
-                }
-            },
-            {
-                name: 'AZURE_HOST_NAME',
-                type: 'metadata',
-                metadataProvider: {
-                    type: 'compute',
-                    environment: 'azure',
-                    field: 'name'
                 }
             },
             {
@@ -214,9 +232,9 @@ describe('Resolver Client', () => {
             };
             return Promise.resolve(cloudClient);
         });
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 6);
+                assert.strictEqual(Object.keys(results).length, 7);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AWS_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.AZURE_PASS, 'StrongPassword2010+');
@@ -315,7 +333,7 @@ describe('Resolver Client', () => {
                 }
             }
         ];
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.ok(Object.keys(results).length === 3);
                 assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT_01'], 'b1gAdminPazz');
@@ -364,7 +382,7 @@ describe('Resolver Client', () => {
                 }
             }
         ];
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'].secret0, 'b1gAdminPazz');
                 assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'].secret1, 'thisIsTestPassword123');
@@ -377,9 +395,9 @@ describe('Resolver Client', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 9);
+                assert.strictEqual(Object.keys(results).length, 10);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
@@ -395,9 +413,9 @@ describe('Resolver Client', () => {
             };
             return Promise.resolve(cloudClient);
         });
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 9);
+                assert.strictEqual(Object.keys(results).length, 10);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
                 assert.strictEqual(results.AZURE_GATEWAY_IP, '10.0.1.1');
@@ -411,7 +429,7 @@ describe('Resolver Client', () => {
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('');
         resolver._resolveUrl = sinon.stub().resolves('');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.strictEqual(Object.keys(results).length, 2);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
@@ -459,7 +477,7 @@ describe('Resolver Client', () => {
             }
         ];
 
-        resolver.resolveRuntimeParameters(runtimeParameters)
+        resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then(() => {
                 assert.ok(false);
             })
@@ -535,7 +553,7 @@ describe('Resolver Client', () => {
         nock('http://169.254.169.254')
             .get('/my-test')
             .reply(200, 'us-west');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => assert.strictEqual(results.REGION, 'us-west'))
             .catch(() => assert.ok(false))
     });
@@ -553,8 +571,7 @@ describe('Resolver Client', () => {
         nock('http://169.254.169.254')
             .get('/my-test-password')
             .reply(200, '9058358705045800063');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => assert.strictEqual(results.TEST_PASSWORD, '9058358705045800063'))
-            //.catch(() => assert.ok(false))
     });
 });

@@ -28,6 +28,29 @@ controls:
   logToJson: true
   extensionInstallDelayInMs: 6000
 runtime_parameters:
+  - name: REGION
+    type: url
+    value: http://169.254.169.254/latest/dynamic/instance-identity/document
+    query: region
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: func-test
+      - name: X-aws-ec2-metadata-token
+        value: "{{{AWS_SESSION_TOKEN}}}"
+  - name: AWS_SESSION_TOKEN
+    type: url
+    value: http://169.254.169.254/latest/api/token
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: func-test
+      - name: method
+        value: PUT
+      - name: X-aws-ec2-metadata-token-ttl-seconds
+        value: 21600
   - name: ADMIN_PASS
     type: secret
     secretProvider:
@@ -54,7 +77,7 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
-          unwrap: false 
+          unwrap: false
   - name: SECOND_PASS
     type: secret
     secretProvider:
@@ -117,7 +140,7 @@ runtime_parameters:
       type: network
       field: subnet-ipv4-cidr-block
       index: 0
-  - name: REGION
+  - name: REGION02
     type: url
     value: http://169.254.169.254/latest/dynamic/instance-identity/document
     query: region
@@ -126,6 +149,8 @@ runtime_parameters:
         value: json
       - name: User-Agent
         value: func-test
+      - name: X-aws-ec2-metadata-token
+        value: "{{{AWS_SESSION_TOKEN}}}"
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -187,7 +212,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: inline
-      value: 
+      value:
         schemaVersion: 1.0.0
         class: Device
         async: true

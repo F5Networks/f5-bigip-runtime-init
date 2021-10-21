@@ -375,7 +375,10 @@ f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
 
 NOTES: 
-  - ```--cloud aws``` is passed to the installer to specify the environment 
+  - ```--cloud aws``` is passed to the installer to specify the environment
+  - Runtime Init supports both available options for accessing AWS Instance metadata:
+     * Instance Metadata Service Version 1 (IMDSv1) – a request/response method
+     * Instance Metadata Service Version 2 (IMDSv2) – a session-oriented method
   - when extension package includes ```extensionUrl``` field, ```extensionVersion``` is not required; however, ```extensionVersion``` is required when package defined without ```extensionUrl```
   ```yaml
     extension_packages:
@@ -496,8 +499,43 @@ NOTE: ```--cloud gcp``` is passed to the installer to specify the environment
 
 ## Runtime parameters
 
-runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. There are a few types of parameters:
-  
+runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. Parameters can dependent on each other, so one parameter value can be used within another parameter (see example below for more details).
+There are a few types of parameters:
+
+  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional. 
+    ```yaml
+        runtime_parameters:  
+          - name: AWS_SESSION_TOKEN
+            type: url
+            value: http://169.254.169.254/latest/api/token
+            headers:
+              - name: Content-Type
+                value: json
+              - name: User-Agent
+                value: some-user-agent
+              - name: method
+                value: PUT
+              - name: X-aws-ec2-metadata-token-ttl-seconds
+                value: 21600
+          - name: REGION
+            type: url
+            value: http://169.254.169.254/latest/dynamic/instance-identity/document
+            query: region
+            headers:
+              - name: Content-Type
+                value: json
+              - name: User-Agent
+                value: some-user-agent
+              - name: X-aws-ec2-metadata-token
+                value: "{{{AWS_SESSION_TOKEN}}}"
+    ```
+    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
+    
+        * string - returns value as string
+        * number - returns value as number
+        * boolean - returns value as boolean
+    Also, it demonstrates how to fetch and utilize AWS Session token for fetching instance metadata; the session token is fetched as parameter and then its value is used for resolving REGION parameter.
+    
   * secret - fetches secret from Secret Vault 
       ```yaml
         runtime_parameters:
@@ -640,26 +678,6 @@ runtime_parameters allows to defined list of parameters and these parameters can
             type: static
             value: us-west-2a
       ```
-  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional.
-    ```yaml
-        runtime_parameters:
-          - name: REGION
-            type: url
-            value: http://169.254.169.254/latest/dynamic/instance-identity/document
-            query: region
-            returnType: string
-            ipcalc: size
-            headers:
-              - name: Content-Type
-                value: json
-              - name: User-Agent
-                value: some-user-agent
-    ```
-    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
-        * string - returns value as string
-        * number - returns value as number
-        * boolean - returns value as boolean
-    
 ## Private Environments
 
 By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
