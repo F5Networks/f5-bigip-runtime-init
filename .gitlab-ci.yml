@@ -345,13 +345,32 @@ publish_container:
         when: always
         expire_in: 1 week
 
+# run functional tests: azure and BIGIPv16
+test_functional_init_azure_v16:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_DOMAIN: "$CLOUD"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v16"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+
 # run functional tests: azure and BIGIPv15
 test_functional_init_azure_v15:
     <<: *test_functional_init_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -385,13 +404,40 @@ test_functional_init_azure_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
 
+# run functional tests: azure and BIGIPv16
+test_functional_init_azure_gov_v16:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v16"
+        VERSION_PATH: "v16"
+        TF_VAR_DOMAIN: "usgovcloudapi"
+        TF_VAR_location: "usgovvirginia"
+        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
+        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
+        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
+        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
+        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
+        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
+
 # run functional tests: azure and BIGIPv15
 test_functional_init_azure_gov_v15:
     <<: *test_functional_init_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -441,6 +487,24 @@ test_functional_init_azure_gov_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "base"
 
+# run functional tests: aws and BIGIPv16
+test_functional_init_aws_v16:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "aws"
+        TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID_v16"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
 
 # run functional tests: aws and BIGIPv15
 test_functional_init_aws_v15:
@@ -448,7 +512,6 @@ test_functional_init_aws_v15:
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
@@ -480,13 +543,31 @@ test_functional_init_aws_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
 
+# run functional tests: gcp and BIGIPv16
+test_functional_init_gcp_v16:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "gcp"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v16"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+
 # run functional tests: gcp and BIGIPv15
 test_functional_init_gcp_v15:
     <<: *test_functional_init_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
@@ -518,13 +599,31 @@ test_functional_init_gcp_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
 
+# run functional tests: base package and BIGIPv16
+test_functional_init_base_v16:
+    <<: *test_functional_init_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "base"
+        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v16"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+
 # run functional tests: base package and BIGIPv15
 test_functional_init_base_v15:
     <<: *test_functional_init_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
@@ -592,12 +691,37 @@ test_functional_init_base_v14:
         expire_in: 1 week
 
 # run functional tests: azure
+test_functional_execute_azure_v16:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_DOMAIN: "$CLOUD"
+        VERSION_PATH: "v16"
+        AZURE_CLIENT_ID: "$AZURE_COMMERCIAL_CLIENT_ID"
+        AZURE_CLIENT_SECRET: "$AZURE_COMMERCIAL_CLIENT_SECRET"
+        AZURE_TENANT_ID: "$AZURE_COMMERCIAL_TENANT_ID"
+        AZURE_SUBSCRIPTION_ID: "$AZURE_COMMERCIAL_SUBSCRIPTION_ID"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_azure_v16
+        - build_package
+
+# run functional tests: azure
 test_functional_execute_azure_v15:
     <<: *test_functional_execute_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -644,12 +768,40 @@ test_functional_execute_azure_v14:
         - build_package
 
 # run functional tests: azure goverment
+test_functional_execute_azure_gov_v16:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "azure"
+        VERSION_PATH: "v16"
+        TF_VAR_DOMAIN: "usgovcloudapi"
+        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
+        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
+        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        AZURE_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
+        AZURE_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
+        AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        AZURE_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_azure_gov_v16
+        - build_package
+
+# run functional tests: azure goverment
 test_functional_execute_azure_gov_v15:
     <<: *test_functional_execute_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -701,6 +853,27 @@ test_functional_execute_azure_gov_v14:
         - test_functional_init_azure_gov_v14
         - build_package
 
+# run functional tests: aws
+test_functional_execute_aws_v16:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "aws"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_aws_v16
+        - build_package
+
 
 # run functional tests: aws
 test_functional_execute_aws_v15:
@@ -708,7 +881,6 @@ test_functional_execute_aws_v15:
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
@@ -722,7 +894,6 @@ test_functional_execute_aws_v15:
     dependencies:
         - test_functional_init_aws_v15
         - build_package
-
 
 test_functional_execute_aws_v14:
     <<: *test_functional_execute_generic
@@ -745,12 +916,31 @@ test_functional_execute_aws_v14:
         - build_package
 
 # run functional tests: gcp
+test_functional_execute_gcp_v16:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "gcp"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_gcp_v16
+        - build_package
+
 test_functional_execute_gcp_v15:
     <<: *test_functional_execute_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
@@ -786,12 +976,32 @@ test_functional_execute_gcp_v14:
         - build_package
 
 # run base package tests
+test_functional_execute_base_v16:
+    <<: *test_functional_execute_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v16"
+        ENV_PROVIDER_TESTS: "ignore"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v16
+        - build_package
+
 test_functional_execute_base_v15:
     <<: *test_functional_execute_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
@@ -855,12 +1065,31 @@ test_functional_execute_base_v14:
             - $PUBLISH_RPM == "true"
 
 # run functional tests: azure
+test_functional_cleanup_azure_v16:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_DOMAIN: "$CLOUD"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_azure_v16
+
 test_functional_cleanup_azure_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -874,7 +1103,6 @@ test_functional_cleanup_azure_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
-
 
 test_functional_cleanup_azure_v14:
     <<: *test_functional_cleanup_generic
@@ -897,14 +1125,41 @@ test_functional_cleanup_azure_v14:
         - test_functional_init_azure_v14
 
 
-
 # run functional tests: azure gov
+test_functional_cleanup_azure_gov_v16:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "azure"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v16"
+        VERSION_PATH: "v16"
+        TF_VAR_DOMAIN: "usgovcloudapi"
+        TF_VAR_location: "usgovvirginia"
+        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
+        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
+        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
+        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
+        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
+        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+    except:
+        variables:
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_azure_gov_v16
+
 test_functional_cleanup_azure_gov_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -927,7 +1182,6 @@ test_functional_cleanup_azure_gov_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
-
 
 test_functional_cleanup_azure_gov_v14:
     <<: *test_functional_cleanup_generic
@@ -959,12 +1213,30 @@ test_functional_cleanup_azure_gov_v14:
         - test_functional_init_azure_gov_v14
 
 # run functional tests: aws
+test_functional_cleanup_aws_v16:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "aws"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "gcp"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_aws_v16
+
 test_functional_cleanup_aws_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
@@ -997,13 +1269,32 @@ test_functional_cleanup_aws_v14:
     dependencies:
         - test_functional_init_aws_v14
 
+
 # run functional tests: gcp
+test_functional_cleanup_gcp_v16:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "gcp"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "base"
+    dependencies:
+        - test_functional_init_gcp_v16
+
 test_functional_cleanup_gcp_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
@@ -1038,12 +1329,30 @@ test_functional_cleanup_gcp_v14:
 
 
 # run functional tests: base
+test_functional_cleanup_base_v16:
+    <<: *test_functional_cleanup_generic
+    only:
+        variables:
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
+            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
+            - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
+    variables:
+        CLOUD: "base"
+        VERSION_PATH: "v16"
+    except:
+        variables:
+            - $TEST_SUITE == "azure"
+            - $TEST_SUITE == "aws"
+            - $TEST_SUITE == "azure_gov"
+            - $TEST_SUITE == "gcp"
+    dependencies:
+        - test_functional_init_base_v16
+
 test_functional_cleanup_base_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
