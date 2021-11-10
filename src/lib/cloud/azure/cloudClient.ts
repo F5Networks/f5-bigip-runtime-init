@@ -96,15 +96,16 @@ export class AzureCloudClient extends AbstractCloudClient {
     }
 
     async _getSubscriptionId(): Promise<string> {
-        const response = await utils.makeRequest(
-            `http://169.254.169.254/metadata/instance?api-version=2017-08-01`,
-            {
-                method: 'GET',
-                headers: {
-                    Metadata: 'true'
-                }
+        const response = await utils.retrier(utils.makeRequest, [`http://169.254.169.254/metadata/instance?api-version=2017-08-01`, {
+            method: 'GET',
+            headers: {
+                Metadata: 'true'
             }
-        );
+        }], {
+            thisContext: this,
+            maxRetries: constants.RETRY.SHORT_COUNT,
+            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+        });
         return response.body.compute.subscriptionId;
     }
 
