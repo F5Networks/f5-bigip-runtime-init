@@ -218,10 +218,16 @@ describe('Util', () => {
                 .reply(200, {
                     id: 1
                 });
+            mock({
+                '/config/fake-ssl': {
+                    'cert.pem': '12345'
+                }
+            });
 
             return util.loadData( 'https://fakedomain.com/awesome_file.txt', {
                 locationType: 'url',
-                verifyTls: false
+                verifyTls: true,
+                trustedCertBundles: ['/config/fake-ssl/cert.pem']
             })
                 .then((resp) => assert.strictEqual(resp.id, 1))
                 .catch(err => Promise.reject(err));

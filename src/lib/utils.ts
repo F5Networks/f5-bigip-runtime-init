@@ -26,9 +26,9 @@
  import Mustache from 'mustache';
  import * as constants from '../constants';
  import Logger from './logger';
- 
+
  const logger = Logger.getLogger();
- 
+
  /**
   * Stringify
   *
@@ -43,8 +43,8 @@
          return data.toString();
      }
  }
- 
- 
+
+
  export function convertTo(data, type): any {
      if (type === 'string') {
          return data.toString();
@@ -55,7 +55,7 @@
      }
      return data;
  }
- 
+
  /**
   * Download HTTP payload to file
   *
@@ -68,10 +68,17 @@
      options = options || {};
      logger.silly(`Downloading File: ${url}`);
      logger.silly(`Options: ${JSON.stringify(options)}`);
+     const trustedCertBundles = [];
+     if (options.trustedCertBundles) {
+         for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
+             trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
+         }
+     }
      await new Promise((resolve, reject) => {
          request({
              url: url,
              method: 'GET',
+             ca: trustedCertBundles.length > 0 ? trustedCertBundles : undefined,
              strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
          })
              .on('error', (err) => {
@@ -85,9 +92,9 @@
      })
          .catch(err => Promise.reject(err));
  }
- 
- 
- 
+
+
+
  /**
   * Verify file against provided hash
   *
@@ -101,13 +108,13 @@
      const input = fs.readFileSync(file);
      createHash.update(input);
      const computedHash = createHash.digest('hex');
- 
+
      if (extensionHash !== computedHash) {
          return false;
      }
      return true;
  }
- 
+
  /**
   * Base64 encoder/decoder
   *
@@ -126,7 +133,7 @@
      }
      throw new Error('Unsupported action, try one of these: decode, encode');
  }
- 
+
  /**
   * Function retrier
   *
@@ -145,11 +152,11 @@
          retryInterval?: number;
      }): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
      options = options || {};
- 
+
      const thisContext = options.thisContext || this;
      const retryCount = options.maxRetries || constants.RETRY.DEFAULT_COUNT;
      const retryInterval = options.retryInterval || constants.RETRY.DELAY_IN_MS;
- 
+
      let i = 0;
      let response;
      let error;
@@ -161,7 +168,7 @@
              error = err;
              logger.silly(`${err}`);
          }
- 
+
          if (error === null) {
              i = retryCount;
          } else {
@@ -170,14 +177,14 @@
              logger.silly(`Retrying... Attempts left: ${retryCount - i}`);
          }
      }
- 
+
      if (error !== null) {
          logger.silly(`All ${retryCount} retry attempts failed. Terminating execution.`);
          return Promise.reject(error);
      }
      return response;
  }
- 
+
  /**
   * Load data
   *
@@ -190,11 +197,19 @@
  export function loadData(location: string, options?: {
      locationType?: string;
      verifyTls?: boolean;
+     trustedCertBundles?: Array<string>;
  }): Promise<object> {
      options = options || {};
      const locationType = options.locationType;
      const urlObject = URL.parse(location);
- 
+
+     const trustedCertBundles = [];
+     if (options.trustedCertBundles) {
+         for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
+             trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
+         }
+     }
+
      if (urlObject.protocol === 'file:') {
          return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
      } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
@@ -203,6 +218,7 @@
              retrier(request, [{
                  url: location,
                  method: 'GET',
+                 ca: trustedCertBundles.length > 0 ? trustedCertBundles : undefined,
                  strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
              }, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
                  if (error) {
@@ -217,11 +233,11 @@
              });
          })
              .catch(err => Promise.reject(err));
- 
+
      }
      return Promise.reject(new Error(`Unknown url type: ${urlObject.protocol}`));
  }
- 
+
  /**
   * Renders secrets
   *
@@ -233,7 +249,7 @@
  export async function renderData(template: string, value: object): Promise<string> {
      return Mustache.render(template, value);
  }
- 
+
  /**
   * Checks for secrets
   *
@@ -248,7 +264,7 @@
      }
      return false;
  }
- 
+
  /**
   * Runs a shell command and returns the output
   *
@@ -265,8 +281,8 @@
      }
      return stdout;
  }
- 
- 
+
+
  /**
   * Verifies that directory exists or create directory
   *
@@ -282,7 +298,7 @@
      }
      return Promise.resolve();
  }
- 
+
  /**
   * Make request (HTTP)
   *
@@ -300,6 +316,7 @@
      method?: string;
      headers?: object;
      verifyTls?: boolean;
+     trustedCertBundles?: Array<string>;
      body?: unknown;
      bodyType?: string;
  }): Promise<{
@@ -307,13 +324,20 @@
      body?: any;
  }> {
      options = options || {};
- 
+
      if (options.bodyType === 'raw') {
          // continue
      } else {
          options.body = JSON.stringify(options.body);
      }
- 
+
+     const trustedCertBundles = [];
+     if (options.trustedCertBundles) {
+         for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
+             trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
+         }
+     }
+
      const requestOptions = {
          url: uri,
          method: options.method || 'GET',
@@ -321,11 +345,12 @@
              options.headers || {}
          ),
          body: options.body || null,
+         ca: trustedCertBundles.length > 0 ?  trustedCertBundles : undefined,
          strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
      };
- 
+
      logger.silly(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.strictSSL}`);
- 
+
      const response: {
          code: number;
          body: any;
@@ -350,13 +375,12 @@
              retryInterval: this.retryInterval
          });
      });
- 
+
      if (new RegExp(constants.LOGGER.ENDPOINTS_TO_HIDE_RESPONSE.join("|")).test(uri)) {
          logger.silly(`Request response: ${response.code}`);
      } else {
          logger.silly(`Request response: ${response.code} ${stringify(response.body)}`);
      }
-  
+
      return { code: response.code, body: response.body };
  }
- 

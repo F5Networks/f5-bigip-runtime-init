@@ -550,6 +550,7 @@ There are a few types of parameters:
   * secret (Hashicorp Vault) - fetches secret from Hashicorp Vault using App Role authentication
 
     The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples). 
+    Also, example demonstrates how to use custom PKI certs for https requests to HashiCorp Vault server when verifyTls set to `true``. 
     
     **NOTE**: When the authBackend.secretId.unwrap attribute is set to **true** (recommended), the secretId value must be in the form of a wrapping token. F5 BIG-IP Runtime Init will unwrap this token to retrieve the actual secret ID. This eliminates the need to pass the secret ID in the declaration. See the Hashicorp Vault [documentation](https://learn.hashicorp.com/tutorials/vault/approle-best-practices#approle-response-wrapping) for more information.
     
@@ -558,10 +559,12 @@ There are a few types of parameters:
         runtime_parameters:
           - name: ADMIN_PASS
             type: secret
+            verifyTls: true
+            trustedCertBundles: ['/config/ssl/ssl.crt/my-ca-bundle.crt']
             secretProvider:
               type: Vault
               environment: hashicorp
-              vaultServer: http://127.0.0.1:8200
+              vaultServer: https://127.0.0.1:8200
               namespace: ns1/
               secretsEngine: kv2
               secretId: secret/credential

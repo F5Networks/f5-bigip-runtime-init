@@ -51,6 +51,7 @@ interface OnboardActions {
     name: string;
     commands: string[];
     verifyTls?: boolean;
+    trustedCertBundles?: Array<string>;
 }
 
 /** Resolver class */
@@ -177,7 +178,8 @@ export class ResolverClient {
                     if (actions[i].type === 'url') {
                         base64ScriptName = `${constants.CUSTOM_ONBOARD_CONFIG_DIR}${Buffer.from(`${actions[i].name}_${j}`).toString('base64')}`;
                         await this.utilsRef.downloadToFile(actions[i].commands[j], base64ScriptName, {
-                            verifyTls: 'verifyTls' in actions[i] ? actions[i].verifyTls : true
+                            verifyTls: 'verifyTls' in actions[i] ? actions[i].verifyTls : true,
+                            trustedCertBundles: 'trustedCertBundles' in actions[i] ? actions[i].trustedCertBundles : undefined
                         });
                     } else {
                         base64ScriptName = actions[i].commands[j];
@@ -269,10 +271,12 @@ export class ResolverClient {
             method: string;
             headers?: any;
             verifyTls?: boolean;
+            trustedCertBundles?: Array<string>;
         } = {
             method: 'GET',
             headers: {},
-            verifyTls: metadata.verifyTls !== undefined ? metadata.verifyTls : true
+            verifyTls: metadata.verifyTls !== undefined ? metadata.verifyTls : true,
+            trustedCertBundles: metadata.trustedCertBundles !== undefined ? metadata.trustedCertBundles : undefined
         };
         if (metadata.headers !== undefined && metadata.headers.length > 0) {
             metadata.headers.forEach((header) => {

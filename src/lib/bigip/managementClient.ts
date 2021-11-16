@@ -38,6 +38,7 @@ export class ManagementClient {
     user: string;
     password: string;
     verifyTls: boolean;
+    trustedCertBundles: Array<string>;
     _protocol: string;
     uriPrefix: string;
     authHeader: string;
@@ -49,6 +50,7 @@ export class ManagementClient {
         user?: string;
         password?: string;
         verifyTls?: boolean;
+        trustedCertBundles?: Array<string>;
         maxRetries?: number;
         retryInterval?: number;
     }) {
@@ -59,6 +61,7 @@ export class ManagementClient {
         this.user = options.user || 'admin';
         this.password = options.password || 'admin';
         this.verifyTls = 'verifyTls' in options ? options.verifyTls : false;
+        this.trustedCertBundles = 'trustedCertBundles' in options ? options.trustedCertBundles : undefined;
         this._protocol = this.verifyTls === true ? 'https' : 'http';
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
@@ -77,7 +80,8 @@ export class ManagementClient {
                 headers: {
                     Authorization: this.authHeader
                 },
-                verifyTls: this.verifyTls
+                verifyTls: this.verifyTls,
+                trustedCertBundles: this.trustedCertBundles
             });
 
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']

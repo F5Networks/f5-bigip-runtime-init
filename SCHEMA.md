@@ -90,6 +90,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 	 - <b id="#/items/properties/ipcalc">ipcalc</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/ipcalc">path: #/items/properties/ipcalc</i>
@@ -450,6 +457,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 
 
 ### post_onboard_enabled: Configuration Examples
@@ -526,6 +540,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 
 
 ### pre_onboard_enabled: Configuration Examples
@@ -607,6 +628,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 
 
 ### bigip_ready_enabled: Configuration Examples
@@ -690,6 +718,13 @@ This schema <u>does not</u> accept additional properties.
 				 - Example values: 
 					 1. _true_
 					 2. _false_
+			 - <b id="#/properties/install_operations/items/properties/trustedCertBundles">trustedCertBundles</b>
+				 - _List of paths to certificate bundles to use for all https requests_
+				 - Type: `array`
+				 - <i id="#/properties/install_operations/items/properties/trustedCertBundles">path: #/properties/install_operations/items/properties/trustedCertBundles</i>
+				 - Example values: 
+					 1. _"/path/to/cert.pem"_
+					 2. _"/path/to/another_cert.pem"_
 			 - <b id="#/properties/install_operations/items/properties/extensionUrl">extensionUrl</b>
 				 - Type: `string`
 				 - <i id="#/properties/install_operations/items/properties/extensionUrl">path: #/properties/install_operations/items/properties/extensionUrl</i>
@@ -823,6 +858,13 @@ This schema <u>does not</u> accept additional properties.
 				 - Example values: 
 					 1. _true_
 					 2. _false_
+			 - <b id="#/properties/service_operations/items/properties/trustedCertBundles">trustedCertBundles</b>
+				 - _List of paths to certificate bundles to use for all https requests_
+				 - Type: `array`
+				 - <i id="#/properties/service_operations/items/properties/trustedCertBundles">path: #/properties/service_operations/items/properties/trustedCertBundles</i>
+				 - Example values: 
+					 1. _"/path/to/cert.pem"_
+					 2. _"/path/to/another_cert.pem"_
 
 
 ### extension_services: Configuration Examples

@@ -675,6 +675,7 @@ export class TelemetryClient {
                     'Content-Type': 'application/json'
                 },
                 verifyTls: 'verifyTls' in postHookConfig ? postHookConfig.verifyTls : true,
+                trustedCertBundles: 'trustedCertBundles' in postHookConfig ? postHookConfig.trustedCertBundles : undefined,
                 body: systemInfo
             }
         );
