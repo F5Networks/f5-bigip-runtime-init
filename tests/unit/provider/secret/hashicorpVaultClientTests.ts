@@ -12,12 +12,14 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import nock from 'nock';
+import mock from 'mock-fs';
 import { HashicorpVaultClient } from '../../../../src/lib/provider/secret/hashicorpVaultClient';
 
-describe('Resolver Client', () => {
+describe('HashiCorp Vault Client', () => {
 
     let secretMetadata;
     after(() => {
+        mock.restore();
         Object.keys(require.cache)
             .forEach((key) => {
                 delete require.cache[key];
@@ -103,6 +105,20 @@ describe('Resolver Client', () => {
             });
     });
 
+    it('should validate login method with inline secretId and roleId with custom trustedCertBundles', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        secretMetadata.trustedCertBundles = ['/config/fake-ssl/cert.pem'];
+        mock({
+            '/config/fake-ssl' : {
+                'cert.pem': '1'
+            }
+        });
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
+            });
+    });
+
     it('should validate login method when verifyTls=true with inline secretId and roleId', () => {
         const hashicorpClient = new HashicorpVaultClient();
         secretMetadata.verifyTls = true;
@@ -142,6 +158,20 @@ describe('Resolver Client', () => {
 
     /* eslint-disable  @typescript-eslint/camelcase */
     it('should validate login method with url secretId as json and inline roleId', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        secretMetadata.secretProvider.authBackend.secretId.type = 'url';
+        secretMetadata.secretProvider.authBackend.secretId.value = 'https://somedomain.com/document.foo';
+        nock('https://somedomain.com')
+            .get('/document.foo')
+            .reply(200, { role_id: 'secretId-test-value' });
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
+            });
+    });
+
+    /* eslint-disable  @typescript-eslint/camelcase */
+    it('should validate failure for login method when invalid type', () => {
         const hashicorpClient = new HashicorpVaultClient();
         secretMetadata.secretProvider.authBackend.secretId.type = 'url';
         secretMetadata.secretProvider.authBackend.secretId.value = 'https://somedomain.com/document.foo';
@@ -218,12 +248,39 @@ describe('Resolver Client', () => {
             });
     });
 
+    it('should validate getSecret method with custom cert', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        secretMetadata.trustedCertBundles = ['/config/fake-ssl/cert.pem'];
+        mock({
+            '/config/fake-ssl' : {
+                'cert.pem': '1'
+            }
+        });
+        nock('http://1.1.1.1:8200')
+            .get('/v1/kv/data/credential')
+            .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz","bigiq_admin_password":"thisIsTestPassword123","bigiq_admin_username":"asdasfdar212@"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
+                return hashicorpClient.getSecret(secretMetadata)
+            })
+            .then((secretValue) => {
+                assert.strictEqual(secretValue, 'b1gAdminPazz')
+            });
+    });
+
     it('should validate getSecret method with verifyTls=true', () => {
         const hashicorpClient = new HashicorpVaultClient();
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
             .reply(200, {"request_id":"61ac698f-15d1-17dc-9095-b23626ea1b97","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"password":"b1gAdminPazz","bigiq_admin_password":"thisIsTestPassword123","bigiq_admin_username":"asdasfdar212@"},"metadata":{"created_time":"2021-06-24T16:15:45.963605157Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
         secretMetadata.verifyTls = true;
+        secretMetadata.trustedCertBundles = ['/config/fake-ssl/cert.pem'];
+        mock({
+            '/config/fake-ssl' : {
+                'cert.pem': '1'
+            }
+        });
         return hashicorpClient.login(secretMetadata)
             .then(() => {
                 assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');

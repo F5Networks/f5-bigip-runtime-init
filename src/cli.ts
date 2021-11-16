@@ -223,7 +223,8 @@ export async function cli(): Promise<string> {
                     serviceOperations[i].value,
                     {
                         locationType: serviceOperations[i].type,
-                        verifyTls: 'verifyTls' in serviceOperations[i] ? serviceOperations[i].verifyTls : true
+                        verifyTls: 'verifyTls' in serviceOperations[i] ? serviceOperations[i].verifyTls : true,
+                        trustedCertBundles: 'trustedCertBundles' in serviceOperations[i] ? serviceOperations[i].trustedCertBundles : undefined,
                     }
                 );
             }

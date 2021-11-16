@@ -38,7 +38,8 @@ const standardToolchainOptions = {
     extensionHash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6',
     maxRetries: 3,
     retryInterval: 2500,
-    verifyTls: true
+    verifyTls: true,
+    trustedCertBundles: ['/config/fake-ssl/ca-bundle.crt']
 };
 
 const ilxToolchainOptions = {
@@ -172,6 +173,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.isInstalled()
@@ -192,7 +196,8 @@ describe('BIG-IP Package Client', () => {
             extensionHash: 'ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987',
             maxRetries: 3,
             retryInterval: 2500,
-            verifyTls: true
+            verifyTls: true,
+            trustedCertBundles: ['/config/fake-ssl/ca-bundle.crt']
         };
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', toolChainOptions);
         const packageClient = toolChainClient.package;
@@ -202,6 +207,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'f5-appsvcs-3.20.0-3.noarch': '1'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.isInstalled()
@@ -223,7 +231,8 @@ describe('BIG-IP Package Client', () => {
             extensionHash: 'ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987',
             maxRetries: 3,
             retryInterval: 2500,
-            verifyTls: true
+            verifyTls: true,
+            trustedCertBundles: ['/config/fake-ssl/ca-bundle.crt']
         };
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', toolChainOptions);
         const packageClient = toolChainClient.package;
@@ -233,6 +242,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'f5-appsvcs-3.20.0-3.noarch': '1'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.isInstalled()
@@ -256,6 +268,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.install()
@@ -274,6 +289,11 @@ describe('BIG-IP Package Client', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
+        mock({
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
+            }
+        });
         nock('http://localhost:8100')
             .post('/mgmt/shared/iapp/package-management-tasks')
             .reply(201);
@@ -287,6 +307,8 @@ describe('BIG-IP Package Client', () => {
 
     it('should validate install failure with via URL', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
+        const tempStandardToolchainOptions = standardToolchainOptions;
+        tempStandardToolchainOptions.trustedCertBundles = undefined;
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
         nock('http://localhost:8100')
@@ -351,6 +373,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.install()
@@ -382,6 +407,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'hello-world-0.1.0-0001.noarch.rpm': '12345'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.install()
@@ -425,6 +453,9 @@ describe('BIG-IP Package Client', () => {
         mock({
             '/var/lib/cloud/icontrollx_installs': {
                 'f5-appsvcs-3.17.0-3.noarch.rpm': '12345'
+            },
+            '/config/fake-ssl' : {
+                'ca-bundle.crt': '1'
             }
         });
         return packageClient.install()
