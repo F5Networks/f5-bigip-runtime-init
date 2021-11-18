@@ -101,7 +101,8 @@ export class HashicorpVaultClient {
             verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true,
             trustedCertBundles: secretMetadata.trustedCertBundles !== undefined ? secretMetadata.trustedCertBundles : undefined
         };
-        const loginResponse = await utils.retrier(utils.makeRequest, [secretMetadata.secretProvider.vaultServer + '/v1/auth/approle/login', options], {
+        const appRolePath = secretMetadata.secretProvider.appRolePath !== undefined ? secretMetadata.secretProvider.appRolePath : '/v1/auth/approle/login'
+        const loginResponse = await utils.retrier(utils.makeRequest, [secretMetadata.secretProvider.vaultServer + appRolePath, options], {
             thisContext: this,
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS

@@ -73,6 +73,11 @@
                                 "type": "string",
                                 "enum": ["SecretsManager", "SecretManager", "default", "KeyVault", "Vault"]
                             },
+                            "appRolePath": {
+                                "description": "URL path of the App Role, if it's unique or if it includes the namespace",
+                                "type": "string",
+                                "examples": ["/v1/auth/approle/login", "/v1/MyNameSpace/auth/approle/login"]
+                            },
                             "secretId": {
                                 "description": "ID or name of the secret in the secret manager of the specified environment",
                                 "type": "string",

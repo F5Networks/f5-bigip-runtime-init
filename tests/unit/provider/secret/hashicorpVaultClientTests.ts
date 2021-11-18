@@ -33,6 +33,7 @@ describe('HashiCorp Vault Client', () => {
                 type: 'Vault',
                 environment: 'hashicorp',
                 vaultServer: 'http://1.1.1.1:8200',
+                appRolePath: '/v1/auth/approle/login',
                 secretsEngine: 'kv2',
                 secretPath: 'kv/data/credential',
                 field: 'password',
@@ -321,6 +322,31 @@ describe('HashiCorp Vault Client', () => {
             })
             .then((secretValue) => {
                 assert.strictEqual(secretValue.password, 'b1gAdminPazz')
+            });
+    });
+
+    it('should validate login method with different appRolePath', () => {
+        const hashicorpClient = new HashicorpVaultClient();
+        nock('http://1.1.1.1:8200')
+            .post('/v1/mynamespace/auth/approle/login')
+            .reply(200,
+                {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"",
+                    "renewable":false,"lease_duration":0,"data":null,
+                    "wrap_info":null,"warnings":null,
+                    "auth":{"client_token":"this-is-test-token-value",
+                        "accessor":"DR8vhrYNUK7CrkRvextEn4CN",
+                        "policies":["default","test"],
+                        "token_policies":["default","test"],
+                        "metadata":{"role_name":"runtime-init-role"},
+                        "lease_duration":3600,"renewable":true,
+                        "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159",
+                        "token_type":"service",
+                        "orphan":true}
+                });
+        secretMetadata.secretProvider.appRolePath = '/v1/mynamespace/auth/approle/login';
+        return hashicorpClient.login(secretMetadata)
+            .then(() => {
+                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
             });
     });
 });

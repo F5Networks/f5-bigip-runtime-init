@@ -5,7 +5,7 @@ runtime_parameters:
       type: Vault
       environment: hashicorp
       vaultServer: http://127.0.0.1:8200
-      namespace: ns1/
+      appRolePath: /v1/auth/approle/login
       secretsEngine: kv2
       secretId: secret/foo
       field: password

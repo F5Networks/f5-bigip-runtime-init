@@ -137,6 +137,13 @@ Type: `array`
 					 3. _"default"_
 					 4. _"KeyVault"_
 					 5. _"Vault"_
+			 - <b id="#/items/properties/secretProvider/properties/appRolePath">appRolePath</b>
+				 - _URL path of the App Role, if it's unique or if it includes the namespace_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/appRolePath">path: #/items/properties/secretProvider/properties/appRolePath</i>
+				 - Example values: 
+					 1. _"/v1/auth/approle/login"_
+					 2. _"/v1/MyNameSpace/auth/approle/login"_
 			 - <b id="#/items/properties/secretProvider/properties/secretId">secretId</b>
 				 - _ID or name of the secret in the secret manager of the specified environment_
 				 - Type: `string`
@@ -399,7 +406,6 @@ hashicorp:
         type: Vault
         environment: hashicorp
         vaultServer: 'http://127.0.0.1:8200'
-        namespace: ns1/
         secretsEngine: kv2
         secretId: secret/foo
         field: password
@@ -1541,7 +1547,6 @@ example_13:
           type: Vault
           environment: hashicorp
           vaultServer: 'http://127.0.0.1:8200'
-          namespace: ns1/
           secretsEngine: kv2
           secretId: secret/foo
           field: password
@@ -1561,7 +1566,6 @@ example_13:
           type: Vault
           environment: hashicorp
           vaultServer: 'http://127.0.0.1:8200'
-          namespace: ns1/
           secretsEngine: kv2
           secretId: secret/bar
           field: data

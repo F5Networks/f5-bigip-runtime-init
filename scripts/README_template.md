@@ -565,7 +565,7 @@ There are a few types of parameters:
               type: Vault
               environment: hashicorp
               vaultServer: https://127.0.0.1:8200
-              namespace: ns1/
+              appRolePath: /v1/auth/approle/login
               secretsEngine: kv2
               secretId: secret/credential
               field: data
