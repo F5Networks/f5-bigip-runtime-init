@@ -63,7 +63,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     }
 
     getCustomerId(): string {
-        return this.accountId;
+        return this.customerId;
     }
 
     getCloudName(): string {
@@ -276,5 +276,9 @@ export class AwsCloudClient extends AbstractCloudClient {
                 );
             });
         });
+    }
+
+    getRegion(): string {
+        return this.region;
     }
 }

@@ -224,7 +224,7 @@ extension_services:
             hostname: '{{ HOST_NAME }}'
             cliInactivityTimeout: 1200
             consoleInactivityTimeout: 1200
-            autoPhonehome: false
+            autoPhonehome: true
           myDns:
             class: DNS
             nameServers:

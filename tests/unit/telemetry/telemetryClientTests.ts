@@ -60,7 +60,8 @@ describe('Telemetry Client', () => {
         telemetryClient.getCloudProvider.withArgs('aws', {}).resolves({
             init: sinon.stub().resolves(),
             getCloudName: sinon.stub().returns('aws'),
-            getCustomerId: sinon.stub().returns('123456423')
+            getCustomerId: sinon.stub().returns('123456423'),
+            getRegion: sinon.stub().returns('us-west')
         });
         nock('http://localhost:8100')
             .get('/mgmt/tm/sys/ready')
@@ -183,6 +184,19 @@ describe('Telemetry Client', () => {
             });
     });
 
+    it('should validate _getTemplateInfo method', () => {
+        mock({
+            '/config/cloud/': {
+                'telemetry_install_params.tmp': 'templateName:v0.0.1/foo/boo/test-template-name.yaml'
+            }
+        });
+
+        const result = telemetryClient._getTemplateInfo();
+        assert.strictEqual(result.name, 'test-template-name.yaml');
+        assert.strictEqual(result.version, 'v0.0.1');
+        mock.restore();
+    });
+
     it('should validate _getInstallParameters method', () => {
         mock({
             '/config/cloud/': {
@@ -282,9 +296,8 @@ describe('Telemetry Client', () => {
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
                 console.log(JSON.stringify(response));
-                assert.strictEqual(response.platform.platform, 'BIG-IP');
-                assert.strictEqual(response.platform.platformId, 'Z100');
-                assert.strictEqual(response.platform.deployment.cloud, 'aws');
+                assert.strictEqual(response.platformDetails.platform, 'BIG-IP');
+                assert.strictEqual(response.platformDetails.platformId, 'Z100');
                 assert.strictEqual(response.operation.endTime, testDate);
                 assert.strictEqual(response.operation.startTime, testDate);
             })
@@ -293,7 +306,7 @@ describe('Telemetry Client', () => {
 
     it('should validate report method', () => {
         telemetryClient.F5TeemDevice = sinon.stub().returns({
-            report: sinon.stub().resolves()
+            reportRecord: sinon.stub().resolves()
         });
         return telemetryClient.init({
             configFile: '/tmp/test-config.yaml',
@@ -369,7 +382,7 @@ describe('Telemetry Client', () => {
         })
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
-                assert.strictEqual(response.platform.system.diskSize, 77824);
+                assert.strictEqual(response.platformDetails.system.diskSize, 77824);
             })
             .catch(err => Promise.reject(err));
     });
@@ -432,7 +445,7 @@ describe('Telemetry Client', () => {
         })
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
-                assert.strictEqual(response.platform.system.diskSize, 77824);
+                assert.strictEqual(response.platformDetails.system.diskSize, 77824);
             })
             .catch(err => Promise.reject(err));
     });
@@ -496,10 +509,9 @@ describe('Telemetry Client', () => {
         })
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
-                assert.strictEqual(response.platform.system.diskSize, 0);
-                assert.strictEqual(response.platform.system.cpuCount, 0);
-                assert.strictEqual(response.platform.system.memory, 0);
-                assert.strictEqual(response.platform.system.regKey, undefined);
+                assert.strictEqual(response.platformDetails.system.diskSize, 0);
+                assert.strictEqual(response.platformDetails.system.cpuCount, 0);
+                assert.strictEqual(response.platformDetails.system.memory, 0);
             })
             .catch(err => Promise.reject(err));
     });
@@ -522,12 +534,13 @@ describe('Telemetry Client', () => {
                 assert.strictEqual(response.operation.rawCommand, 'f5-runtime-init -c /tmp/test-config.yaml');
                 assert.strictEqual(response.product.locale, 'en-US');
                 assert.strictEqual(response.product.version, pkgjson.version);
-                assert.strictEqual(response.platform.nicCount, 2);
-                assert.strictEqual(response.platform.platformId, 'Z100');
-                assert.strictEqual(response.platform.deployment.cloud, 'aws');
-                assert.strictEqual(response.platform.system.cpuCount, 2);
-                assert.strictEqual(response.platform.system.diskSize, 77824);
-                assert.strictEqual(response.platform.system.memory, 14016);
+                assert.strictEqual(response.platformDetails.nicCount, 2);
+                assert.strictEqual(response.platformDetails.platformId, 'Z100');
+                assert.strictEqual(response.templateInfo.cloud, 'aws');
+                assert.strictEqual(response.templateInfo.region, 'us-west');
+                assert.strictEqual(response.platformDetails.system.cpuCount, 2);
+                assert.strictEqual(response.platformDetails.system.diskSize, 77824);
+                assert.strictEqual(response.platformDetails.system.memory, 14016);
             })
             .catch(err => Promise.reject(err));
     });
@@ -536,19 +549,19 @@ describe('Telemetry Client', () => {
         return telemetryClient.init()
             .then(() => {
                 const response = telemetryClient.createTelemetryData();
-                console.log(response);
                 assert.strictEqual(response.operation.endTime, 0);
                 assert.strictEqual(response.operation.startTime, 0);
                 assert.strictEqual(response.operation.rawCommand, undefined);
                 assert.strictEqual(response.product.locale, 'en-US');
                 assert.strictEqual(response.product.version, pkgjson.version);
-                assert.strictEqual(response.platform.nicCount, 2);
-                assert.strictEqual(response.platform.platformId, 'Z100');
-                assert.strictEqual(response.platform.deployment.cloud, 'aws');
-                assert.strictEqual(response.platform.packages['f5-service-discovery-1.2.9-2.noarch'], '1.2.9');
-                assert.strictEqual(response.platform.packages['f5-declarative-onboarding-1.10.0-2.noarch'], '1.10.0');
-                assert.strictEqual(response.platform.packages['f5-appsvcs-3.20.0-3.noarch'], '3.20.0');
-                assert.strictEqual(response.platform.packages['f5-appsvcs-templates-1.1.0-1.noarch'], '1.1.0');
+                assert.strictEqual(response.platformDetails.nicCount, 2);
+                assert.strictEqual(response.platformDetails.platformId, 'Z100');
+                assert.strictEqual(response.templateInfo.cloud, 'aws');
+                assert.strictEqual(response.templateInfo.region, 'us-west');
+                assert.strictEqual(response.platformDetails.packages['f5-service-discovery-1.2.9-2.noarch'], '1.2.9');
+                assert.strictEqual(response.platformDetails.packages['f5-declarative-onboarding-1.10.0-2.noarch'], '1.10.0');
+                assert.strictEqual(response.platformDetails.packages['f5-appsvcs-3.20.0-3.noarch'], '3.20.0');
+                assert.strictEqual(response.platformDetails.packages['f5-appsvcs-templates-1.1.0-1.noarch'], '1.1.0');
             }).catch(err => Promise.reject(err));
     });
 });

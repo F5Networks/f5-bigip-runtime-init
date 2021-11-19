@@ -27,9 +27,9 @@ import * as utils from '../../utils';
 
 export class AzureCloudClient extends AbstractCloudClient {
     _credentials: ManagedIdentityCredential;
+    _metadata: any;
     _keyVaultSecretClient: SecretClient;
     SecretClient = SecretClient;
-    customerId: string;
     constructor(options?: {
         logger?: Logger;
     }) {
@@ -38,7 +38,7 @@ export class AzureCloudClient extends AbstractCloudClient {
 
     async init(): Promise<void> {
         this._credentials = new ManagedIdentityCredential();
-        this.customerId = await this._getSubscriptionId();
+        this._metadata = await this._getInstanceMetadata();
         return Promise.resolve();
     }
 
@@ -48,7 +48,7 @@ export class AzureCloudClient extends AbstractCloudClient {
      * @returns {String}
      */
     getCustomerId(): string {
-        return this.customerId;
+        return this._metadata.subscriptionId;
     }
 
     /**
@@ -59,6 +59,7 @@ export class AzureCloudClient extends AbstractCloudClient {
     getCloudName(): string {
         return constants.CLOUDS.AZURE;
     }
+
 
     _getKeyVaultSecret(vaultUrl: string, secretId: string, version?: string): Promise<KeyVaultSecret> {
         this._keyVaultSecretClient = new this.SecretClient(vaultUrl, this._credentials);
@@ -95,7 +96,7 @@ export class AzureCloudClient extends AbstractCloudClient {
             .catch(err => Promise.reject(err));
     }
 
-    async _getSubscriptionId(): Promise<string> {
+    async _getInstanceMetadata(): Promise<string> {
         const response = await utils.retrier(utils.makeRequest, [`http://169.254.169.254/metadata/instance?api-version=2017-08-01`, {
             method: 'GET',
             headers: {
@@ -106,7 +107,7 @@ export class AzureCloudClient extends AbstractCloudClient {
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
         });
-        return response.body.compute.subscriptionId;
+        return response.body.compute;
     }
 
     /**
@@ -219,4 +220,14 @@ export class AzureCloudClient extends AbstractCloudClient {
         }
         return result;
     }
+
+    /**
+     * Returns cloud region name
+     *
+     * @returns {String}
+     */
+    getRegion(): string {
+        return this._metadata.region;
+    }
+
 }
