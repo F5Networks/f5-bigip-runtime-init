@@ -30,6 +30,8 @@ describe('CloudClient - AWS', () => {
     beforeEach(() => {
         cloudClient = new AwsCloudClient();
         cloudClient.accountId = '1234543';
+        cloudClient.customerId = '1234543';
+        cloudClient.region = 'us-west';
         cloudClient.secretsManager = sinon.stub();
         cloudClient._sessionToken = 'TEST_SESSION_TOKEN';
         cloudClient.secretsManager.getSecretValue = sinon.stub().callsFake(() => ({
@@ -138,6 +140,10 @@ describe('CloudClient - AWS', () => {
 
     it('should validate getCustomerId', () => {
         assert.strictEqual(cloudClient.getCustomerId(), '1234543');
+    });
+
+    it('should validate getRegion', () => {
+        assert.strictEqual(cloudClient.getRegion(), 'us-west');
     });
 
     it('should validate getCloudName', () => {

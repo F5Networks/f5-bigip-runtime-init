@@ -815,6 +815,113 @@ Or, if using the `extension_services` feature to send declarations, by disabling
 
 For more information on how to disable Automatic Phone Home, see this [Overview of the Automatic Update Check and Automatic Phone Home features](https://support.f5.com/csp/article/K15000#1).
 
+Here is an example of the payload that is sent by F5 TEEM
+```json
+
+"telemetryRecords": [
+                {
+                    "platform": "BIG-IP",
+                    "platformVersion": "14.1.4.4",
+                    "nicConfiguration": "multi",
+                    "cloudAccountId": "<REDACTED>",
+                    "regkey": "<REDACTED>",
+                    "platformDetails": {
+                        "platform": "BIG-IP",
+                        "platformVersion": "14.1.4.4",
+                        "platformId": "Z100",
+                        "system": {
+                            "cpuCount": 4,
+                            "memory": 15753,
+                            "diskSize": 77824
+                        },
+                        "nicCount": 2,
+                        "modules": {
+                            "ltm": "nominal"
+                        },
+                        "packages": {},
+                        "environment": {
+                            "pythonVersion": "Python 2.7.5",
+                            "pythonVersionDetailed": "2.7.5 (default, Aug 12 2021, 23:00:20) \n[GCC 4.8.5 20150623 (Red Hat 4.8.5-16)]",
+                            "nodeVersion": "v6.9.1",
+                            "libraries": {
+                                "ssh": "OpenSSH_7.4p1, OpenSSL 1.0.2s-fips  28 May 2019"
+                            }
+                        }
+                    },
+                    "templateInfo": {
+                        "install": "All operations finished successfully",
+                        "templateName": "bigip-standalone.yaml",
+                        "templateVersion": "v1.1.0.0",
+                        "nicCount": 2,
+                        "cloud": "aws",
+                        "region": "us-west-2",
+                        "localization": "en-US"
+                    },
+                    "product": {
+                        "version": "1.3.2",
+                        "locale": "en-US",
+                        "installDate": "2021-11-18T19:29:45.486Z",
+                        "installationId": "f4573f4e-dcd7-4a91-8a0a-3704fca5255f",
+                        "installedComponents": {
+                            "commander": "^4.1.0",
+                            "winston": "^3.3.3",
+                            "get-user-locale": "^1.4.0",
+                            "uuid": "^8.2.0",
+                            "@f5devcentral/f5-teem": "^1.4.6",
+                            "js-yaml": "^3.13.1",
+                            "mustache": "^4.0.0",
+                            "request": "^2.88.0",
+                            "jmespath": "^0.15.0",
+                            "netmask": "^2.0.2",
+                            "aws-sdk": "^2.610.0",
+                            "lodash.where": "^3.1.0"
+                        }
+                    },
+                    "operation": {
+                        "clientRequestId": "0a1bad90-2feb-4eb8-afd6-c851b3b4ffce",
+                        "rawCommand": "f5-runtime-init -c /config/cloud/onboard_config.yaml",
+                        "pre_onboard_enabled": {
+                            "commands": 1
+                        },
+                        "runtime_params": {
+                            "secrets": 3,
+                            "metadata": 6
+                        },
+                        "vaults": {
+                            "aws": 1,
+                            "azure": 0,
+                            "gcp": 0,
+                            "hashicorp": 2
+                        },
+                        "userAgent": "f5-bigip-runtime-init/1.3.2",
+                        "extension_packages": {
+                            "do": "1.23.0",
+                            "fast": "1.11.0",
+                            "ilx": "0.1.0"
+                        },
+                        "extension_services": {
+                            "do": true,
+                            "as3": true
+                        },
+                        "post_onboard_enabled": {
+                            "commands": 3,
+                            "postHooks": 0
+                        },
+                        "result": "FAILURE",
+                        "resultSummary": "All operations finished successfully",
+                        "startTime": "2021-11-18T19:29:43.325Z",
+                        "endTime": "2021-11-18T19:29:43.387Z",
+                        "installParams": [
+                            {
+                                "key": "templateName",
+                                "value": "v1.1.0.0/examples/modules/bigip-standalone/bigip-standalone.yaml"
+                            }
+                        ]
+                    }
+                }
+            ]
+```
+
 
 ## Troubleshooting
 
