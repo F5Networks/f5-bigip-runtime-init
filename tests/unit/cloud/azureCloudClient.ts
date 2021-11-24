@@ -30,7 +30,7 @@ describe('CloudClient - Azure', () => {
         cloudClient.subscriptionId = '1234543';
         cloudClient._metadata = {
             subscriptionId: '1234543',
-            region: 'us-west'
+            location: 'us-west'
         };
         cloudClient.SecretClient = sinon.stub().returns({
             getSecret: sinon.stub().resolves({ value: 'StrongPassword2010!' })
