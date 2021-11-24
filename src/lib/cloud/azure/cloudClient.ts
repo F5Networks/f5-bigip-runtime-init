@@ -227,7 +227,7 @@ export class AzureCloudClient extends AbstractCloudClient {
      * @returns {String}
      */
     getRegion(): string {
-        return this._metadata.region;
+        return this._metadata.location;
     }
 
 }
