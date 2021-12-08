@@ -380,27 +380,28 @@ NOTES:
      * Instance Metadata Service Version 1 (IMDSv1) – a request/response method
      * Instance Metadata Service Version 2 (IMDSv2) – a session-oriented method
   - when extension package includes ```extensionUrl``` field, ```extensionVersion``` is not required; however, ```extensionVersion``` is required when package defined without ```extensionUrl```
+  
   ```yaml
     extension_packages:
       install_operations:
         - extensionType: as3
           extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
-    ```
-  
+  ```
+
 The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
 
 ex.
 
 ```yaml
----
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-      environment: aws
-      type: SecretsManager
-      version: AWSCURRENT
-      secretId: mySecret01
+    ---
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          environment: aws
+          type: SecretsManager
+          version: AWSCURRENT
+          secretId: mySecret01
 ```
 
 When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named ```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
@@ -535,6 +536,32 @@ There are a few types of parameters:
         * number - returns value as number
         * boolean - returns value as boolean
     Also, it demonstrates how to fetch and utilize AWS Session token for fetching instance metadata; the session token is fetched as parameter and then its value is used for resolving REGION parameter.
+    
+    The following two examples demonstrates how to fetch region value for Azure and GCP clouds:
+    
+    Azure: 
+    
+    ```yaml
+        runtime_parameters:
+          - name: REGION
+            type: url
+            value: http://169.254.169.254/metadata/instance/compute/location?api-version=2021-05-01&format=text
+            headers:
+              - name: Metadata
+                value: true 
+    ```
+    
+    GCP:
+    
+    ```yaml
+        runtime_parameters:
+          - name: REGION
+            type: url
+            value: http://metadata.google.internal/computeMetadata/v1/instance/zone
+            headers:
+                - name: Metadata-Flavor
+                  value: Google
+    ```    
     
   * secret - fetches secret from Secret Vault 
       ```yaml
