@@ -40,6 +40,7 @@ describe('CloudClient - GCP', () => {
     it('should validate init', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
         cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
             .then(() => {
                 assert.strictEqual(cloudClient.projectId, 'my-project');
@@ -47,12 +48,16 @@ describe('CloudClient - GCP', () => {
             .then(() => {
                 assert.strictEqual(cloudClient.authToken, 'my-token');
             })
+            .then(() => {
+                assert.strictEqual(cloudClient.region, 'my-region');
+            })
             .catch(err => Promise.reject(err));
     });
 
     it('should validate init metadata request promise rejection _getProjectId', () => {
         cloudClient._getProjectId = sinon.stub().rejects(new Error('Test Rejection'));
         cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
             .then(() => {
                 assert.ok(false);
@@ -64,6 +69,7 @@ describe('CloudClient - GCP', () => {
     it('should validate init metadata request promise rejection _getAuthToken', () => {
         cloudClient._getAuthToken = sinon.stub().rejects(new Error('Test Rejection'));
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
+        cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
             .then(() => {
                 assert.ok(false);
@@ -79,9 +85,34 @@ describe('CloudClient - GCP', () => {
     it('should validate getCustomerId', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
         cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
             .then(() => {
                 assert.strictEqual(cloudClient.getCustomerId(), 'my-project');
+            })
+            .catch(err => Promise.reject(err));
+
+    });
+
+    it('should validate getRegion', () => {
+        cloudClient._getProjectId = sinon.stub().resolves('my-project');
+        cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient._getRegion = sinon.stub().resolves('my-region');
+        return cloudClient.init()
+            .then(() => {
+                assert.strictEqual(cloudClient.getRegion(), 'my-region');
+            })
+            .catch(err => Promise.reject(err));
+
+    });
+
+    it('should validate _getRegion', () => {
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/zone')
+            .reply(200, 'projects/121231/zones/us-west-2');
+        return cloudClient._getRegion()
+            .then((region) => {
+                assert.strictEqual(region, 'us-west-2');
             })
             .catch(err => Promise.reject(err));
 

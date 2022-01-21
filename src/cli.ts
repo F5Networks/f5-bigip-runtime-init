@@ -127,7 +127,7 @@ export async function cli(): Promise<string> {
     );
 
     logger.info('Resolving parameters');
-    const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters): undefined;
+    const resolvedRuntimeParams = config.runtime_parameters !== undefined ? await resolver.resolveRuntimeParameters(config.runtime_parameters, {}, 0): undefined;
 
     let bigipReadyEnabled = config.bigip_ready_enabled || [];
     containsSecrets = utils.checkForSecrets(JSON.stringify(bigipReadyEnabled));
@@ -223,7 +223,8 @@ export async function cli(): Promise<string> {
                     serviceOperations[i].value,
                     {
                         locationType: serviceOperations[i].type,
-                        verifyTls: 'verifyTls' in serviceOperations[i] ? serviceOperations[i].verifyTls : true
+                        verifyTls: 'verifyTls' in serviceOperations[i] ? serviceOperations[i].verifyTls : true,
+                        trustedCertBundles: 'trustedCertBundles' in serviceOperations[i] ? serviceOperations[i].trustedCertBundles : undefined,
                     }
                 );
             }

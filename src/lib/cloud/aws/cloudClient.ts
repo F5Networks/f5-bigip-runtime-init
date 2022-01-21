@@ -19,6 +19,7 @@
 
 import * as AWS from 'aws-sdk';
 import * as constants from '../../../constants';
+import * as netmask from 'netmask';
 import { AbstractCloudClient } from '../abstract/cloudClient';
 import Logger from '../../logger';
 import where = require('lodash.where');
@@ -29,6 +30,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     region: string;
     instanceId: string;
     customerId: string;
+    _sessionToken: string;
 
     constructor(options?: {
         logger?: Logger;
@@ -41,7 +43,10 @@ export class AwsCloudClient extends AbstractCloudClient {
      * See the parent class method for details
      */
     init(): Promise<void> {
-        return this._getInstanceIdentityDoc()
+        return this._fetchMetadataSessionToken()
+            .then(() => {
+                return this._getInstanceIdentityDoc()
+            })
             .then((metadata: {
                 region: string;
                 instanceId: string;
@@ -58,7 +63,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     }
 
     getCustomerId(): string {
-        return this.accountId;
+        return this.customerId;
     }
 
     getCloudName(): string {
@@ -115,7 +120,6 @@ export class AwsCloudClient extends AbstractCloudClient {
         const type = options ? options.type : undefined;
         const index = options ? options.index : undefined;
         const logger = Logger.getLogger();
-
         if (!field) {
             throw new Error('AWS Cloud Client metadata field is missing');
         }
@@ -182,14 +186,11 @@ export class AwsCloudClient extends AbstractCloudClient {
                 const ipMask = primaryIp + cidr.match(/(\/([0-9]{1,2}))/g);
                 logger.info('ip and mask for ' + mac + ': ' + ipMask);
                 return ipMask;
-            /** manipulate data to form gateway address when field eq subnet-ipv4-cidr-block */
             } else if (field === 'subnet-ipv4-cidr-block') {
-                const cidr = await this._getInstanceNetwork('subnet-ipv4-cidr-block', type, mac)
-                .catch(err => Promise.reject(err));
-                logger.info('CIDR block for ' + mac + ':' + cidr);
-                const gateway = cidr.match(/([0-9]{1,3}\.){2}[0-9]{1,3}/g) + '.1';
-                logger.info('gateway for ' + mac + ':' + gateway);
-                return gateway;
+                const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
+                    .catch(err => Promise.reject(err));
+                logger.debug('CIDR block for ' + mac + ': ' + getInstanceNetwork);
+                return new netmask.Netmask(getInstanceNetwork)['first'];
             } else {
                 const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
                 .catch(err => Promise.reject(err));
@@ -198,6 +199,19 @@ export class AwsCloudClient extends AbstractCloudClient {
             }
         }
     }
+    _fetchMetadataSessionToken(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const sessionTokenPath = '/latest/api/token';
+            this._metadata.request(sessionTokenPath, { method: 'PUT', headers: { "X-aws-ec2-metadata-token-ttl-seconds": '3600' }},(err, data) => {
+                if (err) {
+                    reject(err);
+                }
+                this._sessionToken = data;
+                resolve();
+            });
+        });
+    }
+
     /**
      * Gets instance identity document
      *
@@ -210,7 +224,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     }> {
         return new Promise((resolve, reject) => {
             const iidPath = '/latest/dynamic/instance-identity/document';
-            this._metadata.request(iidPath, (err, data) => {
+            this._metadata.request(iidPath, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } },(err, data) => {
                 if (err) {
                     reject(err);
                 }
@@ -231,7 +245,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     _getInstanceCompute(field: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const iidPath = '/latest/meta-data/' + field;
-            this._metadata.request(iidPath, (err, data) => {
+            this._metadata.request(iidPath, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } }, (err, data) => {
                 if (err) {
                     reject(err);
                 }
@@ -253,7 +267,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     _getInstanceNetwork(field: string, type: string, mac: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const iidPath = '/latest/meta-data/' + type + '/interfaces/macs/' + mac + '/' + field;
-            this._metadata.request(iidPath, (err, data) => {
+            this._metadata.request(iidPath, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } }, (err, data) => {
                 if (err) {
                     reject(err);
                 }
@@ -262,5 +276,9 @@ export class AwsCloudClient extends AbstractCloudClient {
                 );
             });
         });
+    }
+
+    getRegion(): string {
+        return this.region;
     }
 }

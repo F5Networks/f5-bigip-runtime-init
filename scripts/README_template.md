@@ -375,29 +375,33 @@ f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
 
 NOTES: 
-  - ```--cloud aws``` is passed to the installer to specify the environment 
+  - ```--cloud aws``` is passed to the installer to specify the environment
+  - Runtime Init supports both available options for accessing AWS Instance metadata:
+     * Instance Metadata Service Version 1 (IMDSv1) – a request/response method
+     * Instance Metadata Service Version 2 (IMDSv2) – a session-oriented method
   - when extension package includes ```extensionUrl``` field, ```extensionVersion``` is not required; however, ```extensionVersion``` is required when package defined without ```extensionUrl```
+  
   ```yaml
     extension_packages:
       install_operations:
         - extensionType: as3
           extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
-    ```
-  
+  ```
+
 The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
 
 ex.
 
 ```yaml
----
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-      environment: aws
-      type: SecretsManager
-      version: AWSCURRENT
-      secretId: mySecret01
+    ---
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          environment: aws
+          type: SecretsManager
+          version: AWSCURRENT
+          secretId: mySecret01
 ```
 
 When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named ```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
@@ -496,8 +500,69 @@ NOTE: ```--cloud gcp``` is passed to the installer to specify the environment
 
 ## Runtime parameters
 
-runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. There are a few types of parameters:
-  
+runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. Parameters can dependent on each other, so one parameter value can be used within another parameter (see example below for more details).
+There are a few types of parameters:
+
+  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional. 
+    ```yaml
+        runtime_parameters:  
+          - name: AWS_SESSION_TOKEN
+            type: url
+            value: http://169.254.169.254/latest/api/token
+            headers:
+              - name: Content-Type
+                value: json
+              - name: User-Agent
+                value: some-user-agent
+              - name: method
+                value: PUT
+              - name: X-aws-ec2-metadata-token-ttl-seconds
+                value: 21600
+          - name: REGION
+            type: url
+            value: http://169.254.169.254/latest/dynamic/instance-identity/document
+            query: region
+            headers:
+              - name: Content-Type
+                value: json
+              - name: User-Agent
+                value: some-user-agent
+              - name: X-aws-ec2-metadata-token
+                value: "{{{AWS_SESSION_TOKEN}}}"
+    ```
+    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
+    
+        * string - returns value as string
+        * number - returns value as number
+        * boolean - returns value as boolean
+    Also, it demonstrates how to fetch and utilize AWS Session token for fetching instance metadata; the session token is fetched as parameter and then its value is used for resolving REGION parameter.
+    
+    The following two examples demonstrates how to fetch region value for Azure and GCP clouds:
+    
+    Azure: 
+    
+    ```yaml
+        runtime_parameters:
+          - name: REGION
+            type: url
+            value: http://169.254.169.254/metadata/instance/compute/location?api-version=2021-05-01&format=text
+            headers:
+              - name: Metadata
+                value: true 
+    ```
+    
+    GCP:
+    
+    ```yaml
+        runtime_parameters:
+          - name: REGION
+            type: url
+            value: http://metadata.google.internal/computeMetadata/v1/instance/zone
+            headers:
+                - name: Metadata-Flavor
+                  value: Google
+    ```    
+    
   * secret - fetches secret from Secret Vault 
       ```yaml
         runtime_parameters:
@@ -509,6 +574,69 @@ runtime_parameters allows to defined list of parameters and these parameters can
               vaultUrl: https://my-keyvault.vault.azure.net
               secretId: mySecret01
       ```
+  * secret (Hashicorp Vault) - fetches secret from Hashicorp Vault using App Role authentication
+
+    The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples). 
+    Also, example demonstrates how to use custom PKI certs for https requests to HashiCorp Vault server when verifyTls set to `true``. 
+    
+    **NOTE**: When the authBackend.secretId.unwrap attribute is set to **true** (recommended), the secretId value must be in the form of a wrapping token. F5 BIG-IP Runtime Init will unwrap this token to retrieve the actual secret ID. This eliminates the need to pass the secret ID in the declaration. See the Hashicorp Vault [documentation](https://learn.hashicorp.com/tutorials/vault/approle-best-practices#approle-response-wrapping) for more information.
+    
+      {{=<% %>=}}
+      ```yaml
+        runtime_parameters:
+          - name: ADMIN_PASS
+            type: secret
+            verifyTls: true
+            trustedCertBundles: ['/config/ssl/ssl.crt/my-ca-bundle.crt']
+            secretProvider:
+              type: Vault
+              environment: hashicorp
+              vaultServer: https://127.0.0.1:8200
+              appRolePath: /v1/auth/approle/login
+              secretsEngine: kv2
+              secretId: secret/credential
+              field: data
+              version: 1
+              authBackend:
+                type: approle
+                roleId:
+                  type: url
+                  value: file:///path/to/role-id
+                secretId:
+                  type: inline
+                  value: secret-id
+                  unwrap: true
+      ...
+        extension_services:
+          service_operations:
+            - extensionType: do
+              type: inline
+              value: 
+                schemaVersion: 1.0.0
+                class: Device
+                async: true
+                label: my BIG-IP declaration for declarative onboarding
+                Common:
+                  class: Tenant
+                  hostname: '{{{ HOST_NAME }}}.local'
+                  foo:
+                    class: User
+                    userType: regular
+                    password: '{{{ ADMIN_PASS.foo_password }}}'
+                    shell: bash
+                    partitionAccess:
+                      all-partitions:
+                        role: admin
+                  bar:
+                    class: User
+                    userType: regular
+                    password: '{{{ ADMIN_PASS.bar_password }}}'
+                    shell: bash
+                    partitionAccess:
+                      all-partitions:
+                        role: admin
+      ```
+      <%={{ }}=%>
   * metadata - fetches common pre-defined metadata from the Metadata Service
     ```yaml
         runtime_parameters:
@@ -580,26 +708,6 @@ runtime_parameters allows to defined list of parameters and these parameters can
             type: static
             value: us-west-2a
       ```
-  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional.
-    ```yaml
-        runtime_parameters:
-          - name: REGION
-            type: url
-            value: http://169.254.169.254/latest/dynamic/instance-identity/document
-            query: region
-            returnType: string
-            ipcalc: size
-            headers:
-              - name: Content-Type
-                value: json
-              - name: User-Agent
-                value: some-user-agent
-    ```
-    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
-        * string - returns value as string
-        * number - returns value as number
-        * boolean - returns value as boolean
-    
 ## Private Environments
 
 By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
@@ -626,6 +734,113 @@ f5-bigip-runtime-init -c /config/cloud/runtime-init-conf.yaml --skip-telemetry
 Or, if using the `extension_services` feature to send declarations, by disabling phone home with the [autoPhonehome property](https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/schema-reference.html#system) in your Declarative Onboarding (DO) declaration.
 
 For more information on how to disable Automatic Phone Home, see this [Overview of the Automatic Update Check and Automatic Phone Home features](https://support.f5.com/csp/article/K15000#1).
+
+Here is an example of the payload that is sent by F5 TEEM
+```json
+
+"telemetryRecords": [
+                {
+                    "platform": "BIG-IP",
+                    "platformVersion": "14.1.4.4",
+                    "nicConfiguration": "multi",
+                    "cloudAccountId": "<REDACTED>",
+                    "regkey": "<REDACTED>",
+                    "platformDetails": {
+                        "platform": "BIG-IP",
+                        "platformVersion": "14.1.4.4",
+                        "platformId": "Z100",
+                        "system": {
+                            "cpuCount": 4,
+                            "memory": 15753,
+                            "diskSize": 77824
+                        },
+                        "nicCount": 2,
+                        "modules": {
+                            "ltm": "nominal"
+                        },
+                        "packages": {},
+                        "environment": {
+                            "pythonVersion": "Python 2.7.5",
+                            "pythonVersionDetailed": "2.7.5 (default, Aug 12 2021, 23:00:20) \n[GCC 4.8.5 20150623 (Red Hat 4.8.5-16)]",
+                            "nodeVersion": "v6.9.1",
+                            "libraries": {
+                                "ssh": "OpenSSH_7.4p1, OpenSSL 1.0.2s-fips  28 May 2019"
+                            }
+                        }
+                    },
+                    "templateInfo": {
+                        "install": "All operations finished successfully",
+                        "templateName": "bigip-standalone.yaml",
+                        "templateVersion": "v1.1.0.0",
+                        "nicCount": 2,
+                        "cloud": "aws",
+                        "region": "us-west-2",
+                        "localization": "en-US"
+                    },
+                    "product": {
+                        "version": "1.3.2",
+                        "locale": "en-US",
+                        "installDate": "2021-11-18T19:29:45.486Z",
+                        "installationId": "f4573f4e-dcd7-4a91-8a0a-3704fca5255f",
+                        "installedComponents": {
+                            "commander": "^4.1.0",
+                            "winston": "^3.3.3",
+                            "get-user-locale": "^1.4.0",
+                            "uuid": "^8.2.0",
+                            "@f5devcentral/f5-teem": "^1.4.6",
+                            "js-yaml": "^3.13.1",
+                            "mustache": "^4.0.0",
+                            "request": "^2.88.0",
+                            "jmespath": "^0.15.0",
+                            "netmask": "^2.0.2",
+                            "aws-sdk": "^2.610.0",
+                            "lodash.where": "^3.1.0"
+                        }
+                    },
+                    "operation": {
+                        "clientRequestId": "0a1bad90-2feb-4eb8-afd6-c851b3b4ffce",
+                        "rawCommand": "f5-runtime-init -c /config/cloud/onboard_config.yaml",
+                        "pre_onboard_enabled": {
+                            "commands": 1
+                        },
+                        "runtime_params": {
+                            "secrets": 3,
+                            "metadata": 6
+                        },
+                        "vaults": {
+                            "aws": 1,
+                            "azure": 0,
+                            "gcp": 0,
+                            "hashicorp": 2
+                        },
+                        "userAgent": "f5-bigip-runtime-init/1.3.2",
+                        "extension_packages": {
+                            "do": "1.23.0",
+                            "fast": "1.11.0",
+                            "ilx": "0.1.0"
+                        },
+                        "extension_services": {
+                            "do": true,
+                            "as3": true
+                        },
+                        "post_onboard_enabled": {
+                            "commands": 3,
+                            "postHooks": 0
+                        },
+                        "result": "FAILURE",
+                        "resultSummary": "All operations finished successfully",
+                        "startTime": "2021-11-18T19:29:43.325Z",
+                        "endTime": "2021-11-18T19:29:43.387Z",
+                        "installParams": [
+                            {
+                                "key": "templateName",
+                                "value": "v1.1.0.0/examples/modules/bigip-standalone/bigip-standalone.yaml"
+                            }
+                        ]
+                    }
+                }
+            ]
+```
 
 
 ## Troubleshooting

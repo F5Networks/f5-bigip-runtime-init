@@ -97,7 +97,6 @@ hashicorp:
       type: Vault
       environment: hashicorp
       vaultServer: http://127.0.0.1:8200
-      namespace: ns1/
       secretsEngine: kv2
       secretId: secret/foo
       field: password
@@ -110,3 +109,4 @@ hashicorp:
         secretId:
           type: inline
           value: secret-id
+          unwrap: true

@@ -32,6 +32,7 @@ describe('Resolver Client', () => {
         nock.cleanAll();
         nock('http://169.254.169.254')
             .get('/latest/dynamic/instance-identity/document')
+            .times(10)
             .reply(200, {
                 "accountId" : "0000000001",
                 "architecture" : "x86_64",
@@ -61,6 +62,17 @@ describe('Resolver Client', () => {
                 "ramdiskId" : null,
                 "region" : "us-west-2",
                 "version" : "2017-09-30"
+            });
+        nock('http://169.254.169.254')
+            .put('/latest/api/token')
+            .times(10)
+            .reply(200, 'TEST_SESSION_TOKEN');
+        nock('http://169.254.169.254')
+            .get('/metadata/instance?api-version=2017-08-01')
+            .reply(200, {
+                'compute': {
+                    'subscriptionId': 'test_subscriptionId'
+                }
             });
 
         onboardActions = [
@@ -93,6 +105,19 @@ describe('Resolver Client', () => {
 
         runtimeParameters = [
             {
+                name: 'REGION',
+                type: 'url',
+                value: 'http://169.254.169.254/latest/dynamic/instance-identity/document',
+                query: 'region',
+                headers: [ { name: 'Content-Type', value: 'json' }, { name: 'method', value: 'GET' }, { name: 'X-aws-ec2-metadata-token', value: '{{{AWS_SESSION_TOKEN}}}' } ]
+            },
+            {
+                name: 'AWS_SESSION_TOKEN',
+                type: 'url',
+                value: 'http://169.254.169.254/latest/api/token',
+                headers: [ { name: 'Content-Type', value: 'json'}, { name: 'method', value: 'PUT'}, { name: 'X-aws-ec2-metadata-token-ttl-seconds', value: 21600} ]
+            },
+            {
                 name: 'AWS_PASS',
                 type: 'secret',
                 secretProvider: {
@@ -103,11 +128,13 @@ describe('Resolver Client', () => {
                 }
             },
             {
-                name: 'REGION',
-                type: 'url',
-                value: 'http://169.254.169.254/latest/dynamic/instance-identity/document',
-                query: 'region',
-                headers: [ { name: 'Content-Type', value: 'json'}]
+                name: 'AZURE_HOST_NAME',
+                type: 'metadata',
+                metadataProvider: {
+                    type: 'compute',
+                    environment: 'azure',
+                    field: 'name'
+                }
             },
             {
                 name: 'NETWORK_SIZE_URL',
@@ -127,15 +154,6 @@ describe('Resolver Client', () => {
                     secretId: 'this-secret',
                     field: 'sensitiveFieldName',
                     debug: true
-                }
-            },
-            {
-                name: 'AZURE_HOST_NAME',
-                type: 'metadata',
-                metadataProvider: {
-                    type: 'compute',
-                    environment: 'azure',
-                    field: 'name'
                 }
             },
             {
@@ -214,9 +232,9 @@ describe('Resolver Client', () => {
             };
             return Promise.resolve(cloudClient);
         });
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 6);
+                assert.strictEqual(Object.keys(results).length, 7);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AWS_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.AZURE_PASS, 'StrongPassword2010+');
@@ -233,20 +251,7 @@ describe('Resolver Client', () => {
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
             .times(3)
-            .reply(200,
-                {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"",
-                    "renewable":false,"lease_duration":0,"data":null,
-                    "wrap_info":null,"warnings":null,
-                    "auth":{"client_token":"this-is-test-token-value",
-                        "accessor":"DR8vhrYNUK7CrkRvextEn4CN",
-                        "policies":["default","test"],
-                        "token_policies":["default","test"],
-                        "metadata":{"role_name":"runtime-init-role"},
-                        "lease_duration":3600,"renewable":true,
-                        "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159",
-                        "token_type":"service",
-                        "orphan":true}
-                });
+            .reply(200, {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"", "renewable":false,"lease_duration":0,"data":null, "wrap_info":null,"warnings":null, "auth":{"client_token":"this-is-test-token-value", "accessor":"DR8vhrYNUK7CrkRvextEn4CN", "policies":["default","test"], "token_policies":["default","test"], "metadata":{"role_name":"runtime-init-role"}, "lease_duration":3600,"renewable":true, "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159", "token_type":"service", "orphan":true} });
         nock('http://1.1.1.1:8200')
             .get('/v1/kv/data/credential')
             .times(3)
@@ -271,7 +276,8 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: false
                         }
                     }
                 }
@@ -295,7 +301,8 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: false
                         }
                     }
                 }
@@ -319,13 +326,14 @@ describe('Resolver Client', () => {
                         },
                         secretId: {
                             type: 'inline',
-                            value: 'ewq-eq-eqw'
+                            value: 'ewq-eq-eqw',
+                            unwrap: false
                         }
                     }
                 }
             }
         ];
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.ok(Object.keys(results).length === 3);
                 assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT_01'], 'b1gAdminPazz');
@@ -334,14 +342,62 @@ describe('Resolver Client', () => {
             });
     });
 
+    it('should validate resolveRuntimeParameters object for hashicorp case', () => {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
+        logger = Logger.getLogger();
+        const resolver = new ResolverClient();
+        nock('http://1.1.1.1:8200')
+            .post('/v1/sys/wrapping/unwrap')
+            .reply(200, { "request_id": "794d6246-1349-cb90-dc31-befd0fbadf95", "lease_id": "", "renewable": false, "lease_duration": 0, "data": { "secret_id": "ewq-eq-eqw", "secret_id_accessor": "a26d5bc6-8088-3895-1372-58a311c4d83a" }, "wrap_info": null, "warnings": null, "auth": null });
+        nock('http://1.1.1.1:8200')
+            .post('/v1/auth/approle/login')
+            .reply(200, {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"", "renewable":false,"lease_duration":0,"data":null, "wrap_info":null,"warnings":null, "auth":{"client_token":"this-is-test-token-value", "accessor":"DR8vhrYNUK7CrkRvextEn4CN", "policies":["default","test"], "token_policies":["default","test"], "metadata":{"role_name":"runtime-init-role"}, "lease_duration":3600,"renewable":true, "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159", "token_type":"service", "orphan":true} });
+        nock('http://1.1.1.1:8200')
+            .get('/v1/kv/data/credential')
+            .reply(200, {"request_id":"fa302a64-0852-4245-1883-782fe8b5b504","lease_id":"","renewable":false,"lease_duration":0,"data":{"data":{"secret0":"b1gAdminPazz","secret1":"thisIsTestPassword123","secret2":"asdasfdar212@"},"metadata":{"created_time":"2021-08-08T12:16:00.931168619Z","deletion_time":"","destroyed":false,"version":1}},"wrap_info":null,"warnings":null,"auth":null});
+        runtimeParameters = [
+            {
+                name: 'SECRET_FROM_HASHICORP_VAULT',
+                type: 'secret',
+                secretProvider: {
+                    type: 'Vault',
+                    environment: 'hashicorp',
+                    vaultServer: 'http://1.1.1.1:8200',
+                    secretsEngine: 'kv2',
+                    secretPath: 'kv/data/credential',
+                    field: 'data',
+                    version: '1',
+                    authBackend: {
+                        type: 'approle',
+                        roleId: {
+                            type: 'inline',
+                            value: 'qweq-qweq-qwe'
+                        },
+                        secretId: {
+                            type: 'inline',
+                            value: 'ewq-eq-eqw',
+                            unwrap: true
+                        }
+                    }
+                }
+            }
+        ];
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'].secret0, 'b1gAdminPazz');
+                assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'].secret1, 'thisIsTestPassword123');
+                assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'].secret2, 'asdasfdar212@');
+            });
+    });
+
 
     it('should validate resolveRuntimeParameters no secret match', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 9);
+                assert.strictEqual(Object.keys(results).length, 10);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
@@ -357,9 +413,9 @@ describe('Resolver Client', () => {
             };
             return Promise.resolve(cloudClient);
         });
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 9);
+                assert.strictEqual(Object.keys(results).length, 10);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
                 assert.strictEqual(results.AZURE_GATEWAY_IP, '10.0.1.1');
@@ -373,7 +429,7 @@ describe('Resolver Client', () => {
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('');
         resolver._resolveUrl = sinon.stub().resolves('');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.strictEqual(Object.keys(results).length, 2);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
@@ -421,7 +477,7 @@ describe('Resolver Client', () => {
             }
         ];
 
-        resolver.resolveRuntimeParameters(runtimeParameters)
+        resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then(() => {
                 assert.ok(false);
             })
@@ -497,7 +553,7 @@ describe('Resolver Client', () => {
         nock('http://169.254.169.254')
             .get('/my-test')
             .reply(200, 'us-west');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => assert.strictEqual(results.REGION, 'us-west'))
             .catch(() => assert.ok(false))
     });
@@ -515,8 +571,7 @@ describe('Resolver Client', () => {
         nock('http://169.254.169.254')
             .get('/my-test-password')
             .reply(200, '9058358705045800063');
-        return resolver.resolveRuntimeParameters(runtimeParameters)
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => assert.strictEqual(results.TEST_PASSWORD, '9058358705045800063'))
-            //.catch(() => assert.ok(false))
     });
 });

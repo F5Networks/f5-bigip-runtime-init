@@ -112,6 +112,26 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
+          unwrap: false
+  - name: SECOND_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: data
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_wrapped_secret_id
+          unwrap: true
   - name: INSTANCE_ID
     type: url
     value: http://169.254.169.254/computeMetadata/v1/instance/id
@@ -223,9 +243,41 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://khanna.s3.amazonaws.com/gcp_do_template_w_vault.json
-      verifyTls: false
+      type: inline
+      value: 
+        schemaVersion: 1.0.0
+        class: Device
+        async: true
+        label: my BIG-IP declaration for declarative onboarding
+        Common:
+          class: Tenant
+          hostname: '{{{ HOST_NAME }}}.test'
+          myProvisioning:
+            class: Provision
+            ltm: nominal
+            asm: nominal
+          admin:
+            class: User
+            userType: regular
+            password: '{{ ADMIN_PASS }}'
+            shell: bash
+          vaultadmin:
+            class: User
+            userType: regular
+            password: '{{ ROOT_PASS }}'
+            shell: bash
+          vaultadmin2:
+            class: User
+            userType: regular
+            password: '{{ SECOND_PASS.bigiq_admin_password }}'
+            shell: bash
+            partitionAccess:
+              all-partitions:
+                role: admin
+          dbvars:
+            class: DbVariables
+            provision.extramb: 500
+            restjavad.useextramb: true
     - extensionType: as3
       type: url
       value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json

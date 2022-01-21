@@ -38,10 +38,45 @@ export class HashicorpVaultClient {
     }
 
     /**
+     * Does call to Hashicorp Vault for unwrapping wrapped secret ID
+     *
+     * @param token          - token to unwrap
+     * @param metadata       - metadata required for interacting with Hashicorp Vault
+     *
+     * @returns              - resolves with secret ID value
+     */
+    async _unwrapSecretId(token, secretMetadata): Promise<string> {
+        logger.info(`Unwrapping token...`);
+        const options: {
+            method: string;
+            headers?: any;
+            verifyTls?: boolean;
+            trustedCertBundles?: Array<string>;
+        } = {
+            method: 'POST',
+            headers: {
+                'X-Vault-Token': token
+            },
+            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true,
+            trustedCertBundles: secretMetadata.trustedCertBundles !== undefined ? secretMetadata.trustedCertBundles : undefined
+        };
+
+        const unwrapResponse = await this.utilsRef.retrier(utils.makeRequest,
+            [`${secretMetadata.secretProvider.vaultServer}/v${secretMetadata.secretProvider.version}/sys/wrapping/unwrap`,
+                options], {
+            thisContext: this,
+            maxRetries: constants.RETRY.SHORT_COUNT,
+            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+        });
+
+        return Promise.resolve(unwrapResponse.body.data.secret_id)
+    }
+
+    /**
      * Does login call to Hashicorp Vault for getting secure token
      *
      * @param secretMetadata          - metadata required for interacting with Hashicorp Vault
-     *
+     * @param secretMetadata          - metadata required for interacting with Hashicorp Vault
      *
      * @returns                       - resolves when login call is completed
      */
@@ -55,6 +90,7 @@ export class HashicorpVaultClient {
             headers?: any;
             body: any;
             verifyTls?: boolean;
+            trustedCertBundles?: Array<string>;
         } = {
             method: 'POST',
             headers: {},
@@ -62,9 +98,11 @@ export class HashicorpVaultClient {
                 role_id: this.roleId,
                 secret_id: this.secretId
             },
-            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true
+            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true,
+            trustedCertBundles: secretMetadata.trustedCertBundles !== undefined ? secretMetadata.trustedCertBundles : undefined
         };
-        const loginResponse = await utils.retrier(utils.makeRequest, [secretMetadata.secretProvider.vaultServer + '/v1/auth/approle/login', options], {
+        const appRolePath = secretMetadata.secretProvider.appRolePath !== undefined ? secretMetadata.secretProvider.appRolePath : '/v1/auth/approle/login'
+        const loginResponse = await utils.retrier(utils.makeRequest, [secretMetadata.secretProvider.vaultServer + appRolePath, options], {
             thisContext: this,
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
@@ -85,6 +123,7 @@ export class HashicorpVaultClient {
      * @param metadata             - role metadata
      * @param type                 - role or secret
      * @param options.verifyTls    - enables secure site verification
+     * @param options.trustedCertBundles        - list of paths to certificates bundles
      *
      *
      * @returns                    - resolves with role id value
@@ -99,7 +138,8 @@ export class HashicorpVaultClient {
                     [metadata.value,
                         {
                             method: 'GET',
-                            verifyTls: options.verifyTls !== undefined ? options.verifyTls : true
+                            verifyTls: options.verifyTls !== undefined ? options.verifyTls : true,
+                            trustedCertBundles: options.trustedCertBundles !== undefined ? options.trustedCertBundles : undefined
                         }], {
                         thisContext: this,
                         maxRetries: constants.RETRY.SHORT_COUNT,
@@ -120,8 +160,6 @@ export class HashicorpVaultClient {
                     } else {
                         this.roleId = JSON.parse(content).role_id;
                     }
-                } else {
-                    throw new Error(`Recieved invalid type while resolving id for hashicorp vault`);
                 }
             } catch (e){
                 logger.silly('Attempt to access RoleId/SecretId as JSON fields failed. Using received content as plain text');
@@ -129,8 +167,6 @@ export class HashicorpVaultClient {
                     this.secretId = content;
                 } else if (type === 'roleId') {
                     this.roleId = content;
-                } else {
-                    throw new Error(`Recieved invalid type while resolving id for hashicorp vault`);
                 }
             }
         } else {
@@ -138,8 +174,14 @@ export class HashicorpVaultClient {
                 this.secretId = metadata.value;
             } else if (type === 'roleId') {
                 this.roleId =  metadata.value;
-            } else {
-                throw new Error(`Recieved invalid type while resolving id for hashicorp vault`);
+            }
+        }
+        metadata.unwrap = metadata.unwrap !== undefined ? metadata.unwrap : true
+        if (type === 'secretId' && metadata.unwrap) {
+            try {
+                this.secretId = await this._unwrapSecretId(this.secretId, options);
+            } catch (e){
+                throw new Error(`Could not unwrap token`);
             }
         }
         return Promise.resolve();
@@ -154,17 +196,19 @@ export class HashicorpVaultClient {
      *
      * @returns                       - resolves when login call is completed
      */
-    async getSecret(secretMetadata): Promise<string> {
+    async getSecret(secretMetadata): Promise<any> {
         const options: {
             method: string;
             headers?: any;
             verifyTls?: boolean;
+            trustedCertBundles?: Array<string>;
         } = {
             method: 'GET',
             headers: {
                 'X-Vault-Token': this.clientToken
             },
-            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true
+            verifyTls: secretMetadata.verifyTls !== undefined ? secretMetadata.verifyTls : true,
+            trustedCertBundles: secretMetadata.trustedCertBundles !== undefined ? secretMetadata.trustedCertBundles : undefined,
         };
 
         const secretResponse = await this.utilsRef.retrier(utils.makeRequest,
@@ -174,7 +218,11 @@ export class HashicorpVaultClient {
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
         });
-        return Promise.resolve(secretResponse.body.data.data[secretMetadata.secretProvider.field])
+        if (secretMetadata.secretProvider.field === 'data') {
+            return Promise.resolve(secretResponse.body.data.data)
+        } else {
+            return Promise.resolve(secretResponse.body.data.data[secretMetadata.secretProvider.field])
+        }
     }
 
 }

@@ -31,7 +31,8 @@ describe('Cloud Client - Abstract', () => {
             'getMetadata',
             'init',
             'getCustomerId',
-            'getCloudName'
+            'getCloudName',
+            'getRegion'
         ];
         methods.forEach((func) => {
             assert.throws(

@@ -35,6 +35,14 @@ interface RuntimeParameter {
     ipcalc: string;
     secretProvider: {
         field: string;
+        environment: string;
+        type: string;
+    };
+    metadataProvider: {
+        environment: string;
+        type: string;
+        field: string;
+        index: number;
     };
 }
 
@@ -43,14 +51,17 @@ interface OnboardActions {
     name: string;
     commands: string[];
     verifyTls?: boolean;
+    trustedCertBundles?: Array<string>;
 }
 
 /** Resolver class */
 export class ResolverClient {
     utilsRef;
     getCloudProvider = getCloudProvider;
+    cloudClients;
     constructor(){
         this.utilsRef = utils;
+        this.cloudClients = {};
     }
 
     /**
@@ -62,11 +73,18 @@ export class ResolverClient {
      * @returns                 - resolves with map of runtime parameters
      */
     /* eslint-disable  @typescript-eslint/no-explicit-any */
-    async resolveRuntimeParameters(parameters: RuntimeParameter[]): Promise<any> {
+    async resolveRuntimeParameters(parameters: RuntimeParameter[], previousResults, controlNumber): Promise<any> {
         const results = {};
         const promises = [];
-        this._preProcessParametersValues(parameters);
+        const requiredOtherParameters = [];
+        await this._preProcessParametersValues(parameters);
         for (let i = 0; i < parameters.length; i += 1) {
+
+            if (JSON.stringify(parameters[i]).indexOf('{{{') !== -1 &&  JSON.stringify(parameters[i]).indexOf('}}}') !== -1) {
+                requiredOtherParameters.push(parameters[i]);
+                continue;
+            }
+
             if (parameters[i].type === 'static') {
                 if (parameters[i].ipcalc !== undefined && parameters[i].value.split('.').length === 4 ){
                     results[parameters[i].name] = this._resolveIpcalc(parameters[i].ipcalc, parameters[i].value, parameters[i].returnType);
@@ -94,14 +112,29 @@ export class ResolverClient {
         }
         if (promises.length > 0) {
             const resolvedParams = await Promise.all(promises);
-
             resolvedParams.forEach((item) => {
                 if (item.value && item.value !== '') {
                     results[item.name] = item.value;
                 }
             });
         }
-        return results;
+
+        const mergedResult = {};
+        for(const key in results) {
+            mergedResult[key] = results[key];
+        }
+        for(const key in previousResults){
+            mergedResult[key] = previousResults[key];
+        }
+
+        if (requiredOtherParameters.length > 0) {
+            // Require re-processing some parameters after rendering values
+            const updatedParameters = JSON.parse(await utils.renderData(JSON.stringify(requiredOtherParameters), mergedResult));
+            if (requiredOtherParameters.length !== controlNumber) {
+                return this.resolveRuntimeParameters(updatedParameters, mergedResult, requiredOtherParameters.length);
+            }
+        }
+        return mergedResult;
     }
 
     /**
@@ -145,7 +178,8 @@ export class ResolverClient {
                     if (actions[i].type === 'url') {
                         base64ScriptName = `${constants.CUSTOM_ONBOARD_CONFIG_DIR}${Buffer.from(`${actions[i].name}_${j}`).toString('base64')}`;
                         await this.utilsRef.downloadToFile(actions[i].commands[j], base64ScriptName, {
-                            verifyTls: 'verifyTls' in actions[i] ? actions[i].verifyTls : true
+                            verifyTls: 'verifyTls' in actions[i] ? actions[i].verifyTls : true,
+                            trustedCertBundles: 'trustedCertBundles' in actions[i] ? actions[i].trustedCertBundles : undefined
                         });
                     } else {
                         base64ScriptName = actions[i].commands[j];
@@ -196,18 +230,14 @@ export class ResolverClient {
      *
      * @returns                    - resolves with secret value
      */
-    async _resolveSecret(secretMetadata): Promise<string> {
+    async _resolveSecret(secretMetadata): Promise<any> {
         let secretValue;
         if (secretMetadata.secretProvider.environment === 'hashicorp') {
             const hashicorpVaultClient = new HashicorpVaultClient();
             await hashicorpVaultClient.login(secretMetadata);
             secretValue = await hashicorpVaultClient.getSecret(secretMetadata);
         } else {
-            const _cloudClient = await this.getCloudProvider(
-                secretMetadata.secretProvider.environment,
-                { logger }
-            );
-            await _cloudClient.init();
+            const _cloudClient = this.cloudClients[secretMetadata.secretProvider.environment];
             secretValue = await _cloudClient.getSecret(
                 secretMetadata.secretProvider.secretId,
                 secretMetadata.secretProvider
@@ -225,11 +255,7 @@ export class ResolverClient {
      * @returns                    - resolves with metadata value
      */
     async _resolveMetadata(metadataMetadata): Promise<string> {
-        const _cloudClient = await this.getCloudProvider(
-            metadataMetadata.metadataProvider.environment,
-            { logger }
-        );
-        await _cloudClient.init();
+        const _cloudClient = this.cloudClients[metadataMetadata.metadataProvider.environment];
         const metadataValue = await _cloudClient.getMetadata(
             metadataMetadata.metadataProvider.field,
             metadataMetadata.metadataProvider
@@ -245,14 +271,20 @@ export class ResolverClient {
             method: string;
             headers?: any;
             verifyTls?: boolean;
+            trustedCertBundles?: Array<string>;
         } = {
             method: 'GET',
             headers: {},
-            verifyTls: metadata.verifyTls !== undefined ? metadata.verifyTls : true
+            verifyTls: metadata.verifyTls !== undefined ? metadata.verifyTls : true,
+            trustedCertBundles: metadata.trustedCertBundles !== undefined ? metadata.trustedCertBundles : undefined
         };
         if (metadata.headers !== undefined && metadata.headers.length > 0) {
             metadata.headers.forEach((header) => {
-                options.headers[header.name] = header.value;
+                if (header.name === 'method') {
+                    options.method = header.value;
+                } else {
+                    options.headers[header.name] = header.value;
+                }
             });
         }
         const response = await utils.retrier(utils.makeRequest, [metadata.value, options], {
@@ -305,11 +337,32 @@ export class ResolverClient {
      *
      *
      */
-    _preProcessParametersValues(parameters: RuntimeParameter[]): void {
+    async _preProcessParametersValues(parameters: RuntimeParameter[]): Promise<void> {
         for (let i = 0; i < parameters.length; i += 1) {
+            // Step #1: Update logger with all sensitive fields
             if (parameters[i].type === 'secret') {
                 if (parameters[i].secretProvider.field !== undefined) {
                     constants.LOGGER.FIELDS_TO_HIDE.push(parameters[i].secretProvider.field);
+                }
+            }
+            // Step #2: Initialize all CloudClients to optimize Cloud APIs usage to eliminate unnecessary calls (i.e. for AWS init method does two calls to fetch token and iddoc each time)
+            if (parameters[i].type === 'metadata') {
+                if (!(parameters[i].metadataProvider.environment in this.cloudClients)) {
+                    const _cloudClient = await this.getCloudProvider(
+                        parameters[i].metadataProvider.environment,
+                        { logger }
+                    );
+                    await _cloudClient.init();
+                    this.cloudClients[parameters[i].metadataProvider.environment] = _cloudClient;
+                }
+            } else if(parameters[i].type === 'secret' && parameters[i].secretProvider.environment !== 'hashicorp') {
+                if (!(parameters[i].secretProvider.environment in this.cloudClients)) {
+                    const _cloudClient = await this.getCloudProvider(
+                        parameters[i].secretProvider.environment,
+                        { logger }
+                    );
+                    await _cloudClient.init();
+                    this.cloudClients[parameters[i].secretProvider.environment] = _cloudClient;
                 }
             }
         }

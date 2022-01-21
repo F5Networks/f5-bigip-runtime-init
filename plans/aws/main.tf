@@ -295,6 +295,11 @@ resource "aws_instance" "vm0" {
     network_interface_id = "${aws_network_interface.external1.id}"
     device_index = 1
   }
+  // Enables IMDSv2 only; uncomment this when BIGIP will support IMDSv2
+//  metadata_options {
+//    http_endpoint = "enabled"
+//    http_tokens = "required"
+//  }
   iam_instance_profile = "${aws_iam_instance_profile.instance_profile.name}"
   user_data = "${data.template_file.user_data_vm0.rendered}"
   tags = merge(var.global_tags, {Name="runtime-init-vm0-${module.utils.env_prefix}"})

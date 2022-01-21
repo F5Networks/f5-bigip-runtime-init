@@ -60,7 +60,7 @@ Type: `array`
  - **_Items_**
  - Type: `object`
  - <i id="#/items">path: #/items</i>
- - This schema accepts additional properties.
+ - This schema <u>does not</u> accept additional properties.
  - **_Properties_**
 	 - <b id="#/items/properties/name">name</b> `required`
 		 - Type: `string`
@@ -90,6 +90,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 	 - <b id="#/items/properties/ipcalc">ipcalc</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/ipcalc">path: #/items/properties/ipcalc</i>
@@ -111,7 +118,7 @@ Type: `array`
 	 - <b id="#/items/properties/secretProvider">secretProvider</b>
 		 - Type: `object`
 		 - <i id="#/items/properties/secretProvider">path: #/items/properties/secretProvider</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/items/properties/secretProvider/properties/environment">environment</b> `required`
 				 - Type: `string`
@@ -130,6 +137,13 @@ Type: `array`
 					 3. _"default"_
 					 4. _"KeyVault"_
 					 5. _"Vault"_
+			 - <b id="#/items/properties/secretProvider/properties/appRolePath">appRolePath</b>
+				 - _URL path of the App Role, if it's unique or if it includes the namespace_
+				 - Type: `string`
+				 - <i id="#/items/properties/secretProvider/properties/appRolePath">path: #/items/properties/secretProvider/properties/appRolePath</i>
+				 - Example values: 
+					 1. _"/v1/auth/approle/login"_
+					 2. _"/v1/MyNameSpace/auth/approle/login"_
 			 - <b id="#/items/properties/secretProvider/properties/secretId">secretId</b>
 				 - _ID or name of the secret in the secret manager of the specified environment_
 				 - Type: `string`
@@ -219,6 +233,13 @@ Type: `array`
 									 1. _"9c9b84a6-d2e1-11eb-b8bc-0242ac130003"_
 									 2. _"file:///path/to/secret-id"_
 									 3. _"https://path/to/secret-id"_
+							 - <b id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/unwrap">unwrap</b>
+								 - _For unwrapping a wrapped secret ID_
+								 - Type: `boolean`
+								 - <i id="#/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/unwrap">path: #/items/properties/secretProvider/properties/authBackend/properties/secretId/properties/unwrap</i>
+								 - Example values: 
+									 1. _true_
+									 2. _false_
 			 - <b id="#/items/properties/secretProvider/properties/field">field</b>
 				 - _field name to which secret value is mapped to_
 				 - Type: `string`
@@ -229,7 +250,7 @@ Type: `array`
 	 - <b id="#/items/properties/metadataProvider">metadataProvider</b>
 		 - Type: `object`
 		 - <i id="#/items/properties/metadataProvider">path: #/items/properties/metadataProvider</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/items/properties/metadataProvider/properties/environment">environment</b> `required`
 				 - Type: `string`
@@ -385,7 +406,6 @@ hashicorp:
         type: Vault
         environment: hashicorp
         vaultServer: 'http://127.0.0.1:8200'
-        namespace: ns1/
         secretsEngine: kv2
         secretId: secret/foo
         field: password
@@ -398,6 +418,7 @@ hashicorp:
           secretId:
             type: inline
             value: secret-id
+            unwrap: true
 
 ```
 ***
@@ -442,6 +463,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 
 
 ### post_onboard_enabled: Configuration Examples
@@ -518,6 +546,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 
 
 ### pre_onboard_enabled: Configuration Examples
@@ -599,6 +634,13 @@ Type: `array`
 		 - Example values: 
 			 1. _true_
 			 2. _false_
+	 - <b id="#/items/properties/trustedCertBundles">trustedCertBundles</b>
+		 - _List of paths to certificate bundles to use for all https requests_
+		 - Type: `array`
+		 - <i id="#/items/properties/trustedCertBundles">path: #/items/properties/trustedCertBundles</i>
+		 - Example values: 
+			 1. _"/path/to/cert.pem"_
+			 2. _"/path/to/another_cert.pem"_
 
 
 ### bigip_ready_enabled: Configuration Examples
@@ -640,7 +682,7 @@ Type: `object`
 
 <i id="#">path: #</i>
 
-This schema accepts additional properties.
+This schema <u>does not</u> accept additional properties.
 
 **_Properties_**
 
@@ -651,7 +693,7 @@ This schema accepts additional properties.
 		 - **_Items_**
 		 - Type: `object`
 		 - <i id="#/properties/install_operations/items">path: #/properties/install_operations/items</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/properties/install_operations/items/properties/extensionType">extensionType</b> `required`
 				 - Type: `string`
@@ -682,6 +724,13 @@ This schema accepts additional properties.
 				 - Example values: 
 					 1. _true_
 					 2. _false_
+			 - <b id="#/properties/install_operations/items/properties/trustedCertBundles">trustedCertBundles</b>
+				 - _List of paths to certificate bundles to use for all https requests_
+				 - Type: `array`
+				 - <i id="#/properties/install_operations/items/properties/trustedCertBundles">path: #/properties/install_operations/items/properties/trustedCertBundles</i>
+				 - Example values: 
+					 1. _"/path/to/cert.pem"_
+					 2. _"/path/to/another_cert.pem"_
 			 - <b id="#/properties/install_operations/items/properties/extensionUrl">extensionUrl</b>
 				 - Type: `string`
 				 - <i id="#/properties/install_operations/items/properties/extensionUrl">path: #/properties/install_operations/items/properties/extensionUrl</i>
@@ -704,59 +753,59 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.23.0
+        extensionVersion: 1.26.0
       - extensionType: as3
-        extensionVersion: 3.30.0
+        extensionVersion: 3.33.0
       - extensionType: fast
-        extensionVersion: 1.11.0
+        extensionVersion: 1.14.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.23.0
+        extensionVersion: 1.26.0
       - extensionType: as3
-        extensionVersion: 3.30.0
+        extensionVersion: 3.33.0
       - extensionType: fast
-        extensionVersion: 1.11.0
+        extensionVersion: 1.14.0
 hashed:
   description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.23.0
-        extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
+        extensionVersion: 1.26.0
+        extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
       - extensionType: as3
-        extensionVersion: 3.30.0
-        extensionHash: 47cc7bb6962caf356716e7596448336302d1d977715b6147a74a142dc43b391b
+        extensionVersion: 3.33.0
+        extensionHash: 368d7b22738fe707655ca3a104c7c79c5c185eb07021e41eebe0e19d70ca63ee
       - extensionType: fast
-        extensionVersion: 1.11.0
-        extensionHash: 1816159f73f684d0b81f60341d7eda4907b2bbf72ca80cae2dcae2d1b059d3ce
+        extensionVersion: 1.14.0
+        extensionHash: dafa15dbcc41742866dcffb4fc2ebe72615b7e47d6443311af3630e15f49e7c9
 url:
   description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.23.0
+        extensionVersion: 1.26.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.23.0/f5-declarative-onboarding-1.23.0-4.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.26.0/f5-declarative-onboarding-1.26.0-5.noarch.rpm
       - extensionType: as3
-        extensionVersion: 3.30.0
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.30.0-5.noarch.rpm'
+        extensionVersion: 3.33.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.33.0-4.noarch.rpm'
       - extensionType: fast
-        extensionVersion: 1.11.0
+        extensionVersion: 1.14.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.11.0/f5-appsvcs-templates-1.11.0-1.noarch.rpm
+          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.14.0/f5-appsvcs-templates-1.14.0-1.noarch.rpm
 ilx:
   description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.23.0
+        extensionVersion: 1.26.0
       - extensionType: as3
-        extensionVersion: 3.30.0
+        extensionVersion: 3.33.0
       - extensionType: fast
-        extensionVersion: 1.11.0
+        extensionVersion: 1.14.0
       - extensionType: ilx
         extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
         extensionVersion: 1.0.0
@@ -772,7 +821,7 @@ Type: `object`
 
 <i id="#">path: #</i>
 
-This schema accepts additional properties.
+This schema <u>does not</u> accept additional properties.
 
 **_Properties_**
 
@@ -783,7 +832,7 @@ This schema accepts additional properties.
 		 - **_Items_**
 		 - Type: `object`
 		 - <i id="#/properties/service_operations/items">path: #/properties/service_operations/items</i>
-		 - This schema accepts additional properties.
+		 - This schema <u>does not</u> accept additional properties.
 		 - **_Properties_**
 			 - <b id="#/properties/service_operations/items/properties/extensionType">extensionType</b>
 				 - Type: `string`
@@ -815,6 +864,13 @@ This schema accepts additional properties.
 				 - Example values: 
 					 1. _true_
 					 2. _false_
+			 - <b id="#/properties/service_operations/items/properties/trustedCertBundles">trustedCertBundles</b>
+				 - _List of paths to certificate bundles to use for all https requests_
+				 - Type: `array`
+				 - <i id="#/properties/service_operations/items/properties/trustedCertBundles">path: #/properties/service_operations/items/properties/trustedCertBundles</i>
+				 - Example values: 
+					 1. _"/path/to/cert.pem"_
+					 2. _"/path/to/another_cert.pem"_
 
 
 ### extension_services: Configuration Examples
@@ -937,14 +993,14 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
-          extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
+          extensionVersion: 1.26.0
+          extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
         - extensionType: as3
-          extensionVersion: 3.30.0
-          extensionHash: 47cc7bb6962caf356716e7596448336302d1d977715b6147a74a142dc43b391b
+          extensionVersion: 3.33.0
+          extensionHash: 6adcf16a7143c0625a36388ccd2972fa3647d98ad8147cf81692628bf1cd39e2
         - extensionType: fast
-          extensionVersion: 1.11.0
-          extensionHash: 1816159f73f684d0b81f60341d7eda4907b2bbf72ca80cae2dcae2d1b059d3ce
+          extensionVersion: 1.14.0
+          extensionHash: dafa15dbcc41742866dcffb4fc2ebe72615b7e47d6443311af3630e15f49e7c9
     extension_services:
       service_operations:
         - extensionType: as3
@@ -966,9 +1022,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.23.0-4.noarch.rpm
-          extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
-          extensionVersion: 1.23.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.26.0-5.noarch.rpm
+          extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
+          extensionVersion: 1.26.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -1001,11 +1057,11 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1044,11 +1100,11 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1083,11 +1139,11 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1145,11 +1201,11 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1172,11 +1228,11 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1229,11 +1285,11 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1338,11 +1394,11 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1355,11 +1411,11 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1378,12 +1434,12 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
-          extensionHash: bfe88c7cf3fdb24adc4070590c27488e203351fc808d57ae6bbb79b615d66d27
+          extensionVersion: 1.26.0
+          extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
         - extensionType: as3
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm
-          extensionVersion: 3.30.0
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.33.0/f5-appsvcs-3.33.0-4.noarch.rpm
+          extensionVersion: 3.33.0
           verifyTls: false
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
@@ -1471,11 +1527,11 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1491,10 +1547,28 @@ example_13:
           type: Vault
           environment: hashicorp
           vaultServer: 'http://127.0.0.1:8200'
-          namespace: ns1/
           secretsEngine: kv2
           secretId: secret/foo
           field: password
+          version: 1
+          authBackend:
+            type: approle
+            roleId:
+              type: url
+              value: 'file:///path/to/role-id'
+            secretId:
+              type: inline
+              value: secret-id
+              unwrap: true
+      - name: SECOND_PASS
+        type: secret
+        secretProvider:
+          type: Vault
+          environment: hashicorp
+          vaultServer: 'http://127.0.0.1:8200'
+          secretsEngine: kv2
+          secretId: secret/bar
+          field: data
           version: 1
           authBackend:
             type: approle
@@ -1513,15 +1587,39 @@ example_13:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.23.0
+          extensionVersion: 1.26.0
         - extensionType: as3
-          extensionVersion: 3.30.0
+          extensionVersion: 3.33.0
         - extensionType: fast
-          extensionVersion: 1.11.0
+          extensionVersion: 1.14.0
     extension_services:
       service_operations:
         - extensionType: do
-          type: url
-          value: 'file:///examples/declarations/example_7_do.json'
+          type: inline
+          value:
+            schemaVersion: 1.0.0
+            class: Device
+            async: true
+            label: my BIG-IP declaration for declarative onboarding
+            Common:
+              class: Tenant
+              hostname: '{{ HOST_NAME }}.local'
+              admin:
+                class: User
+                userType: regular
+                password: '{{ ADMIN_PASS }}'
+                shell: bash
+              admin2:
+                class: User
+                userType: regular
+                password: '{{ SECOND_PASS.admin2_password }}'
+                shell: bash
+                partitionAccess:
+                  all-partitions:
+                    role: admin
+              dbvars:
+                class: DbVariables
+                provision.extramb: 500
+                restjavad.useextramb: true
 
 ```

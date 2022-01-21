@@ -49,6 +49,11 @@
                         "type": "boolean",
                         "examples": ["true", "false"]
                     },
+                    "trustedCertBundles": {
+                        "description": "List of paths to certificate bundles to use for all https requests",
+                        "type": "array",
+                        "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
+                    },
                     "ipcalc": {
                         "type": "string",
                         "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last", "address"]
@@ -67,6 +72,11 @@
                             "type": {
                                 "type": "string",
                                 "enum": ["SecretsManager", "SecretManager", "default", "KeyVault", "Vault"]
+                            },
+                            "appRolePath": {
+                                "description": "URL path of the App Role, if it's unique or if it includes the namespace",
+                                "type": "string",
+                                "examples": ["/v1/auth/approle/login", "/v1/MyNameSpace/auth/approle/login"]
                             },
                             "secretId": {
                                 "description": "ID or name of the secret in the secret manager of the specified environment",
@@ -144,6 +154,11 @@
                                                 "description": "Hashicorp Vault approle secret ID",
                                                 "type": "string",
                                                 "examples": ["9c9b84a6-d2e1-11eb-b8bc-0242ac130003", "file:///path/to/secret-id", "https://path/to/secret-id"]
+                                            },
+                                            "unwrap": {
+                                                "description": "For unwrapping a wrapped secret ID",
+                                                "type": "boolean",
+                                                "examples": ["true", "false"]
                                             }
                                         },
                                         "allOf": [
@@ -285,6 +300,11 @@
                         "description": "For enabling secure site verification",
                         "type": "boolean",
                         "examples": ["true", "false"]
+                    },
+                    "trustedCertBundles": {
+                        "description": "List of paths to certificate bundles to use for all https requests",
+                        "type": "array",
+                        "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
                     }
                 }
             }
@@ -314,6 +334,11 @@
                         "description": "For enabling secure site verification",
                         "type": "boolean",
                         "examples": ["true", "false"]
+                    },
+                    "trustedCertBundles": {
+                        "description": "List of paths to certificate bundles to use for all https requests",
+                        "type": "array",
+                        "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
                     }
                 }
             }
@@ -343,6 +368,11 @@
                         "description": "For enabling secure site verification",
                         "type": "boolean",
                         "examples": ["true", "false"]
+                    },
+                    "trustedCertBundles": {
+                        "description": "List of paths to certificate bundles to use for all https requests",
+                        "type": "array",
+                        "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
                     }
                 }
             }
@@ -373,6 +403,11 @@
                                 "description": "For enabling secure site verification",
                                 "type": "boolean",
                                 "examples": ["true", "false"]
+                            },
+                            "trustedCertBundles": {
+                                "description": "List of paths to certificate bundles to use for all https requests",
+                                "type": "array",
+                                "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
                             },
                             "extensionUrl": {
                                 "type": "string",
@@ -429,6 +464,11 @@
                                 "description": "For enabling secure site verification",
                                 "type": "boolean",
                                 "examples": ["true", "false"]
+                            },
+                            "trustedCertBundles": {
+                                "description": "List of paths to certificate bundles to use for all https requests",
+                                "type": "array",
+                                "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
                             }
                         },
                         "allOf": [
@@ -472,6 +512,11 @@
                     "description": "For enabling secure site verification",
                     "type": "boolean",
                     "examples": ["true", "false"]
+                },
+                "trustedCertBundles": {
+                    "description": "List of paths to certificate bundles to use for all https requests",
+                    "type": "array",
+                    "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
                 },
                 "properties": {
                     "description": "Custom properties supplied by the user",
