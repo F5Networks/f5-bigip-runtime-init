@@ -27,6 +27,7 @@ export class GcpCloudClient extends AbstractCloudClient {
     secretmanager: any;
     google: GoogleApis;
     projectId: string;
+    region: string;
     authToken: any;
     constructor(options?: any) {
         const secretmanager = google.secretmanager('v1');
@@ -46,6 +47,10 @@ export class GcpCloudClient extends AbstractCloudClient {
             })
             .then((result) => {
                 this.authToken = result;
+                return this._getRegion();
+            })
+            .then((region) => {
+                this.region = region;
                 return Promise.resolve();
             })
             .catch(err => Promise.reject(err))
@@ -82,6 +87,15 @@ export class GcpCloudClient extends AbstractCloudClient {
                 const message = `Error getting secret from ${secretId} ${err.message}`;
                 return Promise.reject(new Error(message));
             });
+    }
+
+    /**
+     * Returns cloud region name
+     *
+     * @returns {String}
+     */
+    getRegion(): string {
+        return this.region;
     }
 
     /**
@@ -213,6 +227,21 @@ export class GcpCloudClient extends AbstractCloudClient {
                 const message = `Error getting auth token ${err.message}`;
                 return Promise.reject(new Error(message));
             });
+    }
+
+
+     async _getRegion(): Promise<string> {
+        const zone = await utils.makeRequest(
+            `http://metadata.google.internal/computeMetadata/v1/instance/zone`,
+            {
+                method: 'GET',
+                headers: {
+                    'Metadata-Flavor': 'Google'
+                }
+            }
+        );
+
+        return zone.body.split('/')[zone.body.split('/').length - 1];
     }
 }
 

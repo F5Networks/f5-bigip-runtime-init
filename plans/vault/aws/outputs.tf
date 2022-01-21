@@ -46,3 +46,13 @@ output "secret_id" {
   description = "Command to retrieve the app role secret-id"
   value       = "ssh -l ubuntu ${aws_instance.vault-server[0].public_ip} -i ${var.key_name}.pem 'cat /tmp/secret-id | jq -r .data.secret_id'"
 }
+
+output "wrapped_secret_id" {
+  description = "Command to retrieve the app role wrapped secret-id"
+  value       = "ssh -l ubuntu ${aws_instance.vault-server[0].public_ip} -i ${var.key_name}.pem 'cat /tmp/wrapped-secret-id | jq -r .wrap_info.token'"
+}
+
+output "wrapped_secret_id_2" {
+  description = "Command to retrieve the second app role wrapped secret-id"
+  value       = "ssh -l ubuntu ${aws_instance.vault-server[0].public_ip} -i ${var.key_name}.pem 'cat /tmp/wrapped-secret-id-2 | jq -r .wrap_info.token'"
+}

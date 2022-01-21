@@ -28,6 +28,7 @@ export interface CloudClient {
     getMetadata(field: string, options?: { type?: string; index?: number }): Promise<string>;
     getCloudName(): string;
     getCustomerId(): string;
+    getRegion(): string;
 }
 
 /**
@@ -88,5 +89,14 @@ export class AbstractCloudClient implements CloudClient{
      */
     getCloudName(): string {
         throw new Error('getCloudName method must be implemented in child class!');
+    }
+
+    /**
+     * Returns cloud region
+     *
+     * @returns {String}
+     */
+    getRegion(): string {
+        throw new Error('getRegion method must be implemented in child class!');
     }
 }

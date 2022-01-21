@@ -136,7 +136,7 @@ export default class Logger{
                     winston.format.printf(info => {
                         let message = info.message ? info.message : '';
                         for (const fieldName of constants.LOGGER.FIELDS_TO_HIDE) {
-                            message = message.replace(new RegExp(`"${fieldName}":.[^"]+`, 'g'), `"${fieldName}":"********`);
+                            message = message.replace(new RegExp(`"${fieldName}":\{[^}]*\}`, 'g'), `"${fieldName}":"********"`).replace(new RegExp(`"${fieldName}":.[^"]+`, 'g'), `"${fieldName}":"********`);
                         }
                         return `{"message":${message},"level":"${info.level}","pid":"${process.pid}"}`
                     })
@@ -148,7 +148,7 @@ export default class Logger{
             winston.format.printf(info => {
                 let message = info.message ? info.message : '';
                 for (const fieldName of constants.LOGGER.FIELDS_TO_HIDE) {
-                    message = message.replace(new RegExp(`"${fieldName}":.[^"]+`, 'g'), `"${fieldName}":"********`);
+                    message = message.replace(new RegExp(`"${fieldName}":\{[^}]*\}`, 'g'), `"${fieldName}":"********"`).replace(new RegExp(`"${fieldName}":.[^"]+`, 'g'), `"${fieldName}":"********`);
                 }
                 return `${info.timestamp} [${process.pid}]: ${info.level}: ${message}`
             })

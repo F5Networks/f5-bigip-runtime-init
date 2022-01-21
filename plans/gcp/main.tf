@@ -18,6 +18,7 @@ provider "google" {
   project = "${var.project_id}"
   region  = "${var.region}"
   zone    = "${var.primary_zone}"
+  version = "3.33"
 }
 
 data "google_compute_image" "f5-bigip-image" {

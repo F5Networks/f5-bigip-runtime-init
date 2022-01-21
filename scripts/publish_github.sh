@@ -47,7 +47,7 @@ git push origin $RELEASE_VERSION
 
 
 echo "*** Creating release using GIT APIs"
-git config --global github.token $GIT_HUB_API_TOKEN_AK
+git config --global github.token $GITHUB_API_TOKEN
 
 echo "*** Getting release info"
 release_description=$(curl -sk --header "PRIVATE-TOKEN: $GITLAB_PRIVATE_TOKEN_AK" "https://${GITLAB_API_URL_RUNTIME_INIT}/releases/$CI_COMMIT_REF_NAME" | jq .description)
@@ -69,19 +69,19 @@ EOF
 }
 
 echo "*** Create release $version"
-release_id=$(curl -X POST -d "$(generate_post_data)" "https://api.github.com/repos/f5networks/f5-bigip-runtime-init/releases?access_token=$GIT_HUB_API_TOKEN_AK" | jq .id)
+release_id=$(curl -H "Authorization: token $GITHUB_API_TOKEN" -X POST -d "$(generate_post_data)" "https://api.github.com/repos/f5networks/f5-bigip-runtime-init/releases" | jq .id)
 
 echo "*** Uploading self-executable to release page"
 echo "*** Calculating content length in bytes for self-executable"
 ARTIFACT_NAME=f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run
 ARTIFACT_LOCATION=./dist/f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run
 CONTENT_LENGTH=$(wc -c < $ARTIFACT_LOCATION)
-curl --header "Content-Length:$CONTENT_LENGTH" --header "Content-Type:application/zip" --upload-file $ARTIFACT_LOCATION -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=$ARTIFACT_NAME&access_token=$GIT_HUB_API_TOKEN_AK"
+curl --header "Authorization: token $GITHUB_API_TOKEN" --header "Content-Length:$CONTENT_LENGTH" --header "Content-Type:application/zip" --upload-file $ARTIFACT_LOCATION -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=$ARTIFACT_NAME"
 
 echo "*** Uploading self-executable SHA256 to release page"
 echo "*** Calculating self-executable SHA256"
 cd dist/
 sha256sum f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run > f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256
-curl --header "Content-Type:application/txt" --upload-file f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256 -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256&access_token=$GIT_HUB_API_TOKEN_AK"
+curl --header "Authorization: token $GITHUB_API_TOKEN" --header "Content-Type:application/txt" --upload-file f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256 -X POST "https://uploads.github.com/repos/f5networks/f5-bigip-runtime-init/releases/$release_id/assets?name=f5-bigip-runtime-init-$RELEASE_VERSION-$RELEASE_BUILD.gz.run.sha256"
 
 echo "*** Publishing to github is completed."

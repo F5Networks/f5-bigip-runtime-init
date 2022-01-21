@@ -101,6 +101,14 @@ describe('Provider: AWS', () => {
             assert.ok(!err);
         }));
 
+    it('should login using new vaultadmin2 password', () => funcUtils.getAuthToken(firstDut.ip, firstDut.port, 'vaultadmin2', 'thisIsTestPassword123')
+        .then((data) => {
+            assert.ok('token' in data);
+        })
+        .catch((err) => {
+            assert.ok(!err);
+        }));
+
     it('should confirm hostname was updated using DO', () => {
         assert.strictEqual(testHostName, 'ip-' + testMgmtIp + '.' + env.region + '.compute.internal');
     });
@@ -108,5 +116,4 @@ describe('Provider: AWS', () => {
     it ('should validate that runtime init resolve region correctly', () => {
         assert.ok(!JSON.stringify(as3Declaration).includes('{{{REGION}}}'))
     });
-
 });

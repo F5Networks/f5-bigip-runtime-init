@@ -28,6 +28,29 @@ controls:
   logToJson: true
   extensionInstallDelayInMs: 6000
 runtime_parameters:
+  - name: REGION
+    type: url
+    value: http://169.254.169.254/latest/dynamic/instance-identity/document
+    query: region
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: func-test
+      - name: X-aws-ec2-metadata-token
+        value: "{{{AWS_SESSION_TOKEN}}}"
+  - name: AWS_SESSION_TOKEN
+    type: url
+    value: http://169.254.169.254/latest/api/token
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: func-test
+      - name: method
+        value: PUT
+      - name: X-aws-ec2-metadata-token-ttl-seconds
+        value: 21600
   - name: ADMIN_PASS
     type: secret
     secretProvider:
@@ -54,6 +77,26 @@ runtime_parameters:
         secretId:
           type: inline
           value: vault_secret_id
+          unwrap: false
+  - name: SECOND_PASS
+    type: secret
+    secretProvider:
+      type: Vault
+      environment: hashicorp
+      vaultServer: vault_server_public_http
+      secretsEngine: kv2
+      secretPath: kv/data/credential
+      field: data
+      version: "1"
+      authBackend:
+        type: approle
+        roleId:
+          type: inline
+          value: vault_app_role
+        secretId:
+          type: inline
+          value: vault_wrapped_secret_id
+          unwrap: true
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -97,7 +140,7 @@ runtime_parameters:
       type: network
       field: subnet-ipv4-cidr-block
       index: 0
-  - name: REGION
+  - name: REGION02
     type: url
     value: http://169.254.169.254/latest/dynamic/instance-identity/document
     query: region
@@ -106,6 +149,8 @@ runtime_parameters:
         value: json
       - name: User-Agent
         value: func-test
+      - name: X-aws-ec2-metadata-token
+        value: "{{{AWS_SESSION_TOKEN}}}"
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
@@ -166,8 +211,71 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://khanna.s3.amazonaws.com/aws_do_template_w_root.json
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        async: true
+        label: my BIG-IP declaration for declarative onboarding
+        Common:
+          class: Tenant
+          mySystem:
+            class: System
+            hostname: '{{ HOST_NAME }}'
+            cliInactivityTimeout: 1200
+            consoleInactivityTimeout: 1200
+            autoPhonehome: true
+          myDns:
+            class: DNS
+            nameServers:
+              - 8.8.8.8
+          myNtp:
+            class: NTP
+            servers:
+              - 0.pool.ntp.org
+            timezone: UTC
+          admin:
+            class: User
+            userType: regular
+            password: '{{ ADMIN_PASS }}'
+            shell: bash
+          vaultadmin:
+            class: User
+            userType: regular
+            password: '{{ ROOT_PASS }}'
+            shell: bash
+            partitionAccess:
+              all-partitions:
+                role: admin
+          vaultadmin2:
+            class: User
+            userType: regular
+            password: '{{ SECOND_PASS.bigiq_admin_password }}'
+            shell: bash
+            partitionAccess:
+              all-partitions:
+                role: admin
+          myProvisioning:
+            class: Provision
+            ltm: nominal
+            asm: nominal
+          external:
+            class: VLAN
+            tag: 4094
+            mtu: 1500
+            interfaces:
+              - name: '1.1'
+                tagged: true
+          external-self:
+            class: SelfIp
+            address: '{{{ SELF_IP_EXTERNAL }}}'
+            vlan: external
+            allowService: default
+            trafficGroup: traffic-group-local-only
+          dbvars:
+            class: DbVariables
+            provision.extramb: 500
+            restjavad.useextramb: true
     - extensionType: as3
       type: url
       value: https://f5-cft.s3.amazonaws.com/autoscale_as3_aws.json

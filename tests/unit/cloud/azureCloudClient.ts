@@ -27,7 +27,11 @@ describe('CloudClient - Azure', () => {
     beforeEach(() => {
         cloudClient = new AzureCloudClient();
         cloudClient._credentials = sinon.stub();
-        cloudClient.customerId = '1234543';
+        cloudClient.subscriptionId = '1234543';
+        cloudClient._metadata = {
+            subscriptionId: '1234543',
+            location: 'us-west'
+        };
         cloudClient.SecretClient = sinon.stub().returns({
             getSecret: sinon.stub().resolves({ value: 'StrongPassword2010!' })
         });
@@ -50,6 +54,10 @@ describe('CloudClient - Azure', () => {
 
     it('should validate getCustomerId', () => {
         assert.strictEqual(cloudClient.getCustomerId(), '1234543');
+    });
+
+    it('should validate getRegion', () => {
+        assert.strictEqual(cloudClient.getRegion(), 'us-west');
     });
 
     it('should validate getCloudName', () => {

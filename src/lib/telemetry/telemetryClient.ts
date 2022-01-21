@@ -58,6 +58,7 @@ export class TelemetryClient {
     cloudInfo: {
       cloudName: string;
       customerId: string;
+      region: string;
     };
     installParameters: [{
         key: string;
@@ -86,6 +87,10 @@ export class TelemetryClient {
             };
         };
     };
+    templateInfo: {
+        name: string;
+        version: string;
+    };
     operation: {
         clientRequestId: string;
         configFile: string;
@@ -104,6 +109,7 @@ export class TelemetryClient {
             aws: number;
             azure: number;
             gcp: number;
+            hashicorp: number;
         };
         extensionPackages: any; /* eslint-disable-line @typescript-eslint/no-explicit-any */
         extensionServices: any; /* eslint-disable-line @typescript-eslint/no-explicit-any */
@@ -132,6 +138,7 @@ export class TelemetryClient {
         };
         this.operation = undefined;
         this.systemInfo = undefined;
+        this.templateInfo = undefined;
         this.cloudInfo = undefined;
         this.installParameters = undefined;
     }
@@ -146,8 +153,9 @@ export class TelemetryClient {
         this.systemInfo = await this._getSystemInfo();
         logger.info(JSON.stringify(this.systemInfo));
         this.cloudInfo = await this._getCloudInfo();
+        this.templateInfo = await this._getTemplateInfo();
         this.operation = this._getOperationInfo(options);
-        this.installParameters = this._getInstallParameters(options);
+        this.installParameters = this._getInstallParameters();
     }
 
     _getOperationInfo(options): {
@@ -168,6 +176,7 @@ export class TelemetryClient {
             aws: number;
             azure: number;
             gcp: number;
+            hashicorp: number;
         };
         extensionPackages: any; /* eslint-disable-line @typescript-eslint/no-explicit-any */
         extensionServices: any; /* eslint-disable-line @typescript-eslint/no-explicit-any */
@@ -197,12 +206,17 @@ export class TelemetryClient {
         logger.debug(`Telemetry Type: ${this.telemetryType}`);
         logger.debug(`Telemetry Version: ${this.telemetryTypeVersion}`);
         logger.debug(`F5 TEEM Payload: ${JSON.stringify(payload)}`);
-        await teemClient.report(this.telemetryType, this.telemetryTypeVersion, payload, {});
+        const record = new F5Teem.Record(this.telemetryType, this.telemetryTypeVersion);
+        await record.addPlatformInfo();
+        await record.addRegKey();
+        await record.calculateAssetId();
+        await record.addJsonObject(payload);
+        await teemClient.reportRecord(record);
     }
 
     createTelemetryData(): any{  /* eslint-disable-line @typescript-eslint/no-explicit-any */
         const telemetryData = {
-            "platform": {
+            "platformDetails": {
                 "platform": this.systemInfo.product,
                 "platformVersion": this.systemInfo.version,
                 "platformId": this.systemInfo.platformId,
@@ -212,11 +226,6 @@ export class TelemetryClient {
                     "diskSize": this.systemInfo.diskSize,
                 },
                 "nicCount": this.systemInfo.nicCount,
-                "regKey": this.systemInfo.regKey,
-                "deployment": {
-                    "cloud": this.cloudInfo.cloudName,
-                    "customerId": this.cloudInfo.customerId
-                },
                 "modules": this.systemInfo.provisionedModules,
                 "packages": this.systemInfo.installedPackages,
                 "environment": {
@@ -227,6 +236,15 @@ export class TelemetryClient {
                         "ssh": this.systemInfo.environment.libraries.ssh
                     }
                 }
+            },
+            "templateInfo": {
+                "install": this.operation.resultSummary,
+                "templateName": this.templateInfo.name,
+                "templateVersion": this.templateInfo.version,
+                "nicCount": this.systemInfo.nicCount,
+                "cloud": this.cloudInfo.cloudName,
+                "region": this.cloudInfo.region,
+                "localization": getUserLocale()
             },
             "product": {
                 "version": constants.VERSION,
@@ -255,7 +273,7 @@ export class TelemetryClient {
         return telemetryData;
     }
 
-    _getInstallParameters (config): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
+    _getInstallParameters (): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
         const result = [];
         let data = [];
         if (fs.existsSync(constants.TELEMETRY_INSTALL_DATA_FILE)) {
@@ -270,6 +288,26 @@ export class TelemetryClient {
             }
         });
         return result;
+    }
+
+    _getTemplateInfo(): any {
+        const results = {
+            name: 'UNDEFINED',
+            version: 'UNDEFINED'
+        };
+        let data = [];
+        if (fs.existsSync(constants.TELEMETRY_INSTALL_DATA_FILE)) {
+            data = fs.readFileSync(constants.TELEMETRY_INSTALL_DATA_FILE, 'utf8').split('\n');
+        }
+        data.forEach((item) => {
+            if (item && item.indexOf(':') != -1) {
+                if (item.split(':')[0] == 'templateName') {
+                    results.version = item.split(':')[1].split("/")[0];
+                    results.name = item.split(':')[1].split("/")[item.split(':')[1].split("/").length - 1];
+                }
+            }
+        });
+        return results;
     }
 
     _getExtensionPackages(config): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
@@ -300,12 +338,14 @@ export class TelemetryClient {
         aws: number;
         azure: number;
         gcp: number;
+        hashicorp: number;
     } {
         const runtimeParams = config.runtime_parameters || [];
         const results = {
             aws: 0,
             azure: 0,
-            gcp: 0
+            gcp: 0,
+            hashicorp: 0
         };
         if (runtimeParams.length) {
             for (let i=0; i < runtimeParams.length; i++){
@@ -374,6 +414,7 @@ export class TelemetryClient {
     async _getCloudInfo(): Promise<{
         cloudName: string;
         customerId: string;
+        region: string;
     }> {
         for(const cloudName in constants.CLOUDS) {
             try {
@@ -388,12 +429,14 @@ export class TelemetryClient {
             logger.error('telemetry was not able to get Cloud metadata. Perhaps, public cloud integrations are disabled.');
             return {
                 cloudName: undefined,
-                customerId: undefined
+                customerId: undefined,
+                region: undefined
             }
         }
         return {
             cloudName: this._cloudClient.getCloudName(),
-            customerId: this._cloudClient.getCustomerId()
+            customerId: this._cloudClient.getCustomerId(),
+            region: this._cloudClient.getRegion()
         }
     }
 
@@ -675,6 +718,7 @@ export class TelemetryClient {
                     'Content-Type': 'application/json'
                 },
                 verifyTls: 'verifyTls' in postHookConfig ? postHookConfig.verifyTls : true,
+                trustedCertBundles: 'trustedCertBundles' in postHookConfig ? postHookConfig.trustedCertBundles : undefined,
                 body: systemInfo
             }
         );

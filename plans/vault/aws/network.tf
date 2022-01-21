@@ -1,5 +1,8 @@
 module "vault_demo_vpc" {
   source = "terraform-aws-modules/vpc/aws"
+  // pinning version to fix experimental variable issue
+  // in vpc demo module 3.10.0 + tf 0.12
+  version = "3.7.0"
 
   name = "${var.environment_name}-vpc"
   cidr = "10.0.0.0/16"

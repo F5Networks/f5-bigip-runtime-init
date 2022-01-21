@@ -42,6 +42,7 @@ class MetadataClient {
     infoEndpoint: string;
     metadata: any;
     verifyTls: boolean;
+    trustedCertBundles: Array<string>;
     /**
      *
      * @param  component         [toolchain component]
@@ -50,12 +51,13 @@ class MetadataClient {
      * @param  metadata          [toolchain metadata]
      * @param  infoEndpoint      [toolchain package verification endpoint]
      */
-    constructor(component: string, version: string, hash: string, url: string, infoEndpoint: string, verifyTls: boolean) {
+    constructor(component: string, version: string, hash: string, url: string, infoEndpoint: string, verifyTls: boolean, trustedCertBundles: Array<string>) {
         this.component = component;
         this.version = version;
         this.hash = hash;
         this.url = url;
         this.verifyTls = verifyTls;
+        this.trustedCertBundles = trustedCertBundles;
         this.infoEndpoint = infoEndpoint;
         this.metadata = this._loadMetadata();
     }
@@ -74,6 +76,10 @@ class MetadataClient {
 
     _getVerifyTls(): boolean {
         return this.verifyTls;
+    }
+
+    _getTrustedCertBundles(): Array<string> {
+        return this.trustedCertBundles;
     }
 
     /**
@@ -218,7 +224,8 @@ class PackageClient {
                     },
                     body: fs.createReadStream(file, { start, end }),
                     bodyType: 'raw',
-                    verifyTls: this._metadataClient._getVerifyTls()
+                    verifyTls: this._metadataClient._getVerifyTls(),
+                    trustedCertBundles: this._metadataClient._getTrustedCertBundles()
                 }
             );
 
@@ -247,7 +254,8 @@ class PackageClient {
                     headers: {
                         Authorization: this.authHeader
                     },
-                    verifyTls: this._metadataClient._getVerifyTls()
+                    verifyTls: this._metadataClient._getVerifyTls(),
+                    trustedCertBundles: this._metadataClient._getTrustedCertBundles()
                 });
 
             if (response.body.status === 'FINISHED') {
@@ -276,7 +284,8 @@ class PackageClient {
                     operation: 'INSTALL',
                     packageFilePath: packagePath
                 },
-                verifyTls: this._metadataClient._getVerifyTls()
+                verifyTls: this._metadataClient._getVerifyTls(),
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
             }
         );
 
@@ -322,7 +331,7 @@ class PackageClient {
             logger.silly(`Downloading file: ${downloadUrl}`);
             await utils.retrier(
                 utils.downloadToFile,
-                [downloadUrl, tmpFile, { verifyTls: this._metadataClient._getVerifyTls() }],
+                [downloadUrl, tmpFile, { verifyTls: this._metadataClient._getVerifyTls(), trustedCertBundles: this._metadataClient._getTrustedCertBundles() }],
                 {
                     thisContext: this,
                     maxRetries: constants.RETRY.SHORT_COUNT,
@@ -370,6 +379,7 @@ class PackageClient {
                     Authorization: this.authHeader
                 },
                 verifyTls: this._metadataClient._getVerifyTls(),
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
                 body: payload
             });
     }
@@ -389,7 +399,8 @@ class PackageClient {
                 headers: {
                     Authorization: this.authHeader
                 },
-                verifyTls: this._metadataClient._getVerifyTls()
+                verifyTls: this._metadataClient._getVerifyTls(),
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
             });
         if ('items' in installedPackages.body && installedPackages.body.items) {
             installedPackages.body.items.forEach((item) => {
@@ -453,7 +464,8 @@ class ServiceClient {
                 headers: {
                     Authorization: this.authHeader
                 },
-                verifyTls: this._metadataClient._getVerifyTls()
+                verifyTls: this._metadataClient._getVerifyTls(),
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
             });
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
@@ -501,7 +513,8 @@ class ServiceClient {
                 headers: {
                     Authorization: this.authHeader
                 },
-                verifyTls: this._metadataClient._getVerifyTls()
+                verifyTls: this._metadataClient._getVerifyTls(),
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
             }
         );
 
@@ -549,7 +562,8 @@ class ServiceClient {
                     Authorization: this.authHeader
                 },
                 body: config,
-                verifyTls: this._metadataClient._getVerifyTls()
+                verifyTls: this._metadataClient._getVerifyTls(),
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
             }
         );
         if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED) {
@@ -590,6 +604,7 @@ export class ToolChainClient {
     maxRetries: number;
     retryInterval: number;
     verifyTls: boolean;
+    trustedCertBundles: Array<string>
     /**
      *
      * @param mgmtClient    [management client]
@@ -609,8 +624,9 @@ export class ToolChainClient {
         this.hash = options.extensionHash ? options.extensionHash : undefined;
         this.url = options.extensionUrl ? options.extensionUrl : undefined;
         this.verifyTls = 'verifyTls' in options ? options.verifyTls : true;
+        this.trustedCertBundles = 'trustedCertBundles' in options ? options.trustedCertBundles : undefined;
         this.infoEndpoint = options.extensionVerificationEndpoint ? options.extensionVerificationEndpoint : undefined;
-        this._metadataClient = new MetadataClient(this.component, this.version, this.hash, this.url, this.infoEndpoint, this.verifyTls);
+        this._metadataClient = new MetadataClient(this.component, this.version, this.hash, this.url, this.infoEndpoint, this.verifyTls, this.trustedCertBundles);
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
     }

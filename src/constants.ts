@@ -75,7 +75,8 @@ export const LOGGER = {
         "md5SignaturePassphrase",
         "client_token",
         "roleId",
-        "secretId"
+        "secretId",
+        "secret_id"
     ],
     ENDPOINTS_TO_HIDE_RESPONSE: [
         "/v1/auth/approle/login"
