@@ -325,13 +325,13 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.25.0
+      extensionVersion: 1.27.0
     - extensionType: as3
-      extensionVersion: 3.32.0
+      extensionVersion: 3.34.0
     - extensionType: fast
-      extensionVersion: 1.13.0
+      extensionVersion: 1.15.0
     - extensionType: ts
-      extensionVersion: 1.24.0
+      extensionVersion: 1.26.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -427,13 +427,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.25.0
+      extensionVersion: 1.27.0
     - extensionType: as3
-      extensionVersion: 3.32.0
+      extensionVersion: 3.34.0
     - extensionType: fast
-      extensionVersion: 1.13.0
+      extensionVersion: 1.15.0
     - extensionType: ts
-      extensionVersion: 1.24.0
+      extensionVersion: 1.26.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -581,13 +581,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.25.0
+      extensionVersion: 1.27.0
     - extensionType: as3
-      extensionVersion: 3.32.0
+      extensionVersion: 3.34.0
     - extensionType: fast
-      extensionVersion: 1.13.0
+      extensionVersion: 1.15.0
     - extensionType: ts
-      extensionVersion: 1.24.0
+      extensionVersion: 1.26.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -755,6 +755,18 @@ There are a few types of parameters:
               field: subnet-ipv4-cidr-block
               index: 0
     ```
+    For fetching AWS Metadata, Runtime Init allows to use URI type by providing uri value for needed metadata. By default, Runtime Init uses AWS IMDSv2 to get AWS metadata:
+    ```yaml
+        runtime_parameters:
+          - name: ACCOUNT_ID
+            type: metadata
+            metadataProvider:
+              environment: aws
+              type: uri
+              value: /latest/dynamic/instance-identity/document
+              query: accountId
+    ```    
+
     In a case when returned metadata is in form  IPv4 CIDR block (i.e. 10.0.0.5/24), it can be transformed using ipcalc functionality:
     
     The following example uses ipcalc to get the first useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as GATEWAY.
