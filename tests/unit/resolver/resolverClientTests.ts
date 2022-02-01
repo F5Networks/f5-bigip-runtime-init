@@ -209,7 +209,17 @@ describe('Resolver Client', () => {
                 type: 'static',
                 value: '192.168.1.22/24',
                 ipcalc: 'size'
-            }
+            },
+            {
+                name: 'TEST_ACCOUNT_ID',
+                type: 'metadata',
+                metadataProvider: {
+                    type: 'uri',
+                    environment: 'aws',
+                    value: '/latest/dynamic/instance-identity/document',
+                    query: 'accountId'
+                }
+            },
         ];
     });
 
@@ -241,6 +251,32 @@ describe('Resolver Client', () => {
                 assert.strictEqual(results.REGION, 'us-west-2');
                 assert.strictEqual(results.NETWORK_SIZE_URL, 256);
                 assert.strictEqual(results.NETWORK_SIZE_STATIC, 256);
+            });
+    });
+
+    it('should validate resolveRuntimeParameters for metadataProvider uri type', () => {
+        runtimeParameters = [
+            {
+                name: 'TEST_ACCOUNT_ID',
+                type: 'metadata',
+                metadataProvider: {
+                    type: 'uri',
+                    environment: 'aws',
+                    value: '/latest/dynamic/instance-identity/document',
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getMetadata: sinon.stub().resolves("1111")
+            };
+            return Promise.resolve(cloudClient);
+        });
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.TEST_ACCOUNT_ID, '1111');
             });
     });
 
@@ -397,7 +433,7 @@ describe('Resolver Client', () => {
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 10);
+                assert.strictEqual(Object.keys(results).length, 11);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
@@ -415,7 +451,7 @@ describe('Resolver Client', () => {
         });
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 10);
+                assert.strictEqual(Object.keys(results).length, 11);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
                 assert.strictEqual(results.AZURE_GATEWAY_IP, '10.0.1.1');

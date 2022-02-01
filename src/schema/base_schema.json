@@ -208,11 +208,19 @@
                             },
                             "type": {
                                 "type": "string",
-                                "enum": ["network", "compute"]
+                                "enum": ["network", "compute", "uri"]
                             },
                             "field": {
                               	"type": "string",
                                 "examples": ["name", "hostname", "ipv4", "local-ipv4s", "subnet-ipv4-cidr-block"]
+                            },
+                            "value": {
+                                "type": "string",
+                                "examples": ["/latest/dynamic/instance-identity/document", "/latest/api/token"]
+                            },
+                            "query": {
+                              "type": "string",
+                              "examples": ["region", "accountId"]
                             },
                             "ipcalc": {
                                 "type": "string",
@@ -227,6 +235,10 @@
                             {
                                 "if": { "properties": { "type": { "const": "compute" }, "environment": { "const": "aws" } } },
                                 "then": { "properties": { "field": { "type": "string", "enum": ["hostname"] } }, "required": ["field"] }
+                            },
+                            {
+                                "if": { "properties": { "type": { "const": "uri" }, "environment": { "const": "aws" } } },
+                                "then": { "properties": { "value": { "type": "string" } }, "required": ["value"] }
                             },
                             {
                                 "if": { "properties": { "type": { "const": "compute" }, "environment": { "const": "azure" } } },

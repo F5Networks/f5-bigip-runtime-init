@@ -22,11 +22,11 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.25.0
+      extensionVersion: 1.27.0
     - extensionType: as3
-      extensionVersion: 3.32.0
+      extensionVersion: 3.34.0
     - extensionType: fast
-      extensionVersion: 1.13.0
+      extensionVersion: 1.15.0
 extension_services:
   service_operations:
     - extensionType: do

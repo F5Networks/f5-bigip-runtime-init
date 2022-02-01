@@ -101,8 +101,8 @@ runtime_parameters:
     type: metadata
     metadataProvider:
       environment: aws
-      type: compute
-      field: hostname
+      type: uri
+      value: /latest/meta-data/hostname
   - name: SELF_IP_EXTERNAL
     type: metadata
     metadataProvider:
@@ -151,6 +151,13 @@ runtime_parameters:
         value: func-test
       - name: X-aws-ec2-metadata-token
         value: "{{{AWS_SESSION_TOKEN}}}"
+  - name: ACCOUNT_ID
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/dynamic/instance-identity/document
+      query: accountId
 pre_onboard_enabled:
   - name: provision_rest
     type: inline

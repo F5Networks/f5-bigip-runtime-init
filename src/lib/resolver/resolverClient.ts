@@ -256,8 +256,9 @@ export class ResolverClient {
      */
     async _resolveMetadata(metadataMetadata): Promise<string> {
         const _cloudClient = this.cloudClients[metadataMetadata.metadataProvider.environment];
+        const _metadataField = metadataMetadata.metadataProvider.value || metadataMetadata.metadataProvider.field;
         const metadataValue = await _cloudClient.getMetadata(
-            metadataMetadata.metadataProvider.field,
+            _metadataField,
             metadataMetadata.metadataProvider
         );
         if (metadataMetadata.metadataProvider.ipcalc !== undefined && metadataValue.split('.').length === 4 ){
