@@ -95,7 +95,7 @@ Based on the content of the provided YAML or JSON conifguration file, F5 BIG-IP 
 
 - Download, verify, and install F5 Automation Toolchain components (DO, AS3, FAST, TS, and CFE) from package metadata, URLs, or local files
 - Download, verify, and install custom iApp LX packages from URLs or local files
-- Accept Automation Toolchain declarations from URLs or local files
+- Accept Automation Toolchain declarations from URLs or local files (must be valid JSON or YAML declarations)
 - Get secrets from cloud provider secret management APIs (Azure KeyVault, AWS Secret Manager, GCP Secrets Manager)
 - Get select attributes from cloud provider instance and network metadata
 - Render valid Automation Toolchain declarations based on rendered runtime variables (such as secrets and metadata attributes above) and provided declarations
