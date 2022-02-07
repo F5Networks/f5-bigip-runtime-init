@@ -450,6 +450,54 @@ describe('CloudClient - AWS', () => {
             });
     });
 
+    it('should validate getTagValue method call', () => {
+        cloudClient._ec2 = sinon.stub();
+        cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({
+            promise(): Promise<any> {
+                return Promise.resolve({ Tags: [{Value:"testValue"}]});
+            }
+        }));
+        cloudClient.getTagValue('myTestKeyName', {})
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, 'testValue');
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
+
+
+    it('should validate getTagValue method call when no matching Tags', () => {
+        cloudClient._ec2 = sinon.stub();
+        cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({
+            promise(): Promise<any> {
+                return Promise.resolve({ Tags: []});
+            }
+        }));
+        cloudClient.getTagValue('myTestKeyName', {})
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, '');
+            })
+            .catch((err) => {
+                assert.fail();
+            });
+    });
+
+    it('should validate getTagValue method call when no Tags property recieved', () => {
+        cloudClient._ec2 = sinon.stub();
+        cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({
+            promise(): Promise<any> {
+                return Promise.resolve({});
+            }
+        }));
+        cloudClient.getTagValue('myTestKeyName', {})
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, '');
+            })
+            .catch((err) => {
+                assert.fail();
+            });
+    });
 
     it('should validate getMetadata rejection when type is uri and with query', () => {
         cloudClient._metadata = sinon.stub();

@@ -74,6 +74,15 @@ export class AbstractCloudClient implements CloudClient{
     }
 
     /**
+     * Gets vm tag value
+     *
+     * @param tagProvider metadata - function options
+     */
+    getTagValue(key: string): Promise<string> {
+        throw new Error('getTagValue method must be implemented in child class!');
+    }
+
+    /**
      * Returns customer id
      *
      * @returns {String}

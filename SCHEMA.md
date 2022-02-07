@@ -76,6 +76,7 @@ Type: `array`
 			 2. _"secret"_
 			 3. _"metadata"_
 			 4. _"url"_
+			 5. _"tag"_
 	 - <b id="#/items/properties/returnType">returnType</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/returnType">path: #/items/properties/returnType</i>
@@ -307,6 +308,25 @@ Type: `array`
 					 1. _"0"_
 					 2. _"1"_
 					 3. _"2"_
+	 - <b id="#/items/properties/tagProvider">tagProvider</b>
+		 - Type: `object`
+		 - <i id="#/items/properties/tagProvider">path: #/items/properties/tagProvider</i>
+		 - This schema <u>does not</u> accept additional properties.
+		 - **_Properties_**
+			 - <b id="#/items/properties/tagProvider/properties/environment">environment</b> `required`
+				 - Type: `string`
+				 - <i id="#/items/properties/tagProvider/properties/environment">path: #/items/properties/tagProvider/properties/environment</i>
+				 - The value is restricted to the following: 
+					 1. _"gcp"_
+					 2. _"aws"_
+					 3. _"azure"_
+			 - <b id="#/items/properties/tagProvider/properties/key">key</b> `required`
+				 - Type: `string`
+				 - <i id="#/items/properties/tagProvider/properties/key">path: #/items/properties/tagProvider/properties/key</i>
+				 - Example values: 
+					 1. _"hostname"_
+					 2. _"id"_
+					 3. _"date"_
 	 - <b id="#/items/properties/query">query</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/query">path: #/items/properties/query</i>

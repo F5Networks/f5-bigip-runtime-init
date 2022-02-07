@@ -115,6 +115,22 @@ export function verifyHash(file: string, extensionHash: string): boolean {
     return true;
 }
 
+
+/**
+ * Read file content
+ *
+ * @param file location
+ *
+ * @returns true/false based on hash verification result
+ */
+export function readFileContent(file: string): string {
+    try{
+        return fs.readFileSync(file, 'utf8').trim();
+    } catch {
+        return ''
+    }
+}
+
 /**
  * Base64 encoder/decoder
  *

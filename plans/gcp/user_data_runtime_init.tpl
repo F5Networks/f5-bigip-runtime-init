@@ -89,6 +89,11 @@ runtime_parameters:
     headers:
        - name: Metadata-Flavor
          value: Google
+  - name: TEST_TAG
+    type: tag
+    tagProvider:
+      environment: gcp
+      key: test_key
 extension_packages:
   install_operations:
     - extensionType: do

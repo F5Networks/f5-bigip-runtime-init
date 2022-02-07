@@ -111,6 +111,31 @@ describe('Util', () => {
         });
     });
 
+    describe('readFileContent', () => {
+        it('should validate readFileContent when file exists', () => {
+            mock({
+                'fake/dir': {
+                    'fake.txt': '12345'
+                }
+            });
+
+            const file = 'fake/dir/fake.txt';
+            const response = util.readFileContent(file);
+
+            assert.strictEqual(response, '12345');
+            mock.restore();
+        });
+
+        it('should validate readFileContent when file does not exist', () => {
+            const file = 'fake/dir/fake.txt';
+            const response = util.readFileContent(file);
+
+            assert.strictEqual(response, '');
+            mock.restore();
+        });
+
+    });
+
     describe('verifyHash', () => {
         it('should return true with valid extension hash inputs', () => {
             mock({
