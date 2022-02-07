@@ -574,6 +574,16 @@ There are a few types of parameters:
               vaultUrl: https://my-keyvault.vault.azure.net
               secretId: mySecret01
       ```
+      
+  The type:url also allows to provide local file location using "file://" schema; the example below demonstrates how to get paramter value from /config/cloud/paramter-file.txt file:
+  
+   ```yaml
+        runtime_parameters:
+          - name: SOME_PARAM
+            type: url
+            value: file:///config/cloud/paramter-file.txt 
+  ```      
+    
   * secret (Hashicorp Vault) - fetches secret from Hashicorp Vault using App Role authentication
 
     The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples). 
@@ -712,6 +722,30 @@ There are a few types of parameters:
        * broadcast - The blocks broadcast address (eg: 192.168.1.0/24 => 192.168.1.255).
        * first     - First useable address.
        * last      - Last useable address.
+
+  * tag - fetches tag value from public cloud virtual machine resource; the example below demonstrates how to fetch value for tag, named as "Name", applied to EC2 instance: 
+  
+      ```yaml
+          runtime_parameters:
+            - name: TAG_VALUE
+              type: metadata
+              tagProvider:
+                environment: aws
+                key: Name
+     ```
+    Note that AWS and GCP cloud requires additional permissions in order to access virtual machines' tags:
+    
+    * AWS:
+    
+        ```text
+          "ec2:DescribeTags"
+        ```
+    * GCP:
+    
+        ```text
+          "compute.instances.get"
+        ```    
+    
 
   * static - defines a static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
       ```yaml

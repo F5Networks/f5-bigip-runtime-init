@@ -31,6 +31,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     instanceId: string;
     customerId: string;
     _sessionToken: string;
+    _ec2: AWS.EC2;
 
     constructor(options?: {
         logger?: Logger;
@@ -56,6 +57,7 @@ export class AwsCloudClient extends AbstractCloudClient {
                 this.region = metadata.region;
                 this.instanceId = metadata.instanceId;
                 AWS.config.update({ region: this.region });
+                this._ec2 = new AWS.EC2();
                 this.secretsManager = new AWS.SecretsManager();
                 return Promise.resolve();
             })
@@ -103,6 +105,33 @@ export class AwsCloudClient extends AbstractCloudClient {
         }
 
         return '';
+    }
+
+    /**
+     * Gets value for AWS EC2 Tag
+     *
+     * @param key                           - Tag key name
+     *
+     * @returns {Promise}
+     */
+    async getTagValue(key: string):  Promise<string> {
+        const params = {
+            Filters: [
+                {
+                    Name: 'resource-id',
+                    Values: [this.instanceId]
+                },
+                {
+                    Name: 'key',
+                    Values: [key]
+                }
+            ]
+        };
+        const response = await this._ec2.describeTags(params).promise();
+        if (response.Tags && response.Tags.length) {
+            return response.Tags[0].Value;
+        }
+        return  '';
     }
 
     /**

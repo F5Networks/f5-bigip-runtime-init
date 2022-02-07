@@ -158,12 +158,26 @@ runtime_parameters:
       type: uri
       value: /latest/dynamic/instance-identity/document
       query: accountId
+  - name: NAME_TAG
+    type: tag
+    tagProvider:
+      environment: aws
+      key: Name
+  - name: TEST_TYPE_FILE
+    type: url
+    value: file:///tmp/pre_onboard_test_param.txt
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+  - name: create_local_parameter
+    type: inline
+    commands:
+      - touch /tmp/pre_onboard_test_param.txt
+      - chmod 777 /tmp/pre_onboard_test_param.txt
+      - echo "test-value" > /tmp/pre_onboard_test_param.txt
 bigip_ready_enabled:
   - name: provision_asm
     type: inline

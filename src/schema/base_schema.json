@@ -38,7 +38,7 @@
                     },
                     "type": {
                         "type": "string",
-                        "enum": ["static", "secret", "metadata", "url"]
+                        "enum": ["static", "secret", "metadata", "url", "tag"]
                     },
                     "returnType": {
                         "type": "string",
@@ -211,7 +211,7 @@
                                 "enum": ["network", "compute", "uri"]
                             },
                             "field": {
-                              	"type": "string",
+                                "type": "string",
                                 "examples": ["name", "hostname", "ipv4", "local-ipv4s", "subnet-ipv4-cidr-block"]
                             },
                             "value": {
@@ -219,15 +219,15 @@
                                 "examples": ["/latest/dynamic/instance-identity/document", "/latest/api/token"]
                             },
                             "query": {
-                              "type": "string",
-                              "examples": ["region", "accountId"]
+                                "type": "string",
+                                "examples": ["region", "accountId"]
                             },
                             "ipcalc": {
                                 "type": "string",
                                 "enum": [ "base", "mask", "bitmask", "hostmask", "broadcast", "size", "first", "last", "address"]
                             },
                             "index": {
-                              	"type": "integer",
+                                "type": "integer",
                                 "examples": ["0", "1", "2"]
                             }
                         },
@@ -262,6 +262,21 @@
                             }
                         ],
                         "required": ["environment", "type"],
+                        "additionalProperties": false
+                    },
+                    "tagProvider": {
+                        "type": "object",
+                        "properties": {
+                            "environment": {
+                                "type": "string",
+                                "enum": ["gcp", "aws", "azure"]
+                            },
+                            "key": {
+                                "type": "string",
+                                "examples": ["hostname", "id", "date"]
+                            }
+                        },
+                        "required": ["environment", "key"],
                         "additionalProperties": false
                     },
                     "query": {
