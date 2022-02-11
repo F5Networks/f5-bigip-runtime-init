@@ -12,6 +12,7 @@
 import assert from 'assert';
 import sinon from 'sinon';
 import nock from 'nock';
+import mock from 'mock-fs';
 import { ResolverClient } from '../../../src/lib/resolver/resolverClient';
 import Logger from '../../../src/lib/logger';
 sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
@@ -25,7 +26,8 @@ describe('Resolver Client', () => {
         Object.keys(require.cache)
             .forEach((key) => {
                 delete require.cache[key];
-            });
+        });
+        mock.restore();
     });
 
     beforeEach(() => {
@@ -209,7 +211,31 @@ describe('Resolver Client', () => {
                 type: 'static',
                 value: '192.168.1.22/24',
                 ipcalc: 'size'
+            },
+            {
+                name: 'TEST_ACCOUNT_ID',
+                type: 'metadata',
+                metadataProvider: {
+                    type: 'uri',
+                    environment: 'aws',
+                    value: '/latest/dynamic/instance-identity/document',
+                    query: 'accountId'
+                }
+            },
+            {
+                name: 'TEST_TAG',
+                type: 'tag',
+                tagProvider: {
+                    environment: 'aws',
+                    key: 'testKey',
+                }
+            },
+            {
+                name: 'TEST_URL',
+                type: 'url',
+                value: 'file:///local-directory/local-file.txt'
             }
+
         ];
     });
 
@@ -228,19 +254,49 @@ describe('Resolver Client', () => {
             const cloudClient = {
                 init: sinon.stub(),
                 getSecret: sinon.stub().resolves('StrongPassword2010+'),
-                getMetadata: sinon.stub().resolves('')
+                getMetadata: sinon.stub().resolves(''),
+                getTagValue: sinon.stub().resolves('testValue')
             };
             return Promise.resolve(cloudClient);
         });
+        resolver.utilsRef.readFileContent = sinon.stub().returns('testValue');
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 7);
+                assert.strictEqual(Object.keys(results).length, 9);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AWS_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.AZURE_PASS, 'StrongPassword2010+');
                 assert.strictEqual(results.REGION, 'us-west-2');
                 assert.strictEqual(results.NETWORK_SIZE_URL, 256);
                 assert.strictEqual(results.NETWORK_SIZE_STATIC, 256);
+                assert.strictEqual(results.TEST_TAG, 'testValue');
+            });
+    });
+
+    it('should validate resolveRuntimeParameters for metadataProvider uri type', () => {
+        runtimeParameters = [
+            {
+                name: 'TEST_ACCOUNT_ID',
+                type: 'metadata',
+                metadataProvider: {
+                    type: 'uri',
+                    environment: 'aws',
+                    value: '/latest/dynamic/instance-identity/document',
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getMetadata: sinon.stub().resolves("1111"),
+                getTagValue: sinon.stub().resolves('')
+            };
+            return Promise.resolve(cloudClient);
+        });
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.TEST_ACCOUNT_ID, '1111');
             });
     });
 
@@ -397,7 +453,7 @@ describe('Resolver Client', () => {
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 10);
+                assert.strictEqual(Object.keys(results).length, 12);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_HOST_NAME, 'ru65wrde-vm0');
             });
@@ -409,13 +465,14 @@ describe('Resolver Client', () => {
         resolver.getCloudProvider = sinon.stub().callsFake(() => {
             const cloudClient = {
                 init: sinon.stub(),
-                getMetadata: sinon.stub().resolves('10.0.1.4/24')
+                getMetadata: sinon.stub().resolves('10.0.1.4/24'),
+                getTagValue: sinon.stub().resolves('')
             };
             return Promise.resolve(cloudClient);
         });
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 10);
+                assert.strictEqual(Object.keys(results).length, 12);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.AZURE_SELF_IP, '10.0.1.4/24');
                 assert.strictEqual(results.AZURE_GATEWAY_IP, '10.0.1.1');
@@ -431,7 +488,7 @@ describe('Resolver Client', () => {
         resolver._resolveUrl = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
-                assert.strictEqual(Object.keys(results).length, 2);
+                assert.strictEqual(Object.keys(results).length, 3);
                 assert.strictEqual(results.SOME_NAME, 'SOME VALUE');
                 assert.strictEqual(results.NETWORK_SIZE_STATIC, 256);
             });

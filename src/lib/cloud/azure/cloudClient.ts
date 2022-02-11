@@ -111,6 +111,27 @@ export class AzureCloudClient extends AbstractCloudClient {
     }
 
     /**
+     * Gets value for VM tag
+     *
+     * @param key                           - Tag key name
+     *
+     * @returns {Promise}
+     */
+    getTagValue(key: string):  Promise<string> {
+        let tagValue = '';
+        if (this._metadata.tags && this._metadata.tags.indexOf(key) !== - 1) {
+            this._metadata.tags.split(";").forEach((tag) => {
+                if (tag.indexOf(key) !== -1) {
+                    if (tag.split(':')[0] === key) {
+                        tagValue=tag.split(':')[1]
+                    }
+                }
+            });
+        }
+        return Promise.resolve(tagValue);
+    }
+
+    /**
      * Gets value from Azure metadata
      *
      * @param field                         - metadata property to fetch

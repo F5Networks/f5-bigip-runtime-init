@@ -256,6 +256,10 @@ resource "azurerm_virtual_machine" "vm" {
     identity_ids = [azurerm_user_assigned_identity.user_identity.id]
   }
 
+  tags = {
+    testKey   = "testValue"
+  }
+
 }
 
 resource "azurerm_virtual_machine_extension" "run_startup_cmd" {

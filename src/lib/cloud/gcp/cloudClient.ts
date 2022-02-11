@@ -18,6 +18,7 @@
 'use strict';
 
 import {google, GoogleApis} from 'googleapis';
+import Compute from '@google-cloud/compute';
 import * as constants from '../../../constants'
 import { AbstractCloudClient } from '../abstract/cloudClient'
 import * as utils from "../../utils";
@@ -29,10 +30,12 @@ export class GcpCloudClient extends AbstractCloudClient {
     projectId: string;
     region: string;
     authToken: any;
+    compute: any;
     constructor(options?: any) {
         const secretmanager = google.secretmanager('v1');
         super(constants.CLOUDS.GCP, options);
         this.google = google;
+        this.compute = new Compute();
         this.secretmanager = secretmanager;
     }
 
@@ -114,6 +117,30 @@ export class GcpCloudClient extends AbstractCloudClient {
      */
     getCustomerId(): string {
         return this.projectId;
+    }
+
+    /**
+     * Gets value for VM tag
+     *
+     * @param key                           - Tag key name
+     * @param [options]                     - function options
+     *
+     * @returns {Promise}
+     */
+    async getTagValue(key: string):  Promise<string> {
+        const responseVmName = await utils.makeRequest(
+            `http://metadata.google.internal/computeMetadata/v1/instance/name`,
+            {
+                method: 'GET',
+                headers: {
+                    'Metadata-Flavor': 'Google'
+                }
+            }
+        );
+        const computeZone = this.compute.zone(this.region);
+        const vm = computeZone.vm(responseVmName.body);
+        const vmData = await vm.getMetadata();
+        return vmData[0].labels[key] || '';
     }
 
     /**

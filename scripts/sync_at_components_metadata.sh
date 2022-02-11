@@ -24,10 +24,6 @@ update_config_file()
     echo ">>>> Generating hash value for latest version"
     downloadUrl=$(echo $remote_toolChain_metadata | yq " .components.$extension_type.versions.$latest_version.downloadUrl" | tr -d '"')
     shaUrl="${downloadUrl}.sha256"
-    if [[ ${extension_type} == \"fast\" ]]; then
-        echo "Getting fast hash"
-        shaUrl="${shaUrl}.txt"
-    fi
     extensionHash=$(curl --retry 3 --retry-max-time 15 --max-time 5 -L -s ${shaUrl} | cut -f1 -d" ")
     echo ">>>> Gathering packageName"
     packageName=$(echo $remote_toolChain_metadata | yq " .components.$extension_type.versions.$latest_version.packageName" | tr -d '"')

@@ -13,9 +13,9 @@
     "install_operations": [
       {
         "extensionType": "do",
-        "extensionUrl": "file:///var/config/rest/downloads/f5-declarative-onboarding-1.26.0-5.noarch.rpm",
-        "extensionHash": "f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3",
-        "extensionVersion": "1.26.0"
+        "extensionUrl": "file:///var/config/rest/downloads/f5-declarative-onboarding-1.27.0-6.noarch.rpm",
+        "extensionHash": "2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf",
+        "extensionVersion": "1.27.0"
       },
       {
         "extensionType": "ilx",

@@ -76,6 +76,7 @@ Type: `array`
 			 2. _"secret"_
 			 3. _"metadata"_
 			 4. _"url"_
+			 5. _"tag"_
 	 - <b id="#/items/properties/returnType">returnType</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/returnType">path: #/items/properties/returnType</i>
@@ -265,6 +266,7 @@ Type: `array`
 				 - The value is restricted to the following: 
 					 1. _"network"_
 					 2. _"compute"_
+					 3. _"uri"_
 			 - <b id="#/items/properties/metadataProvider/properties/field">field</b>
 				 - Type: `string`
 				 - <i id="#/items/properties/metadataProvider/properties/field">path: #/items/properties/metadataProvider/properties/field</i>
@@ -274,6 +276,18 @@ Type: `array`
 					 3. _"ipv4"_
 					 4. _"local-ipv4s"_
 					 5. _"subnet-ipv4-cidr-block"_
+			 - <b id="#/items/properties/metadataProvider/properties/value">value</b>
+				 - Type: `string`
+				 - <i id="#/items/properties/metadataProvider/properties/value">path: #/items/properties/metadataProvider/properties/value</i>
+				 - Example values: 
+					 1. _"/latest/dynamic/instance-identity/document"_
+					 2. _"/latest/api/token"_
+			 - <b id="#/items/properties/metadataProvider/properties/query">query</b>
+				 - Type: `string`
+				 - <i id="#/items/properties/metadataProvider/properties/query">path: #/items/properties/metadataProvider/properties/query</i>
+				 - Example values: 
+					 1. _"region"_
+					 2. _"accountId"_
 			 - <b id="#/items/properties/metadataProvider/properties/ipcalc">ipcalc</b>
 				 - Type: `string`
 				 - <i id="#/items/properties/metadataProvider/properties/ipcalc">path: #/items/properties/metadataProvider/properties/ipcalc</i>
@@ -294,6 +308,25 @@ Type: `array`
 					 1. _"0"_
 					 2. _"1"_
 					 3. _"2"_
+	 - <b id="#/items/properties/tagProvider">tagProvider</b>
+		 - Type: `object`
+		 - <i id="#/items/properties/tagProvider">path: #/items/properties/tagProvider</i>
+		 - This schema <u>does not</u> accept additional properties.
+		 - **_Properties_**
+			 - <b id="#/items/properties/tagProvider/properties/environment">environment</b> `required`
+				 - Type: `string`
+				 - <i id="#/items/properties/tagProvider/properties/environment">path: #/items/properties/tagProvider/properties/environment</i>
+				 - The value is restricted to the following: 
+					 1. _"gcp"_
+					 2. _"aws"_
+					 3. _"azure"_
+			 - <b id="#/items/properties/tagProvider/properties/key">key</b> `required`
+				 - Type: `string`
+				 - <i id="#/items/properties/tagProvider/properties/key">path: #/items/properties/tagProvider/properties/key</i>
+				 - Example values: 
+					 1. _"hostname"_
+					 2. _"id"_
+					 3. _"date"_
 	 - <b id="#/items/properties/query">query</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/query">path: #/items/properties/query</i>
@@ -753,59 +786,59 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.26.0
+        extensionVersion: 1.27.0
       - extensionType: as3
-        extensionVersion: 3.33.0
+        extensionVersion: 3.34.0
       - extensionType: fast
-        extensionVersion: 1.14.0
+        extensionVersion: 1.15.0
 versioned:
   description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.26.0
+        extensionVersion: 1.27.0
       - extensionType: as3
-        extensionVersion: 3.33.0
+        extensionVersion: 3.34.0
       - extensionType: fast
-        extensionVersion: 1.14.0
+        extensionVersion: 1.15.0
 hashed:
   description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.26.0
-        extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
+        extensionVersion: 1.27.0
+        extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
       - extensionType: as3
-        extensionVersion: 3.33.0
-        extensionHash: 368d7b22738fe707655ca3a104c7c79c5c185eb07021e41eebe0e19d70ca63ee
+        extensionVersion: 3.34.0
+        extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
       - extensionType: fast
-        extensionVersion: 1.14.0
-        extensionHash: dafa15dbcc41742866dcffb4fc2ebe72615b7e47d6443311af3630e15f49e7c9
+        extensionVersion: 1.15.0
+        extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
 url:
   description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.26.0
+        extensionVersion: 1.27.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.26.0/f5-declarative-onboarding-1.26.0-5.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.27.0/f5-declarative-onboarding-1.27.0-6.noarch.rpm
       - extensionType: as3
-        extensionVersion: 3.33.0
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.33.0-4.noarch.rpm'
+        extensionVersion: 3.34.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.34.0-4.noarch.rpm'
       - extensionType: fast
-        extensionVersion: 1.14.0
+        extensionVersion: 1.15.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.14.0/f5-appsvcs-templates-1.14.0-1.noarch.rpm
+          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.15.0/f5-appsvcs-templates-1.15.0-1.noarch.rpm
 ilx:
   description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.26.0
+        extensionVersion: 1.27.0
       - extensionType: as3
-        extensionVersion: 3.33.0
+        extensionVersion: 3.34.0
       - extensionType: fast
-        extensionVersion: 1.14.0
+        extensionVersion: 1.15.0
       - extensionType: ilx
         extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
         extensionVersion: 1.0.0
@@ -993,14 +1026,14 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
-          extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
+          extensionVersion: 1.27.0
+          extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
         - extensionType: as3
-          extensionVersion: 3.33.0
-          extensionHash: 6adcf16a7143c0625a36388ccd2972fa3647d98ad8147cf81692628bf1cd39e2
+          extensionVersion: 3.34.0
+          extensionHash: 144e2fad49adf38697fd1b94694ef390d6e30cba7311c798ce43529de985042d
         - extensionType: fast
-          extensionVersion: 1.14.0
-          extensionHash: dafa15dbcc41742866dcffb4fc2ebe72615b7e47d6443311af3630e15f49e7c9
+          extensionVersion: 1.15.0
+          extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1022,9 +1055,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.26.0-5.noarch.rpm
-          extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
-          extensionVersion: 1.26.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.27.0-6.noarch.rpm
+          extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+          extensionVersion: 1.27.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -1057,11 +1090,11 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1100,11 +1133,11 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1139,11 +1172,11 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1201,11 +1234,11 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1228,11 +1261,11 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1285,11 +1318,11 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1394,11 +1427,11 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1411,11 +1444,11 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1434,12 +1467,12 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
-          extensionHash: f1f4a23cd7d3ac3d9f38fed520c373f5a16284fab001ebd26593ddc97c011ef3
+          extensionVersion: 1.27.0
+          extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
         - extensionType: as3
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.33.0/f5-appsvcs-3.33.0-4.noarch.rpm
-          extensionVersion: 3.33.0
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.34.0/f5-appsvcs-3.34.0-4.noarch.rpm
+          extensionVersion: 3.34.0
           verifyTls: false
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
@@ -1527,11 +1560,11 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1587,11 +1620,11 @@ example_13:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.26.0
+          extensionVersion: 1.27.0
         - extensionType: as3
-          extensionVersion: 3.33.0
+          extensionVersion: 3.34.0
         - extensionType: fast
-          extensionVersion: 1.14.0
+          extensionVersion: 1.15.0
     extension_services:
       service_operations:
         - extensionType: do

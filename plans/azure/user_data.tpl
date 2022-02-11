@@ -83,12 +83,26 @@ runtime_parameters:
       field: ipv4
       index: 2
       ipcalc: first
+  - name: TEST_TAG
+    type: tag
+    tagProvider:
+      environment: azure
+      key: testKey
+  - name: TEST_TYPE_FILE
+    type: url
+    value: file:///tmp/pre_onboard_test_param.txt
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
+  - name: create_local_parameter
+    type: inline
+    commands:
+      - touch /tmp/pre_onboard_test_param.txt
+      - chmod 777 /tmp/pre_onboard_test_param.txt
+      - echo "test-value" > /tmp/pre_onboard_test_param.txt
 bigip_ready_enabled:
   - name: provision_asm
     type: inline
@@ -151,7 +165,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: inline
-      value: 
+      value:
         schemaVersion: 1.0.0
         class: Device
         async: true

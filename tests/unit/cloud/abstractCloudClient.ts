@@ -29,6 +29,7 @@ describe('Cloud Client - Abstract', () => {
         const methods = [
             'getSecret',
             'getMetadata',
+            'getTagValue',
             'init',
             'getCustomerId',
             'getCloudName',

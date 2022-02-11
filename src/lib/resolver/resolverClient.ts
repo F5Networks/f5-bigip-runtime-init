@@ -44,6 +44,10 @@ interface RuntimeParameter {
         field: string;
         index: number;
     };
+    tagProvider: {
+        environment: string;
+        key: string;
+    };
 }
 
 interface OnboardActions {
@@ -102,14 +106,26 @@ export class ResolverClient {
                     this._resolveMetadata(parameters[i])
                 ));
             } else if (parameters[i].type === 'url') {
+                if (parameters[i].value.indexOf('file:///') === -1) {
+                    promises.push(this._resolveHelper(
+                        parameters[i].name,
+                        this._resolveUrl(parameters[i])
+                    ));
+                } else {
+                    promises.push(this._resolveHelper(
+                        parameters[i].name,
+                        this._resolveFileContent(parameters[i])
+                    ));
+                }
+            } else if (parameters[i].type === 'tag') {
                 promises.push(this._resolveHelper(
                     parameters[i].name,
-                    this._resolveUrl(parameters[i])
+                    this._resolveTagValue(parameters[i])
                 ));
             } else {
-                throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
+                    throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
+                }
             }
-        }
         if (promises.length > 0) {
             const resolvedParams = await Promise.all(promises);
             resolvedParams.forEach((item) => {
@@ -256,14 +272,46 @@ export class ResolverClient {
      */
     async _resolveMetadata(metadataMetadata): Promise<string> {
         const _cloudClient = this.cloudClients[metadataMetadata.metadataProvider.environment];
+        const _metadataField = metadataMetadata.metadataProvider.value || metadataMetadata.metadataProvider.field;
         const metadataValue = await _cloudClient.getMetadata(
-            metadataMetadata.metadataProvider.field,
+            _metadataField,
             metadataMetadata.metadataProvider
         );
         if (metadataMetadata.metadataProvider.ipcalc !== undefined && metadataValue.split('.').length === 4 ){
             return this._resolveIpcalc(metadataMetadata.metadataProvider.ipcalc, metadataValue, metadataMetadata.returnType);
         }
         return utils.convertTo(metadataValue, metadataMetadata.returnType);
+    }
+
+    /**
+     * Resolves tag value using provided key
+     *
+     * @param metadataMetadata     - list of runtime parameters
+     *
+     *
+     * @returns                    - resolves with metadata value
+     */
+    async _resolveTagValue(metadata): Promise<string> {
+        const _cloudClient = this.cloudClients[metadata.tagProvider.environment];
+        const metadataValue = await _cloudClient.getTagValue(
+            metadata.tagProvider.key,
+            metadata.tagProvider
+        );
+        return utils.convertTo(metadataValue, metadata.returnType);
+    }
+
+
+    /**
+     * Reads file content to resolve parameter
+     *
+     * @param metadata     - list of runtime parameters
+     *
+     *
+     * @returns                    - resolves with metadata value
+     */
+    async _resolveFileContent(metadata): Promise<string> {
+        const fileLocation = metadata.value.replace('file://', '');
+        return this.utilsRef.readFileContent(fileLocation);
     }
 
     async _resolveUrl(metadata): Promise<string> {
