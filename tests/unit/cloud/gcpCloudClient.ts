@@ -164,6 +164,59 @@ describe('CloudClient - GCP', () => {
             });
     });
 
+    it('should validate getTagValue method returns tagValue', () => {
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/name')
+            .reply(200, 'test_vm_name-01');
+        cloudClient.compute = sinon.stub();
+        cloudClient.compute.zone = sinon.stub().returns({
+            vm: sinon.stub().returns({
+                getMetadata: sinon.stub().resolves([{labels: {myTestKeyName: 'testValue'}}])
+            })
+        });
+        cloudClient.getTagValue('myTestKeyName')
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, 'testValue');
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
+
+    it('should validate getTagValue method when no tag matching', () => {
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/name')
+            .reply(200, 'test_vm_name-01');
+        cloudClient.compute = sinon.stub();
+        cloudClient.compute.zone = sinon.stub().returns({
+            vm: sinon.stub().returns({
+                getMetadata: sinon.stub().resolves([{labels: {}}])
+            })
+        });
+        cloudClient.getTagValue('myTestKeyName')
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, '');
+            })
+            .catch((err) => {
+                assert.fail();
+            });
+    });
+
+    it('should validate getTagValue method call', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                callback(true, null);
+            });
+        cloudClient.getTagValue('myTestKeyName', { })
+            .then(() => {
+                assert.fail();
+            })
+            .catch(() => {
+                assert.ok(true);
+            });
+    });
+
     it('should validate getSecret promise rejection', () => {
         cloudClient.secretmanager.projects.secrets.versions.access = sinon.stub().rejects();
         return cloudClient.getSecret(

@@ -178,7 +178,7 @@ resource "google_project_iam_custom_role" "gcp_custom_roles" {
   role_id = "tfCustomRole.${module.utils.env_prefix}"
   title = "tfCustomRole.${module.utils.env_prefix}"
   description = "${var.reaper_tag}"
-  permissions = ["secretmanager.versions.access"]
+  permissions = ["secretmanager.versions.access", "compute.instances.get"]
 }
 
 
@@ -222,6 +222,7 @@ resource "google_compute_instance" "vm" {
   labels = {
     f5_bigip_runtime_init = "${module.utils.env_prefix}"
     another_tag = "with_a_value"
+    test_key = "test_value"
   }
 
   boot_disk {

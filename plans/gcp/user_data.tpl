@@ -176,6 +176,14 @@ runtime_parameters:
         field: ip
         index: 0
         ipcalc: first
+  - name: TEST_TAG
+    type: tag
+    tagProvider:
+        environment: gcp
+        key: test_key
+  - name: TEST_TYPE_FILE
+    type: url
+    value: file:///tmp/pre_onboard_test_param.txt
 bigip_ready_enabled:
   - name: provision_modules
     type: inline
@@ -205,6 +213,12 @@ pre_onboard_enabled:
     type: url
     commands:
       - https://ak-metadata-package-poc.s3.amazonaws.com/remote_pre_onboard.sh
+  - name: create_local_parameter
+    type: inline
+    commands:
+      - touch /tmp/pre_onboard_test_param.txt
+      - chmod 777 /tmp/pre_onboard_test_param.txt
+      - echo "test-value" > /tmp/pre_onboard_test_param.txt
 post_onboard_enabled:
   - name: example_inline_command
     type: inline
@@ -244,7 +258,7 @@ extension_services:
   service_operations:
     - extensionType: do
       type: inline
-      value: 
+      value:
         schemaVersion: 1.0.0
         class: Device
         async: true

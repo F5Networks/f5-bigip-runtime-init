@@ -298,6 +298,38 @@ describe('CloudClient - AWS', () => {
             });
     });
 
+    it('should call _fetchUri to validate function without query', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                metadataPathRequest = path;
+                callback(null, 'pass');
+            });
+        cloudClient._fetchUri('/latest/meta-data/hostname')
+            .then((result) => {
+               assert.strictEqual(result,'pass');
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
+
+    it('should call _fetchUri to validate function with query', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                metadataPathRequest = path;
+                callback(null, "{\"test\" : \"pass\"}");
+            });
+        cloudClient._fetchUri('/latest/meta-data/hostname', 'test')
+            .then((result) => {
+                assert.strictEqual(result,'pass');
+            })
+            .catch((err) => {
+                assert.fail(err);
+            });
+    });
+
     it('should call _getInstanceCompute to get instance data', () => {
         cloudClient._metadata = sinon.stub();
         cloudClient._metadata.request = sinon.stub()
@@ -399,6 +431,87 @@ describe('CloudClient - AWS', () => {
             })
             .catch((error) => {
                 assert.fail(error);
+            });
+    });
+
+    it('should validate getMetadata when type is uri and with query', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                metadataPathRequest = path;
+                callback(null, "{\"test\" : \"pass\"}");
+            });
+        cloudClient.getMetadata('/latest/meta-data/hostname', { type: 'uri', query: 'test'})
+            .then((result) => {
+                assert.strictEqual(result, 'pass');
+            })
+            .catch((error) => {
+                assert.fail(error);
+            });
+    });
+
+    it('should validate getTagValue method call', () => {
+        cloudClient._ec2 = sinon.stub();
+        cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({
+            promise(): Promise<any> {
+                return Promise.resolve({ Tags: [{Value:"testValue"}]});
+            }
+        }));
+        cloudClient.getTagValue('myTestKeyName', {})
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, 'testValue');
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
+
+
+    it('should validate getTagValue method call when no matching Tags', () => {
+        cloudClient._ec2 = sinon.stub();
+        cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({
+            promise(): Promise<any> {
+                return Promise.resolve({ Tags: []});
+            }
+        }));
+        cloudClient.getTagValue('myTestKeyName', {})
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, '');
+            })
+            .catch((err) => {
+                assert.fail();
+            });
+    });
+
+    it('should validate getTagValue method call when no Tags property recieved', () => {
+        cloudClient._ec2 = sinon.stub();
+        cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({
+            promise(): Promise<any> {
+                return Promise.resolve({});
+            }
+        }));
+        cloudClient.getTagValue('myTestKeyName', {})
+            .then((tagValue) => {
+                assert.strictEqual(tagValue, '');
+            })
+            .catch((err) => {
+                assert.fail();
+            });
+    });
+
+    it('should validate getMetadata rejection when type is uri and with query', () => {
+        cloudClient._metadata = sinon.stub();
+        cloudClient._metadata.request = sinon.stub()
+            .callsFake((path, headers, callback) => {
+                metadataPathRequest = path;
+                callback(true, null);
+            });
+        cloudClient.getMetadata('/latest/meta-data/hostname', { type: 'uri', query: 'test'})
+            .then(() => {
+                assert.fail();
+            })
+            .catch(() => {
+                assert.ok(true);
             });
     });
 

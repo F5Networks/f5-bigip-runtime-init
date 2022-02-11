@@ -111,6 +111,31 @@ describe('Util', () => {
         });
     });
 
+    describe('readFileContent', () => {
+        it('should validate readFileContent when file exists', () => {
+            mock({
+                'fake/dir': {
+                    'fake.txt': '12345'
+                }
+            });
+
+            const file = 'fake/dir/fake.txt';
+            const response = util.readFileContent(file);
+
+            assert.strictEqual(response, '12345');
+            mock.restore();
+        });
+
+        it('should validate readFileContent when file does not exist', () => {
+            const file = 'fake/dir/fake.txt';
+            const response = util.readFileContent(file);
+
+            assert.strictEqual(response, '');
+            mock.restore();
+        });
+
+    });
+
     describe('verifyHash', () => {
         it('should return true with valid extension hash inputs', () => {
             mock({
@@ -231,6 +256,46 @@ describe('Util', () => {
             })
                 .then((resp) => assert.strictEqual(resp.id, 1))
                 .catch(err => Promise.reject(err));
+        });
+
+        it('should validate loadData successful execution for YAML via URL', () => {
+            nock('https://fakedomain.com')
+                .get('/awesome_file.yaml')
+                .reply(200, `runtime_parameters:
+                  id: 1
+                `);
+            mock({
+                '/config/fake-ssl': {
+                    'cert.pem': '12345'
+                }
+            });
+
+            return util.loadData( 'https://fakedomain.com/awesome_file.yaml', {
+                locationType: 'url',
+                verifyTls: true,
+                trustedCertBundles: ['/config/fake-ssl/cert.pem']
+            })
+                .then((resp) => assert.strictEqual(resp.runtime_parameters.id, 1))
+                .catch(err => Promise.reject(err));
+        });
+
+        it('should validate loadData failed for bad config via URL', () => {
+            nock('https://fakedomain.com')
+                .get('/bad_file.yaml')
+                .reply(200, `runtime_parameters`);
+            mock({
+                '/config/fake-ssl': {
+                    'cert.pem': '12345'
+                }
+            });
+
+            return util.loadData( 'https://fakedomain.com/bad_file.yaml', {
+                locationType: 'url',
+                verifyTls: true,
+                trustedCertBundles: ['/config/fake-ssl/cert.pem']
+            })
+                .then(() => assert.ok(false))
+                .catch((err) => assert.ok(err.message.includes('The config loaded')))
         });
 
         it('should validate loadData failed execution via URL', () => {

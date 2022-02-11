@@ -30,14 +30,15 @@ describe('CloudClient - Azure', () => {
         cloudClient.subscriptionId = '1234543';
         cloudClient._metadata = {
             subscriptionId: '1234543',
-            location: 'us-west'
+            location: 'us-west',
+            tags: "key01:value02;key02:value02"
         };
         cloudClient.SecretClient = sinon.stub().returns({
             getSecret: sinon.stub().resolves({ value: 'StrongPassword2010!' })
         });
         nock('http://169.254.169.254')
             .get('/metadata/instance?api-version=2017-08-01')
-            .reply(200, { compute: { subscriptionId: '1234543'} });
+            .reply(200, { compute: { subscriptionId: '1234543', tags: "key01:value02;key02:value02"} });
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
     });
@@ -62,6 +63,26 @@ describe('CloudClient - Azure', () => {
 
     it('should validate getCloudName', () => {
         assert.strictEqual(cloudClient.getCloudName(), cloud);
+    });
+
+    it('should validate getTagValue method returns correct tag value', () => {
+        cloudClient.getTagValue('key01', {})
+            .then((tagValye) => {
+                assert.strictEqual(tagValye, 'value02')
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
+
+    it('should validate getTagValue method returns no tag value', () => {
+        cloudClient.getTagValue('invalidKey', {})
+            .then((tagValye) => {
+                assert.strictEqual(tagValye, '')
+            })
+            .catch(() => {
+                assert.fail();
+            });
     });
 
     it('should validate getSecret when secret exists', () => cloudClient.getSecret(

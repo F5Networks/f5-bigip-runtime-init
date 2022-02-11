@@ -16,7 +16,7 @@
 
 'use strict';
 
-
+import * as jmesPath from 'jmespath';
 import * as AWS from 'aws-sdk';
 import * as constants from '../../../constants';
 import * as netmask from 'netmask';
@@ -31,6 +31,7 @@ export class AwsCloudClient extends AbstractCloudClient {
     instanceId: string;
     customerId: string;
     _sessionToken: string;
+    _ec2: AWS.EC2;
 
     constructor(options?: {
         logger?: Logger;
@@ -56,6 +57,7 @@ export class AwsCloudClient extends AbstractCloudClient {
                 this.region = metadata.region;
                 this.instanceId = metadata.instanceId;
                 AWS.config.update({ region: this.region });
+                this._ec2 = new AWS.EC2();
                 this.secretsManager = new AWS.SecretsManager();
                 return Promise.resolve();
             })
@@ -106,6 +108,33 @@ export class AwsCloudClient extends AbstractCloudClient {
     }
 
     /**
+     * Gets value for AWS EC2 Tag
+     *
+     * @param key                           - Tag key name
+     *
+     * @returns {Promise}
+     */
+    async getTagValue(key: string):  Promise<string> {
+        const params = {
+            Filters: [
+                {
+                    Name: 'resource-id',
+                    Values: [this.instanceId]
+                },
+                {
+                    Name: 'key',
+                    Values: [key]
+                }
+            ]
+        };
+        const response = await this._ec2.describeTags(params).promise();
+        if (response.Tags && response.Tags.length) {
+            return response.Tags[0].Value;
+        }
+        return  '';
+    }
+
+    /**
      * Gets value from AWS metadata
      *
      * @param field                         - metadata property to fetch
@@ -116,28 +145,33 @@ export class AwsCloudClient extends AbstractCloudClient {
     async getMetadata(field: string, options?: {
         type?: string;
         index?: number;
+        query?: string;
     }):  Promise<string> {
         const type = options ? options.type : undefined;
+        const uriQuery = options ? options.query : undefined;
         const index = options ? options.index : undefined;
         const logger = Logger.getLogger();
         if (!field) {
             throw new Error('AWS Cloud Client metadata field is missing');
         }
-
         if (!type) {
             throw new Error('AWS Cloud Client metadata type is missing');
         }
 
-        if (type !== 'compute' && type !== 'network') {
+        if (type !== 'compute' && type !== 'network' && type !== 'uri') {
             throw new Error('AWS Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
         }
 
         if (type === 'network' && index === undefined) {
             throw new Error('AWS Cloud Client network metadata index is missing');
         }
-        if (type === 'compute'){
+        if (type === 'compute') {
             return this._getInstanceCompute(field)
-            .catch(err => Promise.reject(err));
+                .catch(err => Promise.reject(err));
+        }
+        if (type === 'uri'){
+            return this._fetchUri(field, uriQuery)
+                .catch(err => Promise.reject(err));
         }
         if (type === 'network') {
             /** grab big-ip interface info */
@@ -199,6 +233,48 @@ export class AwsCloudClient extends AbstractCloudClient {
             }
         }
     }
+
+    /**
+     * Fetches provided AWS Metadata uri using AWS SDK Metadata client
+     *
+     * @param uri                         - uri value (i.e. /latest/document/instances/version)
+     * @param query                       - query options to filter JSON response using jmesPath
+     *
+     * @returns   - A Promise resolved with AWS Metadata
+     */
+    _fetchUri(uri, query): Promise<any> {
+        if (typeof uri !== 'string' || (uri.split("/").length - 1) < 2) {
+            throw new Error('AWS Cloud Client expects uri string for _fetchUri method.')
+        } else {
+            return new Promise((resolve, reject) => {
+                this._metadata.request(uri, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } },(err, data) => {
+                    if (err) {
+                        reject(err);
+                    }
+
+                    if (query !== undefined) {
+                        try {
+                            let searchResult;
+                            if (typeof data === 'string') {
+                                searchResult = jmesPath.search(JSON.parse(data), query);
+                            } else {
+                                searchResult = jmesPath.search(data, query);
+                            }
+                            resolve(searchResult);
+                        } catch (error) {
+                            throw new Error(`Error caught while searching json using jmesPath - Query: ${query} - Error ${error.message}`);
+                        }
+                    }
+                    resolve(data);
+                });
+            });
+        }
+    }
+    /**
+     * Fetches AWS IMDSv2 Session token
+     *
+     * @returns   - A Promise resolved after token successfully fetched
+     */
     _fetchMetadataSessionToken(): Promise<void> {
         return new Promise((resolve, reject) => {
             const sessionTokenPath = '/latest/api/token';

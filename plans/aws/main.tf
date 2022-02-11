@@ -184,6 +184,7 @@ resource "aws_iam_role_policy" "BigIpPolicy" {
             "ec2:AssociateAddress",
             "ec2:DisassociateAddress",
             "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribeTags",
             "ec2:DescribeNetworkInterfaceAttribute",
             "ec2:DescribeRouteTables",
             "ec2:ReplaceRoute",
