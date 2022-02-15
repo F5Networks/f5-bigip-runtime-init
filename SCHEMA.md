@@ -342,6 +342,9 @@ Type: `array`
 ```yaml
 aws:
   description: AWS Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -379,6 +382,9 @@ aws:
         index: 1
 azure:
   description: Azure Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: AZURE_SERVICE_PRINCIPAL
       type: secret
@@ -409,6 +415,9 @@ azure:
         index: 2
 gcp:
   description: Google Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -432,6 +441,9 @@ gcp:
         field: name
 hashicorp:
   description: Hashicorp Vault Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -1008,6 +1020,9 @@ example_1:
     Verifies and installs Automation Toolchain components (DO, AS3, FAST) on a
     local BIG-IP and then configures AS3 from a local declaration file.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1045,6 +1060,9 @@ example_2:
     configures DO from a local declaration file. Install operations with an
     extensionUrl value that points to a local file stored on BIG-IP system.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1073,6 +1091,9 @@ example_3:
     Installs DO, AS3, and FAST on a local BIG-IP and renders the Azure service
     principal secret into an AS3 declaration downloaded from a URL.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: AZURE_SERVICE_PRINCIPAL
         type: secret
@@ -1109,6 +1130,9 @@ example_4:
     Renders secret referenced within DO declaration to configure the admin
     password on a BIG-IP device in AWS.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: ADMIN_PASS
         type: secret
@@ -1148,6 +1172,9 @@ example_5:
     Renders secret referenced within DO declaration to configure the admin
     password on a BIG-IP device in GCP.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: ADMIN_PASS
         type: secret
@@ -1188,6 +1215,9 @@ example_6:
     instance metadata to configure hostname, self IP addresses and pool members
     on BIG-IP device.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: HOST_NAME
         type: metadata
@@ -1252,6 +1282,9 @@ example_7:
     Installs AS3, DO, and FAST and uses an inline AS3 declaration to setup the
     BIG-IP.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1302,6 +1335,9 @@ example_7:
 example_8:
   description: Using runtime parameters with inline Automation Toolchain declarations.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: SCHEMA_VERSION
         type: static
@@ -1385,6 +1421,9 @@ example_8:
 example_9:
   description: Using custom pre-onboard and post-onboard commands.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: example_inline_command
         type: inline
@@ -1435,6 +1474,9 @@ example_9:
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1464,6 +1506,9 @@ example_11:
     post_onboard_enabled, extension_packages.install_operations,
     extension_services.service_operations, and post_hook.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     extension_packages:
       install_operations:
         - extensionType: do
@@ -1537,6 +1582,9 @@ example_12:
     Licenses BIG-IP device using BIG-IQ utility offering and authenticating with
     credentials stored in Azure KeyVault.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: HOST_NAME
         type: metadata
@@ -1573,6 +1621,9 @@ example_12:
 example_13:
   description: Renders the admin password using Hashicorp Vault approle authentication.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: ADMIN_PASS
         type: secret

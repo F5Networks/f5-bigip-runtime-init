@@ -1,3 +1,4 @@
+controls: {"logLevel": "silly", "logFilename": "/var/log/cloud/bigIpRuntimeInit.log"}
 extension_packages: {install_operations: [{extensionType: "do", extensionVersion: "1.27.0",
       extensionHash: "2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf"},
     {extensionType: "as3", extensionUrl: "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.34.0/f5-appsvcs-3.34.0-4.noarch.rpm",

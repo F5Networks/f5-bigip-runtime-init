@@ -295,6 +295,9 @@ The startup script contains the following contents.
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -317,7 +320,6 @@ bigip_ready_enabled:
       - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
         -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
         jq .'
-      - f5mku -r {{{ ADMIN_PASS }}}
   - name: reset_master_key
     type: inline
     commands:
@@ -410,6 +412,9 @@ the startup script is templatized in startup-script.tpl and contains the followi
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -564,6 +569,9 @@ the startup script startup-script.tpl is passed to via the instance's ```metadat
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -999,7 +1007,7 @@ Here is an example of the payload that is sent by F5 TEEM
 ## Troubleshooting
 
 ### F5 Automation Toolchain Components
-F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below).  
+F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below) as well as under _/var/log/restnoded/restnoded.log_ since BIGIP iControl LX extensions (i.e. DO, AS3, CFE and so on) send their output to this log file. 
 
 Help with troubleshooting individual Automation Toolchain components can be found at F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/):
 - DO: https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/troubleshooting.html
@@ -1017,7 +1025,7 @@ As a part of the installation workflow, by default, Runtime Init would fetch the
 In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery url for the "extension metadata" file using "--toolchain-metadata-file-url" parameter. See the [Installer](#installer) section for more details. 
 
 ### Controls
-Runtime init declaration provides a list of controls intended for tuning Runtime Init execution: 
+Runtime init declaration provides a list of controls intended for tuning Runtime Init execution as well as helping with troubleshooting issues: 
 
 ```yaml
      controls:

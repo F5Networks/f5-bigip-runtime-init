@@ -1,5 +1,8 @@
 aws:
   description: AWS Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -37,10 +40,13 @@ aws:
         index: 1
 azure:
   description: Azure Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: AZURE_SERVICE_PRINCIPAL
       type: secret
-      secretProvider: 
+      secretProvider:
         type: KeyVault
         environment: azure
         vaultUrl: https://my-keyvault.vault.azure.net
@@ -67,6 +73,9 @@ azure:
         index: 2
 gcp:
   description: Google Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -81,7 +90,7 @@ gcp:
       type: SecretsManager
       environment: gcp
       version: latest
-      secretId: my-secret-id-02 
+      secretId: my-secret-id-02
   - name: HOST_NAME
     type: metadata
     metadataProvider:
@@ -90,6 +99,9 @@ gcp:
         field: name
 hashicorp:
   description: Hashicorp Vault Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
   - name: ADMIN_PASS
     type: secret
