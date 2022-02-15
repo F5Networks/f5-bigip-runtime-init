@@ -1,4 +1,8 @@
 {
+  "controls": {
+    "logLevel": "silly",
+    "logFilename": "/var/log/cloud/bigIpRuntimeInit.log"
+  },
   "runtime_parameters": [],
   "pre_onboard_enabled": [
     {

@@ -1,4 +1,8 @@
 {
+  "controls": {
+    "logLevel": "silly",
+    "logFilename": "/var/log/cloud/bigIpRuntimeInit.log"
+  },
   "pre_onboard_enabled": [
     {
       "name": "provision_rest",

@@ -1,3 +1,6 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: HOST_NAME
     type: metadata

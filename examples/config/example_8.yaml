@@ -1,3 +1,6 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: SCHEMA_VERSION
     type: static

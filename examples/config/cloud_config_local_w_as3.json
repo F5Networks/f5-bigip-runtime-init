@@ -1,4 +1,8 @@
 {
+  "controls": {
+    "logLevel": "silly",
+    "logFilename": "/var/log/cloud/bigIpRuntimeInit.log"
+  },
   "runtime_parameters": [
     {
       "name": "AZURE_SERVICE_PRINCIPAL",

@@ -1,3 +1,6 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -20,7 +23,6 @@ bigip_ready_enabled:
       - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
         -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
         jq .'
-      - f5mku -r {{{ ADMIN_PASS }}}
   - name: reset_master_key
     type: inline
     commands:
