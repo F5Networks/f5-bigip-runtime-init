@@ -1,4 +1,4 @@
-resource "random_string" "env_prefix" {
+resource "random_string" "env_unique_id" {
   length  = 8
   upper   = false
   special = false
@@ -12,8 +12,8 @@ resource "random_string" "admin_password" {
   special     = false
 }
 
-output "env_prefix" {
-  value = random_string.env_prefix.result
+output "env_unique_id" {
+  value = random_string.env_unique_id.result
 }
 
 output "admin_password" {
