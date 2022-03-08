@@ -16,6 +16,7 @@ v8-compile-cache-0/
 
 # local terraform files
 .terraform/
+.terraform.lock.hcl
 *.tfstate*
 **/deployment_info.json
 
