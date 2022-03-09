@@ -1,0 +1,11 @@
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.27.0
+      extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+    - extensionType: as3
+      extensionVersion: 3.34.0
+      extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
+    - extensionType: fast
+      extensionVersion: 1.15.0
+      extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca

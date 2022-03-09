@@ -1,0 +1,6 @@
+runtime_parameters:
+  - name: REMOTE_HOST
+    type: tag
+    tagProvider:
+      environment: azure
+      key: bigIpPeerAddr

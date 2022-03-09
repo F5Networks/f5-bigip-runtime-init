@@ -1,0 +1,14 @@
+runtime_parameters:
+  - name: HOST_NAME
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/hostname
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: REGION
+    type: url
+    value: 'http://metadata.google.internal/computeMetadata/v1/instance/attributes/region'
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  

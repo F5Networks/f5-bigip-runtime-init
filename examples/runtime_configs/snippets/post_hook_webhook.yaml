@@ -1,0 +1,4 @@
+post_hook:
+  - name: example_webhook
+    type: webhook
+    url: https://webhook.site

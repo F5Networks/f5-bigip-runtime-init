@@ -1,0 +1,21 @@
+inline:
+  description: Runs commands specified inline
+  bigip_ready_enabled:
+    - name: set_message_size
+      type: inline
+      commands:
+        - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
+local_exec:
+  description: Runs commands from a local file
+  bigip_ready_enabled:
+    - name: example_local_exec
+      type: file
+      commands:
+        - /tmp/bigip_ready_enabled.sh
+remote_exec:
+  description: Runs commands from a URL
+  bigip_ready_enabled:
+    - name: example_remote_exec
+      type: url
+      commands:
+        - https://the-delivery-location.com/bigip_ready_enabled.sh

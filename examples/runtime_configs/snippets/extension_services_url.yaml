@@ -1,0 +1,9 @@
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json
+      verifyTls: false
+    - extensionType: as3
+      type: url
+      value: https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json

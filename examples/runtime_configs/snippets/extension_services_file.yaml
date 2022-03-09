@@ -1,0 +1,5 @@
+extension_services:
+  service_operations:
+    - extensionType: as3
+      type: url
+      value: file:///examples/automation_toolchain_declarations/as3.json
