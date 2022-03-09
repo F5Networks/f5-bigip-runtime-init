@@ -337,11 +337,52 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
-    - extensionType: as3
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: 'HOST_NAME'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: 'BIGIP_PASSWORD'
+            shell: bash
+            userType: regular
 
 
 EOF
@@ -442,12 +483,52 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
-    - extensionType: as3
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
-
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: 'HOST_NAME'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: 'BIGIP_PASSWORD'
+            shell: bash
+            userType: regular
 
 EOF
 
@@ -599,12 +680,52 @@ extension_packages:
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
-    - extensionType: as3
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
-
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: 'HOST_NAME'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: 'BIGIP_PASSWORD'
+            shell: bash
+            userType: regular
 
 EOF
 

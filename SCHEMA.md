@@ -46,6 +46,7 @@ controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
   logToJson: true
+  extensionInstallDelayInMs: 60000
 
 ```
 ***
@@ -794,7 +795,6 @@ This schema <u>does not</u> accept additional properties.
 
 ```yaml
 default:
-  description: Installs packages from metadata using latest versions
   extension_packages:
     install_operations:
       - extensionType: do
@@ -804,7 +804,6 @@ default:
       - extensionType: fast
         extensionVersion: 1.15.0
 versioned:
-  description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
@@ -814,7 +813,6 @@ versioned:
       - extensionType: fast
         extensionVersion: 1.15.0
 hashed:
-  description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
@@ -827,22 +825,20 @@ hashed:
         extensionVersion: 1.15.0
         extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
 url:
-  description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.27.0
         extensionUrl: >-
           https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.27.0/f5-declarative-onboarding-1.27.0-6.noarch.rpm
+        extensionVersion: 1.27.0
       - extensionType: as3
-        extensionVersion: 3.34.0
         extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.34.0-4.noarch.rpm'
+        extensionVersion: 3.34.0
       - extensionType: fast
-        extensionVersion: 1.15.0
         extensionUrl: >-
           https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.15.0/f5-appsvcs-templates-1.15.0-1.noarch.rpm
+        extensionVersion: 1.15.0
 ilx:
-  description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
@@ -900,7 +896,7 @@ This schema <u>does not</u> accept additional properties.
 				 - <i id="#/properties/service_operations/items/properties/value">path: #/properties/service_operations/items/properties/value</i>
 				 - Example values: 
 					 1. _"https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json"_
-					 2. _"file:///examples/declarations/as3.json"_
+					 2. _"file:///examples/automation_toolchain_declarations/as3.json"_
 					 3. _"class: AS3 action: deploy persist: true declaration: class: ADC schemaVersion: 3.0.0 id: urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d label: Sample 1 remark: Simple HTTP Service with Round-Robin Load Balancing Sample_01: class: Tenant A1: class: Application template: http serviceMain: class: Service_HTTP virtualAddresses: - 10.0.1.10 pool: web_pool web_pool: class: Pool monitors: - http members: - servicePort: 80 serverAddresses: - 192.0.1.10 - 192.0.1.11"_
 			 - <b id="#/properties/service_operations/items/properties/verifyTls">verifyTls</b>
 				 - _For enabling secure site verification_
@@ -922,7 +918,6 @@ This schema <u>does not</u> accept additional properties.
 
 ```yaml
 url:
-  description: Configures services from a URL declaration
   extension_services:
     service_operations:
       - extensionType: do
@@ -935,16 +930,61 @@ url:
         value: >-
           https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
 file:
-  description: Configures services from a file declaration
   extension_services:
     service_operations:
       - extensionType: as3
         type: url
-        value: 'file:///examples/declarations/as3.json'
+        value: 'file:///examples/automation_toolchain_declarations/as3.json'
 inline:
-  description: Configures services from an inline declaration
   extension_services:
     service_operations:
+      - extensionType: do
+        type: inline
+        value:
+          schemaVersion: 1.0.0
+          class: Device
+          label: >-
+            Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with
+            BYOL license
+          async: true
+          Common:
+            class: Tenant
+            My_DbVariables:
+              class: DbVariables
+              provision.extramb: 1000
+              restjavad.useextramb: true
+              ui.advisory.enabled: true
+              ui.advisory.color: blue
+              ui.advisory.text: BIG-IP Quickstart
+            My_Provisioning:
+              class: Provision
+              asm: nominal
+              ltm: nominal
+            My_Ntp:
+              class: NTP
+              servers:
+                - 169.254.169.253
+              timezone: UTC
+            My_Dns:
+              class: DNS
+              nameServers:
+                - 169.254.169.253
+            My_License:
+              class: License
+              licenseType: regKey
+              regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+            My_System:
+              class: System
+              autoPhonehome: true
+              hostname: HOST_NAME
+            quickstart:
+              class: User
+              partitionAccess:
+                all-partitions:
+                  role: admin
+              password: BIGIP_PASSWORD
+              shell: bash
+              userType: regular
       - extensionType: as3
         type: inline
         value:
@@ -1012,7 +1052,7 @@ custom_properties:
 ***
 ## Additional Examples
 
-### Automated Toolchain declarations referenced here are available in the examples/declarations folder.
+### Automated Toolchain declarations referenced here are available in the examples/automation_toolchain_declarations folder.
 
 ```yaml
 example_1:
@@ -1053,7 +1093,7 @@ example_1:
       service_operations:
         - extensionType: as3
           type: url
-          value: 'file:///examples/declarations/as3.json'
+          value: 'file:///examples/automation_toolchain_declarations/as3.json'
 example_2:
   description: >-
     Verifies and installs DO and myIlxApp RPMs from local directories and
@@ -1124,7 +1164,8 @@ example_3:
             https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
         - extensionType: as3
           type: url
-          value: 'file:///examples/declarations/example_3_as3.json'
+          value: >-
+            file:///examples/automation_toolchain_declarations/example_3_as3.json
 example_4:
   description: >-
     Renders secret referenced within DO declaration to configure the admin
@@ -1166,7 +1207,7 @@ example_4:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_4_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_4_do.json'
 example_5:
   description: >-
     Renders secret referenced within DO declaration to configure the admin
@@ -1208,7 +1249,7 @@ example_5:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_5_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_5_do.json'
 example_6:
   description: >-
     Replaces variables used within DO and AS3 declarations with properties from
@@ -1273,10 +1314,11 @@ example_6:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_6_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_6_do.json'
         - extensionType: as3
           type: url
-          value: 'file:///examples/declarations/example_7_as3.json'
+          value: >-
+            file:///examples/automation_toolchain_declarations/example_7_as3.json
 example_7:
   description: >-
     Installs AS3, DO, and FAST and uses an inline AS3 declaration to setup the
@@ -1617,7 +1659,7 @@ example_12:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_7_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_7_do.json'
 example_13:
   description: Renders the admin password using Hashicorp Vault approle authentication.
   runtime_config:

@@ -1,0 +1,6 @@
+description: Runs commands from a local file
+bigip_ready_enabled:
+  - name: example_local_exec
+    type: file
+    commands:
+      - /tmp/bigip_ready_enabled.sh

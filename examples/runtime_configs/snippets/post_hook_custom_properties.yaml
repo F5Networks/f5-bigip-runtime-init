@@ -1,0 +1,7 @@
+post_hook:
+  - name: example_webhook
+    type: webhook
+    url: https://webhook.site
+    properties:
+      optionalKey1: optional_value1
+      optionalKey2: optional_value2

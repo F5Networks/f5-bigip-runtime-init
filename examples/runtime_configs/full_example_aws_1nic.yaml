@@ -1,0 +1,91 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 1000
+      - /usr/bin/setdb restjavad.useextramb true
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      type: compute
+      environment: aws
+      field: hostname
+  - name: REGION
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/dynamic/instance-identity/document
+      query: region
+  - name: BIGIP_PASSWORD
+    type: secret
+    secretProvider:
+      environment: aws
+      secretId: bigIpPassword
+      type: SecretsManager
+      version: AWSCURRENT
+bigip_ready_enabled: []
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.27.0
+      extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+    - extensionType: as3
+      extensionVersion: 3.34.0
+      extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
+    - extensionType: ts
+      extensionVersion: 1.26.0
+      extensionHash: 128ec4fb6fd93e4dd7f43520a58f4810a9e20d45b60e7098a3c65ee960964bfa
+    - extensionType: fast
+      extensionVersion: 1.15.0
+      extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with PAYG
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: '{{{HOST_NAME}}}'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: '{{{BIGIP_PASSWORD}}}'
+            shell: bash
+            userType: regular
+post_onboard_enabled: []

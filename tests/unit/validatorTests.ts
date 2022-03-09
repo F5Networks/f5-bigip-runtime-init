@@ -48,7 +48,7 @@ describe('validator', () => {
     });
 
     it('should validate valid json data from file', () => {
-        const data = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../examples/config/cloud_config_local.json')).toString());
+        const data = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/config/cloud_config_local.json')).toString());
         const validation = validator.validate(data);
         assert.strictEqual(validation.isValid, true);
         assert.strictEqual(validation.errors, 'No errors');
@@ -69,7 +69,7 @@ describe('validator', () => {
     });
 
     it('should validate valid yaml data from a file', () => {
-        const config = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, '../../examples/config/cloud_config_local.yaml')).toString());
+        const config = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, '../../scripts/config/cloud_config_local.yaml')).toString());
         const validation = validator.validate(config);
         assert.strictEqual(validation.isValid, true);
         assert.strictEqual(validation.errors, 'No errors');

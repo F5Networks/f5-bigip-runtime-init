@@ -1,0 +1,123 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+pre_onboard_enabled: []
+runtime_parameters:
+  - name: HOST_NAME
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/hostname
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: REGION
+    type: url
+    value: 'http://metadata.google.internal/computeMetadata/v1/instance/attributes/region'
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: UNIQUE_STRING
+    type: url
+    value: 'http://metadata.google.internal/computeMetadata/v1/instance/attributes/unique-string'
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: INSTANCE_ID
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/id
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: SPLUNK_API_KEY
+    type: secret
+    secretProvider:
+      type: SecretsManager
+      environment: gcp
+      version: latest
+      secretId: my-secret-id-01
+  - name: BIGIQ_PASSWORD
+    type: secret
+    secretProvider:
+      type: SecretsManager
+      environment: gcp
+      version: latest
+      secretId: my-secret-id-02
+bigip_ready_enabled: []
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.27.0
+      extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+    - extensionType: ts
+      extensionVersion: 1.26.0
+      extensionHash: 128ec4fb6fd93e4dd7f43520a58f4810a9e20d45b60e7098a3c65ee960964bfa
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Autoscale 1NIC BIG-IP declaration for Declarative Onboarding with BIG-IQ
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.color: blue
+            ui.advisory.text: "Provisioned via Runtime Init and DO"
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.254
+          My_License:
+            class: License
+            hypervisor: gce
+            licenseType: licensePool
+            licensePool: clpv2
+            bigIqHost: 192.168.1.4
+            bigIqUsername: admin
+            bigIqPassword: '{{{BIGIQ_PASSWORD}}}'
+            tenant: 'myTenant-{{{INSTANCE_ID}}}'
+            skuKeyword1: F5-BIG-MSP-BT-1G
+            unitOfMeasure: hourly
+            reachable: false
+            overwrite: false
+          My_Ntp:
+            class: NTP
+            servers:
+              - 0.pool.ntp.org
+            timezone: UTC
+          My_Provisioning:
+            asm: nominal
+            class: Provision
+            ltm: nominal
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: '{{{HOST_NAME}}}'
+    - extensionType: ts
+      type: inline
+      value:
+        class: Telemetry
+        controls:
+          class: Controls
+          logLevel: silly
+        My_Remote_Logs_Namespace:
+          class: Telemetry_Namespace
+          My_Listener:
+            class: Telemetry_Listener
+            port: 6514
+          My_Splunk_Consumer:
+            class: Telemetry_Consumer
+            type: Splunk
+            host: 192.168.2.4
+            protocol: https
+            port: 8088
+            passphrase:
+              cipherText: '{{{SPLUNK_API_KEY}}}'
+            compressionType: gzip
+post_onboard_enabled: []

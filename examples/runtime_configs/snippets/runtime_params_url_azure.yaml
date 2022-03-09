@@ -1,0 +1,22 @@
+runtime_parameters:
+  - name: RESOURCE_GROUP_NAME
+    type: url
+    value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+    query: resourceGroupName
+    headers:
+      - name: Metadata
+        value: true
+  - name: WORKSPACE_ID
+    type: url
+    value: 'http://169.254.169.254/metadata/instance/compute/tagsList?api-version=2020-09-01'
+    query: "[?name=='workspaceId'].value|[0]"
+    headers:
+      - name: Metadata
+        value: true
+  - name: SUBSCRIPTION_ID
+    type: url
+    value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+    query: subscriptionId
+    headers:
+      - name: Metadata
+        value: true
