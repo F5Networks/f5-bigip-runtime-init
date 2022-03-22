@@ -34,7 +34,7 @@
         "google-auth-library": "^6.1.1",
         "googleapis": "^61.0.0",
         "@google-cloud/compute": "^1.2.0",
-        "icrdk": "git://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
+        "icrdk": "git+https://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
         "jmespath": "^0.15.0",
         "js-yaml": "^3.13.1",
         "lodash": "^4.17.21",
@@ -148,7 +148,17 @@
             "1044289",
             "1043733",
             "1043731",
-            "1043712"
+            "1043712",
+            "1067259",
+            "1064686",
+            "1064843",
+            "1065232",
+            "1064678",
+            "1064657",
+            "1064676",
+            "1067269",
+            "1067270",
+            "1067271"
         ]
     },
     "keywords": [
