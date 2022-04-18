@@ -204,7 +204,7 @@ export class AwsCloudClient extends AbstractCloudClient {
                     if (retries > constants.RETRY.DEFAULT_COUNT) {
                         return Promise.reject(new Error(`Failed to fetch MAC address for BIGIP interface ${interfaceName}.`))
                     }
-                    logger.info(`MAC adddress is not populated on ${interfaceName} BIGIP interface. Trying to re-fecth interface data. Left attempts: ${constants.RETRY.DEFAULT_COUNT - retries}`);
+                    logger.info(`MAC adddress is not populated on ${interfaceName} BIGIP interface. Trying to re-fetch interface data. Left attempts: ${constants.RETRY.DEFAULT_COUNT - retries}`);
                     await timer(constants.RETRY.DELAY_IN_MS);
                 }
             }

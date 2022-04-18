@@ -23,7 +23,12 @@ update_config_file()
     currExtensionHash=$(cat $file_path | yq ".extension_packages.install_operations[$index].extensionHash")
     echo ">>>> Generating hash value for latest version"
     downloadUrl=$(echo $remote_toolChain_metadata | yq " .components.$extension_type.versions.$latest_version.downloadUrl" | tr -d '"')
-    extensionHash=$(curl --retry 3 --retry-max-time 15 --max-time 5 -L -s $downloadUrl | shasum -a 256 | tr -d ' -')
+    shaUrl="${downloadUrl}.sha256"
+    extensionHash=$(curl --retry 3 --retry-max-time 15 --max-time 5 -L -s ${shaUrl} | cut -f1 -d" ")
+    if [[ $extensionHash =~ "Not" ]]; then
+        echo ">>>> Default extension hash is not valid for $extension_type, trying text file..."
+        extensionHash=$(curl --retry 3 --retry-max-time 15 --max-time 5 -L -s ${shaUrl}.txt | cut -f1 -d" ")
+    fi
     echo ">>>> Gathering packageName"
     packageName=$(echo $remote_toolChain_metadata | yq " .components.$extension_type.versions.$latest_version.packageName" | tr -d '"')
     echo ">>>> Updating extensionVersion"
@@ -33,7 +38,7 @@ update_config_file()
             echo ">>>> Updating extensionHash"
             yq ".extension_packages.install_operations[$index].extensionHash = \"$extensionHash\"" $file_path > tempFile.$$.json && mv tempFile.$$.json $file_path
         fi
-        if [[ $ccurrentExtUrl != "null" ]]; then
+        if [[ $currentExtUrl != "null" ]]; then
             echo ">>>> Updating extensionUrl"
             if [[ $currentExtUrl == "file://"* ]]; then
                 newExtensionUrl=${currentExtUrl%/*}/${downloadUrl##*/}
@@ -74,7 +79,7 @@ for name in ${component_names[@]}; do
             version=$item
         fi
     done
-    if [[ ! -z $version ]];then
+    if [[ ! -z $version ]]; then
         component_version_map+=($name:$version)
     fi
 done
