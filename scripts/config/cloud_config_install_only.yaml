@@ -1,36 +1,60 @@
-controls:
-  logLevel: silly
-  logFilename: "/var/log/cloud/bigIpRuntimeInit.log"
-runtime_parameters: []
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - "/usr/bin/setdb provision.extramb 500"
-      - "/usr/bin/setdb restjavad.useextramb true"
-bigip_ready_enabled:
-  - name: provision_asm_module
-    type: inline
-    commands:
-      - tmsh modify sys provision asm level nominal
-  - name: save_sys_config
-    type: inline
-    commands:
-      - tmsh save sys config
-extension_packages:
-  install_operations:
-    - extensionType: do
-      extensionVersion: 1.27.0
-      extensionUrl: file:///var/config/rest/downloads/f5-declarative-onboarding-1.27.0-6.noarch.rpm
-      extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
-    - extensionType: as3
-      extensionVersion: 3.34.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.34.0/f5-appsvcs-3.34.0-4.noarch.rpm
-      extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
-    - extensionType: fast
-      extensionVersion: 1.15.0
-      extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.15.0/f5-appsvcs-templates-1.15.0-1.noarch.rpm
-      extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
-    - extensionType: ilx
-      extensionUrl: file:///var/config/rest/downloads/myIlxApp.rpm
-      extensionVerificationEndpoint: "/mgmt/shared/myIlxApp/info"
+{
+  "controls": {
+    "logLevel": "silly",
+    "logFilename": "/var/log/cloud/bigIpRuntimeInit.log"
+  },
+  "runtime_parameters": [],
+  "pre_onboard_enabled": [
+    {
+      "name": "provision_rest",
+      "type": "inline",
+      "commands": [
+        "/usr/bin/setdb provision.extramb 500",
+        "/usr/bin/setdb restjavad.useextramb true"
+      ]
+    }
+  ],
+  "bigip_ready_enabled": [
+    {
+      "name": "provision_asm_module",
+      "type": "inline",
+      "commands": [
+        "tmsh modify sys provision asm level nominal"
+      ]
+    },
+    {
+      "name": "save_sys_config",
+      "type": "inline",
+      "commands": [
+        "tmsh save sys config"
+      ]
+    }
+  ],
+  "extension_packages": {
+    "install_operations": [
+      {
+        "extensionType": "do",
+        "extensionVersion": "1.28.0",
+        "extensionUrl": "file:///var/config/rest/downloads/f5-declarative-onboarding-1.28.0-4.noarch.rpm",
+        "extensionHash": "fef1f81c259d1ead19c256a67b8dad492f2d70b1019ff520e16172a93e8c17c9"
+      },
+      {
+        "extensionType": "as3",
+        "extensionVersion": "3.35.0",
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.35.0/f5-appsvcs-3.35.0-4.noarch.rpm",
+        "extensionHash": "adc015330d71c48898e89c53a52b2b55717733144c1c488c7a86a697172aa848"
+      },
+      {
+        "extensionType": "fast",
+        "extensionVersion": "1.16.0",
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.16.0/f5-appsvcs-templates-1.16.0-1.noarch.rpm",
+        "extensionHash": "c615a641277a5a9f0cd9edce80137ac47435b0fee72351eca2cbcb279f279ba2"
+      },
+      {
+        "extensionType": "ilx",
+        "extensionUrl": "file:///var/config/rest/downloads/myIlxApp.rpm",
+        "extensionVerificationEndpoint": "/mgmt/shared/myIlxApp/info"
+      }
+    ]
+  }
+}

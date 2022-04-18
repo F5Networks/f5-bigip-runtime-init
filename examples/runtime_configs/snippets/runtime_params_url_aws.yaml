@@ -11,14 +11,14 @@ runtime_parameters:
         value: PUT
       - name: X-aws-ec2-metadata-token-ttl-seconds
         value: 21600
-    - name: BIGIP_PASSWORD
-      type: url
-      query: instanceId
-      value: 'http://169.254.169.254/latest/dynamic/instance-identity/document'
-      headers:
-        - name: Content-Type
-          value: json
-        - name: User-Agent
-          value: some-user-agent
-        - name: X-aws-ec2-metadata-token
-          value: "{{{AWS_SESSION_TOKEN}}}"
+  - name: BIGIP_PASSWORD
+    type: url
+    query: instanceId
+    value: 'http://169.254.169.254/latest/dynamic/instance-identity/document'
+    headers:
+      - name: Content-Type
+        value: json
+      - name: User-Agent
+        value: some-user-agent
+      - name: X-aws-ec2-metadata-token
+        value: "{{{AWS_SESSION_TOKEN}}}"

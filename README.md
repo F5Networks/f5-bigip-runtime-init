@@ -327,13 +327,13 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
+      extensionVersion: 1.28.0
     - extensionType: as3
-      extensionVersion: 3.34.0
+      extensionVersion: 3.35.0
     - extensionType: fast
-      extensionVersion: 1.15.0
+      extensionVersion: 1.16.0
     - extensionType: ts
-      extensionVersion: 1.26.0
+      extensionVersion: 1.27.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -473,13 +473,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
+      extensionVersion: 1.28.0
     - extensionType: as3
-      extensionVersion: 3.34.0
+      extensionVersion: 3.35.0
     - extensionType: fast
-      extensionVersion: 1.15.0
+      extensionVersion: 1.16.0
     - extensionType: ts
-      extensionVersion: 1.26.0
+      extensionVersion: 1.27.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -529,6 +529,7 @@ extension_services:
             password: 'BIGIP_PASSWORD'
             shell: bash
             userType: regular
+
 
 EOF
 
@@ -670,13 +671,13 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
+      extensionVersion: 1.28.0
     - extensionType: as3
-      extensionVersion: 3.34.0
+      extensionVersion: 3.35.0
     - extensionType: fast
-      extensionVersion: 1.15.0
+      extensionVersion: 1.16.0
     - extensionType: ts
-      extensionVersion: 1.26.0
+      extensionVersion: 1.27.0
 extension_services:
   service_operations:
     - extensionType: do
@@ -726,6 +727,7 @@ extension_services:
             password: 'BIGIP_PASSWORD'
             shell: bash
             userType: regular
+
 
 EOF
 
