@@ -101,7 +101,7 @@ lint_package:
     stage: test
     script:
         # linter
-        - npm install
+        - npm install --unsafe-perm
         - npm run lint
     tags:
         - cm-official-docker-executor
@@ -116,7 +116,7 @@ test_audit:
     stage: test
     script:
         # npm audit - uses custom audit processor wrapper
-        - npm install
+        - npm install --unsafe-perm
         - npm run audit
     tags:
         - cm-official-docker-executor
@@ -130,7 +130,7 @@ test_audit:
 unit_tests:
     stage: test
     script:
-        - npm install
+        - npm install --unsafe-perm
         - npm run test
     tags:
         - cm-official-docker-executor
@@ -165,7 +165,7 @@ check_content:
 check_schema:
     stage: test
     script:
-        - npm install
+        - npm install --unsafe-perm
         - npm run generate-readmes
         - if git diff | grep 'diff --git'; then exit 1; else exit 0; fi
     tags:
@@ -212,7 +212,7 @@ build_package:
         - apt-get install -y jq
         - apt-get install -y rpm
         # install node dependencies
-        - npm install
+        - npm install --unsafe-perm
         # build package artifact
         - npm run build
     tags:
@@ -667,7 +667,7 @@ test_functional_init_base_v14:
         - apt-get install sshpass
         # install node (and package dependencies )
         - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get -y install nodejs
-        - npm install
+        - npm install --unsafe-perm
         # copying artifacts inherited from functional_test_init target to root directory
         - cp -a env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/. .
         # executing fuctional test
