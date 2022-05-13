@@ -45,7 +45,7 @@ variable "imageProjectId" {
 variable "bigip_runtime_init_package_url" {
   description = "The delivery url for BIGIP Runtime Init package"
   type        = string
-  default     = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run"
+  default     = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run"
 }
 
 variable "instance-type" {
