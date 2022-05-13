@@ -1,0 +1,5 @@
+pre_onboard_enabled:
+  - name: example_remote_exec
+    type: url
+    commands:
+      - https://the-delivery-location.com/remote_pre_onboard.sh

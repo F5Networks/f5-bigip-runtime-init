@@ -46,6 +46,7 @@ controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit-test.log
   logToJson: true
+  extensionInstallDelayInMs: 60000
 
 ```
 ***
@@ -342,6 +343,9 @@ Type: `array`
 ```yaml
 aws:
   description: AWS Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -379,6 +383,9 @@ aws:
         index: 1
 azure:
   description: Azure Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: AZURE_SERVICE_PRINCIPAL
       type: secret
@@ -409,6 +416,9 @@ azure:
         index: 2
 gcp:
   description: Google Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -432,6 +442,9 @@ gcp:
         field: name
 hashicorp:
   description: Hashicorp Vault Example
+  controls:
+    logLevel: silly
+    logFilename: /var/log/cloud/bigIpRuntimeInit.log
   runtime_parameters:
     - name: ADMIN_PASS
       type: secret
@@ -782,63 +795,58 @@ This schema <u>does not</u> accept additional properties.
 
 ```yaml
 default:
-  description: Installs packages from metadata using latest versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.27.0
+        extensionVersion: 1.29.0
       - extensionType: as3
-        extensionVersion: 3.34.0
+        extensionVersion: 3.36.0
       - extensionType: fast
-        extensionVersion: 1.15.0
+        extensionVersion: 1.17.0
 versioned:
-  description: Installs packages using specific versions
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.27.0
+        extensionVersion: 1.29.0
       - extensionType: as3
-        extensionVersion: 3.34.0
+        extensionVersion: 3.36.0
       - extensionType: fast
-        extensionVersion: 1.15.0
+        extensionVersion: 1.17.0
 hashed:
-  description: Verifies and installs packages using specified hashes
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.27.0
-        extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+        extensionVersion: 1.29.0
+        extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
       - extensionType: as3
-        extensionVersion: 3.34.0
-        extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
+        extensionVersion: 3.36.0
+        extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
       - extensionType: fast
-        extensionVersion: 1.15.0
-        extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
+        extensionVersion: 1.17.0
+        extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
 url:
-  description: Installs packages from custom locations
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.27.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.27.0/f5-declarative-onboarding-1.27.0-6.noarch.rpm
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.29.0/f5-declarative-onboarding-1.29.0-8.noarch.rpm
+        extensionVersion: 1.29.0
       - extensionType: as3
-        extensionVersion: 3.34.0
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.34.0-4.noarch.rpm'
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.36.0-6.noarch.rpm'
+        extensionVersion: 3.36.0
       - extensionType: fast
-        extensionVersion: 1.15.0
         extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.15.0/f5-appsvcs-templates-1.15.0-1.noarch.rpm
+          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm
+        extensionVersion: 1.17.0
 ilx:
-  description: Installs a custom iLX package
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.27.0
+        extensionVersion: 1.29.0
       - extensionType: as3
-        extensionVersion: 3.34.0
+        extensionVersion: 3.36.0
       - extensionType: fast
-        extensionVersion: 1.15.0
+        extensionVersion: 1.17.0
       - extensionType: ilx
         extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
         extensionVersion: 1.0.0
@@ -888,7 +896,7 @@ This schema <u>does not</u> accept additional properties.
 				 - <i id="#/properties/service_operations/items/properties/value">path: #/properties/service_operations/items/properties/value</i>
 				 - Example values: 
 					 1. _"https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json"_
-					 2. _"file:///examples/declarations/as3.json"_
+					 2. _"file:///examples/automation_toolchain_declarations/as3.json"_
 					 3. _"class: AS3 action: deploy persist: true declaration: class: ADC schemaVersion: 3.0.0 id: urn:uuid:33045210-3ab8-4636-9b2a-c98d22ab915d label: Sample 1 remark: Simple HTTP Service with Round-Robin Load Balancing Sample_01: class: Tenant A1: class: Application template: http serviceMain: class: Service_HTTP virtualAddresses: - 10.0.1.10 pool: web_pool web_pool: class: Pool monitors: - http members: - servicePort: 80 serverAddresses: - 192.0.1.10 - 192.0.1.11"_
 			 - <b id="#/properties/service_operations/items/properties/verifyTls">verifyTls</b>
 				 - _For enabling secure site verification_
@@ -910,7 +918,6 @@ This schema <u>does not</u> accept additional properties.
 
 ```yaml
 url:
-  description: Configures services from a URL declaration
   extension_services:
     service_operations:
       - extensionType: do
@@ -923,16 +930,61 @@ url:
         value: >-
           https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_as3.json
 file:
-  description: Configures services from a file declaration
   extension_services:
     service_operations:
       - extensionType: as3
         type: url
-        value: 'file:///examples/declarations/as3.json'
+        value: 'file:///examples/automation_toolchain_declarations/as3.json'
 inline:
-  description: Configures services from an inline declaration
   extension_services:
     service_operations:
+      - extensionType: do
+        type: inline
+        value:
+          schemaVersion: 1.0.0
+          class: Device
+          label: >-
+            Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with
+            BYOL license
+          async: true
+          Common:
+            class: Tenant
+            My_DbVariables:
+              class: DbVariables
+              provision.extramb: 1000
+              restjavad.useextramb: true
+              ui.advisory.enabled: true
+              ui.advisory.color: blue
+              ui.advisory.text: BIG-IP Quickstart
+            My_Provisioning:
+              class: Provision
+              asm: nominal
+              ltm: nominal
+            My_Ntp:
+              class: NTP
+              servers:
+                - 169.254.169.253
+              timezone: UTC
+            My_Dns:
+              class: DNS
+              nameServers:
+                - 169.254.169.253
+            My_License:
+              class: License
+              licenseType: regKey
+              regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+            My_System:
+              class: System
+              autoPhonehome: true
+              hostname: HOST_NAME
+            quickstart:
+              class: User
+              partitionAccess:
+                all-partitions:
+                  role: admin
+              password: BIGIP_PASSWORD
+              shell: bash
+              userType: regular
       - extensionType: as3
         type: inline
         value:
@@ -1000,7 +1052,7 @@ custom_properties:
 ***
 ## Additional Examples
 
-### Automated Toolchain declarations referenced here are available in the examples/declarations folder.
+### Automated Toolchain declarations referenced here are available in the examples/automation_toolchain_declarations folder.
 
 ```yaml
 example_1:
@@ -1008,6 +1060,9 @@ example_1:
     Verifies and installs Automation Toolchain components (DO, AS3, FAST) on a
     local BIG-IP and then configures AS3 from a local declaration file.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1026,25 +1081,28 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
-          extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+          extensionVersion: 1.29.0
+          extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
         - extensionType: as3
-          extensionVersion: 3.34.0
-          extensionHash: 144e2fad49adf38697fd1b94694ef390d6e30cba7311c798ce43529de985042d
+          extensionVersion: 3.36.0
+          extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
         - extensionType: fast
-          extensionVersion: 1.15.0
-          extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
+          extensionVersion: 1.17.0
+          extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
     extension_services:
       service_operations:
         - extensionType: as3
           type: url
-          value: 'file:///examples/declarations/as3.json'
+          value: 'file:///examples/automation_toolchain_declarations/as3.json'
 example_2:
   description: >-
     Verifies and installs DO and myIlxApp RPMs from local directories and
     configures DO from a local declaration file. Install operations with an
     extensionUrl value that points to a local file stored on BIG-IP system.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1055,9 +1113,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.27.0-6.noarch.rpm
-          extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
-          extensionVersion: 1.27.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.29.0-8.noarch.rpm
+          extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
+          extensionVersion: 1.29.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -1073,6 +1131,9 @@ example_3:
     Installs DO, AS3, and FAST on a local BIG-IP and renders the Azure service
     principal secret into an AS3 declaration downloaded from a URL.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: AZURE_SERVICE_PRINCIPAL
         type: secret
@@ -1090,11 +1151,11 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1103,12 +1164,16 @@ example_3:
             https://cdn.f5.com/product/cloudsolutions/templates/f5-azure-arm-templates/examples/modules/bigip/autoscale_do.json
         - extensionType: as3
           type: url
-          value: 'file:///examples/declarations/example_3_as3.json'
+          value: >-
+            file:///examples/automation_toolchain_declarations/example_3_as3.json
 example_4:
   description: >-
     Renders secret referenced within DO declaration to configure the admin
     password on a BIG-IP device in AWS.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: ADMIN_PASS
         type: secret
@@ -1133,21 +1198,24 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_4_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_4_do.json'
 example_5:
   description: >-
     Renders secret referenced within DO declaration to configure the admin
     password on a BIG-IP device in GCP.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: ADMIN_PASS
         type: secret
@@ -1172,22 +1240,25 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_5_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_5_do.json'
 example_6:
   description: >-
     Replaces variables used within DO and AS3 declarations with properties from
     instance metadata to configure hostname, self IP addresses and pool members
     on BIG-IP device.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: HOST_NAME
         type: metadata
@@ -1234,24 +1305,28 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_6_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_6_do.json'
         - extensionType: as3
           type: url
-          value: 'file:///examples/declarations/example_7_as3.json'
+          value: >-
+            file:///examples/automation_toolchain_declarations/example_7_as3.json
 example_7:
   description: >-
     Installs AS3, DO, and FAST and uses an inline AS3 declaration to setup the
     BIG-IP.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1261,11 +1336,11 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1302,6 +1377,9 @@ example_7:
 example_8:
   description: Using runtime parameters with inline Automation Toolchain declarations.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: SCHEMA_VERSION
         type: static
@@ -1318,11 +1396,11 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1385,6 +1463,9 @@ example_8:
 example_9:
   description: Using custom pre-onboard and post-onboard commands.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: example_inline_command
         type: inline
@@ -1427,14 +1508,17 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     pre_onboard_enabled:
       - name: provision_rest
         type: inline
@@ -1444,11 +1528,11 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1464,15 +1548,18 @@ example_11:
     post_onboard_enabled, extension_packages.install_operations,
     extension_services.service_operations, and post_hook.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
-          extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+          extensionVersion: 1.29.0
+          extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
         - extensionType: as3
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.34.0/f5-appsvcs-3.34.0-4.noarch.rpm
-          extensionVersion: 3.34.0
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.36.0/f5-appsvcs-3.36.0-6.noarch.rpm
+          extensionVersion: 3.36.0
           verifyTls: false
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
@@ -1537,6 +1624,9 @@ example_12:
     Licenses BIG-IP device using BIG-IQ utility offering and authenticating with
     credentials stored in Azure KeyVault.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: HOST_NAME
         type: metadata
@@ -1560,19 +1650,22 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do
           type: url
-          value: 'file:///examples/declarations/example_7_do.json'
+          value: 'file:///examples/automation_toolchain_declarations/example_7_do.json'
 example_13:
   description: Renders the admin password using Hashicorp Vault approle authentication.
   runtime_config:
+    controls:
+      logLevel: silly
+      logFilename: /var/log/cloud/bigIpRuntimeInit.log
     runtime_parameters:
       - name: ADMIN_PASS
         type: secret
@@ -1620,11 +1713,11 @@ example_13:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.27.0
+          extensionVersion: 1.29.0
         - extensionType: as3
-          extensionVersion: 3.34.0
+          extensionVersion: 3.36.0
         - extensionType: fast
-          extensionVersion: 1.15.0
+          extensionVersion: 1.17.0
     extension_services:
       service_operations:
         - extensionType: do

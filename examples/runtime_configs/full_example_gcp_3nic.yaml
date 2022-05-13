@@ -1,0 +1,241 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.29.0
+      extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
+    - extensionType: as3
+      extensionVersion: 3.36.0
+      extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
+    - extensionType: cf
+      extensionVersion: 1.10.0
+      extensionHash: d758c985cac4dbef4b0732fe5900317ae97e67c6efca621a5b2b02c8c4bbeace
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        async: true
+        label: FAILOVER 3NIC BIG-IP declaration for Declarative Onboarding with PAYG
+          license
+        Common:
+          class: Tenant
+          hostname: '{{{HOST}}}'
+          My_Provisioning:
+            class: Provision
+            ltm: nominal
+            asm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 0.pool.ntp.org
+              - 1.pool.ntp.org
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.254
+            search:
+              - f5.com
+          My_System:
+            autoPhonehome: true
+            class: System
+          admin:
+            class: User
+            userType: regular
+            password: '{{{BIGIP_PASSWORD}}}'
+            shell: bash
+          externalGwRoute:
+            class: Route
+            target: external
+            network: '{{{EXTERNAL_GW}}}/32'
+            mtu: 1460
+          externalIntRoute:
+            class: Route
+            gw: '{{{EXTERNAL_GW}}}'
+            network: '{{{EXTERNAL_NETWORK}}}/{{{EXTERNAL_BITMASK}}}'
+            mtu: 1460
+          default:
+            class: Route
+            gw: '{{{EXTERNAL_GW}}}'
+            network: default
+            mtu: 1460
+          internalGwRoute:
+            class: Route
+            target: internal
+            network: '{{{INTERNAL_GW}}}/32'
+            mtu: 1460
+          internalIntRoute:
+            class: Route
+            gw: '{{{EXTERNAL_GW}}}'
+            network: '{{{INTERNAL_NETWORK}}}/{{{INTERNAL_BITMASK}}}'
+            mtu: 1460
+          configSync:
+            class: ConfigSync
+            configsyncIp: '{{{SELF_IP_EXTERNAL}}}'
+          failoverAddress:
+            class: FailoverUnicast
+            address: '{{{SELF_IP_EXTERNAL}}}'
+          failoverGroup:
+            class: DeviceGroup
+            type: sync-failover
+            members:
+              - '{{{HOST}}}'
+              - '{{{UNIQUE}}}-bigip2.c.{{{PROJECT_ID}}}.internal'
+            owner: /Common/failoverGroup/members/0
+            autoSync: true
+            saveOnAutoSync: false
+            networkFailover: true
+            fullLoadOnSync: false
+            asmSync: false
+          trust:
+            class: DeviceTrust
+            localUsername: admin
+            localPassword: '{{{BIGIP_PASSWORD}}}'
+            remoteHost: /Common/failoverGroup/members/0
+            remoteUsername: admin
+            remotePassword: '{{{BIGIP_PASSWORD}}}'
+          external:
+            class: VLAN
+            tag: 4094
+            mtu: 1460
+            interfaces:
+              - name: '1.0'
+                tagged: false
+          external-self:
+            class: SelfIp
+            address: '{{{SELF_IP_EXTERNAL}}}/32'
+            vlan: external
+            allowService:
+              - tcp:80
+              - tcp:443
+              - tcp:4353
+              - udp:1026
+            trafficGroup: traffic-group-local-only
+          internal:
+            class: VLAN
+            tag: 4093
+            mtu: 1460
+            interfaces:
+              - name: '1.2'
+                tagged: false
+          internal-self:
+            class: SelfIp
+            address: '{{{SELF_IP_INTERNAL}}}/32'
+            vlan: internal
+            allowService:
+              - udp:1026
+              - tcp:4353
+            trafficGroup: traffic-group-local-only
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            config.allow.rfc3927: enable
+            dhclient.mgmt: disable
+            tm.tcpudptxchecksum: Software-only
+    - extensionType: cf
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Cloud_Failover
+        environment: gcp
+        controls:
+          class: Controls
+          logLevel: silly
+        externalStorage:
+          scopingTags:
+            f5_cloud_failover_label: bigip_high_availability_solution
+        failoverAddresses:
+          enabled: true
+          scopingTags:
+            f5_cloud_failover_label: bigip_high_availability_solution
+          requireScopingTags: false
+pre_onboard_enabled: []
+runtime_parameters:
+  - name: BIGIP_PASSWORD
+    type: secret
+    secretProvider:
+      environment: gcp
+      type: SecretsManager
+      version: latest
+      secretId: mySecretId
+  - name: HOST
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/hostname
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: PROJECT_ID
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/project/project-id
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: UNIQUE
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/attributes/unique-string
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: SELF_IP_EXTERNAL
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/ip
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: SELF_IP_INTERNAL
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/2/ip
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: EXTERNAL_GW
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/gateway
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: INTERNAL_GW
+    type: url
+    value: http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/2/gateway
+    headers:
+      - name: Metadata-Flavor
+        value: Google
+  - name: EXTERNAL_BITMASK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 0
+      ipcalc: bitmask
+  - name: INTERNAL_BITMASK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 2
+      ipcalc: bitmask
+  - name: EXTERNAL_NETWORK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 0
+      ipcalc: base
+  - name: INTERNAL_NETWORK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 2
+      ipcalc: base
+post_onboard_enabled: []

@@ -1,0 +1,5 @@
+pre_onboard_enabled:
+  - name: example_local_exec
+    type: file
+    commands:
+      - /tmp/pre_onboard_script.sh

@@ -94,6 +94,70 @@ describe('Logger', function() {
         }, 5000);
     });
 
+    it('should validate sensitive field is hidden for default debug format', function(done) {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test_sensitive_default_format.log', F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'debug' });
+        const logMessage = '{"schemaVersion":"1.0.0","class":"Device","async":true,"label":"my BIG-IP declaration for declarative onboarding","Common":{"class":"Tenant","mySystem":{"class":"System","hostname":"ip-10-0-0-215.us-west-2.compute.internal","cliInactivityTimeout":1200,"consoleInactivityTimeout":1200,"autoPhonehome":false},"myDns":{"class":"DNS","nameServers":["8.8.8.8"]},"myNtp":{"class":"NTP","servers":["0.pool.ntp.org"],"timezone":"UTC"},"admin":{"class":"User","userType":"regular","password":"SomeSensitiveValue","shell":"bash"},"vaultadmin":{"class":"User","userType":"regular","password":"b1gAdminPazz","shell":"bash","partitionAccess":{"all-partitions":{"role":"admin"}}},"myProvisioning":{"class":"Provision","ltm":"nominal","asm":"nominal"},"external":{"class":"VLAN","tag":4094,"mtu":1500,"interfaces":[{"name":"1.1","tagged":true}]},"external-self":{"class":"SelfIp","address":"10.0.1.32/24","vlan":"external","allowService":"default","trafficGroup":"traffic-group-local-only"},"dbvars":{"class":"DbVariables","provision.extramb":500,"restjavad.useextramb":true}}}';
+        logger = Logger.getLogger();
+        logger.debug(logMessage);
+        this.timeout(10000);
+        setTimeout(() => {
+            assert.ok(fs.existsSync('tmp/test_sensitive_default_format.log'));
+            const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
+            assert.strictEqual(logMessage.split("********").length, 3);
+            fs.unlinkSync('tmp/test_sensitive_default_format.log');
+            fs.rmdirSync('tmp/');
+            done();
+        }, 5000);
+    });
+
+    it('should validate sensitive field is hidden for default silly format', function(done) {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test_sensitive_default_format.log', F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
+        const logMessage = '{"schemaVersion":"1.0.0","class":"Device","async":true,"label":"my BIG-IP declaration for declarative onboarding","Common":{"class":"Tenant","mySystem":{"class":"System","hostname":"ip-10-0-0-215.us-west-2.compute.internal","cliInactivityTimeout":1200,"consoleInactivityTimeout":1200,"autoPhonehome":false},"myDns":{"class":"DNS","nameServers":["8.8.8.8"]},"myNtp":{"class":"NTP","servers":["0.pool.ntp.org"],"timezone":"UTC"},"admin":{"class":"User","userType":"regular","password":"SomeSensitiveValue","shell":"bash"},"vaultadmin":{"class":"User","userType":"regular","password":"b1gAdminPazz","shell":"bash","partitionAccess":{"all-partitions":{"role":"admin"}}},"myProvisioning":{"class":"Provision","ltm":"nominal","asm":"nominal"},"external":{"class":"VLAN","tag":4094,"mtu":1500,"interfaces":[{"name":"1.1","tagged":true}]},"external-self":{"class":"SelfIp","address":"10.0.1.32/24","vlan":"external","allowService":"default","trafficGroup":"traffic-group-local-only"},"dbvars":{"class":"DbVariables","provision.extramb":500,"restjavad.useextramb":true}}}';
+        logger = Logger.getLogger();
+        logger.silly(logMessage);
+        this.timeout(10000);
+        setTimeout(() => {
+            assert.ok(fs.existsSync('tmp/test_sensitive_default_format.log'));
+            const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
+            assert.strictEqual(logMessage.split("********").length, 3);
+            fs.unlinkSync('tmp/test_sensitive_default_format.log');
+            fs.rmdirSync('tmp/');
+            done();
+        }, 5000);
+    });
+
+    it('should validate sensitive field is hidden for default warn format', function(done) {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test_sensitive_default_format.log', F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'warn' });
+        const logMessage = '{"schemaVersion":"1.0.0","class":"Device","async":true,"label":"my BIG-IP declaration for declarative onboarding","Common":{"class":"Tenant","mySystem":{"class":"System","hostname":"ip-10-0-0-215.us-west-2.compute.internal","cliInactivityTimeout":1200,"consoleInactivityTimeout":1200,"autoPhonehome":false},"myDns":{"class":"DNS","nameServers":["8.8.8.8"]},"myNtp":{"class":"NTP","servers":["0.pool.ntp.org"],"timezone":"UTC"},"admin":{"class":"User","userType":"regular","password":"SomeSensitiveValue","shell":"bash"},"vaultadmin":{"class":"User","userType":"regular","password":"b1gAdminPazz","shell":"bash","partitionAccess":{"all-partitions":{"role":"admin"}}},"myProvisioning":{"class":"Provision","ltm":"nominal","asm":"nominal"},"external":{"class":"VLAN","tag":4094,"mtu":1500,"interfaces":[{"name":"1.1","tagged":true}]},"external-self":{"class":"SelfIp","address":"10.0.1.32/24","vlan":"external","allowService":"default","trafficGroup":"traffic-group-local-only"},"dbvars":{"class":"DbVariables","provision.extramb":500,"restjavad.useextramb":true}}}';
+        logger = Logger.getLogger();
+        logger.warn(logMessage);
+        this.timeout(10000);
+        setTimeout(() => {
+            assert.ok(fs.existsSync('tmp/test_sensitive_default_format.log'));
+            const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
+            assert.strictEqual(logMessage.split("********").length, 3);
+            fs.unlinkSync('tmp/test_sensitive_default_format.log');
+            fs.rmdirSync('tmp/');
+            done();
+        }, 5000);
+    });
+
+    it('should validate sensitive field is hidden for default error format', function(done) {
+        sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test_sensitive_default_format.log', F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'error' });
+        const logMessage = '{"schemaVersion":"1.0.0","class":"Device","async":true,"label":"my BIG-IP declaration for declarative onboarding","Common":{"class":"Tenant","mySystem":{"class":"System","hostname":"ip-10-0-0-215.us-west-2.compute.internal","cliInactivityTimeout":1200,"consoleInactivityTimeout":1200,"autoPhonehome":false},"myDns":{"class":"DNS","nameServers":["8.8.8.8"]},"myNtp":{"class":"NTP","servers":["0.pool.ntp.org"],"timezone":"UTC"},"admin":{"class":"User","userType":"regular","password":"SomeSensitiveValue","shell":"bash"},"vaultadmin":{"class":"User","userType":"regular","password":"b1gAdminPazz","shell":"bash","partitionAccess":{"all-partitions":{"role":"admin"}}},"myProvisioning":{"class":"Provision","ltm":"nominal","asm":"nominal"},"external":{"class":"VLAN","tag":4094,"mtu":1500,"interfaces":[{"name":"1.1","tagged":true}]},"external-self":{"class":"SelfIp","address":"10.0.1.32/24","vlan":"external","allowService":"default","trafficGroup":"traffic-group-local-only"},"dbvars":{"class":"DbVariables","provision.extramb":500,"restjavad.useextramb":true}}}';
+        logger = Logger.getLogger();
+        logger.error(logMessage);
+        this.timeout(10000);
+        setTimeout(() => {
+            assert.ok(fs.existsSync('tmp/test_sensitive_default_format.log'));
+            const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
+            assert.strictEqual(logMessage.split("********").length, 3);
+            fs.unlinkSync('tmp/test_sensitive_default_format.log');
+            fs.rmdirSync('tmp/');
+            done();
+        }, 5000);
+    });
+
     it('should validate sensitive field is hidden for json log format', function(done) {
         sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_FILENAME: 'tmp/test_sensitive_json_format.log', F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON: true });
         const logMessage = '{"schemaVersion":"1.0.0","class":"Device","async":true,"label":"my BIG-IP declaration for declarative onboarding","Common":{"class":"Tenant","mySystem":{"class":"System","hostname":"ip-10-0-0-225.us-west-2.compute.internal","cliInactivityTimeout":1200,"consoleInactivityTimeout":1200,"autoPhonehome":false},"myDns":{"class":"DNS","nameServers":["8.8.8.8"]},"myNtp":{"class":"NTP","servers":["0.pool.ntp.org"],"timezone":"UTC"},"admin":{"class":"User","userType":"regular","password":"StrongPassword2010!","shell":"bash"},"vaultadmin":{"class":"User","userType":"regular","password":"b1gAdminPazz","shell":"bash","partitionAccess":{"all-partitions":{"role":"admin"}}},"myProvisioning":{"class":"Provision","ltm":"nominal","asm":"nominal"},"external":{"class":"VLAN","tag":4094,"mtu":1500,"interfaces":[{"name":"1.1","tagged":true}]},"external-self":{"class":"SelfIp","address":"10.0.1.210/24","vlan":"external","allowService":"default","trafficGroup":"traffic-group-local-only"},"dbvars":{"class":"DbVariables","provision.extramb":500,"restjavad.useextramb":true}}}';

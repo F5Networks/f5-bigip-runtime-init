@@ -1,0 +1,15 @@
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: compute
+        field: name
+  - name: EXTERNAL_BITMASK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 0
+      ipcalc: bitmask

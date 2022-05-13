@@ -1,0 +1,5 @@
+post_onboard_enabled:
+  - name: example_local_exec
+    type: file
+    commands:
+      - /tmp/post_onboard_script.sh

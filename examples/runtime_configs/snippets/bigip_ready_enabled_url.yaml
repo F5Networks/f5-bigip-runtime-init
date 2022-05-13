@@ -1,0 +1,6 @@
+description: Runs commands from a URL
+bigip_ready_enabled:
+  - name: example_remote_exec
+    type: url
+    commands:
+      - https://the-delivery-location.com/bigip_ready_enabled.sh

@@ -25,6 +25,10 @@ update_config_file()
     downloadUrl=$(echo $remote_toolChain_metadata | yq " .components.$extension_type.versions.$latest_version.downloadUrl" | tr -d '"')
     shaUrl="${downloadUrl}.sha256"
     extensionHash=$(curl --retry 3 --retry-max-time 15 --max-time 5 -L -s ${shaUrl} | cut -f1 -d" ")
+    if [[ $extensionHash =~ "Not" ]]; then
+        echo ">>>> Default extension hash is not valid for $extension_type, trying text file..."
+        extensionHash=$(curl --retry 3 --retry-max-time 15 --max-time 5 -L -s ${shaUrl}.txt | cut -f1 -d" ")
+    fi
     echo ">>>> Gathering packageName"
     packageName=$(echo $remote_toolChain_metadata | yq " .components.$extension_type.versions.$latest_version.packageName" | tr -d '"')
     echo ">>>> Updating extensionVersion"
@@ -34,7 +38,7 @@ update_config_file()
             echo ">>>> Updating extensionHash"
             yq ".extension_packages.install_operations[$index].extensionHash = \"$extensionHash\"" $file_path > tempFile.$$.json && mv tempFile.$$.json $file_path
         fi
-        if [[ $ccurrentExtUrl != "null" ]]; then
+        if [[ $currentExtUrl != "null" ]]; then
             echo ">>>> Updating extensionUrl"
             if [[ $currentExtUrl == "file://"* ]]; then
                 newExtensionUrl=${currentExtUrl%/*}/${downloadUrl##*/}
@@ -75,7 +79,7 @@ for name in ${component_names[@]}; do
             version=$item
         fi
     done
-    if [[ ! -z $version ]];then
+    if [[ ! -z $version ]]; then
         component_version_map+=($name:$version)
     fi
 done
@@ -86,18 +90,58 @@ echo "***** Phase 3. Syncing local config to match remote"
 echo $remote_toolChain_metadata | yq . > src/lib/bigip/toolchain/toolchain_metadata.json
 
 echo "***** Phase 4. Syncing all config examples to use lastest version"
-config_files=$(ls examples/config/)
+config_files=$(ls examples/runtime_configs/)
 for filename in $config_files; do
-    echo ">>>> Processing file: examples/config/$filename"
-    isRuntimeConfig=$(cat examples/config/$filename | yq ".extension_packages.install_operations")
+    echo ">>>> Processing file: examples/runtime_configs/$filename"
+    isRuntimeConfig=$(cat examples/runtime_configs/$filename | yq ".extension_packages.install_operations")
     if [[ "$isRuntimeConfig" != "null" ]]; then
         for item in ${component_version_map[@]}; do
             latestVersion=${item##*:}
             extensionType=${item%:*}
-            currUsedVersion=$(cat examples/config/$filename | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
+            currUsedVersion=$(cat examples/runtime_configs/$filename | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
             if [[ ! -z $currUsedVersion ]]; then
                 if [[ $currUsedVersion != $latestVersion ]]; then
-                    update_config_file "examples/config/$filename" $extensionType $latestVersion
+                    update_config_file "examples/runtime_configs/$filename" $extensionType $latestVersion
+                fi
+            fi
+        done
+    else
+        echo ">>>>> WARNING: Found config file without install_operations defined  - ${filename}"
+    fi
+done
+
+config_files=$(ls examples/runtime_configs/snippets/)
+for filename in $config_files; do
+    echo ">>>> Processing file: examples/runtime_configs/snippets/$filename"
+    isRuntimeConfig=$(cat examples/runtime_configs/snippets/$filename | yq ".extension_packages.install_operations")
+    if [[ "$isRuntimeConfig" != "null" ]]; then
+        for item in ${component_version_map[@]}; do
+            latestVersion=${item##*:}
+            extensionType=${item%:*}
+            currUsedVersion=$(cat examples/runtime_configs/snippets/$filename | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
+            if [[ ! -z $currUsedVersion ]]; then
+                if [[ $currUsedVersion != $latestVersion ]]; then
+                    update_config_file "examples/runtime_configs/snippets/$filename" $extensionType $latestVersion
+                fi
+            fi
+        done
+    else
+        echo ">>>>> WARNING: Found config file without install_operations defined  - ${filename}"
+    fi
+done
+
+config_files=$(ls scripts/config/)
+for filename in $config_files; do
+    echo ">>>> Processing file: scripts/config/$filename"
+    isRuntimeConfig=$(cat scripts/config/$filename | yq ".extension_packages.install_operations")
+    if [[ "$isRuntimeConfig" != "null" ]]; then
+        for item in ${component_version_map[@]}; do
+            latestVersion=${item##*:}
+            extensionType=${item%:*}
+            currUsedVersion=$(cat scripts/config/$filename | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
+            if [[ ! -z $currUsedVersion ]]; then
+                if [[ $currUsedVersion != $latestVersion ]]; then
+                    update_config_file "scripts/config/$filename" $extensionType $latestVersion
                 fi
             fi
         done

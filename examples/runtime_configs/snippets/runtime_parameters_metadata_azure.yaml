@@ -1,0 +1,21 @@
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: compute
+      field: name
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 1
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      environment: azure
+      type: network
+      field: ipv4
+      index: 2

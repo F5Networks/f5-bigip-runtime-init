@@ -1,0 +1,60 @@
+{
+  "controls": {
+    "logLevel": "silly",
+    "logFilename": "/var/log/cloud/bigIpRuntimeInit.log"
+  },
+  "runtime_parameters": [],
+  "pre_onboard_enabled": [
+    {
+      "name": "provision_rest",
+      "type": "inline",
+      "commands": [
+        "/usr/bin/setdb provision.extramb 500",
+        "/usr/bin/setdb restjavad.useextramb true"
+      ]
+    }
+  ],
+  "bigip_ready_enabled": [
+    {
+      "name": "provision_asm_module",
+      "type": "inline",
+      "commands": [
+        "tmsh modify sys provision asm level nominal"
+      ]
+    },
+    {
+      "name": "save_sys_config",
+      "type": "inline",
+      "commands": [
+        "tmsh save sys config"
+      ]
+    }
+  ],
+  "extension_packages": {
+    "install_operations": [
+      {
+        "extensionType": "do",
+        "extensionVersion": "1.29.0",
+        "extensionUrl": "file:///var/config/rest/downloads/f5-declarative-onboarding-1.29.0-8.noarch.rpm",
+        "extensionHash": "c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f"
+      },
+      {
+        "extensionType": "as3",
+        "extensionVersion": "3.36.0",
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.36.0/f5-appsvcs-3.36.0-6.noarch.rpm",
+        "extensionHash": "f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0"
+      },
+      {
+        "extensionType": "fast",
+        "extensionVersion": "1.17.0",
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm",
+        "extensionHash": "94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a"
+      },
+      {
+        "extensionType": "ilx",
+        "extensionUrl": "file:///var/config/rest/downloads/myIlxApp.rpm",
+        "extensionVerificationEndpoint": "/mgmt/shared/myIlxApp/info"
+      }
+    ]
+  }
+}
