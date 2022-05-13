@@ -1,0 +1,206 @@
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 1000
+      - /usr/bin/setdb restjavad.useextramb true
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      type: compute
+      environment: aws
+      field: hostname
+  - name: REGION
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/dynamic/instance-identity/document
+      query: region
+  - name: BIGIP_PASSWORD
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/dynamic/instance-identity/document
+      query: instanceId
+  - name: SELF_IP_EXTERNAL
+    type: metadata
+    metadataProvider:
+      type: network
+      environment: aws
+      field: local-ipv4s
+      index: 1
+  - name: SELF_IP_INTERNAL
+    type: metadata
+    metadataProvider:
+      type: network
+      environment: aws
+      field: local-ipv4s
+      index: 2
+  - name: DEFAULT_ROUTE
+    type: metadata
+    metadataProvider:
+      type: network
+      environment: aws
+      field: subnet-ipv4-cidr-block
+      index: 1
+bigip_ready_enabled: []
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.29.0
+      extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
+    - extensionType: as3
+      extensionVersion: 3.36.0
+      extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
+    - extensionType: ts
+      extensionVersion: 1.28.0
+      extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
+    - extensionType: fast
+      extensionVersion: 1.17.0
+      extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 3NIC BIG-IP declaration for Declarative Onboarding with PAYG
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: '{{{HOST_NAME}}}'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: '{{{BIGIP_PASSWORD}}}'
+            shell: bash
+            userType: regular
+          default:
+            class: Route
+            gw: '{{{DEFAULT_ROUTE}}}'
+            mtu: 1500
+            network: default
+          app-route:
+            class: Route
+            gw: 10.0.2.1
+            network: 10.0.3.0/24
+          external:
+            class: VLAN
+            interfaces:
+              - name: '1.1'
+                tagged: false
+            mtu: 1500
+            tag: 4094
+          external-self:
+            class: SelfIp
+            address: '{{{SELF_IP_EXTERNAL}}}'
+            allowService: none
+            trafficGroup: traffic-group-local-only
+            vlan: external
+          internal:
+            class: VLAN
+            interfaces:
+              - name: '1.2'
+                tagged: false
+            mtu: 1500
+            tag: 4093
+          internal-self:
+            class: SelfIp
+            address: '{{{SELF_IP_INTERNAL}}}'
+            allowService: default
+            trafficGroup: traffic-group-local-only
+            vlan: internal
+    - extensionType: as3
+      type: inline
+      value:
+        class: ADC
+        schemaVersion: 3.0.0
+        label: Quickstart
+        remark: Quickstart
+        Tenant_1:
+          class: Tenant
+          Shared:
+            class: Application
+            template: shared
+            shared_pool:
+              class: Pool
+              remark: Service 1 shared pool
+              members:
+                - serverAddresses:
+                    - 10.0.3.4
+                  servicePort: 80
+              monitors:
+                - http
+            Custom_HTTP_Profile:
+              class: HTTP_Profile
+              xForwardedFor: true
+            Custom_WAF_Policy:
+              class: WAF_Policy
+              url: >-
+                https://raw.githubusercontent.com/F5Networks/f5-aws-cloudformation-v2/v1.1.0.0/examples/quickstart/bigip-configurations/Rapid_Deployment_Policy_13_1.xml
+              enforcementMode: blocking
+              ignoreChanges: false
+          HTTP_Service:
+            class: Application
+            template: http
+            serviceMain:
+              class: Service_HTTP
+              virtualAddresses:
+                - 10.0.0.101
+              snat: auto
+              profileHTTP:
+                use: /Tenant_1/Shared/Custom_HTTP_Profile
+              policyWAF:
+                use: /Tenant_1/Shared/Custom_WAF_Policy
+              pool: /Tenant_1/Shared/shared_pool
+          HTTPS_Service:
+            class: Application
+            template: https
+            serviceMain:
+              class: Service_HTTPS
+              virtualAddresses:
+                - 10.0.0.101
+              snat: auto
+              profileHTTP:
+                use: /Tenant_1/Shared/Custom_HTTP_Profile
+              policyWAF:
+                use: /Tenant_1/Shared/Custom_WAF_Policy
+              pool: /Tenant_1/Shared/shared_pool
+              serverTLS:
+                bigip: /Common/clientssl
+              redirect80: false
+post_onboard_enabled: []

@@ -71,7 +71,7 @@ From a high level overview, using this tool involves three steps:
 
 - Step 2: Download and install F5 BIG-IP Runtime Init using the self-extracting installer: 
   ```sh
-  curl -o /tmp/f5-bigip-runtime-init-1.4.1-1.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run && bash /tmp/f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud azure'
+  curl -o /tmp/f5-bigip-runtime-init-1.4.2-1.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run && bash /tmp/f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud azure'
   ```
   See [installer](#installer) details and [downloads](#downloads) below.
 
@@ -160,7 +160,7 @@ The self extracting installer accepts the following parameters:
 
 ex:
 ```
- curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud aws'
+ curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud aws'
 ```
 
 The installer allows to configure HTTP requests retries to make installation robust and tolerant to a network instability. This can be done using the following environment variables:
@@ -179,32 +179,32 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 
 | Cloud | Type | Location |
 | --- | --- | --- |
-| All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run |
-| All | SHA256 | https://github.com/f5networks/f5-bigip-runtime-init/releases/download/1.4.1/f5-bigip-runtime-init-1.4.1-1.gz.run.sha256 |
-| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-all-1.4.1-1-signed.noarch.rpm |
-| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-all-1.4.1-1-signed.noarch.rpm.sha256 |
-| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-aws-1.4.1-1-signed.noarch.rpm |
-| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-aws-1.4.1-1-signed.noarch.rpm.sha256 |
-| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-azure-1.4.1-1-signed.noarch.rpm |
-| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-azure-1.4.1-1-signed.noarch.rpm.sha256 |
-| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-gcp-1.4.1-1-signed.noarch.rpm |
-| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-gcp-1.4.1-1-signed.noarch.rpm.sha256 |
-| None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-base-1.4.1-1-signed.noarch.rpm |
-| None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/rpms/f5-bigip-runtime-init-base-1.4.1-1-signed.noarch.rpm.sha256 |
+| All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run |
+| All | SHA256 | https://github.com/f5networks/f5-bigip-runtime-init/releases/download/1.4.2/f5-bigip-runtime-init-1.4.2-1.gz.run.sha256 |
+| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-all-1.4.2-1-signed.noarch.rpm |
+| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-all-1.4.2-1-signed.noarch.rpm.sha256 |
+| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-aws-1.4.2-1-signed.noarch.rpm |
+| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-aws-1.4.2-1-signed.noarch.rpm.sha256 |
+| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-azure-1.4.2-1-signed.noarch.rpm |
+| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-azure-1.4.2-1-signed.noarch.rpm.sha256 |
+| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-gcp-1.4.2-1-signed.noarch.rpm |
+| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-gcp-1.4.2-1-signed.noarch.rpm.sha256 |
+| None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-base-1.4.2-1-signed.noarch.rpm |
+| None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/rpms/f5-bigip-runtime-init-base-1.4.2-1-signed.noarch.rpm.sha256 |
 
 ## Usage Examples
 
 ### Azure (ARM Template) Virtual Machine extension snippet
 #### Download F5 BIG-IP Runtime Config from URL
 ```json
-"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
+"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
 "fileUris": [
   "https://example.com/runtime-init-conf.yaml"
 ]
 ```
 #### Use inline F5 BIG-IP Runtime Config
 ```json
-"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run; bash f5-bigip-runtime-init-1.4.1-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
+"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run; bash f5-bigip-runtime-init-1.4.2-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
 ```
 
 ### Terraform
@@ -295,6 +295,9 @@ The startup script contains the following contents.
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -317,7 +320,6 @@ bigip_ready_enabled:
       - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
         -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
         jq .'
-      - f5mku -r {{{ ADMIN_PASS }}}
   - name: reset_master_key
     type: inline
     commands:
@@ -325,26 +327,67 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
+      extensionVersion: 1.29.0
     - extensionType: as3
-      extensionVersion: 3.34.0
+      extensionVersion: 3.36.0
     - extensionType: fast
-      extensionVersion: 1.15.0
+      extensionVersion: 1.17.0
     - extensionType: ts
-      extensionVersion: 1.26.0
+      extensionVersion: 1.28.0
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
-    - extensionType: as3
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: 'HOST_NAME'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: 'BIGIP_PASSWORD'
+            shell: bash
+            userType: regular
 
 
 EOF
 
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud azure'
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud azure'
 
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
@@ -410,6 +453,9 @@ the startup script is templatized in startup-script.tpl and contains the followi
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -427,26 +473,67 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
+      extensionVersion: 1.29.0
     - extensionType: as3
-      extensionVersion: 3.34.0
+      extensionVersion: 3.36.0
     - extensionType: fast
-      extensionVersion: 1.15.0
+      extensionVersion: 1.17.0
     - extensionType: ts
-      extensionVersion: 1.26.0
+      extensionVersion: 1.28.0
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
-    - extensionType: as3
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: 'HOST_NAME'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: 'BIGIP_PASSWORD'
+            shell: bash
+            userType: regular
 
 
 EOF
 
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud aws'
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud aws'
 
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
@@ -564,6 +651,9 @@ the startup script startup-script.tpl is passed to via the instance's ```metadat
 mkdir -p /config/cloud
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
 runtime_parameters:
   - name: ADMIN_PASS
     type: secret
@@ -581,26 +671,67 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
+      extensionVersion: 1.29.0
     - extensionType: as3
-      extensionVersion: 3.34.0
+      extensionVersion: 3.36.0
     - extensionType: fast
-      extensionVersion: 1.15.0
+      extensionVersion: 1.17.0
     - extensionType: ts
-      extensionVersion: 1.26.0
+      extensionVersion: 1.28.0
 extension_services:
   service_operations:
     - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/do_w_admin.json
-    - extensionType: as3
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/f5-bigip-runtime-init/main/examples/declarations/as3.json
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 169.254.169.253
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: 'HOST_NAME'
+          quickstart:
+            class: User
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: 'BIGIP_PASSWORD'
+            shell: bash
+            userType: regular
 
 
 EOF
 
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.1/dist/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud gcp'
+curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.2/dist/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud gcp'
 
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 ```
@@ -869,12 +1000,12 @@ By default, this tool makes calls to the Internet to download a GPG key [here](h
 
 Example (secure) of hosting the gpg key locally and disabling checking for latest Automation Tool Chain packages.
 ```
- curl https://myprivatehost/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key --skip-toolchain-metadata-sync'
+ curl https://myprivatehost/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key --skip-toolchain-metadata-sync'
 ```
 
 Example (thisisinsecure) of skipping downloading the GPG key and checking for latest Automation Tool Chain packages, using a local copy of the metadata instead. 
 ```
-curl https://myprivatehost/f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run -o f5-bigip-runtime-init-1.4.1-1.gz.run && bash f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud aws --skip-verify --skip-toolchain-metadata-sync'
+curl https://myprivatehost/f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run -o f5-bigip-runtime-init-1.4.2-1.gz.run && bash f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud aws --skip-verify --skip-toolchain-metadata-sync'
 ```
 
 #### Disable Calls from the Command
@@ -999,7 +1130,7 @@ Here is an example of the payload that is sent by F5 TEEM
 ## Troubleshooting
 
 ### F5 Automation Toolchain Components
-F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below).  
+F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below) as well as under _/var/log/restnoded/restnoded.log_ since BIGIP iControl LX extensions (i.e. DO, AS3, CFE and so on) send their output to this log file. 
 
 Help with troubleshooting individual Automation Toolchain components can be found at F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/):
 - DO: https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/troubleshooting.html
@@ -1017,7 +1148,7 @@ As a part of the installation workflow, by default, Runtime Init would fetch the
 In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery url for the "extension metadata" file using "--toolchain-metadata-file-url" parameter. See the [Installer](#installer) section for more details. 
 
 ### Controls
-Runtime init declaration provides a list of controls intended for tuning Runtime Init execution: 
+Runtime init declaration provides a list of controls intended for tuning Runtime Init execution as well as helping with troubleshooting issues: 
 
 ```yaml
      controls:
@@ -1078,7 +1209,7 @@ The logging settings can be configured using controls directive or enviroment va
 
 Example of how to set the log level using an environment variable:
 ```bash
-export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-1.4.1-1.gz.run -- '--cloud ${CLOUD}'
+export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-1.4.2-1.gz.run -- '--cloud ${CLOUD}'
 ```
 
 

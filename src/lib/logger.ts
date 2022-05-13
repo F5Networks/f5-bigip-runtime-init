@@ -83,6 +83,7 @@ export default class Logger{
 
 
         const logger = winston.createLogger({
+            format: Logger._getLoggingFormat(),
             transports: transports
         });
 

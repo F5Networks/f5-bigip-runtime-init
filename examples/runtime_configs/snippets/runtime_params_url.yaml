@@ -1,0 +1,52 @@
+aws:
+  runtime_parameters:
+    - name: AWS_SESSION_TOKEN
+      type: url
+      value: http://169.254.169.254/latest/api/token
+      headers:
+        - name: Content-Type
+          value: json
+        - name: User-Agent
+          value: f5-bigip-runtime-init
+        - name: method
+          value: PUT
+        - name: X-aws-ec2-metadata-token-ttl-seconds
+          value: 21600
+azure:
+  runtime_parameters:
+    - name: RESOURCE_GROUP_NAME
+      type: url
+      value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+      query: resourceGroupName
+      headers:
+        - name: Metadata
+          value: true
+    - name: WORKSPACE_ID
+      type: url
+      value: 'http://169.254.169.254/metadata/instance/compute/tagsList?api-version=2020-09-01'
+      query: "[?name=='workspaceId'].value|[0]"
+      headers:
+        - name: Metadata
+          value: true
+    - name: SUBSCRIPTION_ID
+      type: url
+      value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+      query: subscriptionId
+      headers:
+        - name: Metadata
+          value: true
+gcp:
+  runtime_parameters:
+    - name: HOST_NAME
+      type: url
+      value: http://169.254.169.254/computeMetadata/v1/instance/hostname
+      headers:
+        - name: Metadata-Flavor
+          value: Google
+    - name: REGION
+      type: url
+      value: 'http://metadata.google.internal/computeMetadata/v1/instance/attributes/region'
+      headers:
+        - name: Metadata-Flavor
+          value: Google
+    

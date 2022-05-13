@@ -71,7 +71,7 @@ sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "b
 
 # copy new
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no examples/config/* ${USERNAME}@${MGMT_IP}:/config/cloud/
+sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no scripts/config/* ${USERNAME}@${MGMT_IP}:/config/cloud/
 
 if [[ -n $PATH_TO_RPMS ]]; then
     sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USERNAME}@${MGMT_IP} "bash -c 'mkdir -p /var/lib/cloud/icontrollx_installs'"

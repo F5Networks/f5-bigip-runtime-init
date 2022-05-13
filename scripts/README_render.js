@@ -14,9 +14,9 @@ function renderDocs() {
     const version = packageInfo.version;
     const build = packageInfo.release;
     let template = fs.readFileSync('./scripts/README_template.md', 'utf-8');
-    fs.readdirSync('examples/config/').forEach(file => {
+    fs.readdirSync('scripts/config/').forEach(file => {
         if (file.indexOf('snippet_') !== -1) {
-            template = template.replace(`%${file.replace(/\.[^/.]+$/, "")}%`, fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
+            template = template.replace(`%${file.replace(/\.[^/.]+$/, "")}%`, fs.readFileSync(`scripts/config/${file}`, {encoding:'utf8', flag:'r'}))
         }
     });
     const output = mustache.render(template, { RELEASE_VERSION: version, RELEASE_BUILD: build, ADMIN_PASS: '{{{ ADMIN_PASS }}}', AWS_SESSION_TOKEN: '{{{AWS_SESSION_TOKEN}}}' });
@@ -34,10 +34,10 @@ function renderDocs() {
     };
 
 
-    const completeExamples = yaml.safeLoad(fs.readFileSync(`./examples/config/complete_examples.yaml`, 'utf8'));
-    fs.readdirSync('examples/config/').forEach(file => {
+    const completeExamples = yaml.safeLoad(fs.readFileSync(`./scripts/config/complete_examples.yaml`, 'utf8'));
+    fs.readdirSync('scripts/config/').forEach(file => {
         if (file.indexOf('example_') !== -1) {
-            completeExamples[file.replace(/\.[^/.]+$/, "")]['runtime_config'] = yaml.safeLoad(fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
+            completeExamples[file.replace(/\.[^/.]+$/, "")]['runtime_config'] = yaml.safeLoad(fs.readFileSync(`scripts/config/${file}`, {encoding:'utf8', flag:'r'}))
         }
     });
 
@@ -46,14 +46,21 @@ function renderDocs() {
         try {
             let attributeExample;
             if ( attribute == 'extension_packages' ) {
-                attributeExample = yaml.safeLoad(fs.readFileSync(`./examples/config/extension_packages.yaml`, 'utf8'));
-                fs.readdirSync('examples/config/').forEach(file => {
+                attributeExample = yaml.safeLoad(fs.readFileSync(`./scripts/config/extension_packages.yaml`, 'utf8'));
+                fs.readdirSync('examples/runtime_configs/snippets/').forEach(file => {
                     if (file.indexOf('extension_packages_') !== -1) {
-                        attributeExample[file.replace(/\.[^/.]+$/, "").split('_')[2]] = yaml.safeLoad(fs.readFileSync(`examples/config/${file}`, {encoding:'utf8', flag:'r'}))
+                        attributeExample[file.replace(/\.[^/.]+$/, "").split('_')[2]] = yaml.safeLoad(fs.readFileSync(`examples/runtime_configs/snippets/${file}`, {encoding:'utf8', flag:'r'}))
+                    }
+                });
+            } else if ( attribute == 'extension_services' ) {
+                attributeExample = yaml.safeLoad(fs.readFileSync(`./scripts/config/extension_services.yaml`, 'utf8'));
+                fs.readdirSync('examples/runtime_configs/snippets/').forEach(file => {
+                    if (file.indexOf('extension_services_') !== -1) {
+                        attributeExample[file.replace(/\.[^/.]+$/, "").split('_')[2]] = yaml.safeLoad(fs.readFileSync(`examples/runtime_configs/snippets/${file}`, {encoding:'utf8', flag:'r'}))
                     }
                 });
             } else {
-                attributeExample = yaml.safeLoad(fs.readFileSync(`./examples/config/${attribute}.yaml`, 'utf8'));
+                attributeExample = yaml.safeLoad(fs.readFileSync(`./scripts/config/${attribute}.yaml`, 'utf8'));
             }
             const Doccer = new MyDoccer();
             Doccer.load(schema.properties[attribute]);
@@ -67,7 +74,7 @@ function renderDocs() {
             fs.appendFileSync('./SCHEMA.md', '\r\n```\r\n');
             fs.appendFileSync('./SCHEMA.md', '***\r\n');
         } catch (e) {
-            console.error(`Attribute ${attribute} is missing an example. Please add at least one example to /examples/config.`, e);
+            console.error(`Attribute ${attribute} is missing an example. Please add at least one example to /scripts/config.`, e);
             process.exit(1);
         }
     }
@@ -75,7 +82,7 @@ function renderDocs() {
     fs.writeFileSync('./SCHEMA.md', '## F5 BIG-IP Runtime Init Schema and Examples\r\n\r\n');
     attributes.forEach(attribute => renderSchema(attribute));
     fs.appendFileSync('./SCHEMA.md', `## Additional Examples\r\n\r\n`);
-    fs.appendFileSync('./SCHEMA.md', `### Automated Toolchain declarations referenced here are available in the examples/declarations folder.\r\n\r\n`);
+    fs.appendFileSync('./SCHEMA.md', `### Automated Toolchain declarations referenced here are available in the examples/automation_toolchain_declarations folder.\r\n\r\n`);
     fs.appendFileSync('./SCHEMA.md', '```yaml\r\n');
     fs.appendFileSync('./SCHEMA.md', yaml.safeDump(completeExamples));
     fs.appendFileSync('./SCHEMA.md', '\r\n```\r\n');

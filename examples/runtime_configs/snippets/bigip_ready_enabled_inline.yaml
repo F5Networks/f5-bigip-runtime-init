@@ -1,0 +1,20 @@
+bigip_ready_enabled:
+# Dependent on GUI being up
+  - name: icontrol_settings
+    type: inline
+    commands:
+      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
+# Dependent on MCPD being up
+  - name: using_runtime_variables
+    type: inline
+    commands:
+      - f5mku -r {{{ ADMIN_PASS }}}
+# Dependent on TMSH / MCPD being up
+  - name: using_bash_variables_in_commands
+    type: inline
+    commands:
+      - "EXT_GW=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/gateway); tmsh create net route ext_gw_int network $EXT_GW/32 interface external"
+      - "INT_GW=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/2/gateway); tmsh create net route int_gw_int network $INT_GW/32 interface internal"
+
+
+
