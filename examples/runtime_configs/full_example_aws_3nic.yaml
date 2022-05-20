@@ -1,54 +1,44 @@
-controls:
+# Terraform Example: Standalone 3NIC using Secret
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 1000
-      - /usr/bin/setdb restjavad.useextramb true
+pre_onboard_enabled: []
 runtime_parameters:
+  - name: ADMIN_PASS
+    type: secret
+    secretProvider:
+      environment: aws
+      type: SecretsManager
+      version: AWSCURRENT
+      field: password
+      secretId: ${secret_id}
   - name: HOST_NAME
     type: metadata
     metadataProvider:
-      type: compute
-      environment: aws
-      field: hostname
-  - name: REGION
-    type: metadata
-    metadataProvider:
       environment: aws
       type: uri
-      value: /latest/dynamic/instance-identity/document
-      query: region
-  - name: BIGIP_PASSWORD
-    type: metadata
-    metadataProvider:
-      environment: aws
-      type: uri
-      value: /latest/dynamic/instance-identity/document
-      query: instanceId
+      value: /latest/meta-data/hostname
   - name: SELF_IP_EXTERNAL
     type: metadata
     metadataProvider:
-      type: network
       environment: aws
+      type: network
       field: local-ipv4s
       index: 1
   - name: SELF_IP_INTERNAL
     type: metadata
     metadataProvider:
-      type: network
       environment: aws
+      type: network
       field: local-ipv4s
       index: 2
-  - name: DEFAULT_ROUTE
+  - name: DEFAULT_GW
     type: metadata
     metadataProvider:
-      type: network
       environment: aws
-      field: subnet-ipv4-cidr-block
+      type: network
+      field: local-ipv4s
       index: 1
+      ipcalc: first
 bigip_ready_enabled: []
 extension_packages:
   install_operations:
@@ -71,10 +61,8 @@ extension_services:
       value:
         schemaVersion: 1.0.0
         class: Device
-        label: >-
-          Quickstart 3NIC BIG-IP declaration for Declarative Onboarding with PAYG
-          license
         async: true
+        label: Example 3NIC BIG-IP with Runtime-Init
         Common:
           class: Tenant
           My_DbVariables:
@@ -83,124 +71,63 @@ extension_services:
             restjavad.useextramb: true
             ui.advisory.enabled: true
             ui.advisory.color: blue
-            ui.advisory.text: BIG-IP Quickstart
-          My_Provisioning:
-            class: Provision
-            asm: nominal
-            ltm: nominal
+            ui.advisory.text: BIG-IP VE Runtime Init Example
+          My_System:
+            class: System
+            hostname: '{{{ HOST_NAME }}}'
+            cliInactivityTimeout: 1200
+            consoleInactivityTimeout: 1200
+            autoPhonehome: true
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 169.254.169.253
           My_Ntp:
             class: NTP
             servers:
               - 169.254.169.253
             timezone: UTC
-          My_Dns:
-            class: DNS
-            nameServers:
-              - 169.254.169.253
-          My_System:
-            class: System
-            autoPhonehome: true
-            hostname: '{{{HOST_NAME}}}'
-          quickstart:
+          My_Provisioning:
+            class: Provision
+            ltm: nominal
+            gtm: nominal
+          admin:
             class: User
+            userType: regular
             partitionAccess:
               all-partitions:
                 role: admin
-            password: '{{{BIGIP_PASSWORD}}}'
+            password: '{{{ ADMIN_PASS }}}'
             shell: bash
-            userType: regular
-          default:
-            class: Route
-            gw: '{{{DEFAULT_ROUTE}}}'
-            mtu: 1500
-            network: default
-          app-route:
-            class: Route
-            gw: 10.0.2.1
-            network: 10.0.3.0/24
           external:
             class: VLAN
+            tag: 4094
+            mtu: 1500
             interfaces:
               - name: '1.1'
                 tagged: false
-            mtu: 1500
-            tag: 4094
-          external-self:
-            class: SelfIp
-            address: '{{{SELF_IP_EXTERNAL}}}'
-            allowService: none
-            trafficGroup: traffic-group-local-only
-            vlan: external
           internal:
             class: VLAN
+            tag: 4093
+            mtu: 1500
             interfaces:
               - name: '1.2'
                 tagged: false
-            mtu: 1500
-            tag: 4093
-          internal-self:
+          external-self:
             class: SelfIp
-            address: '{{{SELF_IP_INTERNAL}}}'
+            address: '{{{ SELF_IP_EXTERNAL }}}'
+            vlan: external
             allowService: default
             trafficGroup: traffic-group-local-only
+          internal-self:
+            class: SelfIp
+            address: '{{{ SELF_IP_INTERNAL }}}'
             vlan: internal
-    - extensionType: as3
-      type: inline
-      value:
-        class: ADC
-        schemaVersion: 3.0.0
-        label: Quickstart
-        remark: Quickstart
-        Tenant_1:
-          class: Tenant
-          Shared:
-            class: Application
-            template: shared
-            shared_pool:
-              class: Pool
-              remark: Service 1 shared pool
-              members:
-                - serverAddresses:
-                    - 10.0.3.4
-                  servicePort: 80
-              monitors:
-                - http
-            Custom_HTTP_Profile:
-              class: HTTP_Profile
-              xForwardedFor: true
-            Custom_WAF_Policy:
-              class: WAF_Policy
-              url: >-
-                https://raw.githubusercontent.com/F5Networks/f5-aws-cloudformation-v2/v1.1.0.0/examples/quickstart/bigip-configurations/Rapid_Deployment_Policy_13_1.xml
-              enforcementMode: blocking
-              ignoreChanges: false
-          HTTP_Service:
-            class: Application
-            template: http
-            serviceMain:
-              class: Service_HTTP
-              virtualAddresses:
-                - 10.0.0.101
-              snat: auto
-              profileHTTP:
-                use: /Tenant_1/Shared/Custom_HTTP_Profile
-              policyWAF:
-                use: /Tenant_1/Shared/Custom_WAF_Policy
-              pool: /Tenant_1/Shared/shared_pool
-          HTTPS_Service:
-            class: Application
-            template: https
-            serviceMain:
-              class: Service_HTTPS
-              virtualAddresses:
-                - 10.0.0.101
-              snat: auto
-              profileHTTP:
-                use: /Tenant_1/Shared/Custom_HTTP_Profile
-              policyWAF:
-                use: /Tenant_1/Shared/Custom_WAF_Policy
-              pool: /Tenant_1/Shared/shared_pool
-              serverTLS:
-                bigip: /Common/clientssl
-              redirect80: false
+            allowService: default
+            trafficGroup: traffic-group-local-only
+          default:
+            class: Route
+            gw: '{{{ DEFAULT_GW }}}'
+            mtu: 1500
+            network: default
 post_onboard_enabled: []

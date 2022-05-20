@@ -824,20 +824,7 @@ hashed:
       - extensionType: fast
         extensionVersion: 1.17.0
         extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
-url:
-  extension_packages:
-    install_operations:
-      - extensionType: do
-        extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.29.0/f5-declarative-onboarding-1.29.0-8.noarch.rpm
-        extensionVersion: 1.29.0
-      - extensionType: as3
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.36.0-6.noarch.rpm'
-        extensionVersion: 3.36.0
-      - extensionType: fast
-        extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm
-        extensionVersion: 1.17.0
+url: null
 ilx:
   extension_packages:
     install_operations:

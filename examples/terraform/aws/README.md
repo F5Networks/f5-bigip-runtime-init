@@ -2,7 +2,7 @@
 
 ## Description
 
-This directory provides a simple terraform example to demonstrate provisioning and onboarding a BIG-IP system using BIG-IP Runtime-Init in AWS.
+This directory provides a simple Terraform example to demonstrate provisioning and onboarding a BIG-IP system using BIG-IP Runtime-Init in AWS.
 
 ## Prerequisites
  * Terraform (v1.1.6)

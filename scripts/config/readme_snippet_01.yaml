@@ -1,42 +1,66 @@
 controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
+pre_onboard_enabled: []
 runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-      environment: azure
-      type: KeyVault
-      vaultUrl: https://my-keyvault.vault.azure.net
-      secretId: ${secret_id}
-      field: password
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 500
-      - /usr/bin/setdb restjavad.useextramb true
-bigip_ready_enabled:
-  - name: set_message_size
-    type: inline
-    commands:
-      - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}''
-        -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 |
-        jq .'
-  - name: reset_master_key
-    type: inline
-    commands:
-      - f5mku -r {{{ ADMIN_PASS }}}
+    - name: ADMIN_PASS
+      type: secret
+      secretProvider:
+        environment: azure
+        type: KeyVault
+        vaultUrl: 'https://${bigip_vault_name}.vault.azure.net'
+        secretId: ${secret_id}
+    - name: HOST_NAME
+      type: metadata
+      metadataProvider:
+        environment: azure
+        type: compute
+        field: name
+    - name: SELF_IP_EXTERNAL
+      type: metadata
+      metadataProvider:
+        environment: azure
+        type: network
+        field: ipv4
+        index: 1
+    - name: SELF_IP_INTERNAL
+      type: metadata
+      metadataProvider:
+        environment: azure
+        type: network
+        field: ipv4
+        index: 2
+    - name: DEFAULT_GW
+      type: metadata
+      metadataProvider:
+        environment: azure
+        type: network
+        field: ipv4
+        index: 1
+        ipcalc: first
+    - name: MGMT_GW
+      type: metadata
+      metadataProvider:
+        environment: azure
+        type: network
+        field: ipv4
+        index: 0
+        ipcalc: first
+bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
       extensionVersion: 1.29.0
+      extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
     - extensionType: as3
       extensionVersion: 3.36.0
-    - extensionType: fast
-      extensionVersion: 1.17.0
+      extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
     - extensionType: ts
       extensionVersion: 1.28.0
+      extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
+    - extensionType: fast
+      extensionVersion: 1.17.0
+      extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
 extension_services:
   service_operations:
     - extensionType: do
@@ -44,10 +68,8 @@ extension_services:
       value:
         schemaVersion: 1.0.0
         class: Device
-        label: >-
-          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
-          license
         async: true
+        label: Example 3NIC BIG-IP with Runtime-Init
         Common:
           class: Tenant
           My_DbVariables:
@@ -56,33 +78,84 @@ extension_services:
             restjavad.useextramb: true
             ui.advisory.enabled: true
             ui.advisory.color: blue
-            ui.advisory.text: BIG-IP Quickstart
-          My_Provisioning:
-            class: Provision
-            asm: nominal
-            ltm: nominal
-          My_Ntp:
-            class: NTP
-            servers:
-              - 169.254.169.253
-            timezone: UTC
+            ui.advisory.text: BIG-IP VE Runtime Init Example
+            config.allow.rfc3927: enable
+            dhclient.mgmt: disable
+          My_System:
+            class: System
+            hostname: '{{{ HOST_NAME }}}.local'
+            cliInactivityTimeout: 1200
+            consoleInactivityTimeout: 1200
+            autoPhonehome: true
           My_Dns:
             class: DNS
             nameServers:
-              - 169.254.169.253
-          My_License:
-            class: License
-            licenseType: regKey
-            regKey: AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE
-          My_System:
-            class: System
-            autoPhonehome: true
-            hostname: 'HOST_NAME'
-          quickstart:
+             - 168.63.129.16
+          My_Ntp:
+            class: NTP
+            servers:
+              - 0.pool.ntp.org
+            timezone: UTC
+          My_Provisioning:
+            class: Provision
+            ltm: nominal
+          admin:
             class: User
+            userType: regular
             partitionAccess:
               all-partitions:
                 role: admin
-            password: 'BIGIP_PASSWORD'
+            password: '{{{ ADMIN_PASS }}}'
             shell: bash
+          ${admin_username}:
+            class: User
             userType: regular
+            partitionAccess:
+              all-partitions:
+                role: admin
+            password: '{{{ ADMIN_PASS }}}'
+            shell: bash
+          external:
+            class: VLAN
+            tag: 4094
+            mtu: 1500
+            interfaces:
+              - name: '1.1'
+                tagged: false
+          internal:
+            class: VLAN
+            tag: 4093
+            mtu: 1500
+            interfaces:
+              - name: '1.2'
+                tagged: false
+          default:
+            class: ManagementRoute
+            gw: '{{{ MGMT_GW }}}'
+            network: default
+          dhclient_route1:
+            class: ManagementRoute
+            gw: '{{{ MGMT_GW }}}'
+            network: 168.63.129.16/32
+          azureMetadata:
+            class: ManagementRoute
+            gw: '{{{ MGMT_GW }}}'
+            network: 169.254.169.254/32
+          external-self:
+            class: SelfIp
+            address: '{{{ SELF_IP_EXTERNAL }}}'
+            vlan: external
+            allowService: default
+            trafficGroup: traffic-group-local-only
+          internal-self:
+            class: SelfIp
+            address: '{{{ SELF_IP_INTERNAL }}}'
+            vlan: internal
+            allowService: default
+            trafficGroup: traffic-group-local-only
+          defaultRoute:
+            class: Route
+            gw: '{{{ DEFAULT_GW }}}'
+            network: default
+            mtu: 1500
+post_onboard_enabled: []

@@ -2,9 +2,9 @@
 
 ### Overview
 
-This document provides overview and instructions on release process used for BIGIP Runtime Init project. 
+This document provides overview and instructions on release process used for BIG-IP Runtime Init project. 
 
-The release is fully automated process; however it requires a few manual steps to trigger automation pipeline; all steps are outlined below in details.
+The release is fully automated process. However, it requires a few manual steps to trigger automation pipeline; all steps are outlined below in details.
 
 
 ### Step #1. Pre-release
@@ -15,10 +15,10 @@ Before triggering release pipeline, the following needs to be done as a part of 
    2. Edits to the README.md file should be made to scripts/README_template.md.  This file is tagged with mustache handlebars used to update README.md with the correctly versioned links based on package.json when scripts/README_render.js is executed; SCHEMA.md will also be generated based on the contents of base_schema.json. Run this command manually after updating the version in package.json: **node scripts/README_render.js**
    3. Create Merge Request (aka MR) to merge all changes from `develop` to `main` branch
    4. After merging changes to `main` branch, use pre-configured schedules to trigger functional tests against `main` branch:
-      * There a few environment variables which are used for triggering functional tests for different clouds as well as BIGIP versions:
-         - BIGIP_VERSION - specifies BIGIP version used in testing; possible values (14, 15 or all)
-         - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, azure_gov, gcp or all). 
-         - *Example:* Specifying `TEST_SUITE: all and BIGIP_VERSION: all` will trigger 6 tests pipelines to test each supported BIGIP version (v14 and v15) against each supported Public Cloud (aws, gcp and azure)
+      * There a few environment variables which are used for triggering functional tests for different clouds as well as BIG-IP versions:
+         - BIGIP_VERSION - specifies BIG-IP version used in testing; possible values (14, 15 or all)
+         - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, azure_gov, gcp, or all). 
+         - *Example:* Specifying `TEST_SUITE: all and BIGIP_VERSION: all` will trigger 6 tests pipelines to test each supported BIG-IP version (v14 and v15) against each supported Public Cloud (aws, gcp, and azure)
 
 When functional tests against `main` branch is completed, the pre-release part is done. Continue to actual release
 
@@ -62,7 +62,7 @@ Creation of `publish-<version>-<release>` tag triggers CI/CD pipeline which incl
       - NOTE: the list of allowed items can be found under `scripts/publish_github.sh`
    4. Trigger downstream CI/CD pipeline on `f5-cloud-factory/master` to start post-release testing; it includes:
       - Updating bigip.json module template with new version of runtime init
-      - Triggering templates functional tests for BIGIP module and Autoscale solution
+      - Triggering templates functional tests for BIG-IP module and Autoscale solution
       
       
 ### Additional details

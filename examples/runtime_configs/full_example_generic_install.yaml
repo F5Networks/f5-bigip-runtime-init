@@ -1,3 +1,4 @@
+# Generic Example: Used with F5 BIG-IP Image Generator tool in VMware image
 controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
