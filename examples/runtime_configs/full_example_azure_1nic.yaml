@@ -1,3 +1,4 @@
+# Azure Arm Template Example: Autoscale 1NIC using Secret for BIG-IQ license
 controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
@@ -9,23 +10,37 @@ runtime_parameters:
       type: compute
       environment: azure
       field: name
+  - name: RESOURCE_GROUP_NAME
+    type: url
+    value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+    query: resourceGroupName
     headers:
       - name: Metadata
         value: true
   - name: UNIQUE_STRING
-    type: url
-    value: 'http://169.254.169.254/metadata/instance/compute/tagsList?api-version=2020-09-01'
-    query: "[?name=='uniqueString'].value|[0]"
-    headers:
-      - name: Metadata
-        value: true
+    type: tag
+    tagProvider:
+      environment: azure
+      key: uniqueString
   - name: WORKSPACE_ID
+    type: tag
+    tagProvider:
+      environment: azure
+      key: workspaceId
+  - name: SUBSCRIPTION_ID
     type: url
-    value: 'http://169.254.169.254/metadata/instance/compute/tagsList?api-version=2020-09-01'
-    query: "[?name=='workspaceId'].value|[0]"
+    value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+    query: subscriptionId
     headers:
       - name: Metadata
         value: true
+  - name: BIGIQ_PASSWORD
+    type: secret
+    secretProvider:
+      type: KeyVault
+      environment: azure
+      vaultUrl: 'https://myVaultName.vault.azure.net'
+      secretId: mySecretId
   - name: REGION
     type: url
     value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
@@ -53,7 +68,8 @@ extension_services:
         schemaVersion: 1.0.0
         class: Device
         label: >-
-          Autoscale 1NIC BIG-IP declaration for Declarative Onboarding with PAYG license
+          Autoscale 1NIC BIG-IP declaration for Declarative Onboarding with BIG-IQ
+          license
         async: true
         Common:
           class: Tenant
@@ -67,6 +83,19 @@ extension_services:
             class: DNS
             nameServers:
               - 168.63.129.16
+          My_License:
+            class: License
+            hypervisor: azure
+            licenseType: licensePool
+            licensePool: clpv2
+            bigIqHost: 192.168.1.4
+            bigIqUsername: azureuser
+            bigIqPassword: '{{{BIGIQ_PASSWORD}}}'
+            tenant: myTenant
+            skuKeyword1: F5-BIG-MSP-BT-1G
+            unitOfMeasure: hourly
+            reachable: false
+            overwrite: false
           My_Ntp:
             class: NTP
             servers:
@@ -80,6 +109,122 @@ extension_services:
             class: System
             autoPhonehome: true
             hostname: '{{{HOST_NAME}}}.local'
+    - extensionType: as3
+      type: inline
+      value:
+        schemaVersion: 3.0.0
+        class: ADC
+        remark: Autoscale
+        label: Autoscale
+        Tenant_1:
+          class: Tenant
+          Shared:
+            class: Application
+            template: shared
+            telemetry_local_rule:
+              remark: Only required when TS is a local listener
+              class: iRule
+              iRule: |-
+                when CLIENT_ACCEPTED {
+                  node 127.0.0.1 6514
+                }
+            telemetry_local:
+              remark: Only required when TS is a local listener
+              class: Service_TCP
+              virtualAddresses:
+                - 255.255.255.254
+              virtualPort: 6514
+              iRules:
+                - telemetry_local_rule
+            telemetry:
+              class: Pool
+              members:
+                - enable: true
+                  serverAddresses:
+                    - 255.255.255.254
+                  servicePort: 6514
+              monitors:
+                - bigip: "/Common/tcp"
+            telemetry_hsl:
+              class: Log_Destination
+              type: remote-high-speed-log
+              protocol: tcp
+              pool:
+                use: telemetry
+            telemetry_formatted:
+              class: Log_Destination
+              type: splunk
+              forwardTo:
+                use: telemetry_hsl
+            telemetry_publisher:
+              class: Log_Publisher
+              destinations:
+                - use: telemetry_formatted
+            telemetry_asm_security_log_profile:
+              class: Security_Log_Profile
+              application:
+                localStorage: false
+                remoteStorage: splunk
+                servers:
+                  - address: 255.255.255.254
+                    port: '6514'
+                storageFilter:
+                  requestType: all
+            Shared_Pool:
+              class: Pool
+              remark: Service 1 shared pool
+              members:
+                - addressDiscovery: azure
+                  addressRealm: private
+                  resourceGroup: '{{{RESOURCE_GROUP_NAME}}}'
+                  resourceId: '{{{UNIQUE_STRING}}}-app-vmss'
+                  resourceType: scaleSet
+                  servicePort: 80
+                  subscriptionId: '{{{SUBSCRIPTION_ID}}}'
+                  updateInterval: 60
+                  useManagedIdentity: true
+              monitors:
+                - http
+            Custom_HTTP_Profile:
+              class: HTTP_Profile
+              xForwardedFor: true
+            Custom_WAF_Policy:
+              class: WAF_Policy
+              url: >-
+                https://raw.githubusercontent.com/F5Networks/f5-azure-arm-templates-v2/v2.1.0.0/examples/autoscale/bigip-configurations/Rapid_Deployment_Policy_13_1.xml
+              enforcementMode: blocking
+              ignoreChanges: false
+          HTTP_Service:
+            class: Application
+            template: http
+            serviceMain:
+              class: Service_HTTP
+              virtualAddresses:
+                - 0.0.0.0
+              profileHTTP:
+                use: /Tenant_1/Shared/Custom_HTTP_Profile
+              policyWAF:
+                use: /Tenant_1/Shared/Custom_WAF_Policy
+              pool: /Tenant_1/Shared/Shared_Pool
+              securityLogProfiles:
+                - use: /Tenant_1/Shared/telemetry_asm_security_log_profile
+          HTTPS_Service:
+            class: Application
+            template: https
+            serviceMain:
+              class: Service_HTTPS
+              virtualAddresses:
+                - 0.0.0.0
+              profileHTTP:
+                use: /Tenant_1/Shared/Custom_HTTP_Profile
+              policyWAF:
+                use: /Tenant_1/Shared/Custom_WAF_Policy
+              pool: /Tenant_1/Shared/Shared_Pool
+              securityLogProfiles:
+                - use: /Tenant_1/Shared/telemetry_asm_security_log_profile
+              serverTLS:
+                bigip: /Common/clientssl
+              redirect80: false
     - extensionType: ts
       type: inline
       value:

@@ -1,12 +1,11 @@
-# F5 BIG-IP Runtime Init
+# BIG-IP Runtime Init
 
-[![Slack Status](https://f5cloudsolutions.herokuapp.com/badge.svg)](https://f5cloudsolutions.herokuapp.com)
 [![Releases](https://img.shields.io/github/release/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/releases)
 [![Issues](https://img.shields.io/github/issues/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/issues)
 
 
 ## Contents
-- [F5 BIG-IP Runtime Init](#f5-big-ip-runtime-init)
+- [BIG-IP Runtime Init](#big-ip-runtime-init)
   - [Contents](#contents)
   - [Introduction](#introduction)
   - [Overview](#overview)
@@ -14,28 +13,32 @@
   - [Prerequisites](#prerequisites)
   - [Caveats and Limitations](#caveats-and-limitations)
   - [Validated BIG-IP versions](#validated-big-ip-versions)
-  - [Configuration](#configuration)
-    - [Configuration Examples and Schema Documentation](#configuration-examples-and-schema-documentation)
   - [Installer](#installer)
   - [Downloads](#downloads)
+  - [Configuration](#configuration)
+    - [Configuration Examples and Schema Documentation](#configuration-examples-and-schema-documentation)
+    - [controls](#controls)
+    - [pre_onboard_enabled](#pre\_onboard\_enabled)
+    - [runtime_parameters](#runtime\_parameters)
+    - [bigip_ready_enabled](#bigip\_ready\_enabled)
+    - [extension_packages](#extension\_packages)
+    - [extension_services](#extension\_services)
+    - [post_onboard_enableds](#post\_onboard\_enabled)
+    - [post_hook](#post\_hook)
   - [Usage Examples](#usage-examples)
-    - [Azure (ARM Template) Virtual Machine extension snippet](#azure-arm-template-virtual-machine-extension-snippet)
-      - [Download F5 BIG-IP Runtime Config from URL](#download-f5-big-ip-runtime-config-from-url)
-      - [Use inline F5 BIG-IP Runtime Config](#use-inline-f5-big-ip-runtime-config)
     - [Terraform](#terraform)
-      - [Azure (Terraform) snippet](#azure-terraform-snippet)
-      - [AWS (Terraform) snippet](#aws-terraform-snippet)
-      - [GCP (Terraform) snippet](#gcp-terraform-snippet)
-  - [Runtime parameters](#runtime-parameters)
+      - [Azure snippet](#azure-terraform-snippet)
+    - [Azure (ARM Template) snippet](#azure-arm-template-snippet)
+      - [Download BIG-IP Runtime Config from a URL](#download-big-ip-runtime-config-from-a-url)
+      - [Inline BIG-IP Runtime Config](#inline-big-ip-runtime-config)
+    - [Native Template Examples](#native-template-examples)
   - [Private Environments](#private-environments)
       - [Disable Calls from the Installer](#disable-calls-from-the-installer)
       - [Disable Calls from the Command](#disable-calls-from-the-command)
   - [Troubleshooting](#troubleshooting)
+    - [Log to the Serial Console](#log-to-the-serial-console)
     - [F5 Automation Toolchain Components](#f5-automation-toolchain-components)
     - [Extension metadata file](#extension-metadata-file)
-    - [Controls](#controls)
-    - [Logging](#logging)
-      - [Send output to log file and serial console](#send-output-to-log-file-and-serial-console)
   - [Documentation](#documentation)
   - [Getting Help](#getting-help)
     - [Filing Issues](#filing-issues)
@@ -46,133 +49,118 @@
 
 ## Introduction
 
-The F5 BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. 
+BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. It does this by providing a single convenient YAML (1.2 spec) or JSON-based configuration file, which
+* leverages [F5 Automation Tool Chain](https://www.f5.com/pdf/products/automation-toolchain-overview.pdf) declarations that are easier to author, validate, and maintain as code (vs. bigip.conf files);
+* renders secrets from public cloud vaults; and
+* renders runtime variables from metadata services.
 
-By providing a single convenient yaml (1.2 spec) or json-based configuration file which
-* leverages [F5 Automation Tool Chain](https://www.f5.com/pdf/products/automation-toolchain-overview.pdf) declarations that are easier to author, validate and maintain as code (vs. bigip.conf files)
-* renders secrets from public cloud vaults
-* renders runtime variables from metadata services
-
-resulting in a complete overlay deployment tool for configuring a BIG-IP instance, it allows us to extend our cloud solutions from native templates to other instance provisioning tools, such as Terraform and Ansible. For more information regarding sending startup scripts to BIG-IP VE, see VE [documentation](https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html).
+The result is a complete overlay deployment tool for configuring a BIG-IP instance. This allows us to extend our cloud solutions from native templates to other instance provisioning tools, such as Terraform and Ansible. For more information regarding sending startup scripts to BIG-IP VE, see [VE documentation](https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html).
 
 
-![F5 BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init.gif)
+![BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init_animated.gif)
 
-
+    
 ## Overview
 
-From a high level overview, using this tool involves three steps:
+From a high-level, using this tool involves three steps:
 
-- Step 1: Download OR render inline a Runtime Init configuration file (runtime-init-conf.yaml).
+- **Step 1**: Download and Install BIG-IP Runtime Init using the self-extracting installer: 
+  ```sh
+  curl -o /tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash /tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud [aws|azure|gcp]'
+  ```
+  - See [installer](#installer) details and [downloads](#downloads) below.
+
+- **Step 2**: Download OR Render inline a Runtime Init configuration file (runtime-init-conf.yaml).
   ```sh
   curl -o /config/cloud/runtime-init-conf.yaml https://my-source-host/my-repo/bigip-configs/0.0.1/runtime-init-conf.yaml 
   ```
-  See [configuration](#configuration) details below.
+  - See [configuration](#configuration) details below.
 
-- Step 2: Download and install F5 BIG-IP Runtime Init using the self-extracting installer: 
-  ```sh
-  curl -o /tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash /tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud azure'
-  ```
-  See [installer](#installer) details and [downloads](#downloads) below.
-
-- Step 3: Load the configuration file: 
+- **Step 3**: Load the configuration file: 
   ```sh
   f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
   ```
 
-See usage [examples](#usage-examples) below.
+  - See usage [examples](#usage-examples) below.
 
 ## Features
-This repository includes both the F5 BIG-IP Runtime Init source code and a self-extracting installer script for installing the main package.
+This repository includes both the BIG-IP Runtime Init source code and a self-extracting installer script for installing the main package.
 
 The installer script will do the following:
 
 - Determine the cloud environment where the script is running
-- Extract and verify the appropriate cloud-specific package archive (or the all-inclusive package archive if cloud is not detected)
+- Extract and verify the appropriate cloud-specific package archive
 - Install the package archive and create a command alias for f5-bigip-runtime-init
 
-Based on the content of the provided YAML or JSON conifguration file, F5 BIG-IP Runtime Init will do the following:
+Based on the content of the provided YAML or JSON configuration file, BIG-IP Runtime Init will do the following:
 
-- Download, verify, and install F5 Automation Toolchain components (DO, AS3, FAST, TS, and CFE) from package metadata, URLs, or local files
-- Download, verify, and install custom iApp LX packages from URLs or local files
-- Accept Automation Toolchain declarations from URLs or local files (must be valid JSON or YAML declarations)
-- Get secrets from cloud provider secret management APIs (Azure KeyVault, AWS Secret Manager, GCP Secrets Manager)
-- Get select attributes from cloud provider instance and network metadata
-- Render valid Automation Toolchain declarations based on rendered runtime variables (such as secrets and metadata attributes above) and provided declarations
-- POST rendered declarations to Automation Toolchain endpoints and verify success or failure
-- Run user-specified pre-onboard and post-onboard commands
-- Send a webhook with a customizable telemetry data to a user-specified endpoint 
+- Download, verify, and install F5 Automation Toolchain packages (DO, AS3, FAST, TS, and CFE) from default package metadata, URLs, or local files.
+- Download, verify, and install custom iApp LX packages from URLs or local files.
+- Accept Automation Toolchain declarations from URLs or local files (must be valid JSON or YAML declarations).
+- Get secrets from cloud provider secret management APIs (Azure KeyVault, AWS Secret Manager, GCP Secrets Manager, HashiCorp Vault).
+- Get select attributes from cloud provider instance and network metadata.
+- Render valid Automation Toolchain declarations based on rendered runtime variables (such as secrets and metadata attributes above) and provided declarations.
+- POST rendered declarations to Automation Toolchain endpoints and verify success or failure.
+- Run user-specified pre-onboard and post-onboard commands.
+- Send a webhook with a customizable telemetry data to a user-specified endpoint.
 
 
 ## Prerequisites
-- BIG-IP 14.1.2.6 or later
-- A mechanism to copy the configuration file to the BIG-IP instance (cloud-init, user data, provider-specific methods)
-- Access to the Internet (or other network location if files are locally hosted) for downloading the self-extracting installer package, RPM files, and SHA256 checksums for package verification
-- Access to the cloud provider metadata service, if rendering metadata runtime parameters
-- An IAM identity associated to the BIG-IP instance(s) with sufficient roles/permissions for accessing cloud provider APIs
+- BIG-IP 14.1.2.6 or newer.
+- A mechanism to copy the configuration file to the BIG-IP instance (cloud-init, user data, provider-specific methods).
+- Access to the Internet (or other network location if files are locally hosted) for downloading the self-extracting installer package, RPM files, and SHA256 checksums for package verification.
+- Access to the cloud provider metadata service if you rendering metadata runtime parameters.
+- An IAM identity associated to the BIG-IP instance(s) with sufficient roles/permissions for accessing cloud provider APIs.
 
 
 ## Caveats and Limitations
-- If leveraging the extension_services parameter to send DO declarations, the declarations cannot contain directives that will trigger a reboot. For example, a reboot would occur for any declaration that:
+- If leveraging the `extension_services` parameter to send DO declarations, the declarations cannot contain directives that will trigger a reboot. For example, a reboot would occur for any declaration that:
   - contains a disk_class
   - provisions a module (for example, APM) that creates a disk volume
 
 ## Validated BIG-IP versions
-F5 BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
+BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
 
 | BIG-IP Version | Build Number |
 | --- | --- |
 | 15.1.2.1 | 0.0.10 |
 | 14.1.3 | 0.0.7 |
 
-
-## Configuration
-
-The F5 BIG-IP Runtime Init configuration consists of the following attributes:
-
-| Attribute | Default Value | Required |    Description | 
-| --- | --- | --- | --- | 
-| controls | none | No    | List of runtime controls settings. |
-| pre_onboard_enabled | none | No   | List of commands to run that do not check if BIG-IP and MCPD are up and running. However, execution before BIG-IP is ready depends on cloud agent/download times/etc.  |
-| runtime_parameters | none | No    | List of runtime parameters to gather. |
-| bigip_ready_enabled | none | No   | List of commands to run after BIG-IP and MCPD are up and running. Example: tmsh commands, misc optimizations, etc. |
-| extension_packages    | none  | No | List of URLs to download and install iControl LX extension packages before onboarding. |
-| extension_services | none | No |  List of declarations to configure. |
-| post_onboard_enabled | none   | No    | List of commands to run after sending iControl LX declarations. |
-| post_hook | none | No  | Webhook to send upon completion. |
-
-
-### Configuration Examples and Schema Documentation
-See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and configuration examples.
-
+Newer versions are expected to work but have not been specifically tested. 
 ## Installer
 
-The self extracting installer accepts the following parameters:
+The self-extracting installer accepts the following parameters:
 
 ```
---cloud  | -c                   : Specifies cloud provider name. Allowed values: ( all, aws, azure, or gcp ). When not provided, intergrations with Public Clouds (AWS, Azure or/and GCP) are disabled
+--cloud  | -c                   : Specifies cloud provider name. Allowed values: (aws, azure or gcp)
 --key    | -k                   : Provides location for GPG key used for verifying signature on RPM file
 --skip-verify                   : Disables RPM signature verification
---toolchain-metadata-file-url   : Provides overriding delivery url for toolchain extension metadata file
+--toolchain-metadata-file-url   : Provides overriding delivery URL for toolchain extension metadata file
 --skip-toolchain-metadata-sync  : Disables downloading automation toolchain metadata from the Internet
---telemetry-params              : Specifies telemerty parameters as key:value pairs; (key01:value01,key02:value02)"
+--telemetry-params              : Specifies telemetry parameters as key:value pairs; (key01:value01,key02:value02). For sending F5 additional usage data.
 ```
 
-ex:
+
+*NOTE*: Runtime Init can be installed generically on a cloud or environment not listed above by omitting the ``--cloud | -c`` parameter. For example, it can also be used in a VMware environment to install the F5 Automation Tool Chain packages and declarations. When omitted, Runtime Init's cloud specific integrations (runtime_parameters: ```type: secret``` and ```type: metadata``` ) will be disabled. See [runtime_parameters](#runtime\_parameters) section for details.
+
+
+The installer also allows you to configure request retries to make the installation robust and tolerant to network instability. This can be done using the following environment variables:
+
+| Environment variable | Description | Default Value |
+| --- | --- | --- |
+| HTTP_RETRY | Number of retries before script will fail. | 12 |
+| HTTP_RETRY_MAX_TIME | The retry timer (in seconds) is reset before the first transfer attempt. | 60 |
+| HTTP_MAX_TIME | Maximum time (in seconds) that you allow the whole operation to take. | 5 |
+
+
+**Examples:**
+
+Using `--cloud` parameter for basic AWS install:
 ```
  curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws'
 ```
 
-The installer allows to configure HTTP requests retries to make installation robust and tolerant to a network instability. This can be done using the following environment variables:
-
-| Environment variable | Description | Default Value |
-| --- | --- | --- |
-| HTTP_RETRY | Number of retries before script will fail.  | 12 |
-| HTTP_RETRY_MAX_TIME | The retry timer (in seconds) is reset before the first transfer attempt. | 60 |
-| HTTP_MAX_TIME | Maximum time in seconds that you allow the whole operation to take. | 5 |
-
-See [Private Environments](#private-environments) section below.
-
+See [Private Environments](#private-environments) section below for more install examples.
 
 ## Downloads
 Self-extracting installer, RPMs, and file hashes are available from the following locations:
@@ -192,52 +180,878 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 | None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-base-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm |
 | None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/rpms/f5-bigip-runtime-init-base-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}-signed.noarch.rpm.sha256 |
 
+
+## Configuration
+
+The BIG-IP Runtime Init configuration consists of the following attributes:
+
+| Attribute | Default Value | Required |    Description | 
+| --- | --- | --- | --- | 
+| [controls](#controls) | none | No    | List of runtime controls settings. |
+| [pre_onboard_enabled](#pre\_onboard\_enabled) | none | No   | List of commands to run that do not check if BIG-IP and MCPD are up and running. However, execution before BIG-IP is ready depends on cloud agent/download times/etc.  |
+| [runtime_parameters](#runtime\_parameters) | none | No    | List of runtime parameters to gather. |
+| [bigip_ready_enabled](#bigip\_ready\_nabled) | none | No   | List of commands to run after BIG-IP and MCPD are up and running. Example: TMSH commands, misc optimizations, etc. |
+| [extension_packages](#extension\_packages)    | none  | No | List of iControl Lx packages to download and install. |
+| [extension_services](#extension\_ervices) | none | No |  List of iControl Lx declarations to configure. |
+| [post_onboard_enabled](#post\_onboard\_enabled) | none   | No    | List of commands to run after sending iControl LX declarations. |
+| [post_hook](#post\_hook) | none | No  | Webhook to send upon completion. |
+
+#### Configuration Examples and Schema Documentation
+
+A basic Runtime Init configuration file *(YAML)*.
+
+```yaml
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.29.0
+    - extensionType: as3
+      extensionVersion: 3.36.0
+    - extensionType: ts
+      extensionVersion: 1.28.0
+    - extensionType: fast
+      extensionVersion: 1.17.0
+```
+
+See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and [/examples/runtime_configs](examples/runtime_configs/) for additional examples.
+
+### Controls
+Runtime Init provides a list of controls intended for tuning Runtime Init execution as well as helping with troubleshooting issues: 
+
+*NOTE:* These can also be set at runtime using an environment variable. For example:
+
+```bash
+export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly &&  f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
+```
+
+  - **logLevel** 
+    - *Description:* Defines log level. Allowed values are `error`, `warn`, `info`, `debug` and `silly`. *NOTE: F5 recommends putting Runtime Init in `silly` first. Although this results in large amounts of logs, it is generally more useful for troubleshooting initial deployments / new configurations.*
+    - *Default:* `info`. 
+    - *Environment Variable:* F5_BIGIP_RUNTIME_INIT_LOG_LEVEL (string)
+
+- **logFilename**
+
+   - *Description:* Defines the location of Runtime Init's log file. 
+   - *Default:* `/var/log/cloud/bigIpRuntimeInit.log`
+   - *Environment Variable:* F5_BIGIP_RUNTIME_INIT_LOG_FILENAME (string) 
+
+
+ - **logToJson** 
+    - *Description:* Defines when log is outputted into JSON format. For example,
+    ```json
+        {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
+    ```
+    - *Default:* `false`
+    - *Environment Variable:* F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON (boolean)
+
+
+ - **extensionInstallDelayInMs** 
+    - *Description:* Defines a delay between extensions installations. 
+    - *Default:* `10000`
+    - *Environment Variable:* F5_BIGIP_RUNTIME_EXTENSION_INSTALL_DELAY_IN_MS (number)
+
+
+***Examples:***
+
+```yaml
+controls:
+  logLevel: silly
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+  logToJson: true
+  extensionInstallDelayInMs: 60000
+```
+
+
+### pre_onboard_enabled
+
+*Description:* A list of commands to run that do NOT check if BIG-IP and MCPD are up and running. However, execution of before or after BIG-IP is ready depends on cloud agent/download times/etc. For instance, when Runtime-Init and/or files are baked directly into the BIG-IP Image using the [BIG-IP Image Generator](https://github.com/f5devcentral/f5-bigip-image-generator/).
+
+
+
+Allowed types are `inline`, `file` and `url`.
+
+***Examples:***
+
+ - **inline** 
+
+    ```yaml
+    pre_onboard_enabled:
+      - name: example_inline_command
+        type: inline
+        commands:
+          - touch /tmp/pre_onboard_script.sh
+          - chmod 777 /tmp/pre_onboard_script.sh
+          - echo "touch /tmp/create_by_autogenerated_pre_local" > /tmp/pre_onboard_script.sh
+          - /usr/bin/setdb provision.extramb 500
+          - /usr/bin/setdb restjavad.useextramb true
+    ```
+
+ - **file** 
+
+    ```yaml
+    pre_onboard_enabled:
+      - name: example_local_exec
+        type: file
+        commands:
+          - /tmp/pre_onboard_script.sh
+    ```
+
+ - **url** 
+
+    ```yaml
+    pre_onboard_enabled:
+      - name: example_remote_exec
+        type: url
+        commands:
+          - https://the-delivery-location.com/remote_pre_onboard.sh
+    ```
+
+
+*NOTE:* Each command is executed independently from each other. For example, a bash variable in one command cannot be referenced by the following command. See the other command based attributes (ex. [bigip_ready_enabled](#bigip\_ready\_enabled), [post_onboard_enabled](#post\_onboard\_enabled) for more advanced command examples.
+
+
+### runtime_parameters
+
+
+*Description:* A list of parameters discovered at run (or deploy) time which are substituted *(using mustache handlebars)* in subsequent eligible runtime attributes: 
+* bigip_ready_enabled *(commands)*
+* extension_services *(declarations sent to the Tool Chain endpoints)* 
+* post_onboard_enabled: *(commands)*
+* post_hook
+
+Parameters can be dependent on each other, so one parameter value can be used within another parameter (see examples below for more details).
+
+Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
+
+- **secret** 
+  
+    *Description:* Fetches a secret from a provider vault. This type requires the BIG-IP instance to have IAM **READ** permissions for the secrets. See the respective Cloud Provider's official documentation for additional information. For basic examples, see the [Terraform examples](examples/terraform). 
+
+    Allowed environments are `aws`, `azure`, `gcp` and `hashicorp`.
+
+    ***Examples:***
+
+    **AWS:**
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: SecretsManager
+          environment: aws
+          version: AWSCURRENT
+          secretId: mysecret
+    ```
+    
+    **IAM Permissions:**
+    ```text
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:ListSecretVersionIds"
+    ```
+    *For more information, see [AWS documentation](https://docs.aws.amazon.com/mediaconnect/latest/ug/iam-policy-examples-asm-secrets.html).*
+    </br>
+
+    **Azure:**
+    ```yaml
+    runtime_parameters:
+      - name: AZURE_SERVICE_PRINCIPAL
+        type: secret
+        secretProvider:
+          type: KeyVault
+          environment: azure
+          vaultUrl: https://my-keyvault.vault.azure.net
+          secretId: mysecret
+    ```
+    **IAM Permissions:**
+    ```text
+    key_permissions = ["get"]
+    secret_permissions = ["get","list"]
+    storage_permissions = ["get"]
+    ```
+    *For more information, see [Azure documentation](https://docs.microsoft.com/en-us/azure/key-vault/secrets/about-secrets#secret-access-control).*
+    </br>
+
+    **GCP:**
+
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: SecretsManager
+          environment: gcp
+          version: latest
+          secretId: mysecret
+    ```
+
+    **IAM Permissions:**
+    ```text
+    "secretmanager.versions.access"
+    "secretmanager.versions.list"
+    "secretmanager.versions.get"
+    "compute.instances.get"
+    ```
+    *For more information, see [GCP documentation](https://cloud.google.com/secret-manager/docs/access-control).*
+    </br>    
+
+    **HashiCorp (using App Role authentication):**
+
+    The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples). 
+
+    {{=<% %>=}} 
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        verifyTls: true
+        trustedCertBundles: ['/config/ssl/ssl.crt/my-ca-bundle.crt']
+        secretProvider:
+          type: Vault
+          environment: hashicorp
+          vaultServer: https://127.0.0.1:8200
+          appRolePath: /v1/auth/approle/login
+          secretsEngine: kv2
+          secretId: secret/credential
+          field: data
+          version: 1
+          authBackend:
+            type: approle
+            roleId:
+              type: url
+              value: file:///path/to/role-id
+            secretId:
+              type: inline
+              value: secret-id
+              unwrap: true
+    ...
+    extension_services:
+      service_operations:
+        - extensionType: do
+          type: inline
+          value: 
+            schemaVersion: 1.0.0
+            class: Device
+            async: true
+            label: my BIG-IP declaration for declarative onboarding
+            Common:
+              class: Tenant
+              hostname: '{{{ HOST_NAME }}}.local'
+              foo:
+                class: User
+                userType: regular
+                password: '{{{ ADMIN_PASS.foo_password }}}'
+                shell: bash
+                partitionAccess:
+                  all-partitions:
+                    role: admin
+              bar:
+                class: User
+                userType: regular
+                password: '{{{ ADMIN_PASS.bar_password }}}'
+                shell: bash
+                partitionAccess:
+                  all-partitions:
+                    role: admin
+    ```
+    <%={{ }}=%>
+
+    *NOTE*: 
+    - When the authBackend.secretId.unwrap attribute is set to `true` (recommended), the secretId value must be in the form of a wrapping token. BIG-IP Runtime Init will unwrap this token to retrieve the actual secret ID. This eliminates the need to pass the secret ID in the declaration. For more information, See the [HashiCorp AppRole documentation](https://learn.hashicorp.com/tutorials/vault/approle-best-practices#approle-response-wrapping)
+
+    - This example also demonstrates how to use custom PKI certs for https requests to HashiCorp Vault server when verifyTls set to `true`. 
+    <br>
+
+    *For more information, see [HashiCorp documentation](https://www.vaultproject.io/docs/concepts/policies#policy-syntax).*
+    <br>
+
+
+
+  
+    ##### Security - Masking Secrets
+
+    By default, runtime will mask out (ex. \"password\":\"******\") the following common fields in declarations when logging:
+
+    ```json
+        [
+            "password",
+            "localPassword",
+            "remotePassword",
+            "bigIqPassword",
+            "bigIpPassword",
+            "passphrase",
+            "cookiePassphrase",
+            "certificate",
+            "privateKey",
+            "ciphertext",
+            "protected",
+            "secret",
+            "sharedSecret",
+            "secretAccessKey",
+            "apiAccessKey",
+            "encodedCredentials",
+            "encodedToken",
+            "oldPassword",
+            "newPassword",
+            "bindPassword",
+            "checkBindPassword",
+            "md5SignaturePassphrase"
+        ]
+    ```
+    However, it is possible to extend this list by providing an additional (***field***) attribute for the Secret object:
+
+    ```yaml
+    runtime_parameters:
+      - name: MY_SECRET
+        type: secret
+        secretProvider:
+          environment: azure
+          type: KeyVault
+          vaultUrl: https://my-keyvault.vault.azure.net
+          secretId: mySecret01
+          field: newCustomSecretField
+    ``` 
+
+    This example shows instructing Runtime Init to also mask out the value for ```newCustomSecretField``` seen in any declarations.
+
+ - **tag**
+
+    *Description:* fetches a tag value from public cloud virtual machine resource. 
+    
+    The example below demonstrates how to fetch the value for the tag, with the key "CustomTag", applied to the EC2 instance: 
+      
+    ```yaml
+    runtime_parameters:
+      - name: TAG_VALUE
+        type: tag
+        tagProvider:
+          environment: aws
+          key: CustomTag
+    ```
+
+    *NOTE:*
+    - In Azure, Runtime-Init will gather tags from the metadata service and doesn't require any additional permissions.
+    - In AWS and GCP, Runtime-Init will gather them from the Cloud API which requires additional IAM permissions.
+
+
+      * AWS:
+
+        ```text
+          "ec2:DescribeTags"
+        ```
+      * GCP (Labels):
+
+        ```text
+          "compute.instances.get"
+        ```    
+        * GCP also has several different types of tags (Labels, Network Tags, and Metadata Tags - ad hoc key/value pairs embedded in Metadata). As the Metadata Tags can be fetched using the generic `url` type if needed, this type leverages IAM roles to enable fetching "Labels".
+
+  - **metadata**
+
+    *Description:* Convenience function to grab common onboarding items from the Metadata Service. 
+
+    Allowed types are `network` and `uri`.
+
+    For example, type `network` returns addresses reformatted in CIDR notation so you can use for Self-IPs.
+
+    For more examples, see the [examples/runtime_configs](examples/runtime_configs/snippets) directory
+
+    ***Examples:***
+
+    *AWS Self-IP*
+    ```yaml
+    runtime_parameters:
+      - name: SELF_IP_EXTERNAL
+        type: metadata
+        metadataProvider:
+          type: network
+          environment: aws
+          field: local-ipv4s
+          index: 1
+    ```
+
+    *Azure Self-IP*
+    ```yaml
+    runtime_parameters:
+      - name: SELF_IP_EXTERNAL
+        type: metadata
+        metadataProvider:
+          type: network
+          environment: azure
+          field: ipv4
+          index: 1
+    ```
+
+    *GCP Self-IP*
+    ```yaml
+    runtime_parameters:
+      - name: SELF_IP_EXTERNAL
+        type: metadata
+        metadataProvider:
+          environment: gcp
+          type: network
+          field: ip
+          index: 0
+    ```
+
+    Returns the CIDR address (ex. `10.0.0.5/24`) which is required by the Self-IP. 
+
+    The output can be further transformed using ipcalc functionality:
+
+
+    The ipcalc functionality provides the following transformation options: 
+      - **address**   - The provided address without netmask prefix.
+      -  **base**      - The base address of the network block as a string (eg: 216.240.32.0). Base does not give an indication of the size of the network block.
+      -  **mask**      - The netmask as a string (eg: 255.255.255.0).
+      -  **hostmask**  - The host mask which is the opposite of the netmask (eg: 0.0.0.255).
+      -  **bitmask**   - The netmask as a number of bits in the network portion of the address for this block (eg: 24).
+      -  **size**      - The number of IP addresses in a block (eg: 256).
+      -  **broadcast** - The blocks broadcast address (eg: 192.168.1.0/24 => 192.168.1.255).
+      -  **first**     - First useable address.
+      -  **last**      - Last useable address.
+
+
+    The following example uses ipcalc to get the first useable IPv4 address using the CIDR of the first AWS subnet and resolves it to a runtime parameter named `GATEWAY`.
+
+    ```yaml
+    runtime_parameters:
+      - name: GATEWAY
+        type: metadata
+        metadataProvider:
+          environment: aws
+          type: network
+          field: local-ipv4s
+          index: 0
+          ipcalc: first
+    ```
+    This example returns `10.0.0.1` for the Self-IP `10.0.0.5/24`.
+
+    The next example uses ipcalc to get the bitmask using the CIDR of the first AWS subnet and resolves it to a runtime parameter named as BITMASK.
+          
+    ```yaml
+    runtime_parameters:
+      - name: BITMASK
+        type: metadata
+        metadataProvider:
+          environment: aws
+          type: network
+          field: local-ipv4s
+          index: 0
+          ipcalc: bitmask
+    ```
+    This example returns `24` for the Self-IP `10.0.0.5/24`.
+            
+    For fetching **AWS** Metadata, Runtime Init allows you use a custom URI. By default, Runtime Init uses AWS IMDSv2 to get AWS metadata:
+
+    ```yaml
+    runtime_parameters:
+      - name: ACCOUNT_ID
+        type: metadata
+        metadataProvider:
+          environment: aws
+          type: uri
+          value: /latest/dynamic/instance-identity/document
+          query: accountId
+    ```    
+
+    In the case where JSON response is returned, this type allows you to provide a [JMESPath](https://jmespath.org/) query filter. In example above, the response queries for the `accountId` key. 
+
+ - **url**
+
+    *Description:* Defines a generic URL to fetch a runtime parameter. 
+
+    This type can be useful when gathering custom metadata not covered in the `metadataProvider` above, data from custom locations, session based URLs, etc.
+
+    This type allows you to provide HTTP headers as well as a [JMESPath](https://jmespath.org/) query filter for JSON responses. The headers and query fields are *optional*. 
+
+    <br/>
+    The following examples demonstrates how to fetch hostnames or virtual machine names for AWS, GCP and Azure:
+
+    *AWS Hostname*
+    ```yaml
+    runtime_parameters:
+      - name: HOST_NAME
+        type: url
+        value: http://169.254.169.254/latest/meta-data/hostname
+    ```
+
+    *GCP Hostname*
+    ```yaml
+    runtime_parameters:
+      - name: HOST_NAME
+        type: url
+        value: http://169.254.169.254/computeMetadata/v1/instance/hostname
+        headers:
+          - name: Metadata-Flavor
+            value: Google
+    ```
+
+    *Azure Virtual Machine Name*
+    ```yaml
+    runtime_parameters:
+      - name: NAME
+        type: url
+        value: 'http://169.254.169.254/metadata/instance/compute?api-version=2020-09-01'
+        query: name
+        headers:
+          - name: Metadata
+            value: true
+    ```
+
+   The following AWS URL example has been superseded by the metadata `uri` type above but demonstrates linking Runtime Parameters together (to provide a session-based request). It first fetches an AWS Session token and leverages the JMESPath `query` field to filter for the `region` key. 
+
+    AWS:
+
+    ```yaml
+    runtime_parameters:  
+      - name: AWS_SESSION_TOKEN
+        type: url
+        value: http://169.254.169.254/latest/api/token
+        headers:
+          - name: Content-Type
+            value: json
+          - name: User-Agent
+            value: some-user-agent
+          - name: method
+            value: PUT
+          - name: X-aws-ec2-metadata-token-ttl-seconds
+            value: 21600
+      - name: REGION
+        type: url
+        value: http://169.254.169.254/latest/dynamic/instance-identity/document
+        query: region
+        headers:
+          - name: Content-Type
+            value: json
+          - name: User-Agent
+            value: some-user-agent
+          - name: X-aws-ec2-metadata-token
+            value: "{{{AWS_SESSION_TOKEN}}}"
+    ```
+
+    The `url` type also allows you to provide a local file location using the "file://" schema. The example below demonstrates how to get a parameter value from the /config/cloud/paramter-file.txt file:
+      
+    ```yaml
+    runtime_parameters:
+      - name: SOME_PARAM
+        type: url
+        value: file:///config/cloud/paramter-file.txt 
+    ```      
+
+
+ - **static**
+
+    *Description:* defines a static value. 
+
+    Examples: 
+
+    This example replaces AVAILABILITY_ZONE token with "us-west-2a" string.
+
+    ```yaml
+    runtime_parameters:
+      - name: AVAILABILITY_ZONE
+        type: static
+        value: us-west-2a
+    ```
+
+### bigip_ready_enabled
+
+
+*Description:* List of commands to run after BIG-IP and MCPD are up and running. Example: TMSH commands, misc optimizations, etc.
+
+Allowed types are `inline`, `file` and `url`.
+
+***Examples:***
+
+
+ - **inline** 
+
+    ```yaml
+    bigip_ready_enabled:
+    # Dependent on GUI being up
+      - name: icontrol_settings
+        type: inline
+        commands:
+          - '/usr/bin/curl -s -f -u admin: -H "Content-Type: application/json" -d ''{"maxMessageBodySize":134217728}'' -X POST http://localhost:8100/mgmt/shared/server/messaging/settings/8100 | jq .'
+    # Dependent on MCPD being up
+      - name: using_runtime_variables
+        type: inline
+        commands:
+          - f5mku -r {{{ ADMIN_PASS }}}
+    # Dependent on TMSH / MCPD being up
+      - name: using_bash_variables_in_commands
+        type: inline
+        commands:
+          - "EXT_GW=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/gateway); tmsh create net route ext_gw_int network $EXT_GW/32 interface external"
+          - "INT_GW=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/2/gateway); tmsh create net route int_gw_int network $INT_GW/32 interface internal"
+    ```
+
+
+*NOTE:* Each command is executed in a separate shell context from each other. For example, a bash variable in one command cannot be referenced by the following command. For instance, in the example above, the command with the `$INT_GW` variable would not be able to render the `$EXT_GW` variable from command above it. For more examples, see the [examples/runtime_configs](examples/runtime_configs/snippets) directory.
+
+
+### extension_packages
+
+*Description:* List of iControl Lx packages to download and install.
+
+Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
+
+***Examples:***
+
+ - *minimal* 
+
+    ```yaml
+    extension_packages:
+      install_operations:
+        - extensionType: do
+          extensionVersion: 1.29.0
+        - extensionType: as3
+          extensionVersion: 3.36.0
+        - extensionType: ts
+          extensionVersion: 1.28.0
+        - extensionType: fast
+          extensionVersion: 1.17.0
+    ```
+
+ - *with hash checking*
+
+    ```yaml
+    extension_packages:
+      install_operations:
+        - extensionType: do
+          extensionVersion: 1.29.0
+          extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
+        - extensionType: as3
+          extensionVersion: 3.36.0
+          extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
+        - extensionType: ts
+          extensionVersion: 1.28.0
+          extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
+        - extensionType: fast
+          extensionVersion: 1.17.0
+          extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
+    ```
+
+ - *custom from URL*
+
+    ```yaml
+    extension_packages:
+      install_operations:
+      - extensionType: do
+        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.29.0/f5-declarative-onboarding-1.29.0-8.noarch.rpm
+        extensionVersion: 1.29.0
+      - extensionType: as3
+        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.36.0-6.noarch.rpm
+        extensionVersion: 3.36.0
+      - extensionType: fast
+        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm
+        extensionVersion: 1.17.0
+    ```
+
+    *NOTE: ```extensionVersion``` is not required when used with the ```extensionUrl``` field.*
+
+
+For more examples, see the [examples/runtime_configs](examples/runtime_configs/snippets) directory.
+
+
+### extension_services
+
+*Description:* List of iControl Lx declarations to configure. 
+
+Allowed extensionTypes are `do`, `as3`, `ts` and `cfe`.
+
+Allowed value types are `inline`, `file` and `url`.
+
+***Examples:***
+
+
+ - **inline** 
+
+    ```yaml
+    extension_services:
+      service_operations:
+        - extensionType: do
+          type: inline
+          value:
+            schemaVersion: 1.0.0
+            class: Device
+            label: >-
+              Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+              license
+            async: true
+            Common:
+              class: Tenant
+              My_DbVariables:
+                class: DbVariables
+                provision.extramb: 1000
+                restjavad.useextramb: true
+                ui.advisory.enabled: true
+                ui.advisory.color: blue
+                ui.advisory.text: BIG-IP Quickstart
+              My_Provisioning:
+                class: Provision
+                asm: nominal
+                ltm: nominal
+              My_Ntp:
+                class: NTP
+                servers:
+                  - 169.254.169.253
+                timezone: UTC
+              My_Dns:
+                class: DNS
+                nameServers:
+                  - 169.254.169.253
+              My_License:
+                class: License
+                licenseType: regKey
+                regKey: 'AAAAA-BBBBB-CCCCC-DDDDD-EEEEEEE'
+              My_System:
+                class: System
+                autoPhonehome: true
+                hostname: bigip.example.com
+              quickstart:
+                class: User
+                partitionAccess:
+                  all-partitions:
+                    role: admin
+                password: 'BIGIP_PASSWORD'
+                shell: bash
+                userType: regular
+        - extensionType: as3
+          type: inline
+          value:
+            class: AS3
+            action: deploy
+            persist: true
+            declaration:
+              class: ADC
+              schemaVersion: 3.0.0
+              label: Sample 1
+              remark: Simple HTTP Service with Round-Robin Load Balancing
+              Sample_01:
+                class: Tenant
+                A1:
+                  class: Application
+                  template: http
+                  serviceMain:
+                    class: Service_HTTP
+                    virtualAddresses:
+                    - 10.0.1.10
+                    pool: web_pool
+                  web_pool:
+                    class: Pool
+                    monitors:
+                    - http
+                    members:
+                    - servicePort: 80
+                      serverAddresses:
+                      - 192.0.1.10
+                      - 192.0.1.11
+    ```
+
+ - **url** 
+
+    ```yaml
+    extension_services:
+      service_operations:
+        - extensionType: do
+          type: url
+          value: https://cdn.f5.com/product/cloudsolutions/declarations/template2-0/autoscale-waf/autoscale_do_payg.json
+          verifyTls: false
+        - extensionType: as3
+          type: url
+          value: file:///examples/automation_toolchain_declarations/as3.json
+    ```
+
+*NOTE:* 
+ - *If using the `url` type, the declarations can be in JSON or YAML format.*
+
+For more examples, see the [examples/runtime_configs](examples/runtime_configs/snippets) directory.
+
+*TIP*:
+ - If creating multiple service extension services, you may need to order them in a particular sequence. For example, if creating a cluster with Declarative Onboarding (DO) and additional extension services, run the first Declarative Onboarding declaration without the device service clustering elements, then run the additional services, and finally, the Declarative Onboarding declaration again with the clustering elements. 
+ 
+ For examples, see `failover` solutions in the [Native Template Examples](#native-template-examples).
+
+
+### post_onboard_enabled
+
+*Description:* List of commands to run after sending iControl LX declarations.
+
+Allowed types are `inline`, `file` and `url`.
+
+
+***Examples:***
+
+ - **inline** 
+
+    ```yaml
+    post_onboard_enabled:
+      - name: example_inline_command
+        type: inline
+        commands:
+          - touch /tmp/post_onboard_script.sh
+          - chmod 777 /tmp/post_onboard_script.sh
+          - echo "touch /tmp/create_by_autogenerated_post_local" > /tmp/post_onboard_script.sh
+    ```
+
+
+*NOTE:* Each command is executed independently from each other. For example, a bash variable in one command cannot be referenced by the following command. For more examples, see the [examples/runtime_configs](examples/runtime_configs/snippets) directory.
+
+### post_hook
+
+*Description:* Webhook to send upon completion.
+
+***Examples:***
+
+```yaml
+post_hook:
+  - name: example_webhook
+    type: webhook
+    url: https://webhook.site
+    properties:
+      optionalKey1: optional_value1
+      optionalKey2: optional_value2
+```
+
+For more examples, see the [examples/runtime_configs](examples/runtime_configs/snippets) directory.
+
+
 ## Usage Examples
-
-### Azure (ARM Template) Virtual Machine extension snippet
-#### Download F5 BIG-IP Runtime Config from URL
-```json
-"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
-"fileUris": [
-  "https://example.com/runtime-init-conf.yaml"
-]
-```
-#### Use inline F5 BIG-IP Runtime Config
-```json
-"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run; bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
-```
-
 ### Terraform
 
-Terraform plans will generally consist of the following, 
+Terraform plans will generally consist of the following:
 
   - a startup_script template (.tpl)
   - passing the rendered startup script to the instance's startup script parameter 
 
 
-#### Azure (Terraform) snippet
+#### Azure snippet
 
-In this snippet, 
+In this snippet: 
 
 ```
-data "template_file" "startup_script" {
-  template = "${file("${path.module}/startup-script.tpl")}"
-  vars = {
-    secret_id = "mySecret01"
+resource "azurerm_linux_virtual_machine" "vm" {
+  name                  = "vm-${module.utils.env_unique_id}-bigip"
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  size                  = var.instance_size
+  admin_username        = var.admin_username
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file(var.f5_ssh_publickey)
   }
-}
 
-resource "azurerm_virtual_machine" "vm" {
-  name                             = "${module.utils.env_prefix}-vm0"
-  location                         = azurerm_resource_group.deployment.location
-  resource_group_name              = azurerm_resource_group.deployment.name
-  network_interface_ids            = [azurerm_network_interface.mgmt.id, azurerm_network_interface.internal.id, azurerm_network_interface.external.id]
-  primary_network_interface_id     = azurerm_network_interface.mgmt.id
-  vm_size                          = var.instance_size
-  delete_os_disk_on_termination    = true
-  delete_data_disks_on_termination = true
+ os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
 
-  storage_image_reference {
+  source_image_reference {
     publisher = var.publisher
     offer     = var.offer
     sku       = var.sku
@@ -250,536 +1064,144 @@ resource "azurerm_virtual_machine" "vm" {
     name      = var.sku
   }
 
-  storage_os_disk {
-    name              = "osdisk0"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+  boot_diagnostics {
+    storage_account_uri  = var.boot_diagnostics ? join(",", azurerm_storage_account.vm_sa.*.primary_blob_endpoint) : ""
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
+  network_interface_ids = [
+      azurerm_network_interface.nic_mgmt.id, 
+      azurerm_network_interface.nic_external.id, 
+      azurerm_network_interface.nic_internal.id
+  ]
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.user_identity.id]
   }
 
-  os_profile {
-    computer_name  = "f5vm"
-    admin_username = var.admin_username
-    admin_password = module.utils.admin_password
-    custom_data =  "${data.template_file.startup_script.rendered}"
-  }
+  custom_data = base64encode(templatefile("${path.module}/startup-script.tpl", {
+    admin_username:     var.admin_username,
+    bigip_vault_name:   "key-vault-${module.utils.env_unique_id}-bigip",
+    secret_id: "secret-${module.utils.env_unique_id}-bigIpPassword",
+    package_url:        var.bigip_runtime_init_package_url,
+  }))
 
-}
+  tags = merge(var.global_tags, { Name="vm-${module.utils.env_unique_id}-bigip" })
 
-resource "azurerm_virtual_machine_extension" "run_startup_cmd" {
-  name                 = "${module.utils.env_prefix}-run-startup-cmd"
-  virtual_machine_id   = azurerm_virtual_machine.vm.id
-  publisher            = "Microsoft.OSTCExtensions"
-  type                 = "CustomScriptForLinux"
-  type_handler_version = "1.2"
-  settings             = <<SETTINGS
-    {
-      "commandToExecute": "bash /var/lib/waagent/CustomData"
-    }
-SETTINGS
 }
 ```
 
-the startup script is templatized in startup-script.tpl and sent using the vm os_profile's ```custom_data``` parameter. On BIG-IP versions 15.1+ Cloud-Init will execute this script directly. However, for earlier versions, azurerm_virtual_machine_extension is used to run it. See BIG-IP's [Cloud-Init](!https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html) documentation for more information.
+The startup script is templatized in startup-script.tpl and sent using the VM's ```custom_data``` parameter. On BIG-IP versions 15.1+, Cloud-Init will execute this script directly. However, for earlier versions, azurerm_virtual_machine_extension is used to run it. See [BIG-IP Cloud-Init documentation](!https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html) for more information.
 
 
-The startup script contains the following contents.
+The Terraform template for the startup script contains the following contents.
 
 ```sh
-#!/bin/bash
+#!/bin/bash -x
 
-mkdir -p /config/cloud
+# Send output to log file and serial console
+mkdir -p  /var/log/cloud /config/cloud /var/config/rest/downloads
+LOG_FILE=/var/log/cloud/startup-script.log
+[[ ! -f $LOG_FILE ]] && touch $LOG_FILE || { echo "Run Only Once. Exiting"; exit; }
+npipe=/tmp/$$.tmp
+trap "rm -f $npipe" EXIT
+mknod $npipe p
+tee <$npipe -a $LOG_FILE /dev/ttyS0 &
+exec 1>&-
+exec 1>$npipe
+exec 2>&1
+
+# Download or Render BIG-IP Runtime Init Config
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
 %readme_snippet_01%
 
 EOF
 
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud azure'
 
+
+# Download
+for i in {1..30}; do
+    curl -fv --retry 1 --connect-timeout 5 -L "${package_url}" -o "/var/config/rest/downloads/f5-bigip-runtime-init.gz.run" && break || sleep 10
+done
+# Install
+bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- "--cloud azure"
+# Run
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
-```
-
-NOTE: ```--cloud azure``` is passed to the installer to specify the environment 
-
-The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```custom_data``` parameter.  Ex. the rendered ```custom_data``` finally sent to BIG-IP will contain the actual key name 'mySecret01' to gather at runtime:
-
-ex.
-
-```yaml
-runtime_parameters:
-  - name: ADMIN_PASS
-    type: secret
-    secretProvider:
-      environment: azure
-      type: KeyVault
-      vaultUrl: https://my-keyvault.vault.azure.net
-      secretId: mySecret01
-      field: password
-```
-
-When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the admin password). ***field*** provides field name to which this secret is map to and it instructs Runtime Init to masks the secret value in any logging outputs. 
-
-
-#### AWS (Terraform) snippet
-
-
-In this AWS example snippet, 
 
 ```
-data "template_file" "startup_script" {
-  template = "${file("${path.module}/startup-script.tpl")}"
-  vars = {
-    secret_id = "${aws_secretsmanager_secret_version.AdminSecret.secret_id}"
-  }
-}
 
-
-resource "aws_instance" "vm01" {
-  ami = "${var.AWS_BIGIP_AMI_ID}"
-  instance_type = "m5.xlarge"
-  availability_zone = "${var.AWS_DEFAULT_REGION}a"
-  network_interface {
-    network_interface_id = "${aws_network_interface.mgmt1.id}"
-    device_index = 0
-  }
-  network_interface {
-    network_interface_id = "${aws_network_interface.external1.id}"
-    device_index = 1
-  }
-  iam_instance_profile = "${aws_iam_instance_profile.instance_profile.name}"
-  tags = merge(var.global_tags, {Name="runtime-init-vm0-${module.utils.env_prefix}"})
-  user_data = "${data.template_file.startup_script.rendered}"
-}
-```
-
-the startup script is templatized in startup-script.tpl and contains the following contents.
-
-```sh
-#!/bin/bash
-
-mkdir -p /config/cloud
-cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
----
-%readme_snippet_02%
-
-EOF
-
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws'
-
-f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
-```
-
-NOTES: 
-  - ```--cloud aws``` is passed to the installer to specify the environment
-  - Runtime Init supports both available options for accessing AWS Instance metadata:
-     * Instance Metadata Service Version 1 (IMDSv1) – a request/response method
-     * Instance Metadata Service Version 2 (IMDSv2) – a session-oriented method
-  - when extension package includes ```extensionUrl``` field, ```extensionVersion``` is not required; however, ```extensionVersion``` is required when package defined without ```extensionUrl```
-  
-  ```yaml
-    extension_packages:
-      install_operations:
-        - extensionType: as3
-          extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm
-  ```
-
-The terraform variable that is templatized is ```${secret_id}``` which will be rendered by terraform before sending to the instance's ```user_data``` parameter.  Ex. the rendered ```user_data``` finally sent to BIG-IP will contain the actual name of secret 'mySecret01' to gather at runtime:
-
-ex.
-
-```yaml
-    ---
+*NOTE:* 
+ - ```--cloud azure``` is passed to the installer to specify the environment.
+ - Terraform templates use the `${variable}` syntax for variables. To preserve a bash variable in the rendered script, it uses the escape syntax `$${bash_variable}`.
+ - When BIG-IP is launched, Terraform renders the template's `${secret_id}` variable. For example, the rendered file on BIG-IP will contain: 
+    ```yaml
     runtime_parameters:
-      - name: ADMIN_PASS
-        type: secret
-        secretProvider:
-          environment: aws
-          type: SecretsManager
-          version: AWSCURRENT
-          secretId: mySecret01
+        - name: ADMIN_PASS
+          type: secret
+          secretProvider:
+            environment: azure
+            type: KeyVault
+            vaultUrl: 'https://key-vault-1cqephd9-bigip.vault.azure.net'
+            secretId: secret-1cqephd9-bigIpPassword
+    ```
+    When Runtime Init runs, it will fetch the **value** for that secret named `secret-1cqephd9-bigIpPassword` and set the runtime variable ``ADMIN_PASS``. Runtime Init will then render any tool chain declarations with the mustache variable ```{{{ ADMIN_PASS }}}``` with the secret **value** (i.e. the actual admin password) in its POST payload to the Tool Chain service endpoint. For example:
+    ```
+    ...
+    2022-03-16T22:19:06.147Z [10306]: info: Creating - do 1.27.0 {"schemaVersion":"1.0.0","class":"Device",
+    ...
+    "admin":{"class":"User","userType":"regular","partitionAccess":{"all-partitions":{"role":"admin"}},"password":"********","shell":"bash"},
+    ...
+    ```
+
+For similar **AWS** and **GCP** examples, see the [examples/terraform](examples/terraform) directory.
+
+### Azure (ARM Template) snippet
+#### Download BIG-IP Runtime Config from URL
+```json
+"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
+"fileUris": [
+  "https://example.com/runtime-init-conf.yaml"
+]
+```
+#### Inline BIG-IP Runtime Config
+```json
+"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run; bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
 ```
 
-When BIG-IP is launched, Runtime Init will fetch the **value** for the secret named ```mySecret01``` from the native vault and set the runtime variable ``ADMIN_PASS``. Any declarations containing ```{{{ ADMIN_PASS }}}``` (ex. do.json, as3.json templates formatted with mustache) will be populated with the secret **value** (ex. the password). 
+### Native Template Examples
 
-Note that if logging level is set to debug, secrets used by inline commands may appear in the BIG-IP logs as part of the commands or their outputs.
+For more native template examples, see:
+- [Azure ARM Templates](https://github.com/F5Networks/f5-azure-arm-templates-v2/)
+- [AWS CloudFormation Templates](https://github.com/F5Networks/f5-aws-cloudformation-v2)
+- [Google Deployment Manager Templates](https://github.com/F5Networks/f5-google-gdm-templates-v2)
 
+For example runtime-init configurations, go to the `/bigip-configurations` directory in a solution folder. For example, see `failover` examples in `examples/failover/bigip-configurations`.
 
-#### GCP (Terraform) snippet
-
-Similar to examples above, 
-
-```
-data "template_file" "startup_script" {
-  template = "${file("${path.module}/startup-script.tpl")}"
-  vars = {
-    secret_id = "mySecret01"
-  }
-}
-
-resource "google_compute_instance" "vm01" {
-  name         = "tf-func-test-vm-${module.utils.env_prefix}"
-  machine_type = "${var.instance-type}"
-  zone         = "${var.primary_zone}"
-  can_ip_forward = true
-  description = "${var.reaper_tag}"
-
-  labels = {
-    f5_bigip_runtime_init = "${module.utils.env_prefix}"
-    another_tag = "with_a_value"
-  }
-
-  boot_disk {
-    initialize_params {
-      image = "${data.google_compute_image.f5-bigip-image.self_link}"
-    }
-  }
-
-  network_interface {
-    network = "${google_compute_network.ext_network.self_link}"
-    subnetwork = "${google_compute_subnetwork.ext_subnetwork.self_link}"
-    network_ip = "${var.vm-ext-private-ip}"
-
-    access_config {
-    }
-  }
-
-  network_interface {
-    network = "${google_compute_network.mgmt_network.self_link}"
-    subnetwork = "${google_compute_subnetwork.mgmt_subnetwork.self_link}"
-    network_ip = "${var.vm-mgmt-private-ip}"
-
-    access_config {
-    }
-
-  }
-
-  network_interface {
-    network = "${google_compute_network.int_network.self_link}"
-    subnetwork = "${google_compute_subnetwork.int_subnetwork.self_link}"
-    network_ip = "${var.vm-int-private-ip}"
-  }
-
-  metadata = {
-    foo = "bar"
-  }
-
-  metadata_startup_script = "${data.template_file.startup_script.rendered}"
-
-  service_account {
-    email = google_service_account.sa.email
-    scopes = ["cloud-platform"]
-  }
-
-}
-```
-
-the startup script startup-script.tpl is passed to via the instance's ```metadata_startup_script``` parameter
-
-
-```sh
-#!/bin/bash
-
-mkdir -p /config/cloud
-cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
----
-%readme_snippet_03%
-
-EOF
-
-curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud gcp'
-
-f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
-```
-
-NOTE: ```--cloud gcp``` is passed to the installer to specify the environment 
-
-## Runtime parameters
-
-runtime_parameters allows to defined list of parameters and these parameters can be used for substituting tokens defined within declarations. Parameters can dependent on each other, so one parameter value can be used within another parameter (see example below for more details).
-There are a few types of parameters:
-
-  * url - defines url to fetch a runtime parameter (ex. custom metadata). This parameter allows to provide HTTP headers as well as JMESPath query for querying JSON document/response. The headers and query fields are optional. 
-    ```yaml
-        runtime_parameters:  
-          - name: AWS_SESSION_TOKEN
-            type: url
-            value: http://169.254.169.254/latest/api/token
-            headers:
-              - name: Content-Type
-                value: json
-              - name: User-Agent
-                value: some-user-agent
-              - name: method
-                value: PUT
-              - name: X-aws-ec2-metadata-token-ttl-seconds
-                value: 21600
-          - name: REGION
-            type: url
-            value: http://169.254.169.254/latest/dynamic/instance-identity/document
-            query: region
-            headers:
-              - name: Content-Type
-                value: json
-              - name: User-Agent
-                value: some-user-agent
-              - name: X-aws-ec2-metadata-token
-                value: "{{{AWS_SESSION_TOKEN}}}"
-    ```
-    The example above also demonstrates how to define `returnType`, which can be set to one of the following values:
-    
-        * string - returns value as string
-        * number - returns value as number
-        * boolean - returns value as boolean
-    Also, it demonstrates how to fetch and utilize AWS Session token for fetching instance metadata; the session token is fetched as parameter and then its value is used for resolving REGION parameter.
-    
-    The following two examples demonstrates how to fetch region value for Azure and GCP clouds:
-    
-    Azure: 
-    
-    ```yaml
-        runtime_parameters:
-          - name: REGION
-            type: url
-            value: http://169.254.169.254/metadata/instance/compute/location?api-version=2021-05-01&format=text
-            headers:
-              - name: Metadata
-                value: true 
-    ```
-    
-    GCP:
-    
-    ```yaml
-        runtime_parameters:
-          - name: REGION
-            type: url
-            value: http://metadata.google.internal/computeMetadata/v1/instance/zone
-            headers:
-                - name: Metadata-Flavor
-                  value: Google
-    ```    
-    
-  * secret - fetches secret from Secret Vault 
-      ```yaml
-        runtime_parameters:
-          - name: ADMIN_PASS
-            type: secret
-            secretProvider:
-              environment: azure
-              type: KeyVault
-              vaultUrl: https://my-keyvault.vault.azure.net
-              secretId: mySecret01
-      ```
-      
-  The type:url also allows to provide local file location using "file://" schema; the example below demonstrates how to get paramter value from /config/cloud/paramter-file.txt file:
-  
-   ```yaml
-        runtime_parameters:
-          - name: SOME_PARAM
-            type: url
-            value: file:///config/cloud/paramter-file.txt 
-  ```      
-    
-  * secret (Hashicorp Vault) - fetches secret from Hashicorp Vault using App Role authentication
-
-    The following example uses the special value **data** in the field attribute to retrieve the entire secret response, which can then be referenced inside mustache handlebars inside the configuration. When referencing multiple secret values from a single response, this limits client requests to the Vault server to a minimum (you may also create a unique runtime parameter for each secret stored in Vault, using the provided examples). 
-    Also, example demonstrates how to use custom PKI certs for https requests to HashiCorp Vault server when verifyTls set to `true``. 
-    
-    **NOTE**: When the authBackend.secretId.unwrap attribute is set to **true** (recommended), the secretId value must be in the form of a wrapping token. F5 BIG-IP Runtime Init will unwrap this token to retrieve the actual secret ID. This eliminates the need to pass the secret ID in the declaration. See the Hashicorp Vault [documentation](https://learn.hashicorp.com/tutorials/vault/approle-best-practices#approle-response-wrapping) for more information.
-    
-      {{=<% %>=}}
-      ```yaml
-        runtime_parameters:
-          - name: ADMIN_PASS
-            type: secret
-            verifyTls: true
-            trustedCertBundles: ['/config/ssl/ssl.crt/my-ca-bundle.crt']
-            secretProvider:
-              type: Vault
-              environment: hashicorp
-              vaultServer: https://127.0.0.1:8200
-              appRolePath: /v1/auth/approle/login
-              secretsEngine: kv2
-              secretId: secret/credential
-              field: data
-              version: 1
-              authBackend:
-                type: approle
-                roleId:
-                  type: url
-                  value: file:///path/to/role-id
-                secretId:
-                  type: inline
-                  value: secret-id
-                  unwrap: true
-      ...
-        extension_services:
-          service_operations:
-            - extensionType: do
-              type: inline
-              value: 
-                schemaVersion: 1.0.0
-                class: Device
-                async: true
-                label: my BIG-IP declaration for declarative onboarding
-                Common:
-                  class: Tenant
-                  hostname: '{{{ HOST_NAME }}}.local'
-                  foo:
-                    class: User
-                    userType: regular
-                    password: '{{{ ADMIN_PASS.foo_password }}}'
-                    shell: bash
-                    partitionAccess:
-                      all-partitions:
-                        role: admin
-                  bar:
-                    class: User
-                    userType: regular
-                    password: '{{{ ADMIN_PASS.bar_password }}}'
-                    shell: bash
-                    partitionAccess:
-                      all-partitions:
-                        role: admin
-      ```
-      <%={{ }}=%>
-  * metadata - fetches common pre-defined metadata from the Metadata Service
-    ```yaml
-        runtime_parameters:
-          - name: MGMT_ROUTE
-            type: metadata
-            metadataProvider:
-              environment: aws
-              type: network
-              field: subnet-ipv4-cidr-block
-              index: 0
-    ```
-    For fetching AWS Metadata, Runtime Init allows to use URI type by providing uri value for needed metadata. By default, Runtime Init uses AWS IMDSv2 to get AWS metadata:
-    ```yaml
-        runtime_parameters:
-          - name: ACCOUNT_ID
-            type: metadata
-            metadataProvider:
-              environment: aws
-              type: uri
-              value: /latest/dynamic/instance-identity/document
-              query: accountId
-    ```    
-
-    In a case when returned metadata is in form  IPv4 CIDR block (i.e. 10.0.0.5/24), it can be transformed using ipcalc functionality:
-    
-    The following example uses ipcalc to get the first useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as GATEWAY.
-    ```yaml
-        runtime_parameters:
-          - name: GATEWAY
-            type: metadata
-            metadataProvider:
-              environment: aws
-              type: network
-              field: local-ipv4s
-              index: 0
-              ipcalc: first
-    ```
-    This example uses ipcalc to get the last useable ipv4 address using the CIDR of the first AWS subnet, and resolves it to a runtime parameter named as LAST_ADDRESS.
-    
-    ```yaml
-        runtime_parameters:
-          - name: LAST_ADDRESS
-            type: metadata
-            metadataProvider:
-              environment: aws
-              type: network
-              field: local-ipv4s
-              index: 0
-              ipcalc: last
-    ```
-    
-    The following examples demonstrates how get number of ip addresses in CIDR of the first AWS subnet and resolves it to a runtime parameter named as NETWORK_SIZE
-    
-    ```yaml
-        runtime_parameters:
-          - name: NETWORK_SIZE
-            type: metadata
-            metadataProvider:
-              environment: aws
-              type: network
-              field: local-ipv4s
-              index: 0
-              ipcalc: size
-    ```    
-    
-    The ipcalc functionality provides the following transformation options: 
-       * address   - The provided address without netmask prefix.
-       * base      - The base address of the network block as a string (eg: 216.240.32.0). Base does not give an indication of the size of the network block.
-       * mask      - The netmask as a string (eg: 255.255.255.0).
-       * hostmask  - The host mask which is the opposite of the netmask (eg: 0.0.0.255).
-       * bitmask   - The netmask as a number of bits in the network portion of the address for this block (eg: 24).
-       * size      - The number of IP addresses in a block (eg: 256).
-       * broadcast - The blocks broadcast address (eg: 192.168.1.0/24 => 192.168.1.255).
-       * first     - First useable address.
-       * last      - Last useable address.
-
-  * tag - fetches tag value from public cloud virtual machine resource; the example below demonstrates how to fetch value for tag, named as "Name", applied to EC2 instance: 
-  
-      ```yaml
-          runtime_parameters:
-            - name: TAG_VALUE
-              type: metadata
-              tagProvider:
-                environment: aws
-                key: Name
-     ```
-    Note that AWS and GCP cloud requires additional permissions in order to access virtual machines' tags:
-    
-    * AWS:
-    
-        ```text
-          "ec2:DescribeTags"
-        ```
-    * GCP:
-    
-        ```text
-          "compute.instances.get"
-        ```    
-    
-
-  * static - defines a static value. Example below will replace AVAILABILITY_ZONE token with "us-west-2a" string
-      ```yaml
-        runtime_parameters:
-          - name: AVAILABILITY_ZONE
-            type: static
-            value: us-west-2a
-      ```
 ## Private Environments
 
-By default, this tool makes calls to the Internet to download a GPG key [here](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages and send usage data.  To disable calls to the Internet, you can use the examples below:
+Some environments may not allow BIG-IPs to have any access to the Internet. In these cases, startup scripts can be customized to download packages and/or config files from locally hosted URLs. By default, the installer makes calls to the Internet to download a [GPG key](https://f5-cft.s3.amazonaws.com/f5-bigip-runtime-init/gpg.key) to verify RPM signatures, find the latest Automation Tool Chain packages, and send usage data. To disable calls to the Internet, you can use the examples below:
 
-#### Disable Calls from the Installer
+#### Disable Internet Calls from the Installer
 
-Example (secure) of hosting the gpg key locally and disabling checking for latest Automation Tool Chain packages.
+Example (secure) of hosting the GPG key locally and disabling checking for latest Automation Tool Chain packages.
 ```
  curl https://myprivatehost/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key --skip-toolchain-metadata-sync'
 ```
 
-Example (thisisinsecure) of skipping downloading the GPG key and checking for latest Automation Tool Chain packages, using a local copy of the metadata instead. 
+Example (thisisinsecure) of skipping downloading the GPG key entirely and checking for latest Automation Tool Chain packages, using a local copy of the metadata instead. 
 ```
 curl https://myprivatehost/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws --skip-verify --skip-toolchain-metadata-sync'
 ```
 
-#### Disable Calls from the Command
+#### Disable Internet Calls from the Command
 
 To disable the f5-bigip-runtime-init command from sending usage reporting, you can include the '--skip-telemetry' parameter.
 ```
 f5-bigip-runtime-init -c /config/cloud/runtime-init-conf.yaml --skip-telemetry
 ```
 
-Or, if using the `extension_services` feature to send declarations, by disabling phone home with the [autoPhonehome property](https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/schema-reference.html#system) in your Declarative Onboarding (DO) declaration.
-
-For more information on how to disable Automatic Phone Home, see this [Overview of the Automatic Update Check and Automatic Phone Home features](https://support.f5.com/csp/article/K15000#1).
+If using the `extension_services` feature to send Declarative Onboarding declarations, you can alternatively set the [autoPhonehome property](https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/schema-reference.html#system) to disabled. Using the [autoPhonehome property](https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/schema-reference.html#system) will prevent BIG-IP from sending telemetry data globally. For more information on how to disable Automatic Phone Home, see this [Overview of the Automatic Update Check and Automatic Phone Home features](https://support.f5.com/csp/article/K15000#1).
 
 Here is an example of the payload that is sent by F5 TEEM
 ```json
@@ -891,178 +1313,9 @@ Here is an example of the payload that is sent by F5 TEEM
 
 ## Troubleshooting
 
-### F5 Automation Toolchain Components
-F5 BIG-IP Runtime Init uses the F5 Automation Toolchain for configuration of BIG-IP instances.  Any errors thrown from these components will be surfaced in the bigIpRuntimeInit.log (or a custom log location as specified below) as well as under _/var/log/restnoded/restnoded.log_ since BIGIP iControl LX extensions (i.e. DO, AS3, CFE and so on) send their output to this log file. 
+### Log to the Serial Console
 
-Help with troubleshooting individual Automation Toolchain components can be found at F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/):
-- DO: https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/troubleshooting.html
-- AS3: https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest/userguide/troubleshooting.html
-- FAST: https://clouddocs.f5.com/products/extensions/f5-appsvcs-templates/latest/userguide/troubleshooting.html
-- TS: https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/userguide/troubleshooting.html
-- CFE: https://clouddocs.f5.com/products/extensions/f5-cloud-failover/latest/userguide/troubleshooting.html
-
-### Extension metadata file
-F5 BIGIP Runtime Init uses the "extension metadata" file (JSON document) to identify package delivery url for each F5 Automation Toolchain extension. Each Runtime Init build includes extension metadata file and it is stored under the following directory: src/lib/bigip/toolchain/toolchain_metadata.json
-
-The latest "extension metadata" file is published on F5 CDN under the following location: https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json 
-As a part of the installation workflow, by default, Runtime Init would fetch the latest available version of the extension metadata and will replace the built-in file; however providing "--skip-toolchain-metadata-sync" flag to the Runtime Init installation allows to skip extension metadata sync, and then Runtime Init would utilize the built-in extension metadata file. 
-
-In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery url for the "extension metadata" file using "--toolchain-metadata-file-url" parameter. See the [Installer](#installer) section for more details. 
-
-### Controls
-Runtime init declaration provides a list of controls intended for tuning Runtime Init execution as well as helping with troubleshooting issues: 
-
-```yaml
-     controls:
-        logLevel: silly
-        logFilename: /var/log/cloud/bigIpRuntimeInit.log
-        logToJson: true
-        extensionInstallDelayInMs: 60000
-```
- * extensionInstallDelayInMs - defines a delay between extensions installations. 
- * logLevel - defines log level.
- * logFilename - defines path to log file.
- * logToJson - defines when log is outputed into JSON format.
-
-### Logging
-The default log location is /var/log/cloud/bigIpRuntimeInit.log. This location can be customized (see below). 
-
-The logging settings can be configured using controls directive or enviroment variables: 
-
-- Log level: 
-    * Using controls directive: 
-    ```yaml
-     controls:
-        logLevel: silly
-    ```
-
-    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_LEVEL (string)
-    
-    ```json
-        { 
-          error: 0, 
-          warn: 1, 
-          info: 2, 
-          debug: 5, 
-          silly: 6 
-        }
-    ```
-- Log filename:
-    * Using controls directive:
-     ```yaml
-     controls:
-        logFilename: /var/log/cloud/bigIpRuntimeInit.log
-    ```    
-    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_FILENAME (string) 
-    
-- Log to JSON:
-
-    * Using controls directive:
-  
-        ```yaml
-        controls:
-          logToJson: true
-        ```
-    * Using enviroment variable: F5_BIGIP_RUNTIME_INIT_LOG_TO_JSON (boolean)
-
-    ```json
-        {"message":"this is a json message","level":"info","timestamp":"2020-08-04T00:22:28.069Z"}
-    ```
-
-Example of how to set the log level using an environment variable:
-```bash
-export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly && bash /var/tmp/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud ${CLOUD}'
-```
-
-
-By default, runtime will mask out (i.e. "********") the following common fields when logging:
-```json
-    [
-        "password",
-        "localPassword",
-        "remotePassword",
-        "bigIqPassword",
-        "bigIpPassword",
-        "passphrase",
-        "cookiePassphrase",
-        "certificate",
-        "privateKey",
-        "ciphertext",
-        "protected",
-        "secret",
-        "sharedSecret",
-        "secretAccessKey",
-        "apiAccessKey",
-        "encodedCredentials",
-        "encodedToken",
-        "oldPassword",
-        "newPassword",
-        "bindPassword",
-        "checkBindPassword",
-        "md5SignaturePassphrase"
-    ]
-```
-However, it is possible to extend this list by providing additional metadata (***field***) for the Secret object:
-
-```yaml
-        runtime_parameters:
-          - name: MY_SECRET
-            type: secret
-            secretProvider:
-              environment: azure
-              type: KeyVault
-              vaultUrl: https://my-keyvault.vault.azure.net
-              secretId: mySecret01
-              field: newCustomSecretField
-``` 
-This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
-
-
-By default, runtime will mask out (i.e. "********") the following common fields when logging:
-```json
-    [
-        "password",
-        "localPassword",
-        "remotePassword",
-        "bigIqPassword",
-        "bigIpPassword",
-        "passphrase",
-        "cookiePassphrase",
-        "certificate",
-        "privateKey",
-        "ciphertext",
-        "protected",
-        "secret",
-        "sharedSecret",
-        "secretAccessKey",
-        "apiAccessKey",
-        "encodedCredentials",
-        "encodedToken",
-        "oldPassword",
-        "newPassword",
-        "bindPassword",
-        "checkBindPassword",
-        "md5SignaturePassphrase"
-    ]
-```
-However, it is possible to extend this list by providing additional metadata (***field***) for the Secret object:
-
-```yaml
-        runtime_parameters:
-          - name: MY_SECRET
-            type: secret
-            secretProvider:
-              environment: azure
-              type: KeyVault
-              vaultUrl: https://my-keyvault.vault.azure.net
-              secretId: mySecret01
-              field: newCustomSecretField
-``` 
-This example shows how to instruct Runtime Init to mask out the value for ```newCustomSecretField```.
-
-#### Send output to log file and serial console
-
-Add the following to the beginning of user data to log startup events to a local file/serial console. See the simple [example](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/examples/simple/terraform/startup-script.tpl) for more information.
+F5 first recommends adding the following to the beginning of your startup scripts to log the Serial Console as well as provide a consistent logging location. 
 
 ```
 mkdir -p  /var/log/cloud
@@ -1076,12 +1329,61 @@ exec 1>$npipe
 exec 2>&1
 ```
 
+Some environments have additional resource requirements for the instance to enable the Serial Console/Logging. For instance, see this [Azure example](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/examples/terraform/azure).
+
+
+If the BIG-IP or Service is not reachable, first review the console logs (see your cloud provider for details) for any errors.
+
+If possible, try to log in to the BIG-IP instance via SSH (mgmt interface) to examine the logs. Serial console login may also be possible but only for partial onboarding successes where passwords were configured successfully (ex. with Declarative Onboarding). To verify the BIG-IP deployment, perform the following steps:
+
+- Check the `startup-script` sent to user_data to make sure it was installed/interpolated correctly:
+  - AWS:
+    - ```cat /opt/cloud/instance/user-data.txt```
+  - Azure:
+    - ```cat /var/lib/waagent/CustomData | base64 -d```
+  - GCP:
+    - Option Not Available
+- Check the logs (in order of invocation):
+  - waagent logs:
+    - */var/log/waagent.log* *(Azure Only)*
+  - cloud-init logs:
+    - */var/log/boot.log*
+    - */var/log/cloud-init.log*
+    - */var/log/cloud-init-output.log*
+  - runtime-init logs:
+    - */var/log/cloud/startup-script.log*: This file contains events that happen prior to execution of f5-bigip-runtime-init. For example, if the Runtime Init package failed to download, the installer failed to download a file, etc.
+    - */var/log/cloud/bigipRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
+  - Automation Tool Chain logs:
+    - */var/log/restnoded/restnoded.log*: This file contains events logged by the BIG-IP Automation Toolchain components. If an Automation Toolchain declaration fails to deploy, you will see more details for those events logged here.
+
+- *GENERAL LOG TIP*: Search for the most critical error level errors first (for example, `egrep -i err /var/log/[log name]`).
+
+
+### BIG-IP Automation Toolchain Components
+
+Help with troubleshooting individual Automation Toolchain components can be found at F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/):
+- DO: https://clouddocs.f5.com/products/extensions/f5-declarative-onboarding/latest/troubleshooting.html
+- AS3: https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest/userguide/troubleshooting.html
+- FAST: https://clouddocs.f5.com/products/extensions/f5-appsvcs-templates/latest/userguide/troubleshooting.html
+- TS: https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/userguide/troubleshooting.html
+- CFE: https://clouddocs.f5.com/products/extensions/f5-cloud-failover/latest/userguide/troubleshooting.html
+
+### Extension metadata file
+BIG-IP Runtime Init uses the "extension metadata" file (JSON document) to identify package delivery URL for each BIG-IP Automation Toolchain extension. Each Runtime Init build includes an extension metadata file and it is stored under the following directory: src/lib/bigip/toolchain/toolchain_metadata.json
+
+The latest "extension metadata" file is published on F5 CDN under the following location: https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json 
+As a part of the installation workflow, by default, Runtime Init will attempt to fetch the latest available version of the extension metadata from the Internet and will replace the built-in file; however, providing `--skip-toolchain-metadata-sync` flag to the Runtime Init installation allows you to skip extension metadata sync and fall back to the built-in extension metadata file. 
+
+In a situation, when custom extension_metadata file needs to be used, Runtime Init installation allows to override delivery URL for the "extension metadata" file using the `--toolchain-metadata-file-url` parameter. See the [Installer](#installer) section for more details. 
+
+
+
 ## Documentation
-For more information on F5 cloud solutions, including manual configuration procedures for some deployment scenarios, see F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/).
+For more information on BIG-IP cloud solutions, including manual configuration procedures for some deployment scenarios, see F5's [Public Cloud Docs](http://clouddocs.f5.com/cloud/public/v1/).
 
 
 ## Getting Help
-The example declarations in this document are intended to provide reference onboarding configurations for F5 BIG-IP Virtual Editions. Read more about [Support Policies](https://www.f5.com/company/policies/support-policies). 
+The example declarations in this document are intended to provide reference onboarding configurations for BIG-IP Virtual Editions. Read more about [Support Policies](https://www.f5.com/company/policies/support-policies). 
 
 ### Filing Issues
 If you find an issue, we would love to hear about it.
@@ -1090,7 +1392,7 @@ If you find an issue, we would love to hear about it.
 
 
 ## Copyright
-Copyright 2014-2020 F5 Networks Inc.
+Copyright 2014-2022 F5 Networks Inc.
 
 
 ## License

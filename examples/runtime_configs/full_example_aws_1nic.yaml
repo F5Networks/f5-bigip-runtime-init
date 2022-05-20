@@ -1,19 +1,15 @@
+# Cloudformation Example: Autoscale 1NIC using Secret for BIG-IQ license 
 controls:
   logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
-pre_onboard_enabled:
-  - name: provision_rest
-    type: inline
-    commands:
-      - /usr/bin/setdb provision.extramb 1000
-      - /usr/bin/setdb restjavad.useextramb true
+pre_onboard_enabled: []
 runtime_parameters:
   - name: HOST_NAME
     type: metadata
     metadataProvider:
-      type: compute
       environment: aws
       field: hostname
+      type: compute
   - name: REGION
     type: metadata
     metadataProvider:
@@ -21,11 +17,11 @@ runtime_parameters:
       type: uri
       value: /latest/dynamic/instance-identity/document
       query: region
-  - name: BIGIP_PASSWORD
+  - name: BIGIQ_PASSWORD
     type: secret
     secretProvider:
       environment: aws
-      secretId: bigIpPassword
+      secretId: mySecretId
       type: SecretsManager
       version: AWSCURRENT
 bigip_ready_enabled: []
@@ -40,32 +36,22 @@ extension_packages:
     - extensionType: ts
       extensionVersion: 1.28.0
       extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
-    - extensionType: fast
-      extensionVersion: 1.17.0
-      extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
 extension_services:
   service_operations:
     - extensionType: do
       type: inline
       value:
-        schemaVersion: 1.0.0
-        class: Device
-        label: >-
-          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with PAYG
-          license
-        async: true
         Common:
           class: Tenant
           My_DbVariables:
             class: DbVariables
             provision.extramb: 1000
             restjavad.useextramb: true
-            ui.advisory.enabled: true
             ui.advisory.color: blue
-            ui.advisory.text: BIG-IP Quickstart
+            ui.advisory.text: "Provisioned via Runtime Init and DO"
           My_Provisioning:
-            class: Provision
             asm: nominal
+            class: Provision
             ltm: nominal
           My_Ntp:
             class: NTP
@@ -76,16 +62,195 @@ extension_services:
             class: DNS
             nameServers:
               - 169.254.169.253
+          My_License:
+            bigIqHost: 10.0.1.200
+            bigIqPassword: '{{{BIGIQ_PASSWORD}}}'
+            bigIqUsername: admin
+            class: License
+            hypervisor: aws
+            licensePool: myPool
+            licenseType: licensePool
+            reachable: false
+            skuKeyword1: F5-BIG-MSP-BT-1G
+            tenant: myTenant
+            unitOfMeasure: hourly
           My_System:
-            class: System
             autoPhonehome: true
+            class: System
             hostname: '{{{HOST_NAME}}}'
-          quickstart:
-            class: User
-            partitionAccess:
-              all-partitions:
-                role: admin
-            password: '{{{BIGIP_PASSWORD}}}'
-            shell: bash
-            userType: regular
+        async: true
+        class: Device
+        label: Autoscale 1NIC BIG-IP declaration for Declarative Onboarding with BIG-IQ
+          license
+        schemaVersion: 1.0.0
+    - extensionType: as3
+      type: inline
+      value:
+        class: ADC
+        schemaVersion: 3.0.0
+        label: Autoscale
+        remark: Autoscale
+        Tenant_1:
+          class: Tenant
+          Shared:
+            class: Application
+            template: shared
+            shared_pool:
+              class: Pool
+              remark: Service 1 shared pool
+              members:
+                - servicePort: 80
+                  addressDiscovery: aws
+                  region: '{{{REGION}}}'
+                  updateInterval: 60
+                  tagKey: 'aws:cloudformation:logical-id'
+                  tagValue: appAutoscaleGroup
+                  addressRealm: private
+              monitors:
+                - http
+            telemetry_local_rule:
+              remark: Only required when TS is a local listener
+              class: iRule
+              iRule: |-
+                when CLIENT_ACCEPTED {
+                  node 127.0.0.1 6514
+                }
+            telemetry_local:
+              remark: Only required when TS is a local listener
+              class: Service_TCP
+              virtualAddresses:
+                - 255.255.255.254
+              virtualPort: 6514
+              iRules:
+                - telemetry_local_rule
+            telemetry:
+              class: Pool
+              members:
+                - enable: true
+                  serverAddresses:
+                    - 255.255.255.254
+                  servicePort: 6514
+              monitors:
+                - bigip: "/Common/tcp"
+            telemetry_hsl:
+              class: Log_Destination
+              type: remote-high-speed-log
+              protocol: tcp
+              pool:
+                use: telemetry
+            telemetry_formatted:
+              class: Log_Destination
+              type: splunk
+              forwardTo:
+                use: telemetry_hsl
+            telemetry_publisher:
+              class: Log_Publisher
+              destinations:
+                - use: telemetry_formatted
+            telemetry_asm_security_log_profile:
+              class: Security_Log_Profile
+              application:
+                localStorage: false
+                remoteStorage: splunk
+                servers:
+                  - address: 255.255.255.254
+                    port: '6514'
+                storageFilter:
+                  requestType: illegal
+            Custom_HTTP_Profile:
+              class: HTTP_Profile
+              xForwardedFor: true
+            Custom_WAF_Policy:
+              class: WAF_Policy
+              url: >-
+                https://raw.githubusercontent.com/F5Networks/f5-aws-cloudformation-v2/v2.1.0.0/examples/autoscale/bigip-configurations/Rapid_Deployment_Policy_13_1.xml
+              enforcementMode: blocking
+              ignoreChanges: false
+          HTTP_Service:
+            class: Application
+            template: http
+            serviceMain:
+              class: Service_HTTP
+              virtualAddresses:
+                - 0.0.0.0
+              snat: auto
+              profileHTTP:
+                use: /Tenant_1/Shared/Custom_HTTP_Profile
+              policyWAF:
+                use: /Tenant_1/Shared/Custom_WAF_Policy
+              pool: /Tenant_1/Shared/shared_pool
+              securityLogProfiles:
+                - use: /Tenant_1/Shared/telemetry_asm_security_log_profile
+          HTTPS_Service:
+            class: Application
+            template: https
+            serviceMain:
+              class: Service_HTTPS
+              virtualAddresses:
+                - 0.0.0.0
+              snat: auto
+              profileHTTP:
+                use: /Tenant_1/Shared/Custom_HTTP_Profile
+              policyWAF:
+                use: /Tenant_1/Shared/Custom_WAF_Policy
+              pool: /Tenant_1/Shared/shared_pool
+              securityLogProfiles:
+                - use: /Tenant_1/Shared/telemetry_asm_security_log_profile
+              serverTLS:
+                bigip: /Common/clientssl
+              redirect80: false
+    - extensionType: ts
+      type: inline
+      value:
+        class: Telemetry
+        controls:
+          class: Controls
+          logLevel: info
+        My_Metrics_Namespace:
+          class: Telemetry_Namespace
+          My_System_Poller:
+            class: Telemetry_System_Poller
+            interval: 60
+            actions:
+              - includeData: {}
+                locations:
+                  system:
+                    cpu: true
+          My_Scaling_Endpoints:
+            class: Telemetry_Endpoints
+            items:
+              throughputIn:
+                name: throughputIn
+                path: /mgmt/tm/sys/performance/throughput?$top=1&$select=Current
+              system:
+                name: hostname
+                path: /mgmt/tm/sys/global-settings?$select=hostname
+          My_Custom_Endpoints_Poller:
+            class: Telemetry_System_Poller
+            interval: 60
+            endpointList:
+              - My_Scaling_Endpoints/throughputIn
+              - My_Scaling_Endpoints/system
+          My_Telemetry_System:
+            class: Telemetry_System
+            systemPoller:
+              - My_System_Poller
+              - My_Custom_Endpoints_Poller
+          My_Cloudwatch_Metrics:
+            class: Telemetry_Consumer
+            type: AWS_CloudWatch
+            region: '{{{REGION}}}'
+            dataType: metrics
+            metricNamespace: f5-scaling-metrics
+        My_Remote_Logs_Namespace:
+          class: Telemetry_Namespace
+          My_Listener:
+            class: Telemetry_Listener
+            port: 6514
+          My_Cloudwatch_Logs:
+            class: Telemetry_Consumer
+            type: AWS_CloudWatch
+            region: '{{{REGION}}}'
+            logGroup: f5telemetry
+            logStream: f5-waf-logs
 post_onboard_enabled: []

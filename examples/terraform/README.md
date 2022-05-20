@@ -2,7 +2,7 @@
 
 ## Description
 
-This directory provides simple terraform examples to demonstrate provisioning and onboarding a BIG-IP system using BIG-IP Runtime-Init in the following public clouds:
+This directory provides simple Terraform examples to demonstrate provisioning and onboarding a BIG-IP system using BIG-IP Runtime-Init in the following public clouds:
  * AWS
  * Azure
  * Google Cloud Platform

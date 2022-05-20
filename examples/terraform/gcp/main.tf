@@ -132,18 +132,18 @@ resource "google_project_iam_member" "role_member_assignment" {
 resource "google_project_iam_custom_role" "custom_role" {
   role_id = "tfCustomRole.${module.utils.env_unique_id}"
   title = "tfCustomRole.${module.utils.env_unique_id}"
-  permissions = ["secretmanager.versions.access", "compute.instances.get"]
+  permissions = [ "secretmanager.versions.access", "secretmanager.versions.get", "secretmanager.versions.list","compute.instances.get"]
 }
 
-resource "google_secret_manager_secret" "secret_01" {
-  secret_id = "bigIpPass-${module.utils.env_unique_id}"
+resource "google_secret_manager_secret" "admin_secret" {
+  secret_id = "secret-${module.utils.env_unique_id}-bigIpPassword"
   replication {
     automatic = true
   }
 }
 
 resource "google_secret_manager_secret_version" "secret_version_01" {
-  secret      = google_secret_manager_secret.secret_01.id
+  secret      = google_secret_manager_secret.admin_secret.id
   secret_data = module.utils.admin_password
 }
 
@@ -203,7 +203,7 @@ resource "google_compute_instance" "vm" {
     int_private_ip: "10.0.2.11",
     mgmt_private_ip: "10.0.0.11/24",
     hostname_suffix: local.hostname_suffix,
-    secret_id: "bigIpPass-${module.utils.env_unique_id}",
+    secret_id: "secret-${module.utils.env_unique_id}-bigIpPassword",
     package_url: var.bigip_runtime_init_package_url,
   })
 
