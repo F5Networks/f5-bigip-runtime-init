@@ -1,5 +1,3 @@
-# Note: Or set via environment variable
-# export TF_VAR_project_id='my_project_id'
 variable "project_id" {
   description = "REQUIRED: GCP project where resources will be created (Note: This can be configured using environment variable GOOGLE_PROJECT_ID)"
   type        = string
@@ -33,7 +31,7 @@ variable "primary_zone" {
 variable "bigip_version" {
   description = "The BIG-IP version for the virtual machine"
   type        = string
-  default     = "f5-bigip-16-1-0-0-0-19-payg-best-25mbps-210623021328"
+  default     = "f5-bigip-16-1-2-2-0-0-28-payg-best-25mbps-220505074742"
 }
 
 variable "imageProjectId" {

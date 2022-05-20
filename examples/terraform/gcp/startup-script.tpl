@@ -33,7 +33,7 @@ EOF
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
 controls:
-  logLevel: debug
+  logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
 pre_onboard_enabled: []
 runtime_parameters:
@@ -50,12 +50,14 @@ runtime_parameters:
     headers:
        - name: Metadata-Flavor
          value: Google
-  - name: MGMT_GW
-    type: url
-    value: http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/1/gateway
-    headers:
-       - name: Metadata-Flavor
-         value: Google
+  - name: MGMT_IP
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 1
+        ipcalc: address
   - name: SELF_IP_EXTERNAL
     type: metadata
     metadataProvider:
@@ -63,6 +65,7 @@ runtime_parameters:
         type: network
         field: ip
         index: 0
+        ipcalc: address
   - name: SELF_IP_INTERNAL
     type: metadata
     metadataProvider:
@@ -70,27 +73,94 @@ runtime_parameters:
         type: network
         field: ip
         index: 2
-  - name: DEFAULT_GW
-    type: url
-    value: http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/gateway
-    headers:
-       - name: Metadata-Flavor
-         value: Google
+        ipcalc: address
+  - name: MGMT_GW
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 1
+        ipcalc: first
+  - name: EXTERNAL_GW
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 0
+        ipcalc: first
+  - name: INTERNAL_GW
+    type: metadata
+    metadataProvider:
+        environment: gcp
+        type: network
+        field: ip
+        index: 2
+        ipcalc: first
+  - name: MGMT_BITMASK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 1
+      ipcalc: bitmask
+  - name: EXTERNAL_BITMASK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 0
+      ipcalc: bitmask
+  - name: INTERNAL_BITMASK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 2
+      ipcalc: bitmask
+  - name: MGMT_NETWORK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 1
+      ipcalc: base
+  - name: EXTERNAL_NETWORK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 0
+      ipcalc: base
+  - name: INTERNAL_NETWORK
+    type: metadata
+    metadataProvider:
+      environment: gcp
+      type: network
+      field: ip
+      index: 2
+      ipcalc: base
 bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
-      extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+      extensionVersion: 1.29.0
+      extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
     - extensionType: as3
-      extensionVersion: 3.34.0
-      extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
+      extensionVersion: 3.36.0
+      extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
     - extensionType: ts
-      extensionVersion: 1.26.0
-      extensionHash: 128ec4fb6fd93e4dd7f43520a58f4810a9e20d45b60e7098a3c65ee960964bfa
+      extensionVersion: 1.28.0
+      extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
     - extensionType: fast
-      extensionVersion: 1.15.0
-      extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
+      extensionVersion: 1.17.0
+      extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
 extension_services:
   service_operations:
     - extensionType: do
@@ -135,7 +205,15 @@ extension_services:
                 role: admin
             password: '{{{ ADMIN_PASS }}}'
             shell: bash
-          defaultManagementRoute:
+          dhclient_route1:
+            class: ManagementRoute
+            network: '{{{MGMT_IP}}}/32'         
+            type: interface
+          dhclient_route2:
+            class: ManagementRoute
+            network: '{{{MGMT_NETWORK}}}/{{{MGMT_BITMASK}}}'
+            gw: '{{{MGMT_IP}}}'
+          default:
             class: ManagementRoute
             mtu: 1460
             network: default
@@ -156,29 +234,42 @@ extension_services:
                 tagged: false
           external-self:
             class: SelfIp
-            address: '{{{ SELF_IP_EXTERNAL }}}'
+            address: '{{{ SELF_IP_EXTERNAL }}}/32'
             vlan: external
             allowService: none
             trafficGroup: traffic-group-local-only
           internal-self:
             class: SelfIp
-            address: '{{{ SELF_IP_INTERNAL }}}'
+            address: '{{{ SELF_IP_INTERNAL }}}/32'
             vlan: internal
             allowService: default
             trafficGroup: traffic-group-local-only
-          default:
+          externalGwRoute:
             class: Route
-            gw: '{{{ DEFAULT_GW }}}'
+            target: external
+            network: '{{{EXTERNAL_GW}}}/32'
+            mtu: 1460
+          externalIntRoute:
+            class: Route
+            gw: '{{{EXTERNAL_GW}}}'
+            network: '{{{EXTERNAL_NETWORK}}}/{{{EXTERNAL_BITMASK}}}'
+            mtu: 1460
+          internalGwRoute:
+            class: Route
+            target: internal
+            network: '{{{INTERNAL_GW}}}/32'
+            mtu: 1460
+          internalIntRoute:
+            class: Route
+            gw: '{{{EXTERNAL_GW}}}'
+            network: '{{{INTERNAL_NETWORK}}}/{{{INTERNAL_BITMASK}}}'
+            mtu: 1460
+          defaultGateway:
+            class: Route
+            gw: '{{{EXTERNAL_GW}}}'
             network: default
-            mtu: 1500
-post_onboard_enabled:
-  - name: create_google_routes
-    type: inline
-    commands:
-    - "EXT_GW=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/gateway); tmsh create net route ext_gw_int network $EXT_GW/32 interface external"
-    - "INT_GW=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/2/gateway); tmsh create net route int_gw_int network $INT_GW/32 interface internal"
-    - "MGMT_SELF_IP=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/ip); MGMT_MASK=$(curl -sH 'Metadata-Flavor: Google' http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/subnetmask); MGMT_NETWORK=$(ipcalc -n $MGMT_SELF_IP $MGMT_MASK | sed -n 's/^NETWORK=\\(.*\\)/\\1/p'); MGMT_PREFIX=$(ipcalc -p $MGMT_SELF_IP $MGMT_MASK | sed -n 's/^PREFIX=\\(.*\\)/\\1/p'); tmsh create sys management-route dhclient_route1 network $MGMT_SELF_IP/32 type interface; tmsh create sys management-route dhclient_route2 gateway $MGMT_SELF_IP network $MGMT_NETWORK/$MGMT_PREFIX"
-    - tmsh save sys config
+            mtu: 1460
+post_onboard_enabled: []
 EOF
 
 
@@ -202,7 +293,7 @@ wait_bigip_ready
 # Wait until a little more until dhcp/chmand is finished re-configuring MGMT IP w/ "chmand[4267]: 012a0003:3: Mgmt Operation:0 Dest:0.0.0.0"
 sleep 15
 MGMT_GW=$(egrep static-routes /var/lib/dhclient/dhclient.leases | tail -1 | grep -oE '[^ ]+$' | tr -d ';')
-tmsh create sys management-route defaultManagementRoute network default gateway $MGMT_GW mtu 1460
+tmsh create sys management-route default network default gateway $MGMT_GW mtu 1460
 tmsh modify sys global-settings remote-host add { metadata.google.internal { hostname metadata.google.internal addr 169.254.169.254 } }
 tmsh save /sys config
 

@@ -20,7 +20,7 @@ exec 2>&1
 cat << 'EOF' > /config/cloud/runtime-init-conf.yaml
 ---
 controls:
-  logLevel: debug
+  logLevel: silly
   logFilename: /var/log/cloud/bigIpRuntimeInit.log
 pre_onboard_enabled: []
 runtime_parameters:
@@ -55,25 +55,26 @@ runtime_parameters:
   - name: DEFAULT_GW
     type: metadata
     metadataProvider:
-      type: network
       environment: aws
-      field: subnet-ipv4-cidr-block
+      type: network
+      field: local-ipv4s
       index: 1
+      ipcalc: first
 bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.27.0
-      extensionHash: 2aee4a29ac64b38ac5af7d41607a966cac063c99a339b228225ffa38f8f9a4cf
+      extensionVersion: 1.29.0
+      extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
     - extensionType: as3
-      extensionVersion: 3.34.0
-      extensionHash: 05a80ec0848dc5b8876b78a8fbee2980d5a1671d635655b3af604dc830d5fed4
+      extensionVersion: 3.36.0
+      extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
     - extensionType: ts
-      extensionVersion: 1.26.0
-      extensionHash: 128ec4fb6fd93e4dd7f43520a58f4810a9e20d45b60e7098a3c65ee960964bfa
+      extensionVersion: 1.28.0
+      extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
     - extensionType: fast
-      extensionVersion: 1.15.0
-      extensionHash: 4980984355ef03cfe61442e8c0563518e292961aaca0da024d2a038d1c8601ca
+      extensionVersion: 1.17.0
+      extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
 extension_services:
   service_operations:
     - extensionType: do
@@ -110,6 +111,7 @@ extension_services:
           My_Provisioning:
             class: Provision
             ltm: nominal
+            gtm: nominal
           admin:
             class: User
             userType: regular
