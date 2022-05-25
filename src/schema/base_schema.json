@@ -96,7 +96,6 @@
                             "vaultUrl": {
                                 "description": "URL of the Azure Key Vault",
                                 "type": "string",
-                                "pattern": "(https?://(.+?\\.)?vault\\.(azure|usgovcloudapi)\\.net(/[A-Za-z0-9\\-\\._~:/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)",
                                 "examples": ["https://my-keyvault.vault.azure.net", "https://my-keyvault.vault.usgovcloudapi.net"]
                             },
                             "vaultServer": {

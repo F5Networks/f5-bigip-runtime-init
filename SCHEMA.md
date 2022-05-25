@@ -174,7 +174,6 @@ Type: `array`
 				 - Example values: 
 					 1. _"https://my-keyvault.vault.azure.net"_
 					 2. _"https://my-keyvault.vault.usgovcloudapi.net"_
-				 - The value must match this pattern: `(https?://(.+?\.)?vault\.(azure|usgovcloudapi)\.net(/[A-Za-z0-9\-\._~:/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)`
 			 - <b id="#/items/properties/secretProvider/properties/vaultServer">vaultServer</b>
 				 - _URL of the Hashicorp Vault server_
 				 - Type: `string`
