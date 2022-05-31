@@ -283,7 +283,7 @@ export async function cli(): Promise<string> {
 function exit(): void {
     setTimeout(() => {
         process.exit(statusCode);
-    }, 2000);
+    }, 30000);
 }
 
 cli()
