@@ -399,7 +399,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/startup-script.tpl", {
-    bigip_vault_name:   "key-vault-${module.utils.env_unique_id}-bigip",
+    vault_name:         "key-vault-${module.utils.env_unique_id}-bigip",
+    secret_id:          azurerm_key_vault_secret.adminsecret.name,
     package_url:        var.bigip_runtime_init_package_url,
     admin_username:     var.admin_username,
   }))

@@ -50,7 +50,7 @@ variable "offer" {
 variable "sku" {
   description = "The BIG-IP sku for the virtual machine"
   type        = string
-  default = "f5-bigip-virtual-edition-25m-best-hourly"
+  default = "f5-big-best-plus-hourly-25mbps"
 }
 
 variable "bigip_version" {
@@ -62,7 +62,7 @@ variable "bigip_version" {
 variable "bigip_runtime_init_package_url" {
   description = "The delivery url for BIGIP Runtime Init package"
   type        = string
-  default =  "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.4/dist/f5-bigip-runtime-init-1.4.4-1.gz.run"
+  default =  "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.0/dist/f5-bigip-runtime-init-1.5.0-1.gz.run"
 }
 
 variable "instance_size" {
@@ -84,7 +84,7 @@ variable "boot_diagnostics_sa_type" {
 }
 
 variable "wait_bigip_ready" {
-  description = "The number of seconds/minutes of delay to build into creation of BIG-IP VMs; default is 250. BIG-IP requires a few minutes to complete the onboarding process and this value can be used to delay the processing of dependent Terraform resources."
+  description = "The number of seconds/minutes of delay to build into creation of BIG-IP VMs; default is 300. BIG-IP requires a few minutes to complete the onboarding process and this value can be used to delay the processing of dependent Terraform resources."
   type        = string
   default     = "300s"
 }

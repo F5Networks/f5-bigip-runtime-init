@@ -32,7 +32,7 @@ runtime_parameters:
       secretProvider:
         environment: azure
         type: KeyVault
-        vaultUrl: 'https://${bigip_vault_name}.vault.azure.net'
+        vaultUrl: 'https://${vault_name}.vault.azure.net'
         secretId: ${secret_id}
     - name: HOST_NAME
       type: metadata
@@ -190,6 +190,6 @@ for i in {1..30}; do
     curl -fv --retry 1 --connect-timeout 5 -L "${package_url}" -o "/var/config/rest/downloads/f5-bigip-runtime-init.gz.run" && break || sleep 10
 done
 # Install
-bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- "--cloud azure"
+bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- "--cloud azure --telemetry-params templateName:f5-bigip-runtime-init/examples/terraform/azure/main.tf"
 # Run
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml

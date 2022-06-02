@@ -31,7 +31,7 @@ variable "primary_zone" {
 variable "bigip_version" {
   description = "The BIG-IP version for the virtual machine"
   type        = string
-  default     = "f5-bigip-16-1-2-2-0-0-28-payg-best-25mbps-220505074742"
+  default     = "f5-bigip-16-1-2-2-0-0-28-payg-best-plus-25mbps-220505080809"
 }
 
 variable "imageProjectId" {
@@ -43,7 +43,7 @@ variable "imageProjectId" {
 variable "bigip_runtime_init_package_url" {
   description = "The delivery url for BIGIP Runtime Init package"
   type        = string
-  default     = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.4.4/dist/f5-bigip-runtime-init-1.4.4-1.gz.run"
+  default     = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.0/dist/f5-bigip-runtime-init-1.5.0-1.gz.run"
 }
 
 variable "instance-type" {
@@ -53,8 +53,8 @@ variable "instance-type" {
 }
 
 variable "wait_bigip_ready" {
-  description = "The number of seconds/minutes of delay to build into creation of BIG-IP VMs; default is 250. BIG-IP requires a few minutes to complete the onboarding process and this value can be used to delay the processing of dependent Terraform resources."
+  description = "The number of seconds/minutes of delay to build into creation of BIG-IP VMs; default is 420. BIG-IP requires a few minutes to complete the onboarding process and this value can be used to delay the processing of dependent Terraform resources."
   type        = string
-  default     = "300s"
+  default     = "420s"
 }
 
