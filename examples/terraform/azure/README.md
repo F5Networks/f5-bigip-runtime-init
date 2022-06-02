@@ -12,7 +12,7 @@ This directory provides a simple Terraform example to demonstrate provisioning a
     - By default, this solution uses [F5 BIG-IP Virtual Edition - BEST (PAYG 25Mbps)](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/f5-networks.f5-big-ip-best?tab=PlansAndPrice)
     - Azure CLI: 
         ```bash
-        az vm image terms accept --urn f5-networks:f5-big-ip-best:f5-bigip-virtual-edition-25m-best-hourly:16.0.101000
+        az vm image terms accept --publisher f5-networks --offer f5-big-ip-best --plan f5-big-best-plus-hourly-25mbps
         ```
     - For more marketplace terms information, see Azure [documentation](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage#deploy-an-image-with-marketplace-terms).
 
