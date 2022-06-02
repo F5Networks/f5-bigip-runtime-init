@@ -269,6 +269,9 @@ export async function cli(): Promise<string> {
         await telemetryClient.init(executionResults);
         logger.info('Sending f5-teem report');
         telemetryClient.report(telemetryClient.createTelemetryData())
+            .then(() => {
+                logger.info('Successfully sent data to F5 Teem');
+            })
             .catch((err) => {
                 logger.warn('Problem with sending data to F5 TEEM. Perhaps, there is no public access');
                 logger.error(err.message);
@@ -280,7 +283,7 @@ export async function cli(): Promise<string> {
 function exit(): void {
     setTimeout(() => {
         process.exit(statusCode);
-    }, 2000);
+    }, 30000);
 }
 
 cli()

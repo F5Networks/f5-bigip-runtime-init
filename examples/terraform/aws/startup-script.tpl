@@ -159,6 +159,6 @@ for i in {1..30}; do
     curl -fv --retry 1 --connect-timeout 5 -L "${package_url}" -o "/var/config/rest/downloads/f5-bigip-runtime-init.gz.run" && break || sleep 10
 done
 # Install
-bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- "--cloud aws"
+bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- "--cloud aws --telemetry-params templateName:f5-bigip-runtime-init/examples/terraform/aws/main.tf"
 # Run
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml

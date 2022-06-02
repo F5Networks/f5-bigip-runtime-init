@@ -155,9 +155,9 @@ The installer also allows you to configure request retries to make the installat
 
 **Examples:**
 
-Using `--cloud` parameter for basic AWS install:
+Using `--cloud` parameter for basic Azure install:
 ```
- curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud aws'
+ curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v{{ RELEASE_VERSION }}/dist/f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -o f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run && bash f5-bigip-runtime-init-{{ RELEASE_VERSION }}-{{ RELEASE_BUILD }}.gz.run -- '--cloud azure'
 ```
 
 See [Private Environments](#private-environments) section below for more install examples.
@@ -1080,10 +1080,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/startup-script.tpl", {
-    admin_username:     var.admin_username,
-    bigip_vault_name:   "key-vault-${module.utils.env_unique_id}-bigip",
-    secret_id: "secret-${module.utils.env_unique_id}-bigIpPassword",
+    vault_name:         "key-vault-${module.utils.env_unique_id}-bigip",
+    secret_id:          azurerm_key_vault_secret.adminsecret.name,
     package_url:        var.bigip_runtime_init_package_url,
+    admin_username:     var.admin_username,
   }))
 
   tags = merge(var.global_tags, { Name="vm-${module.utils.env_unique_id}-bigip" })
@@ -1295,7 +1295,7 @@ Here is an example of the payload that is sent by F5 TEEM
                             "commands": 3,
                             "postHooks": 0
                         },
-                        "result": "FAILURE",
+                        "result": "SUCCESS",
                         "resultSummary": "All operations finished successfully",
                         "startTime": "2021-11-18T19:29:43.325Z",
                         "endTime": "2021-11-18T19:29:43.387Z",
