@@ -105,7 +105,7 @@ export class AzureCloudClient extends AbstractCloudClient {
         }], {
             thisContext: this,
             maxRetries: constants.RETRY.SHORT_COUNT,
-            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+            retryInterval: constants.RETRY.DELAY_IN_MS
         });
         return response.body.compute;
     }
@@ -176,7 +176,7 @@ export class AzureCloudClient extends AbstractCloudClient {
         }], {
             thisContext: this,
             maxRetries: constants.RETRY.SHORT_COUNT,
-            retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
+            retryInterval: constants.RETRY.DELAY_IN_MS
         });
 
         if (type === 'compute') {
