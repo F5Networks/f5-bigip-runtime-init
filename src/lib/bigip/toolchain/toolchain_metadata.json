@@ -656,10 +656,15 @@
         }
       },
       "versions": {
+        "1.19.0": {
+          "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.19.0/f5-appsvcs-templates-1.19.0-1.noarch.rpm",
+          "packageName": "f5-appsvcs-templates-1.19.0-1.noarch",
+          "latest": true
+        },
         "1.18.0": {
           "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.18.0/f5-appsvcs-templates-1.18.0-1.noarch.rpm",
           "packageName": "f5-appsvcs-templates-1.18.0-1.noarch",
-          "latest": true
+          "latest": false
         },
         "1.17.0": {
           "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm",
@@ -724,11 +729,6 @@
         "1.7.0": {
           "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.7.0/f5-appsvcs-templates-1.7.0-1.noarch.rpm",
           "packageName": "f5-appsvcs-templates-1.7.0-1.noarch",
-          "latest": false
-        },
-        "1.6.1": {
-          "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.6.1/f5-appsvcs-templates-1.6.1-1.noarch.rpm",
-          "packageName": "f5-appsvcs-templates-1.6.1-1.noarch",
           "latest": false
         },
         "1.6.0": {

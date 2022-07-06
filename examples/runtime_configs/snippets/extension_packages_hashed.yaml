@@ -7,5 +7,5 @@ extension_packages:
       extensionVersion: 3.36.1
       extensionHash: 48876a92d3d8fe7da70310882dc9fd1499d209579d798394715e18c12138daf3
     - extensionType: fast
-      extensionVersion: 1.18.0
-      extensionHash: 8693d4a676abbf9cc4f4d5040c7b9c3274b574a1f2a64d68b517a118311151c3
+      extensionVersion: 1.19.0
+      extensionHash: 981b00b61c3dfc3d13f9e96836b6260aa250dc4b92fc7cb746b7ca7b2dbcea1d
