@@ -13,8 +13,8 @@
       },
       {
         "extensionType": "fast",
-        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.18.0/f5-appsvcs-templates-1.18.0-1.noarch.rpm",
-        "extensionVersion": "1.18.0"
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.19.0/f5-appsvcs-templates-1.19.0-1.noarch.rpm",
+        "extensionVersion": "1.19.0"
       }
     ]
   }

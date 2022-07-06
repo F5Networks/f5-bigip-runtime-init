@@ -801,7 +801,7 @@ default:
       - extensionType: as3
         extensionVersion: 3.36.1
       - extensionType: fast
-        extensionVersion: 1.18.0
+        extensionVersion: 1.19.0
 versioned:
   extension_packages:
     install_operations:
@@ -810,7 +810,7 @@ versioned:
       - extensionType: as3
         extensionVersion: 3.36.1
       - extensionType: fast
-        extensionVersion: 1.18.0
+        extensionVersion: 1.19.0
 hashed:
   extension_packages:
     install_operations:
@@ -821,8 +821,8 @@ hashed:
         extensionVersion: 3.36.1
         extensionHash: 48876a92d3d8fe7da70310882dc9fd1499d209579d798394715e18c12138daf3
       - extensionType: fast
-        extensionVersion: 1.18.0
-        extensionHash: 8693d4a676abbf9cc4f4d5040c7b9c3274b574a1f2a64d68b517a118311151c3
+        extensionVersion: 1.19.0
+        extensionHash: 981b00b61c3dfc3d13f9e96836b6260aa250dc4b92fc7cb746b7ca7b2dbcea1d
 url:
   extension_packages:
     install_operations:
@@ -835,8 +835,8 @@ url:
         extensionVersion: 3.36.1
       - extensionType: fast
         extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.18.0/f5-appsvcs-templates-1.18.0-1.noarch.rpm
-        extensionVersion: 1.18.0
+          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.19.0/f5-appsvcs-templates-1.19.0-1.noarch.rpm
+        extensionVersion: 1.19.0
 ilx:
   extension_packages:
     install_operations:
@@ -845,7 +845,7 @@ ilx:
       - extensionType: as3
         extensionVersion: 3.36.1
       - extensionType: fast
-        extensionVersion: 1.18.0
+        extensionVersion: 1.19.0
       - extensionType: ilx
         extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
         extensionVersion: 1.0.0
@@ -1086,8 +1086,8 @@ example_1:
           extensionVersion: 3.36.1
           extensionHash: 48876a92d3d8fe7da70310882dc9fd1499d209579d798394715e18c12138daf3
         - extensionType: fast
-          extensionVersion: 1.18.0
-          extensionHash: 8693d4a676abbf9cc4f4d5040c7b9c3274b574a1f2a64d68b517a118311151c3
+          extensionVersion: 1.19.0
+          extensionHash: 981b00b61c3dfc3d13f9e96836b6260aa250dc4b92fc7cb746b7ca7b2dbcea1d
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1154,7 +1154,7 @@ example_3:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1201,7 +1201,7 @@ example_4:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1243,7 +1243,7 @@ example_5:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1308,7 +1308,7 @@ example_6:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1339,7 +1339,7 @@ example_7:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1399,7 +1399,7 @@ example_8:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1511,7 +1511,7 @@ example_9:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1531,7 +1531,7 @@ example_10:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1653,7 +1653,7 @@ example_12:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1716,7 +1716,7 @@ example_13:
         - extensionType: as3
           extensionVersion: 3.36.1
         - extensionType: fast
-          extensionVersion: 1.18.0
+          extensionVersion: 1.19.0
     extension_services:
       service_operations:
         - extensionType: do

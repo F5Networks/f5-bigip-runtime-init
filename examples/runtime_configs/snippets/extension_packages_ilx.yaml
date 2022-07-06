@@ -5,7 +5,7 @@ extension_packages:
     - extensionType: as3
       extensionVersion: 3.36.1
     - extensionType: fast
-      extensionVersion: 1.18.0
+      extensionVersion: 1.19.0
     - extensionType: ilx
       extensionUrl: file:///var/config/rest/downloads/myIlxApp.rpm
       extensionVersion: 1.0.0
