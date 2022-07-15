@@ -105,6 +105,17 @@ resource "aws_security_group" "external" {
   tags = merge(var.global_tags, {Name="aws-security-group-external-${module.utils.env_prefix}"})
 }
 
+data "http" "my_public_ip" {
+  url = "https://ifconfig.co/json"
+  request_headers = {
+    Accept = "application/json"
+  }
+}
+
+locals {
+  ifconfig_co_json = jsondecode(data.http.my_public_ip.body)
+}
+
 resource "aws_security_group" "mgmt" {
   description = "External interface rules"
   vpc_id = "${aws_vpc.main.id}"
@@ -112,13 +123,13 @@ resource "aws_security_group" "mgmt" {
     from_port = 22
     to_port = 22
     protocol = 6
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${local.ifconfig_co_json.ip}/32", "10.0.0.0/16"]
   }
   ingress {
     from_port = 443
     to_port = 443
     protocol = 6
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${local.ifconfig_co_json.ip}/32", "10.0.0.0/16"]
   }
   ingress {
     from_port = 443

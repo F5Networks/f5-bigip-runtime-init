@@ -63,6 +63,18 @@ resource "azurerm_public_ip" "pip" {
   location            = azurerm_resource_group.deployment.location
   resource_group_name = azurerm_resource_group.deployment.name
   allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+data "http" "my_public_ip" {
+  url = "https://ifconfig.co/json"
+  request_headers = {
+    Accept = "application/json"
+  }
+}
+
+locals {
+  ifconfig_co_json = jsondecode(data.http.my_public_ip.body)
 }
 
 resource "azurerm_network_security_group" "deployment" {
@@ -77,7 +89,7 @@ resource "azurerm_network_security_group" "deployment" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "*"
-    source_address_prefix      = "*"
+    source_address_prefixes    = ["${local.ifconfig_co_json.ip}/32", "10.0.0.0/16"]
     destination_address_prefix = "*"
   }
 }

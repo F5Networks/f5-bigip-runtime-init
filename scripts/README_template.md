@@ -106,7 +106,7 @@ Based on the content of the provided YAML or JSON configuration file, BIG-IP Run
 
 
 ## Prerequisites
-- BIG-IP 14.1.2.6 or newer.
+- BIG-IP 14.1.4.6 or newer.
 - A mechanism to copy the configuration file to the BIG-IP instance (cloud-init, user data, provider-specific methods).
 - Access to the Internet (or other network location if files are locally hosted) for downloading the self-extracting installer package, RPM files, and SHA256 checksums for package verification.
 - Access to the cloud provider metadata service if you rendering metadata runtime parameters.
@@ -123,8 +123,9 @@ BIG-IP Runtime Init has been tested and validated with the following versions of
 
 | BIG-IP Version | Build Number |
 | --- | --- |
-| 15.1.2.1 | 0.0.10 |
-| 14.1.3 | 0.0.7 |
+| 16.1.2.2 | 0.0.28 |
+| 15.1.5.1 | 0.0.14 |
+| 14.1.4.6 | 0.0.8 |
 
 Newer versions are expected to work but have not been specifically tested. 
 ## Installer
@@ -1209,13 +1210,13 @@ Here is an example of the payload that is sent by F5 TEEM
 "telemetryRecords": [
                 {
                     "platform": "BIG-IP",
-                    "platformVersion": "14.1.4.4",
+                    "platformVersion": "14.1.4.6",
                     "nicConfiguration": "multi",
                     "cloudAccountId": "<REDACTED>",
                     "regkey": "<REDACTED>",
                     "platformDetails": {
                         "platform": "BIG-IP",
-                        "platformVersion": "14.1.4.4",
+                        "platformVersion": "14.1.4.6",
                         "platformId": "Z100",
                         "system": {
                             "cpuCount": 4,

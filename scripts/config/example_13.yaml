@@ -48,11 +48,11 @@ pre_onboard_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.30.0
+      extensionVersion: 1.31.0
     - extensionType: as3
-      extensionVersion: 3.36.1
+      extensionVersion: 3.38.0
     - extensionType: fast
-      extensionVersion: 1.18.0
+      extensionVersion: 1.19.0
 extension_services:
   service_operations:
     - extensionType: do

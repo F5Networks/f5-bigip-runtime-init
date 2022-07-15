@@ -97,6 +97,17 @@ resource "google_compute_firewall" "internal" {
 
 }
 
+data "http" "my_public_ip" {
+  url = "https://ifconfig.co/json"
+  request_headers = {
+    Accept = "application/json"
+  }
+}
+
+locals {
+  ifconfig_co_json = jsondecode(data.http.my_public_ip.body)
+}
+
 resource "google_compute_firewall" "mgmt" {
   name    = "tf-func-test-bigip-traffic-mgmt-firewall-${module.utils.env_prefix}"
   network = "${google_compute_network.mgmt_network.name}"
@@ -116,6 +127,13 @@ resource "google_compute_firewall" "mgmt" {
     ports    = ["443", "22"]
   }
 
+  source_ranges = [
+    "${local.ifconfig_co_json.ip}/32", 
+    "${var.ext-subnet-cidr-range}",
+    "${var.int-subnet-cidr-range}",
+    "${var.mgmt-subnet-cidr-range}"
+  ]
+
 }
 
 resource "google_compute_firewall" "ext" {
@@ -131,6 +149,13 @@ resource "google_compute_firewall" "ext" {
   allow {
     protocol = "icmp"
   }
+
+  source_ranges = [
+    "${local.ifconfig_co_json.ip}/32", 
+    "${var.ext-subnet-cidr-range}",
+    "${var.int-subnet-cidr-range}",
+    "${var.mgmt-subnet-cidr-range}"
+  ]
 
 }
 
@@ -180,7 +205,6 @@ resource "google_project_iam_custom_role" "gcp_custom_roles" {
   description = "${var.reaper_tag}"
   permissions = ["secretmanager.versions.access", "compute.instances.get"]
 }
-
 
 resource "google_secret_manager_secret" "secret-01" {
   secret_id = "secret-01-${module.utils.env_prefix}"
