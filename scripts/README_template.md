@@ -208,13 +208,13 @@ controls:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.29.0
+      extensionVersion: 1.32.0
     - extensionType: as3
-      extensionVersion: 3.36.0
+      extensionVersion: 3.39.0
     - extensionType: ts
-      extensionVersion: 1.28.0
+      extensionVersion: 1.31.0
     - extensionType: fast
-      extensionVersion: 1.17.0
+      extensionVersion: 1.20.0
 ```
 
 See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and [/examples/runtime_configs](examples/runtime_configs/) for additional examples.
@@ -808,13 +808,13 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.29.0
+          extensionVersion: 1.32.0
         - extensionType: as3
-          extensionVersion: 3.36.0
+          extensionVersion: 3.39.0
         - extensionType: ts
-          extensionVersion: 1.28.0
+          extensionVersion: 1.31.0
         - extensionType: fast
-          extensionVersion: 1.17.0
+          extensionVersion: 1.20.0
     ```
 
  - *with hash checking*
@@ -823,17 +823,17 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.29.0
-          extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
+          extensionVersion: 1.32.0
+          extensionHash: 56eff7e20abb8c0636d2293926cd5106cefff9e2b4bb71592c661cfd6732af3e
         - extensionType: as3
-          extensionVersion: 3.36.0
-          extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
+          extensionVersion: 3.39.0
+          extensionHash: 54d82a0844b46555c023e22a7887debd8ce49dd3ab4a4a4afca9ee30541dca23
         - extensionType: ts
-          extensionVersion: 1.28.0
-          extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
+          extensionVersion: 1.31.0
+          extensionHash: 8d2b7c546a9dc4f487c5fb62eb801e2621ad620329ee6d91c64fd734e09a3c01
         - extensionType: fast
-          extensionVersion: 1.17.0
-          extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
+          extensionVersion: 1.20.0
+          extensionHash: 84b72613298b46a6da7accab513a723d096df5d15aa5ad0a40990b86557d57f4
     ```
 
  - *custom from URL*
@@ -842,14 +842,14 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
       - extensionType: do
-        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.29.0/f5-declarative-onboarding-1.29.0-8.noarch.rpm
-        extensionVersion: 1.29.0
+        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.32.0/f5-declarative-onboarding-1.32.0-3.noarch.rpm
+        extensionVersion: 1.32.0
       - extensionType: as3
-        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.36.0-6.noarch.rpm
-        extensionVersion: 3.36.0
+        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.39.0-7.noarch.rpm
+        extensionVersion: 3.39.0
       - extensionType: fast
-        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm
-        extensionVersion: 1.17.0
+        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.20.0/f5-appsvcs-templates-1.20.0-1.noarch.rpm
+        extensionVersion: 1.20.0      
     ```
 
     *NOTE: ```extensionVersion``` is not required when used with the ```extensionUrl``` field.*

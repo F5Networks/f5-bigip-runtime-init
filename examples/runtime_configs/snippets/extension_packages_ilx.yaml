@@ -1,11 +1,11 @@
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.31.0
+      extensionVersion: 1.32.0
     - extensionType: as3
-      extensionVersion: 3.38.0
+      extensionVersion: 3.39.0
     - extensionType: fast
-      extensionVersion: 1.19.0
+      extensionVersion: 1.20.0
     - extensionType: ilx
       extensionUrl: file:///var/config/rest/downloads/myIlxApp.rpm
       extensionVersion: 1.0.0

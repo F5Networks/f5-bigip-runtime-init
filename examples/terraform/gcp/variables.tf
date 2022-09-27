@@ -31,7 +31,7 @@ variable "primary_zone" {
 variable "bigip_version" {
   description = "The BIG-IP version for the virtual machine"
   type        = string
-  default     = "f5-bigip-16-1-2-2-0-0-28-payg-best-plus-25mbps-220505080809"
+  default     = "f5-bigip-16-1-3-1-0-0-11-payg-best-plus-25mbps-220721054250"
 }
 
 variable "imageProjectId" {
@@ -43,7 +43,7 @@ variable "imageProjectId" {
 variable "bigip_runtime_init_package_url" {
   description = "The delivery url for BIGIP Runtime Init package"
   type        = string
-  default     = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.0/dist/f5-bigip-runtime-init-1.5.0-1.gz.run"
+  default     = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.1/dist/f5-bigip-runtime-init-1.5.1-1.gz.run"
 }
 
 variable "instance-type" {
