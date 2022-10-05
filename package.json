@@ -12,7 +12,7 @@
     "scripts": {
         "audit": "npm audit --json > .auditReport.json; node scripts/auditProcessor.js",
         "sync-at-components-metadata": "bash scripts/sync_at_components_metadata.sh",
-        "generate-readmes": "node ./scripts/README_render.js",
+        "generate-readmes": "node ./scripts/render.js",
         "cli": "node ./src/cli.js",
         "preinstall": "npx npm-force-resolutions",
         "build": "bash scripts/build_package.sh",

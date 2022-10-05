@@ -150,17 +150,17 @@ bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.33.0
-      extensionHash: 4ac7b7c6eb93320df20f964f32ce7bc6e0454858a36440761f774a8a42a01020
+      extensionVersion: {{DO_VERSION}}
+      extensionHash: {{DO_HASH}}
     - extensionType: as3
-      extensionVersion: 3.40.0
-      extensionHash: 708533815cb8e608b4d28fbb730f0ed34617ce5def53c5462c0ab98bd54730fc
+      extensionVersion: {{AS3_VERSION}}
+      extensionHash: {{AS3_HASH}}
     - extensionType: ts
-      extensionVersion: 1.32.0
-      extensionHash: a6bf242728a5ba1b8b8f26b59897765567db7e0f0267ba9973f822be3ab387b6
+      extensionVersion: {{TS_VERSION}}
+      extensionHash: {{TS_HASH}}
     - extensionType: fast
-      extensionVersion: 1.21.0
-      extensionHash: 9b637713abf07ba33d99b67c85cd8267556cceb1a0ed2816ef19306f330104c5
+      extensionVersion: {{FAST_VERSION}}
+      extensionHash: {{FAST_HASH}}
 extension_services:
   service_operations:
     - extensionType: do
@@ -261,7 +261,7 @@ extension_services:
             mtu: 1460
           internalIntRoute:
             class: Route
-            gw: '{{{ EXTERNAL_GW }}}'
+            gw: '{{{EXTERNAL_GW}}}'
             network: '{{{ INTERNAL_NETWORK }}}/{{{ INTERNAL_BITMASK }}}'
             mtu: 1460
           defaultGateway:
