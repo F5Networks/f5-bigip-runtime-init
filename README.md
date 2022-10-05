@@ -847,7 +847,7 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
         extensionVersion: 3.40.0
       - extensionType: fast
         extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.21.0/f5-appsvcs-templates-1.21.0-1.noarch.rpm
-        extensionVersion: 1.21.0      
+        extensionVersion: 1.21.0     
     ```
 
     *NOTE: ```extensionVersion``` is not required when used with the ```extensionUrl``` field.*
@@ -1512,7 +1512,7 @@ If possible, try to log in to the BIG-IP instance via SSH (mgmt interface) to ex
     - */var/log/cloud-init-output.log*
   - runtime-init logs:
     - */var/log/cloud/startup-script.log*: This file contains events that happen prior to execution of f5-bigip-runtime-init. For example, if the Runtime Init package failed to download, the installer failed to download a file, etc.
-    - */var/log/cloud/bigipRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
+    - */var/log/cloud/bigIpRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
   - Automation Tool Chain logs:
     - */var/log/restnoded/restnoded.log*: This file contains events logged by the BIG-IP Automation Toolchain components. If an Automation Toolchain declaration fails to deploy, you will see more details for those events logged here.
 

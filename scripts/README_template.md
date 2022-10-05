@@ -208,13 +208,13 @@ controls:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.33.0
+      extensionVersion: {{DO_VERSION}}
     - extensionType: as3
-      extensionVersion: 3.40.0
+      extensionVersion: {{AS3_VERSION}}
     - extensionType: ts
-      extensionVersion: 1.32.0
+      extensionVersion: {{TS_VERSION}}
     - extensionType: fast
-      extensionVersion: 1.21.0
+      extensionVersion: {{FAST_VERSION}}
 ```
 
 See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and [/examples/runtime_configs](examples/runtime_configs/) for additional examples.
@@ -808,13 +808,13 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.33.0
+          extensionVersion: {{DO_VERSION}}
         - extensionType: as3
-          extensionVersion: 3.40.0
+          extensionVersion: {{AS3_VERSION}}
         - extensionType: ts
-          extensionVersion: 1.32.0
+          extensionVersion: {{TS_VERSION}}
         - extensionType: fast
-          extensionVersion: 1.21.0
+          extensionVersion: {{FAST_VERSION}}
     ```
 
  - *with hash checking*
@@ -823,17 +823,17 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.33.0
-          extensionHash: 4ac7b7c6eb93320df20f964f32ce7bc6e0454858a36440761f774a8a42a01020
+          extensionVersion: {{DO_VERSION}}
+          extensionHash: {{DO_HASH}}
         - extensionType: as3
-          extensionVersion: 3.40.0
-          extensionHash: 708533815cb8e608b4d28fbb730f0ed34617ce5def53c5462c0ab98bd54730fc
+          extensionVersion: {{AS3_VERSION}}
+          extensionHash: {{AS3_HASH}}
         - extensionType: ts
-          extensionVersion: 1.32.0
-          extensionHash: a6bf242728a5ba1b8b8f26b59897765567db7e0f0267ba9973f822be3ab387b6
+          extensionVersion: {{TS_VERSION}}
+          extensionHash: {{TS_HASH}}
         - extensionType: fast
-          extensionVersion: 1.21.0
-          extensionHash: 9b637713abf07ba33d99b67c85cd8267556cceb1a0ed2816ef19306f330104c5
+          extensionVersion: {{FAST_VERSION}}
+          extensionHash: {{FAST_HASH}}
     ```
 
  - *custom from URL*
@@ -842,14 +842,14 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
       - extensionType: do
-        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.33.0/f5-declarative-onboarding-1.33.0-7.noarch.rpm
-        extensionVersion: 1.33.0
+        extensionUrl: {{{DO_URL}}}
+        extensionVersion: {{DO_VERSION}}
       - extensionType: as3
-        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.40.0-5.noarch.rpm
-        extensionVersion: 3.40.0
+        extensionUrl: {{{AS3_URL}}}
+        extensionVersion: {{AS3_VERSION}}
       - extensionType: fast
-        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.21.0/f5-appsvcs-templates-1.21.0-1.noarch.rpm
-        extensionVersion: 1.21.0      
+        extensionUrl: {{{FAST_URL}}}
+        extensionVersion: {{FAST_VERSION}}     
     ```
 
     *NOTE: ```extensionVersion``` is not required when used with the ```extensionUrl``` field.*
@@ -1353,7 +1353,7 @@ If possible, try to log in to the BIG-IP instance via SSH (mgmt interface) to ex
     - */var/log/cloud-init-output.log*
   - runtime-init logs:
     - */var/log/cloud/startup-script.log*: This file contains events that happen prior to execution of f5-bigip-runtime-init. For example, if the Runtime Init package failed to download, the installer failed to download a file, etc.
-    - */var/log/cloud/bigipRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
+    - */var/log/cloud/bigIpRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
   - Automation Tool Chain logs:
     - */var/log/restnoded/restnoded.log*: This file contains events logged by the BIG-IP Automation Toolchain components. If an Automation Toolchain declaration fails to deploy, you will see more details for those events logged here.
 

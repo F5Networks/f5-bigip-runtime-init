@@ -12,9 +12,11 @@ The release is fully automated process. However, it requires a few manual steps 
 Before triggering release pipeline, the following needs to be done as a part of pre-release activities
 
    1. Update `version` and `release` values under package.json
-   2. Edits to the README.md file should be made to scripts/README_template.md.  This file is tagged with mustache handlebars used to update README.md with the correctly versioned links based on package.json when scripts/README_render.js is executed; SCHEMA.md will also be generated based on the contents of base_schema.json. Run this command manually after updating the version in package.json: **node scripts/README_render.js**
-   3. Create Merge Request (aka MR) to merge all changes from `develop` to `main` branch
-   4. After merging changes to `main` branch, use pre-configured schedules to trigger functional tests against `main` branch:
+   2. Run scripts/sync_at_components_metadata.sh to grab the latest ATC versions from CDN.
+   3. Edits to the README.md file should be made to scripts/README_template.md. This file is tagged with mustache handlebars used to update README.md with the correctly versioned links based on package.json when scripts/render.js is executed; SCHEMA.md will also be generated based on the contents of base_schema.json. Run this command manually after updating the version in package.json: **node scripts/render.js**
+   4. Edits to the Terraform example startup script files should be made in scripts/tf_examples TPL files. The render.js script will update ATC package versions in the resulting output files.
+   5. Create Merge Request (aka MR) to merge all changes from `develop` to `main` branch
+   6. After merging changes to `main` branch, use pre-configured schedules to trigger functional tests against `main` branch:
       * There a few environment variables which are used for triggering functional tests for different clouds as well as BIG-IP versions:
          - BIGIP_VERSION - specifies BIG-IP version used in testing; possible values (14, 15 or all)
          - TEST_SUITE - specifies Public Cloud against which functional testing will be done; possilbe values ( aws, azure, azure_gov, gcp, or all). 
