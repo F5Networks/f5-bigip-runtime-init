@@ -138,7 +138,8 @@
     },
     "auditProcessor": {
         "whitelist": [
-            "1067480"
+            "1067480",
+            "1084901"
         ]
     },
     "keywords": [

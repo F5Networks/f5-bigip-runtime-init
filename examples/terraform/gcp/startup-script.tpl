@@ -23,17 +23,9 @@ if [ ! -f /config/first_run_flag ]; then
     chmod +x /config/startup-script.sh
     echo "/config/startup-script.sh" >> /config/startup
 
-    # Run Immediately Before MCPD starts
-    # SWAP NIC
     /usr/bin/setdb provision.managementeth eth1
-    # Increase resources for restjavad and restnoded
     /usr/bin/setdb provision.extramb 1000
     /usr/bin/setdb restjavad.useextramb true
-    /usr/bin/setdb iapplxrpm.timeout 300 || true
-    /usr/bin/setdb icrd.timeout 180 || true
-    /usr/bin/setdb restjavad.timeout 180 || true
-    /usr/bin/setdb restnoded.timeout 180 || true
-
     reboot
 fi
 EOF
@@ -182,6 +174,8 @@ extension_services:
           class: Tenant
           My_DbVariables:
             class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
             ui.advisory.enabled: true
             ui.advisory.color: blue
             ui.advisory.text: BIG-IP VE Runtime Init Example
