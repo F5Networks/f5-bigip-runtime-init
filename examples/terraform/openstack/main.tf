@@ -316,7 +316,8 @@ data "template_file" "bigip_init" {
     # the password will be cached by tfstate, in cloud-drive, and initially on the device
     # Not recommended for production.
     # Recommend changing password immediately 
-    # For production, F5 also recommends customizing the user-data.tpl to using Hashicorp Vault to fetch the secret/password
+    # For production, F5 also recommends customizing the Runtime-Init Config in startup-script.tpl 
+    # to using Hashicorp Vault to fetch the secret/password
     # See https://github.com/F5Networks/f5-bigip-runtime-init#runtime_parameters
     admin_password = module.utils.admin_password
     package_url    = var.bigip_runtime_init_package_url
