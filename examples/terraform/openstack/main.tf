@@ -132,6 +132,7 @@ resource "openstack_networking_subnet_v2" "subnet_internal" {
 # │ Error: Error creating openstack_networking_port_v2: Request forbidden: [POST https://10.144.69.33:9696/v2.0/ports], error message: {"NeutronError": {"type": "PolicyNotAuthorized", "message": "((rule:create_port and (rule:create_port:fixed_ips and (rule:create_port:fixed_ips:ip_address and rule:create_port:fixed_ips:subnet_id))) and rule:create_port:port_security_enabled) is disallowed by policy", "detail": ""}}
 
 resource "openstack_compute_secgroup_v2" "sg_mgmt" {
+  count       = var.port_security_enabled ? 1 : 0
   name        = "sg-${module.utils.env_unique_id}-bigip-mgmt"
   description = "Mgmt interface rules"
 
@@ -163,6 +164,7 @@ resource "openstack_compute_secgroup_v2" "sg_mgmt" {
 }
 
 resource "openstack_compute_secgroup_v2" "sg_external" {
+  count       = var.port_security_enabled ? 1 : 0
   name        = "sg-${module.utils.env_unique_id}-bigip-external"
   description = "External interface rules"
 
@@ -210,6 +212,7 @@ resource "openstack_compute_secgroup_v2" "sg_external" {
 }
 
 resource "openstack_compute_secgroup_v2" "sg_internal" {
+  count       = var.port_security_enabled ? 1 : 0
   name        = "sg-${module.utils.env_unique_id}-bigip-internal"
   description = "Internal interface rules"
 
@@ -258,13 +261,13 @@ resource "openstack_networking_port_v2" "mgmt_port" {
   admin_state_up = "true"
 
   port_security_enabled = var.port_security_enabled ? true : null
-  security_group_ids =  var.port_security_enabled ? [ openstack_compute_secgroup_v2.sg_mgmt.id ] : null
+  security_group_ids    = var.port_security_enabled ? [openstack_compute_secgroup_v2.sg_mgmt[0].id] : null
 
   dynamic "fixed_ip" {
-    for_each = [for subnet in local.subnet_mgmt_ids: subnet if var.dhcp_enabled == false ]
+    for_each = [for subnet in local.subnet_mgmt_ids : subnet if var.dhcp_enabled == false]
     content {
-      subnet_id = var.network_mgmt == "" ? openstack_networking_subnet_v2.subnet_mgmt[0].id : data.openstack_networking_subnet_v2.subnet_mgmt[0].id
-      ip_address  = var.subnet_mgmt == "" ? cidrhost(openstack_networking_subnet_v2.subnet_mgmt[0].cidr, var.cidr_host) :  cidrhost(tostring(data.openstack_networking_subnet_v2.subnet_mgmt[0].cidr), var.cidr_host)
+      subnet_id  = var.network_mgmt == "" ? openstack_networking_subnet_v2.subnet_mgmt[0].id : data.openstack_networking_subnet_v2.subnet_mgmt[0].id
+      ip_address = var.subnet_mgmt == "" ? cidrhost(openstack_networking_subnet_v2.subnet_mgmt[0].cidr, var.cidr_host) : cidrhost(tostring(data.openstack_networking_subnet_v2.subnet_mgmt[0].cidr), var.cidr_host)
     }
   }
 }
@@ -275,7 +278,7 @@ resource "openstack_networking_port_v2" "external_port" {
   admin_state_up = "true"
 
   port_security_enabled = var.port_security_enabled ? true : null
-  security_group_ids = var.port_security_enabled ? [ openstack_compute_secgroup_v2.sg_external.id ]: null
+  security_group_ids    = var.port_security_enabled ? [openstack_compute_secgroup_v2.sg_external[0].id] : null
 
   dynamic "fixed_ip" {
     for_each = [for subnet in local.subnet_external_ids : subnet if var.dhcp_enabled == false]
@@ -293,7 +296,7 @@ resource "openstack_networking_port_v2" "internal_port" {
   admin_state_up = "true"
 
   port_security_enabled = var.port_security_enabled ? true : null
-  security_group_ids = var.port_security_enabled ? [ openstack_compute_secgroup_v2.sg_internal.id ] : [ ]
+  security_group_ids    = var.port_security_enabled ? [openstack_compute_secgroup_v2.sg_internal[0].id] : []
 
   dynamic "fixed_ip" {
     for_each = [for subnet in local.subnet_internal_ids : subnet if var.dhcp_enabled == false]
