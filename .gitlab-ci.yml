@@ -189,6 +189,7 @@ check_at_components_metadata:
     except:
         refs:
             - schedules
+    allow_failure: true
 
 # checks links in README
 check_links:
