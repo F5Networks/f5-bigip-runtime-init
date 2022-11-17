@@ -2,7 +2,7 @@
 
 ## Description
 
-This directory provides a simple Terraform example to demonstrate provisioning and onboarding a BIG-IP system using BIG-IP Runtime-Init in Azure.
+This directory provides a simple Terraform example to demonstrate provisioning and onboarding a BIG-IP system using F5 BIG-IP Runtime-Init in Azure.
 
 ## Prerequisites
  * Terraform (v1.1.6)
