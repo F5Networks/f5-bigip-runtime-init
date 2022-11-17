@@ -1,11 +1,11 @@
-# BIG-IP Runtime Init
+# F5 BIG-IP Runtime Init
 
 [![Releases](https://img.shields.io/github/release/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/releases)
 [![Issues](https://img.shields.io/github/issues/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/issues)
 
 
 ## Contents
-- [BIG-IP Runtime Init](#big-ip-runtime-init)
+- [F5 BIG-IP Runtime Init](#big-ip-runtime-init)
   - [Contents](#contents)
   - [Introduction](#introduction)
   - [Overview](#overview)
@@ -49,7 +49,7 @@
 
 ## Introduction
 
-BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. It does this by providing a single convenient YAML (1.2 spec) or JSON-based configuration file, which
+F5 BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. It does this by providing a single convenient YAML (1.2 spec) or JSON-based configuration file, which
 * leverages [F5 Automation Tool Chain](https://www.f5.com/pdf/products/automation-toolchain-overview.pdf) declarations that are easier to author, validate, and maintain as code (vs. bigip.conf files);
 * renders secrets from public cloud vaults; and
 * renders runtime variables from metadata services.
@@ -57,7 +57,7 @@ BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP V
 The result is a complete overlay deployment tool for configuring a BIG-IP instance. This allows us to extend our cloud solutions from native templates to other instance provisioning tools, such as Terraform and Ansible. For more information regarding sending startup scripts to BIG-IP VE, see [VE documentation](https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html).
 
 
-![BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init_animated.gif)
+![F5 BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init_animated.gif)
 
     
 ## Overview
@@ -119,7 +119,7 @@ Based on the content of the provided YAML or JSON configuration file, BIG-IP Run
   - provisions a module (for example, APM) that creates a disk volume
 
 ## Validated BIG-IP versions
-BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
+F5 BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
 
 | BIG-IP Version | Build Number |
 | --- | --- |
