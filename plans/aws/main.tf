@@ -106,14 +106,11 @@ resource "aws_security_group" "external" {
 }
 
 data "http" "my_public_ip" {
-  url = "https://ifconfig.co/json"
-  request_headers = {
-    Accept = "application/json"
-  }
+  url = "http://ipv4.icanhazip.com"
 }
 
 locals {
-  ifconfig_co_json = jsondecode(data.http.my_public_ip.body)
+  ifconfig_co_json = "${chomp(data.http.my_public_ip.body)}"
 }
 
 resource "aws_security_group" "mgmt" {
@@ -123,13 +120,13 @@ resource "aws_security_group" "mgmt" {
     from_port = 22
     to_port = 22
     protocol = 6
-    cidr_blocks = ["${local.ifconfig_co_json.ip}/32", "10.0.0.0/16"]
+    cidr_blocks = ["${local.ifconfig_co_json}/32", "10.0.0.0/16"]
   }
   ingress {
     from_port = 443
     to_port = 443
     protocol = 6
-    cidr_blocks = ["${local.ifconfig_co_json.ip}/32", "10.0.0.0/16"]
+    cidr_blocks = ["${local.ifconfig_co_json}/32", "10.0.0.0/16"]
   }
   ingress {
     from_port = 443

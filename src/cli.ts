@@ -176,9 +176,13 @@ export async function cli(): Promise<string> {
                         await toolchainClient.service.isAvailable();
                         // end of workaround
                     }
+                } else {
+                    // skip install delay if not explicitly defined
+                    if (!config.controls.extensionInstallDelayInMs) {
+                        delayInstallTimeInMs = '0';
+                    }
                 }
             } else {
-
                 await toolchainClient.package.install();
                 try {
                     logger.info(`Validating - ${installOperations[i].extensionType} extension is available.`);

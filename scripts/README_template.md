@@ -250,7 +250,7 @@ export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly &&  f5-bigip-runtime-init --config-
 
 
  - **extensionInstallDelayInMs** 
-    - *Description:* Defines a delay between extensions installations. 
+    - *Description:* Defines a delay between extensions installations. *NOTE: If not provided and the extension package is already installed, the default delay of 10 seconds is skipped.*
     - *Default:* `10000`
     - *Environment Variable:* F5_BIGIP_RUNTIME_EXTENSION_INSTALL_DELAY_IN_MS (number)
 
@@ -575,6 +575,7 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
     ```
 
     *Azure Self-IP*
+    {{=<% %>=}}
     ```yaml
     runtime_parameters:
       - name: SELF_IP_EXTERNAL
@@ -584,7 +585,28 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
           environment: azure
           field: ipv4
           index: 1
+      - name: SELF_IP_EXTERNAL_IPV6
+        type: metadata
+        metadataProvider:
+          type: network
+          environment: azure
+          field: ipv6
+          index: 1
+    service_operations:
+      - extensionType: do
+        value:
+          Common:
+            class: Tenant
+            external-self:
+              class: SelfIp
+              address: '{{{SELF_IP_EXTERNAL}}}'
+              vlan: external
+            external-self-ipv6:
+              class: SelfIp
+              address: '{{{SELF_IP_EXTERNAL_IPV6}}}/64'
+              vlan: external
     ```
+    <%={{ }}=%>
 
     *GCP Self-IP*
     ```yaml
@@ -598,9 +620,10 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
           index: 0
     ```
 
-    Returns the CIDR address (ex. `10.0.0.5/24`) which is required by the Self-IP. 
+    IPv4: Returns the CIDR address (ex. `10.0.0.5/24`) which is required by the Self-IP.
+    IPv6: Returns the address (ex. ab:ff:ff::dfd). Must provide the prefix.
 
-    The output can be further transformed using ipcalc functionality:
+    The output can be further transformed using ipcalc functionality (IPv4 only):
 
 
     The ipcalc functionality provides the following transformation options: 

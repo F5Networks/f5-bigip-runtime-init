@@ -98,14 +98,11 @@ resource "google_compute_firewall" "internal" {
 }
 
 data "http" "my_public_ip" {
-  url = "https://ifconfig.co/json"
-  request_headers = {
-    Accept = "application/json"
-  }
+  url = "http://ipv4.icanhazip.com"
 }
 
 locals {
-  ifconfig_co_json = jsondecode(data.http.my_public_ip.body)
+  ifconfig_co_json = "${chomp(data.http.my_public_ip.body)}"
 }
 
 resource "google_compute_firewall" "mgmt" {
@@ -128,7 +125,7 @@ resource "google_compute_firewall" "mgmt" {
   }
 
   source_ranges = [
-    "${local.ifconfig_co_json.ip}/32", 
+    "${local.ifconfig_co_json}/32", 
     "${var.ext-subnet-cidr-range}",
     "${var.int-subnet-cidr-range}",
     "${var.mgmt-subnet-cidr-range}"
@@ -151,7 +148,7 @@ resource "google_compute_firewall" "ext" {
   }
 
   source_ranges = [
-    "${local.ifconfig_co_json.ip}/32", 
+    "${local.ifconfig_co_json}/32", 
     "${var.ext-subnet-cidr-range}",
     "${var.int-subnet-cidr-range}",
     "${var.mgmt-subnet-cidr-range}"

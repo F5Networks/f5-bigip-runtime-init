@@ -3,7 +3,7 @@ module "utils" {
 }
 
 provider "azurerm" {
-  version = "=2.5.0"
+  version = "~> 2.29"
   features {
   }
   environment = var.AZURE_ENVIROMENT
@@ -32,7 +32,7 @@ data "template_file" "init_declaration" {
 
 resource "azurerm_virtual_network" "deployment" {
   name                = "${module.utils.env_prefix}-network"
-  address_space       = ["10.0.0.0/16"]
+  address_space       = ["10.0.0.0/16", "ace:cab:deca::/48"]
   location            = azurerm_resource_group.deployment.location
   resource_group_name = azurerm_resource_group.deployment.name
 }
@@ -48,7 +48,7 @@ resource "azurerm_subnet" "external" {
   name                 = "external"
   resource_group_name  = azurerm_resource_group.deployment.name
   virtual_network_name = azurerm_virtual_network.deployment.name
-  address_prefix       = "10.0.2.0/24"
+  address_prefixes     = ["10.0.2.0/24", "ace:cab:deca:deee::/64"]
 }
 
 resource "azurerm_subnet" "internal" {
@@ -67,14 +67,11 @@ resource "azurerm_public_ip" "pip" {
 }
 
 data "http" "my_public_ip" {
-  url = "https://ifconfig.co/json"
-  request_headers = {
-    Accept = "application/json"
-  }
+  url = "http://ipv4.icanhazip.com"
 }
 
 locals {
-  ifconfig_co_json = jsondecode(data.http.my_public_ip.body)
+  ifconfig_co_json = "${chomp(data.http.my_public_ip.body)}"
 }
 
 resource "azurerm_network_security_group" "deployment" {
@@ -89,7 +86,7 @@ resource "azurerm_network_security_group" "deployment" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "*"
-    source_address_prefixes    = ["${local.ifconfig_co_json.ip}/32", "10.0.0.0/16"]
+    source_address_prefixes    = ["${local.ifconfig_co_json}/32", "10.0.0.0/16"]
     destination_address_prefix = "*"
   }
 }
@@ -118,6 +115,15 @@ resource "azurerm_network_interface" "external" {
     subnet_id                     = azurerm_subnet.external.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.2.4"
+    primary                       = true
+  }
+
+  ip_configuration {
+    name                          = "${module.utils.env_prefix}-ext-ipv6-1"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "ace:cab:deca:deee::4"
+    private_ip_address_version    = "IPv6"
+    subnet_id                     = azurerm_subnet.external.id
   }
 
   tags = {

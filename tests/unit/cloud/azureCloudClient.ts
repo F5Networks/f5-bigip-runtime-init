@@ -252,7 +252,7 @@ describe('CloudClient - Azure', () => {
             });
     });
 
-    it('should validate getMetadata when network type is provided', () => {
+    it('should validate getMetadata when IPv4 network type is provided', () => {
         nock('http://localhost:8100')
             .get('/mgmt/tm/net/interface')
             .reply(200, bigipMgmtNetInterfacesResponse );
@@ -263,6 +263,20 @@ describe('CloudClient - Azure', () => {
         cloudClient.getMetadata('ipv4', { type: 'network', index: 1 })
             .then((result) => {
                 assert.strictEqual(result, '10.0.1.4/24');
+            });
+    });
+
+    it('should validate getMetadata when IPv6 network type is provided', () => {
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/net/interface')
+            .reply(200, bigipMgmtNetInterfacesResponse );
+        nock('http://169.254.169.254')
+            .get('/metadata/instance/network?api-version=2017-08-01')
+            .reply(200, { interface: [{ ipv4: { ipAddress: [{ privateIpAddress: '10.0.0.4' }], subnet: [{ address: '10.0.0.0', prefix: '24' }] }, macAddress:'FA163ED0B0DF' }, { ipv4: { ipAddress: [{ privateIpAddress: '10.0.1.4' }], subnet: [{ address: '10.0.1.0', prefix: '24' }] }, ipv6: { ipAddress: [{ privateIpAddress: 'ace:cab:deca:deee::4' }] } , macAddress:'FA163EC5BE3D'}] });
+
+        cloudClient.getMetadata('ipv6', { type: 'network', index: 1 })
+            .then((result) => {
+                assert.strictEqual(result, 'ace:cab:deca:deee::4');
             });
     });
 });
