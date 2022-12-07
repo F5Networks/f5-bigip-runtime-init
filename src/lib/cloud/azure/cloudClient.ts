@@ -219,8 +219,13 @@
                  if (localMac === metadataMac) {
                      logger.info(`Local interface ${index} MAC address ${localMac} matches Azure network interface ${i} MAC address ${metadataMac}`);
                      ipAddress = interfaces[i][field].ipAddress[0].privateIpAddress;
-                     prefix = interfaces[i][field].subnet[0].prefix;
-                     result = `${ipAddress}/${prefix}`;
+                     if (field.toLowerCase() === 'ipv6') {
+                        /** Azure does not return subnet prefix for IPv6 */
+                        result = `${ipAddress}`;
+                     } else {
+                        prefix = interfaces[i][field].subnet[0].prefix;
+                        result = `${ipAddress}/${prefix}`;
+                     }
                      break;
                  }
              }

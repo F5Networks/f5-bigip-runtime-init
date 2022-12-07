@@ -1,6 +1,6 @@
 variable "location" {
   description = "The Azure Region in which the resources in this example should exist"
-  default     = "westus"
+  default     = "westus2"
 }
 
 variable "publisher" {
@@ -17,12 +17,12 @@ variable "AZURE_SKU" {
 
 variable "AZURE_BIGIP_VERSION" {
   description = "The BIG-IP version for the virtual machine"
-  default     = ""
+  default     = "16.1.302000"
 }
 
 variable "instance_size" {
   description = "The instance size for the virtual machine"
-  default     = "Standard_DS3_v2"
+  default     = "Standard_D8s_v4"
 }
 
 variable "admin_username" {
