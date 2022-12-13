@@ -102,17 +102,6 @@ describe('System tests', () => {
         assert.ok(installedPackages.filter(item => item.version === declaredDoVersion).length > 0);
     });
 
-    it('should verify FAST installed', () => {
-        const declaredFastVersion = postedBigIpRunTimeInitDeclaration.extension_packages.install_operations.filter(item => item.extensionType === 'fast')[0].extensionVersion;
-        if (declaredFastVersion !== undefined) {
-            const declaredPackageName = availablePackages.components.fast.versions[declaredFastVersion].packageName;
-            assert.ok(installedPackages.filter(item => item.packageName === declaredPackageName).length > 0);
-            assert.ok(installedPackages.filter(item => item.version === declaredFastVersion).length > 0);
-        }
-        assert.ok(installedPackages.filter(item => item.name === 'f5-appsvcs-templates').length > 0);
-
-    });
-
     it('should verify iLX installed', () => {
         const declaredPackageName = 'hello-world-0.1.0-0001.noarch';
 
