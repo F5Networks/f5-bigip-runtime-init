@@ -1,0 +1,4 @@
+[submodule "deployment-tool"]
+	path = deployment-tool
+	url = ../../../automation-sdk/deployment-tool.git
+	branch = master
