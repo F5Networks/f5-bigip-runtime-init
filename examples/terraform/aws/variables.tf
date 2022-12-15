@@ -29,7 +29,7 @@ variable "f5_ami_search_name" {
 
 variable "bigip_runtime_init_package_url" {
   description = "The delivery url for BIGIP Runtime Init package"
-  default =  "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.0/dist/f5-bigip-runtime-init-1.5.0-1.gz.run"
+  default =  "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.2/dist/f5-bigip-runtime-init-1.5.2-1.gz.run"
 }
 
 variable "instance_type" {

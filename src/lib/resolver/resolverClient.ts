@@ -403,7 +403,18 @@ export class ResolverClient {
                     await _cloudClient.init();
                     this.cloudClients[parameters[i].metadataProvider.environment] = _cloudClient;
                 }
-            } else if(parameters[i].type === 'secret' && parameters[i].secretProvider.environment !== 'hashicorp') {
+            }
+            else if(parameters[i].type === 'tag') {
+                if (!(parameters[i].tagProvider.environment in this.cloudClients)) {
+                    const _cloudClient = await this.getCloudProvider(
+                        parameters[i].tagProvider.environment,
+                        { logger }
+                    );
+                    await _cloudClient.init();
+                    this.cloudClients[parameters[i].tagProvider.environment] = _cloudClient;
+                }
+            }
+            else if(parameters[i].type === 'secret' && parameters[i].secretProvider.environment !== 'hashicorp') {
                 if (!(parameters[i].secretProvider.environment in this.cloudClients)) {
                     const _cloudClient = await this.getCloudProvider(
                         parameters[i].secretProvider.environment,

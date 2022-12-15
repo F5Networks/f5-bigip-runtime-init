@@ -4,11 +4,9 @@ stages:
     - process
     - test
     - build
-    - functional_test_publish
     - functional_test_init
     - functional_test_execute
     - functional_test_cleanup
-    - functional_test_cleanup_container
     - publish
     - release_publish
 
@@ -38,7 +36,10 @@ variables:
     TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION"
     GIT_SECRETS_VERSION: '1.3.0'
     GIT_SECRETS_PKG_URL: "https://github.com/awslabs/git-secrets/archive/${GIT_SECRETS_VERSION}.tar.gz"
-
+    GIT_SUBMODULE_STRATEGY: recursive
+    VAULT_PATH: 'deployment-tool/plans/runtime_init_vault/aws'
+    VAULT_STATE_FILE: 'terraform.tfstate'
+    TERRAFORM_VERSION: '0.12.31'
 
 # Cleanup development RPM's on CDN when branch no longer present on gitlab
 cleanup_publish_rpms_dev_cdn:
@@ -72,29 +73,6 @@ cleanup_publish_rpms_dev_cdn:
     tags:
         - cm-official-docker-executor
 
-# Cleanup artifactory images when matching branch no longer present on gitlab
-cleanup_artifactory_images:
-    stage: process
-    only:
-        variables:
-            - $CLEANUP_ARTIFACTORY == "true"
-    except:
-        variables:
-            - $RUN_FUNCTIONAL_TESTS == "true"
-    script:
-        # install jq
-        - apt-get update
-        - apt-get install -y jq
-        # find branches in project and images in artifactory
-        - curl -k -H "PRIVATE-TOKEN:${DAILY_TEST_TOKEN}" "https://${GITLAB_URL}/api/v4/projects/${CI_PROJECT_ID}/repository/branches" | jq -r .[].name > branches.txt
-        - cat branches.txt
-        - curl -k -u "${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD}" -X GET "https://${ARTIFACTORY_SERVER}/artifactory/api/docker/ecosystems-cloudsolutions-docker-dev/v2/deployment-tool-runtime-init/tags/list" | jq -r .tags[] > artifactory_tags.txt
-        - cat artifactory_tags.txt
-        - diff=$(comm -23 artifactory_tags.txt branches.txt)
-        - for d in $diff; do if [[ $d != "latest" ]]; then echo removing image ${d}; curl -k -u "${GITLAB_ARTIFACTORY_USER}:${GITLAB_ARTIFACTORY_PASSWORD}" -X DELETE "https://${ARTIFACTORY_SERVER}/artifactory/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init/${d}"; fi; done
-    tags:
-        - cm-official-docker-executor
-
 # lint package
 lint_package:
     stage: test
@@ -116,7 +94,7 @@ test_audit:
     script:
         # npm audit - uses custom audit processor wrapper
         - npm install --unsafe-perm
-        - npm run audit
+        - npm run audit --production
     tags:
         - cm-official-docker-executor
     except:
@@ -176,10 +154,10 @@ check_schema:
 # verifies all examples use the latest AT Components versions
 check_at_components_metadata:
     stage: test
-    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
     script:
         - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -yq nodejs build-essential
-        - npm install -g npm
+        - npm install -g npm@6.9.2
         - apt-get install -y jq
         - pip3 install yq
         - npm run sync-at-components-metadata
@@ -189,6 +167,7 @@ check_at_components_metadata:
     except:
         refs:
             - schedules
+    allow_failure: true
 
 # checks links in README
 check_links:
@@ -227,73 +206,84 @@ build_package:
             - $CLEANUP_DEVELOP_CDN == "true"
 
 ### Functional Tests Section
-# Publish docker image to artifactory
-publish_container:
-    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/docker:stable
-    stage: functional_test_publish
+# Functional Tests - Initialization phase
+test_functional_init_vault:
+    stage: functional_test_init
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/hashicorp/terraform:${TERRAFORM_VERSION}
+    retry:
+        max: 0
     script:
-        - docker login -u ${GITLAB_ARTIFACTORY_USER} -p ${GITLAB_ARTIFACTORY_PASSWORD} ${ARTIFACTORY_SERVER}
-        - docker build --build-arg artifactory_server=${ARTIFACTORY_SERVER} -t ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME} .
-        - docker push ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME}
+        - current_dir=$(pwd)
+        # deploy hashicorp vault
+        - cd ${VAULT_PATH}
+        - terraform init
+        - terraform apply -auto-approve
+        - sleep 3m
+        - cd $current_dir
+        - cat ${VAULT_PATH}/${VAULT_STATE_FILE}
     tags:
-        - docker-executor
+        - cm-official-docker-executor
     only:
         variables:
             - $CI_COMMIT_REF_NAME == "main"
             - $CI_COMMIT_REF_NAME == "develop"
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
-        changes:
-            - Dockerfile
-            - plans/**/*
     except:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
+    artifacts:
+        paths:
+            - ${VAULT_PATH}/${VAULT_STATE_FILE}
+        when: always
+        expire_in: 1 week
 
-# Functional Tests - Initialization phase (with 1 retries in a case of any failures)
 .test_functional_init_generic: &test_functional_init_generic
     stage: functional_test_init
-    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME}
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/hashicorp/terraform:${TERRAFORM_VERSION}
+    needs:
+      - build_package
+      - test_functional_init_vault
+    dependencies:
+      - build_package
+      - test_functional_init_vault
     retry:
-        max: 1
+        max: 0
     script:
-        - current_dir=$(pwd)
+        # deploy prereqs
+        - apk add --update
+        - apk add bash curl jq build-base openssl-dev libffi-dev git
+        - apk add jq openssh-client sshpass python3 python3-dev
+        - ln -sf python3 /usr/bin/python
+        - python -m ensurepip
+        - ln -s pip3 /usr/bin/pip
+        - pip install --upgrade pip
+        - apk add npm
+        # create ssh key
         - echo "*** Configuring SSH"
         - eval $(ssh-agent -s)
         - echo "$SSH_KEY" | sed 's/\\n/\n/g' | ssh-add -
         - mkdir -p ~/.ssh
         - chmod 700 ~/.ssh
-        # - printf '%s\n' '${SSH_KEY}' >> dewpt.pem
-        # - chmod 600 dewpt.pem
-        # deploy hashicorp vault and exit out of the folder
-        - cd /deployment-tool/plans/vault/aws
-        - terraform init
-        - terraform apply -auto-approve
-        - cd $current_dir
-        # sleep
-        - sleep 3m
-        # get Hashicorp vault details and place them in user_data file
-        - export VAULT_MGMT_IP=$(cat /deployment-tool/plans/vault/aws/terraform.tfstate | jq .outputs.vault_server_public_ip.value -r)
-        - export VAULT_SERVER_PUBLIC_HTTP=$(cat /deployment-tool/plans/vault/aws/terraform.tfstate | jq .outputs.vault_server_public_http.value -r)
-        - export VAULT_APP_ROLE=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id')
-        - export VAULT_SECRET_ID=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
-        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/wrapped-secret-id | jq -r .wrap_info.token')
-        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu $VAULT_MGMT_IP -o 'StrictHostKeyChecking=no' 'cat /tmp/wrapped-secret-id-2 | jq -r .wrap_info.token')
-        # debugging the values
-        - echo $VAULT_MGMT_IP
-        - echo $VAULT_SERVER_PUBLIC_HTTP
-        - echo $VAULT_APP_ROLE
-        - echo $VAULT_SECRET_ID
-        - echo $VAULT_WRAPPED_SECRET_ID
-        - echo $VAULT_WRAPPED_SECRET_ID_2
-        - sed -i "s \vault_server_public_http $VAULT_SERVER_PUBLIC_HTTP g" /deployment-tool/plans/${CLOUD}/user_data.tpl
-        - sed -i "s/\vault_app_role/$VAULT_APP_ROLE/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
-        - sed -i "s/\vault_secret_id/$VAULT_SECRET_ID/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
-        - sed -i "s/\vault_wrapped_secret_id/$VAULT_WRAPPED_SECRET_ID/g" /deployment-tool/plans/${CLOUD}/user_data.tpl
+        # inhale the vault variables
+        - export VAULT_MGMT_IP=$(cat ${VAULT_PATH}/${VAULT_STATE_FILE} | jq .outputs.vault_server_public_ip.value -r)
+        - export VAULT_SERVER_PUBLIC_HTTP=$(cat ${VAULT_PATH}/${VAULT_STATE_FILE} | jq .outputs.vault_server_public_http.value -r)
+        - export VAULT_APP_ROLE=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id')
+        - export VAULT_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
+        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
+        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-2-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
+        # replace cloud plan defaults with vault variables
+        - sed -i "s \vault_server_public_http ${VAULT_SERVER_PUBLIC_HTTP} g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
+        - sed -i "s/\vault_app_role/${VAULT_APP_ROLE}/g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
+        - sed -i "s/\vault_secret_id/${VAULT_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
+        - sed -i "s/\vault_wrapped_secret_id/${VAULT_WRAPPED_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
+        # install deployment tool requirements
+        - pip install -r deployment-tool/dependencies/requirements.txt
         # deploy environment - required artifacts will be place in output folder
-        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}
-        # Collecting deployment metadata
-        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}/user_data.tpl -A 1000 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - deployment-tool/deploy.sh --deployment-plan runtime_init_${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH} --skip-requirements "true"
+        # collect deployment metadata
+        - grep "\-\-\-" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl -A 1000 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - export MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
         - export USERNAME=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
         - export PASSWORD=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
@@ -306,8 +296,9 @@ publish_container:
         - bash tests/scripts/verify_bash_available.sh
         - if [[ $? != 0 ]]; then exit 1; fi
         - echo "Installing RPM and executing"
+        - ls -la dist/
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-        # Workaround: copying over declaration to support bigip version with no user-data support
+        # workaround: copying over declaration to support bigip version with no user-data support
         - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml
         - sed "s/\${secret_id}/$SECRET_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
         - sed "s/\${domain}/$TF_VAR_DOMAIN/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml
@@ -315,12 +306,12 @@ publish_container:
         - mv env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
-        # End of Workaround.
+        # end of workaround.
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash -c 'export TEEM_API_ENVIRONMENT=staging && f5-bigip-runtime-init -c /config/cloud/onboard_config'"
-        # Attempt to re-run self-executable and runtime-init
-        # Using updated config because wrapped Vault token can only be used once
+        # attempt to re-run self-executable and runtime-init
+        # using updated config because wrapped Vault token can only be used once
         - sed "s/${VAULT_WRAPPED_SECRET_ID}/${VAULT_WRAPPED_SECRET_ID_2}/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
         - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
@@ -408,8 +399,6 @@ test_functional_init_azure_gov_v16:
     <<: *test_functional_init_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
@@ -436,7 +425,6 @@ test_functional_init_azure_gov_v15:
     <<: *test_functional_init_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -463,12 +451,10 @@ test_functional_init_azure_gov_v14:
     <<: *test_functional_init_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v14"
         VERSION_PATH: "v14"
         TF_VAR_DOMAIN: "usgovcloudapi"
         TF_VAR_location: "usgovvirginia"
@@ -603,8 +589,6 @@ test_functional_init_base_v16:
     <<: *test_functional_init_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "base"
@@ -622,7 +606,6 @@ test_functional_init_base_v15:
     <<: *test_functional_init_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
@@ -640,8 +623,6 @@ test_functional_init_base_v14:
     <<: *test_functional_init_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "base"
@@ -713,7 +694,8 @@ test_functional_execute_azure_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v16
-        - build_package
+    needs:
+        - test_functional_init_azure_v16
 
 # run functional tests: azure
 test_functional_execute_azure_v15:
@@ -738,7 +720,8 @@ test_functional_execute_azure_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
-        - build_package
+    needs:
+        - test_functional_init_azure_v15
 
 # run functional tests: azure
 test_functional_execute_azure_v14:
@@ -764,15 +747,14 @@ test_functional_execute_azure_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v14
-        - build_package
+    needs:
+        - test_functional_init_azure_v14
 
 # run functional tests: azure goverment
 test_functional_execute_azure_gov_v16:
     <<: *test_functional_execute_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
@@ -793,14 +775,14 @@ test_functional_execute_azure_gov_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v16
-        - build_package
+    needs:
+        - test_functional_init_azure_gov_v16
 
 # run functional tests: azure goverment
 test_functional_execute_azure_gov_v15:
     <<: *test_functional_execute_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -821,15 +803,14 @@ test_functional_execute_azure_gov_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
-        - build_package
+    needs:
+        - test_functional_init_azure_gov_v15
 
 # run functional tests: azure
 test_functional_execute_azure_gov_v14:
     <<: *test_functional_execute_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
@@ -850,7 +831,8 @@ test_functional_execute_azure_gov_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v14
-        - build_package
+    needs:
+        - test_functional_init_azure_gov_v14
 
 # run functional tests: aws
 test_functional_execute_aws_v16:
@@ -871,8 +853,8 @@ test_functional_execute_aws_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v16
-        - build_package
-
+    needs:
+        - test_functional_init_aws_v16
 
 # run functional tests: aws
 test_functional_execute_aws_v15:
@@ -892,7 +874,8 @@ test_functional_execute_aws_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v15
-        - build_package
+    needs:
+        - test_functional_init_aws_v15
 
 test_functional_execute_aws_v14:
     <<: *test_functional_execute_generic
@@ -912,7 +895,8 @@ test_functional_execute_aws_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v14
-        - build_package
+    needs:
+        - test_functional_init_aws_v14
 
 # run functional tests: gcp
 test_functional_execute_gcp_v16:
@@ -933,7 +917,8 @@ test_functional_execute_gcp_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v16
-        - build_package
+    needs:
+        - test_functional_init_gcp_v16
 
 test_functional_execute_gcp_v15:
     <<: *test_functional_execute_generic
@@ -952,7 +937,8 @@ test_functional_execute_gcp_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v15
-        - build_package
+    needs:
+        - test_functional_init_gcp_v15
 
 test_functional_execute_gcp_v14:
     <<: *test_functional_execute_generic
@@ -972,15 +958,14 @@ test_functional_execute_gcp_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v14
-        - build_package
+    needs:
+        - test_functional_init_gcp_v14
 
 # run base package tests
 test_functional_execute_base_v16:
     <<: *test_functional_execute_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "base"
@@ -994,13 +979,13 @@ test_functional_execute_base_v16:
             - $TEST_SUITE == "gcp"
     dependencies:
         - test_functional_init_base_v16
-        - build_package
+    needs:
+        - test_functional_init_base_v16
 
 test_functional_execute_base_v15:
     <<: *test_functional_execute_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
@@ -1014,14 +999,13 @@ test_functional_execute_base_v15:
             - $TEST_SUITE == "gcp"
     dependencies:
         - test_functional_init_base_v15
-        - build_package
+    needs:
+        - test_functional_init_base_v15
 
 test_functional_execute_base_v14:
     <<: *test_functional_execute_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "base"
@@ -1035,21 +1019,20 @@ test_functional_execute_base_v14:
             - $TEST_SUITE == "gcp"
     dependencies:
         - test_functional_init_base_v14
-        - build_package
-
+    needs:
+        - test_functional_init_base_v14
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
-.test_functional_cleanup_generic: &test_functional_cleanup_generic
+test_functional_cleanup_vault:
     stage: functional_test_cleanup
-    image: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-runtime-init:${CI_COMMIT_REF_NAME}
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/hashicorp/terraform:${TERRAFORM_VERSION}
     retry:
         max: 1
     when: always
     script:
-        # copying artifacts inherited from functional_test_init target to root directory
-        - cp -a env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/. .
-        # teardown environment
-        - /deployment-tool/deploy.sh --deployment-plan ${CLOUD} --action delete
+        - cd ${VAULT_PATH}
+        - terraform init
+        - terraform destroy -auto-approve
     tags:
         - cm-official-docker-executor
     only:
@@ -1062,6 +1045,42 @@ test_functional_execute_base_v14:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
             - $PUBLISH_RPM == "true"
+    allow_failure: true
+
+.test_functional_cleanup_generic: &test_functional_cleanup_generic
+    stage: functional_test_cleanup
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/hashicorp/terraform:${TERRAFORM_VERSION}
+    retry:
+        max: 1
+    when: always
+    script:
+        # deploy environment
+        - apk add --update
+        - apk add bash curl jq build-base openssl-dev libffi-dev git
+        - apk add jq openssh-client sshpass python3 python3-dev
+        - ln -sf python3 /usr/bin/python
+        - python -m ensurepip
+        - ln -s pip3 /usr/bin/pip
+        - pip install --upgrade pip
+        - apk add npm
+        - pip install -r deployment-tool/dependencies/requirements.txt
+        # copying artifacts inherited from functional_test_init target to root directory
+        - cp -a env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/. .
+        # teardown environment
+        - deployment-tool/deploy.sh --deployment-plan runtime_init_${CLOUD} --action delete --skip-requirements "true"
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == "main"
+            - $CI_COMMIT_REF_NAME == "develop"
+            - $RUN_FUNCTIONAL_TESTS == "true"
+            - $CI_COMMIT_MESSAGE =~ /smart:run_functional_tests/
+    except:
+        variables:
+            - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_RPM == "true"
+    allow_failure: true
 
 # run functional tests: azure
 test_functional_cleanup_azure_v16:
@@ -1083,6 +1102,10 @@ test_functional_cleanup_azure_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v16
+        - test_functional_execute_azure_v16
+    needs:
+        - test_functional_init_azure_v16
+        - test_functional_execute_azure_v16
 
 test_functional_cleanup_azure_v15:
     <<: *test_functional_cleanup_generic
@@ -1102,6 +1125,10 @@ test_functional_cleanup_azure_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v15
+        - test_functional_execute_azure_v15
+    needs:
+        - test_functional_init_azure_v15
+        - test_functional_execute_azure_v15
 
 test_functional_cleanup_azure_v14:
     <<: *test_functional_cleanup_generic
@@ -1122,15 +1149,16 @@ test_functional_cleanup_azure_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_v14
-
+        - test_functional_execute_azure_v14
+    needs:
+        - test_functional_init_azure_v14
+        - test_functional_execute_azure_v14
 
 # run functional tests: azure gov
 test_functional_cleanup_azure_gov_v16:
     <<: *test_functional_cleanup_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
@@ -1153,12 +1181,15 @@ test_functional_cleanup_azure_gov_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v16
+        - test_functional_execute_azure_gov_v16
+    needs:
+        - test_functional_init_azure_gov_v16
+        - test_functional_execute_azure_gov_v16
 
 test_functional_cleanup_azure_gov_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
@@ -1181,18 +1212,20 @@ test_functional_cleanup_azure_gov_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v15
+        - test_functional_execute_azure_gov_v15
+    needs:
+        - test_functional_init_azure_gov_v15
+        - test_functional_execute_azure_gov_v15
 
 test_functional_cleanup_azure_gov_v14:
     <<: *test_functional_cleanup_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
+        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v14"
+        VERSION_PATH: "v14"
         TF_VAR_DOMAIN: "usgovcloudapi"
         TF_VAR_location: "usgovvirginia"
         TF_VAR_AZURE_ENVIROMENT: "usgovernment"
@@ -1210,6 +1243,10 @@ test_functional_cleanup_azure_gov_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_azure_gov_v14
+        - test_functional_execute_azure_gov_v14
+    needs:
+        - test_functional_init_azure_gov_v14
+        - test_functional_execute_azure_gov_v14
 
 # run functional tests: aws
 test_functional_cleanup_aws_v16:
@@ -1230,6 +1267,10 @@ test_functional_cleanup_aws_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v16
+        - test_functional_execute_aws_v16
+    needs:
+        - test_functional_init_aws_v16
+        - test_functional_execute_aws_v16
 
 test_functional_cleanup_aws_v15:
     <<: *test_functional_cleanup_generic
@@ -1248,6 +1289,10 @@ test_functional_cleanup_aws_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v15
+        - test_functional_execute_aws_v15
+    needs:
+        - test_functional_init_aws_v15
+        - test_functional_execute_aws_v15
 
 test_functional_cleanup_aws_v14:
     <<: *test_functional_cleanup_generic
@@ -1267,7 +1312,10 @@ test_functional_cleanup_aws_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_aws_v14
-
+        - test_functional_execute_aws_v14
+    needs:
+        - test_functional_init_aws_v14
+        - test_functional_execute_aws_v14
 
 # run functional tests: gcp
 test_functional_cleanup_gcp_v16:
@@ -1288,6 +1336,10 @@ test_functional_cleanup_gcp_v16:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v16
+        - test_functional_execute_gcp_v16
+    needs:
+        - test_functional_init_gcp_v16
+        - test_functional_execute_gcp_v16
 
 test_functional_cleanup_gcp_v15:
     <<: *test_functional_cleanup_generic
@@ -1306,6 +1358,10 @@ test_functional_cleanup_gcp_v15:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v15
+        - test_functional_execute_gcp_v15
+    needs:
+        - test_functional_init_gcp_v15
+        - test_functional_execute_gcp_v15
 
 test_functional_cleanup_gcp_v14:
     <<: *test_functional_cleanup_generic
@@ -1325,15 +1381,16 @@ test_functional_cleanup_gcp_v14:
             - $TEST_SUITE == "base"
     dependencies:
         - test_functional_init_gcp_v14
-
+        - test_functional_execute_gcp_v14
+    needs:
+        - test_functional_init_gcp_v14
+        - test_functional_execute_gcp_v14
 
 # run functional tests: base
 test_functional_cleanup_base_v16:
     <<: *test_functional_cleanup_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "base"
@@ -1346,12 +1403,15 @@ test_functional_cleanup_base_v16:
             - $TEST_SUITE == "gcp"
     dependencies:
         - test_functional_init_base_v16
+        - test_functional_execute_base_v16
+    needs:
+        - test_functional_init_base_v16
+        - test_functional_execute_base_v16
 
 test_functional_cleanup_base_v15:
     <<: *test_functional_cleanup_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
@@ -1364,13 +1424,15 @@ test_functional_cleanup_base_v15:
             - $TEST_SUITE == "gcp"
     dependencies:
         - test_functional_init_base_v15
+        - test_functional_execute_base_v15
+    needs:
+        - test_functional_init_base_v15
+        - test_functional_execute_base_v15
 
 test_functional_cleanup_base_v14:
     <<: *test_functional_cleanup_generic
     only:
         variables:
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
-            - $TEST_SUITE == "all" && $BIGIP_VERSION == "all"
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "base"
@@ -1383,6 +1445,10 @@ test_functional_cleanup_base_v14:
             - $TEST_SUITE == "gcp"
     dependencies:
         - test_functional_init_base_v14
+        - test_functional_execute_base_v14
+    needs:
+        - test_functional_init_base_v14
+        - test_functional_execute_base_v14
 
 # End of Funtional tests
 

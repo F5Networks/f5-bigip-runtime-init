@@ -1,11 +1,11 @@
-# BIG-IP Runtime Init
+# F5 BIG-IP Runtime Init
 
 [![Releases](https://img.shields.io/github/release/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/releases)
 [![Issues](https://img.shields.io/github/issues/f5networks/f5-bigip-runtime-init.svg)](https://github.com/f5networks/f5-bigip-runtime-init/issues)
 
 
 ## Contents
-- [BIG-IP Runtime Init](#big-ip-runtime-init)
+- [F5 BIG-IP Runtime Init](#big-ip-runtime-init)
   - [Contents](#contents)
   - [Introduction](#introduction)
   - [Overview](#overview)
@@ -49,7 +49,7 @@
 
 ## Introduction
 
-BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. It does this by providing a single convenient YAML (1.2 spec) or JSON-based configuration file, which
+F5 BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP Virtual Edition. It does this by providing a single convenient YAML (1.2 spec) or JSON-based configuration file, which
 * leverages [F5 Automation Tool Chain](https://www.f5.com/pdf/products/automation-toolchain-overview.pdf) declarations that are easier to author, validate, and maintain as code (vs. bigip.conf files);
 * renders secrets from public cloud vaults; and
 * renders runtime variables from metadata services.
@@ -57,7 +57,7 @@ BIG-IP Runtime Init is a tool that aims to simplify startup scripts for BIG-IP V
 The result is a complete overlay deployment tool for configuring a BIG-IP instance. This allows us to extend our cloud solutions from native templates to other instance provisioning tools, such as Terraform and Ansible. For more information regarding sending startup scripts to BIG-IP VE, see [VE documentation](https://clouddocs.f5.com/cloud/public/v1/shared/cloudinit.html).
 
 
-![BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init_animated.gif)
+![F5 BIG-IP Runtime Init](diagrams/f5_bigip_runtime_init_animated.gif)
 
     
 ## Overview
@@ -119,11 +119,11 @@ Based on the content of the provided YAML or JSON configuration file, BIG-IP Run
   - provisions a module (for example, APM) that creates a disk volume
 
 ## Validated BIG-IP versions
-BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
+F5 BIG-IP Runtime Init has been tested and validated with the following versions of BIG-IP:
 
 | BIG-IP Version | Build Number |
 | --- | --- |
-| 16.1.2.2 | 0.0.28 |
+| 16.1.3.1 | 0.0.11 |
 | 15.1.5.1 | 0.0.14 |
 | 14.1.4.6 | 0.0.8 |
 
@@ -208,13 +208,13 @@ controls:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.29.0
+      extensionVersion: {{DO_VERSION}}
     - extensionType: as3
-      extensionVersion: 3.36.0
+      extensionVersion: {{AS3_VERSION}}
     - extensionType: ts
-      extensionVersion: 1.28.0
+      extensionVersion: {{TS_VERSION}}
     - extensionType: fast
-      extensionVersion: 1.17.0
+      extensionVersion: {{FAST_VERSION}}
 ```
 
 See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and [/examples/runtime_configs](examples/runtime_configs/) for additional examples.
@@ -250,7 +250,7 @@ export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly &&  f5-bigip-runtime-init --config-
 
 
  - **extensionInstallDelayInMs** 
-    - *Description:* Defines a delay between extensions installations. 
+    - *Description:* Defines a delay between extensions installations. *NOTE: If not provided and the extension package is already installed, the default delay of 10 seconds is skipped.*
     - *Default:* `10000`
     - *Environment Variable:* F5_BIGIP_RUNTIME_EXTENSION_INSTALL_DELAY_IN_MS (number)
 
@@ -575,6 +575,7 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
     ```
 
     *Azure Self-IP*
+    {{=<% %>=}}
     ```yaml
     runtime_parameters:
       - name: SELF_IP_EXTERNAL
@@ -584,7 +585,28 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
           environment: azure
           field: ipv4
           index: 1
+      - name: SELF_IP_EXTERNAL_IPV6
+        type: metadata
+        metadataProvider:
+          type: network
+          environment: azure
+          field: ipv6
+          index: 1
+    service_operations:
+      - extensionType: do
+        value:
+          Common:
+            class: Tenant
+            external-self:
+              class: SelfIp
+              address: '{{{SELF_IP_EXTERNAL}}}'
+              vlan: external
+            external-self-ipv6:
+              class: SelfIp
+              address: '{{{SELF_IP_EXTERNAL_IPV6}}}/64'
+              vlan: external
     ```
+    <%={{ }}=%>
 
     *GCP Self-IP*
     ```yaml
@@ -598,9 +620,10 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
           index: 0
     ```
 
-    Returns the CIDR address (ex. `10.0.0.5/24`) which is required by the Self-IP. 
+    IPv4: Returns the CIDR address (ex. `10.0.0.5/24`) which is required by the Self-IP.
+    IPv6: Returns the address (ex. ab:ff:ff::dfd). Must provide the prefix.
 
-    The output can be further transformed using ipcalc functionality:
+    The output can be further transformed using ipcalc functionality (IPv4 only):
 
 
     The ipcalc functionality provides the following transformation options: 
@@ -808,13 +831,13 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.29.0
+          extensionVersion: {{DO_VERSION}}
         - extensionType: as3
-          extensionVersion: 3.36.0
+          extensionVersion: {{AS3_VERSION}}
         - extensionType: ts
-          extensionVersion: 1.28.0
+          extensionVersion: {{TS_VERSION}}
         - extensionType: fast
-          extensionVersion: 1.17.0
+          extensionVersion: {{FAST_VERSION}}
     ```
 
  - *with hash checking*
@@ -823,17 +846,17 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.29.0
-          extensionHash: c0bd44f0d63e6bc25a5066d74c20cb6c86d3faad2c4eaa0cd04a47eb30ca104f
+          extensionVersion: {{DO_VERSION}}
+          extensionHash: {{DO_HASH}}
         - extensionType: as3
-          extensionVersion: 3.36.0
-          extensionHash: f7d88910535b97e024b7208b521c9f1a802d39176dc0f81da0ed166abc1617e0
+          extensionVersion: {{AS3_VERSION}}
+          extensionHash: {{AS3_HASH}}
         - extensionType: ts
-          extensionVersion: 1.28.0
-          extensionHash: c3dc9cd67ef89815c58da4a148080744ef7b4337e53d67f00a46c8b591fb8187
+          extensionVersion: {{TS_VERSION}}
+          extensionHash: {{TS_HASH}}
         - extensionType: fast
-          extensionVersion: 1.17.0
-          extensionHash: 94109f1c3e1180080779de91a5a91ff7baf6dfb9b373396d2b785f886c92550a
+          extensionVersion: {{FAST_VERSION}}
+          extensionHash: {{FAST_HASH}}
     ```
 
  - *custom from URL*
@@ -842,14 +865,14 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
       - extensionType: do
-        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.29.0/f5-declarative-onboarding-1.29.0-8.noarch.rpm
-        extensionVersion: 1.29.0
+        extensionUrl: {{{DO_URL}}}
+        extensionVersion: {{DO_VERSION}}
       - extensionType: as3
-        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.36.0-6.noarch.rpm
-        extensionVersion: 3.36.0
+        extensionUrl: {{{AS3_URL}}}
+        extensionVersion: {{AS3_VERSION}}
       - extensionType: fast
-        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm
-        extensionVersion: 1.17.0
+        extensionUrl: {{{FAST_URL}}}
+        extensionVersion: {{FAST_VERSION}}     
     ```
 
     *NOTE: ```extensionVersion``` is not required when used with the ```extensionUrl``` field.*
@@ -1353,7 +1376,7 @@ If possible, try to log in to the BIG-IP instance via SSH (mgmt interface) to ex
     - */var/log/cloud-init-output.log*
   - runtime-init logs:
     - */var/log/cloud/startup-script.log*: This file contains events that happen prior to execution of f5-bigip-runtime-init. For example, if the Runtime Init package failed to download, the installer failed to download a file, etc.
-    - */var/log/cloud/bigipRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
+    - */var/log/cloud/bigIpRuntimeInit.log*: This file contains events logged by the f5-bigip-runtime-init onboarding utility. If the configuration is invalid causing onboarding to fail, you will see those events logged here. If the deployment is successful, you will see an event with the body "All operations completed successfully".
   - Automation Tool Chain logs:
     - */var/log/restnoded/restnoded.log*: This file contains events logged by the BIG-IP Automation Toolchain components. If an Automation Toolchain declaration fails to deploy, you will see more details for those events logged here.
 

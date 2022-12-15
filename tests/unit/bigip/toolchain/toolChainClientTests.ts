@@ -34,8 +34,8 @@ const standardMgmtOptions = {
 };
 
 const standardToolchainOptions = {
-    extensionVersion: '3.17.0',
-    extensionHash: '41151962912408d9fc6fc6bde04c006b6e4e155fc8cc139d1797411983b7afa6',
+    extensionVersion: '3.41.0',
+    extensionHash: 'ced0948208f4dc29af7c0ea3a925a28bf8b8690a263588374e3c3d2689999490',
     maxRetries: 3,
     retryInterval: 2500,
     verifyTls: true,
@@ -87,7 +87,7 @@ describe('BIG-IP Metadata Client', () => {
 
     it('should return the download URL for an AT package', () => {
         const component = 'as3';
-        const url = 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.17.0/f5-appsvcs-3.17.0-3.noarch.rpm';
+        const url = 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.41.0/f5-appsvcs-3.41.0-1.noarch.rpm';
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
 
@@ -105,7 +105,7 @@ describe('BIG-IP Metadata Client', () => {
 
     it('should return the download package name', () => {
         const component = 'as3';
-        const packageName = 'f5-appsvcs-3.17.0-3.noarch.rpm';
+        const packageName = 'f5-appsvcs-3.41.0-1.noarch.rpm';
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, component, standardToolchainOptions);
 
@@ -172,7 +172,7 @@ describe('BIG-IP Package Client', () => {
             .reply(200, installedPackages);
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '1'
             },
             '/config/fake-ssl' : {
                 'ca-bundle.crt': '1'
@@ -221,12 +221,11 @@ describe('BIG-IP Package Client', () => {
             .catch(err => Promise.reject(err));
     });
 
-
     it('should validate isInstalled method when package installed and required update', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainOptions = {
             extensionType: 'as3',
-            extensionVersion: '3.17.0',
+            extensionVersion: '3.41.0',
             extensionUrl: 'https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm',
             extensionHash: 'ba2db6e1c57d2ce6f0ca20876c820555ffc38dd0a714952b4266c4daf959d987',
             maxRetries: 3,
@@ -262,12 +261,12 @@ describe('BIG-IP Package Client', () => {
         const packageClient = toolChainClient.package;
         constants.RETRY.SHORT_COUNT = 5;
         nock('https://github.com')
-            .get('/F5Networks/f5-appsvcs-extension/releases/download/v3.17.0/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .get('/F5Networks/f5-appsvcs-extension/releases/download/v3.41.0/f5-appsvcs-3.41.0-1.noarch.rpm')
             .times(constants.RETRY.SHORT_COUNT)
             .replyWithError('ECONNRESET');
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '1'
             },
             '/config/fake-ssl' : {
                 'ca-bundle.crt': '1'
@@ -326,20 +325,20 @@ describe('BIG-IP Package Client', () => {
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
         nock('http://localhost:8100')
-            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.41.0-1.noarch.rpm')
             .times(30)
             .reply(200, {
                 id: '1'
             });
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '1'
             }
         });
         return packageClient.install()
             .then((response) => {
                 assert.strictEqual(response.component, 'as3');
-                assert.strictEqual(response.version, '3.17.0');
+                assert.strictEqual(response.version, '3.41.0');
                 assert.ok(response.installed);
                 nock.cleanAll();
             })
@@ -365,14 +364,14 @@ describe('BIG-IP Package Client', () => {
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
         nock('http://localhost:8100')
-            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.41.0-1.noarch.rpm')
             .times(30)
             .reply(200, {
                 id: '1'
             });
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '1'
             },
             '/config/fake-ssl' : {
                 'ca-bundle.crt': '1'
@@ -381,13 +380,12 @@ describe('BIG-IP Package Client', () => {
         return packageClient.install()
             .then((response) => {
                 assert.strictEqual(response.component, 'as3');
-                assert.strictEqual(response.version, '3.17.0');
+                assert.strictEqual(response.version, '3.41.0');
                 assert.ok(response.installed);
                 nock.cleanAll();
             })
             .catch(err => Promise.reject(err));
     }).timeout(300000);
-
 
     it('should validate install done via FILE', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
@@ -444,7 +442,7 @@ describe('BIG-IP Package Client', () => {
             .times(constants.RETRY.SHORT_COUNT)
             .reply(200);
         nock('http://localhost:8100')
-            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.41.0-1.noarch.rpm')
             .times(constants.RETRY.SHORT_COUNT)
             .times(30)
             .reply(200, {
@@ -452,7 +450,7 @@ describe('BIG-IP Package Client', () => {
             });
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '12345'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '12345'
             },
             '/config/fake-ssl' : {
                 'ca-bundle.crt': '1'
@@ -468,7 +466,7 @@ describe('BIG-IP Package Client', () => {
 
     it('should validate install failure when package hash is not matching', () => {
         const standardToolchainOptions = {
-            extensionVersion: '3.17.0',
+            extensionVersion: '3.41.0',
             extensionHash: 'wrongHashValueHere',
             maxRetries: 3,
             retryInterval: 2500,
@@ -492,14 +490,14 @@ describe('BIG-IP Package Client', () => {
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
         nock('http://localhost:8100')
-            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.41.0-1.noarch.rpm')
             .times(30)
             .reply(200, {
                 id: '1'
             });
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '1'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '1'
             }
         });
         return packageClient.install()
@@ -532,14 +530,14 @@ describe('BIG-IP Package Client', () => {
             .get('/mgmt/shared/file-transfer/uploads/')
             .reply(200);
         nock('http://localhost:8100')
-            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.17.0-3.noarch.rpm')
+            .post('/mgmt/shared/file-transfer/uploads/f5-appsvcs-3.41.0-1.noarch.rpm')
             .times(40)
             .reply(200, {
                 id: '1'
             });
         mock({
             '/var/lib/cloud/icontrollx_installs': {
-                'f5-appsvcs-3.17.0-3.noarch.rpm': '12345'
+                'f5-appsvcs-3.41.0-1.noarch.rpm': '12345'
             }
         });
         return packageClient.install()
