@@ -87,6 +87,25 @@ describe('Util', () => {
         });
     });
 
+    describe('convertUrl', () => {
+        it('should validate convertUrl for AWS s3', async () => {
+            const result = util.convertUrl('s3://mybucket/share/test/file');
+            assert.ok(result === 'https://mybucket.s3.amazonaws.com/share/test/file');
+        });
+        it('should validate convertUrl for GCP gs', async () => {
+            const result = util.convertUrl('gs://mybucket/test/file');
+            assert.ok(result === 'https://storage.googleapis.com/storage/v1/b/mybucket/o/test%2Ffile?alt=media');
+        });
+        it('should validate convertUrl for GCP https', async () => {
+            const result = util.convertUrl('https://storage.cloud.google.com/mybucket/test/file');
+            assert.ok(result === 'https://storage.googleapis.com/storage/v1/b/mybucket/o/test%2Ffile?alt=media');
+        });
+        it('should validate convertUrl for https', async () => {
+            const result = util.convertUrl('https://mybucket.s3.amazonaws.com/share/test/file');
+            assert.ok(result === 'https://mybucket.s3.amazonaws.com/share/test/file');
+        });
+    });
+
     describe('makeRequest', () => {
         afterEach(() => {
             if(!nock.isDone()) {

@@ -29,6 +29,7 @@ export interface CloudClient {
     getCloudName(): string;
     getCustomerId(): string;
     getRegion(): string;
+    getAuthHeaders(): object;
 }
 
 /**
@@ -107,5 +108,19 @@ export class AbstractCloudClient implements CloudClient{
      */
     getRegion(): string {
         throw new Error('getRegion method must be implemented in child class!');
+    }
+
+    /**
+     * Get storage auth headers
+     * 
+     * @param source - Optional source URL for S3 objects
+     * 
+     * @param resource - Optional resource scope for Azure
+     *
+     * @returns {object} A promise which is resolved with auth headers
+     *
+     */
+     getAuthHeaders(source?: string, resource?: string): Promise<object> {
+        throw new Error('getAuthHeaders method must be implemented in child class!');
     }
 }

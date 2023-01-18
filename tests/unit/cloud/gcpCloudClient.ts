@@ -286,7 +286,6 @@ describe('CloudClient - GCP', () => {
             .catch(err => Promise.reject(err));
     });
 
-
     it('should validate getMetadata returns network ip field value', () => {
         nock('http://metadata.google.internal')
             .get('/computeMetadata/v1/instance/network-interfaces/0/ip')

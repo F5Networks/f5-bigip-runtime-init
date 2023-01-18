@@ -150,29 +150,23 @@ for filename in $config_files; do
     fi
 done
 
+## need to revisit this since configs have moved to deployment-tool
+# echo "***** Phase 5. Checking all configs used by functional tests"
+# SUPPORTED_CLOUDS=(aws azure gcp base)
 
-echo "***** Phase 5. Checking all configs used by functional tests"
-SUPPORTED_CLOUDS=(aws azure gcp base)
-
-for cloud in ${SUPPORTED_CLOUDS[@]}; do
-    echo ">>>>> Verifying user-data used for $cloud functional tests"
-    grep "\-\-\-" plans/${cloud}/user_data.tpl -A 150 > temp_$cloud.yaml
-    for item in ${component_version_map[@]}; do
-        latestVersion=${item##*:}
-        extensionType=${item%:*}
-        currUsedVersion=$(cat temp_$cloud.yaml | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
-        if [[ ! -z $currUsedVersion ]]; then
-          if [[ $currUsedVersion != $latestVersion ]]; then
-                echo ">>>> WARNING: Update user-data, used for $cloud functional tests, with new version ($latestVersion) of AT Component: $extensionType"
-                touch $cloud.update
-          fi
-        fi
-    done
-    rm temp_$cloud.yaml
-done
-
-
-
-
-
-
+# for cloud in ${SUPPORTED_CLOUDS[@]}; do
+#     echo ">>>>> Verifying user-data used for $cloud functional tests"
+#     grep "\-\-\-" deployment-tool/plans/runtime_init_${cloud}/templates/user_data.tpl -A 1000 > temp_$cloud.yaml
+#     for item in ${component_version_map[@]}; do
+#         latestVersion=${item##*:}
+#         extensionType=${item%:*}
+#         currUsedVersion=$(cat temp_$cloud.yaml | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
+#         if [[ ! -z $currUsedVersion ]]; then
+#           if [[ $currUsedVersion != $latestVersion ]]; then
+#                 echo ">>>> WARNING: Update user-data, used for $cloud functional tests, with new version ($latestVersion) of AT Component: $extensionType"
+#                 touch $cloud.update
+#           fi
+#         fi
+#     done
+#     rm temp_$cloud.yaml
+# done

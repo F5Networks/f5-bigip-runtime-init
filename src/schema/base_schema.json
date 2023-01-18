@@ -38,7 +38,7 @@
                     },
                     "type": {
                         "type": "string",
-                        "enum": ["static", "secret", "metadata", "url", "tag"]
+                        "enum": ["static", "secret", "metadata", "url", "tag", "storage"]
                     },
                     "returnType": {
                         "type": "string",
@@ -203,7 +203,7 @@
                         "properties": {
                             "environment": {
                                 "type": "string",
-                                "enum": ["gcp", "aws", "azure"]
+                                "enum": ["aws", "azure", "gcp"]
                             },
                             "type": {
                                 "type": "string",
@@ -276,6 +276,39 @@
                             }
                         },
                         "required": ["environment", "key"],
+                        "additionalProperties": false
+                    },
+                    "storageProvider": {
+                        "type": "object",
+                        "properties": {
+                            "environment": {
+                                "type": "string",
+                                "enum": ["aws", "azure", "gcp", "private"]
+                            },
+                            "source": {
+                                "description": "The URL of the AWS, Azure, Google Cloud Storage, or privately hosted source file",
+                                "type": "string",
+                                "pattern": "^(https?|http?|s3?|gs?):\/\/[^\\s$.?#].[^\\s]*$",
+                                "examples": ["https://mybucket.s3.amazonaws.com/mykey/myfile", "https://mystorageaccount.blob.core.windows.net/mycontainer/myfile", "https://storage.cloud.google.com/mybucket/mykey/myfile", "https://myserver/myfile"]
+                            },
+                            "destination": {
+                                "description": "The location where the downloaded file will be saved",
+                                "type": "string",
+                                "pattern": "^(\/var\/tmp\/|\/var\/config\/rest\/downloads\/)",
+                                "examples": ["/var/tmp/file1", "/var/config/rest/downloads/file1"]
+                            },
+                            "verifyTls": {
+                                "description": "For enabling secure site verification",
+                                "type": "boolean",
+                                "examples": ["true", "false"]
+                            },
+                            "trustedCertBundles": {
+                                "description": "List of paths to certificate bundles to use for all https requests",
+                                "type": "array",
+                                "examples": ["/path/to/cert.pem", "/path/to/another_cert.pem"]
+                            }
+                        },
+                        "required": ["environment", "source", "destination"],
                         "additionalProperties": false
                     },
                     "query": {
@@ -437,7 +470,6 @@
                             },
                             "extensionUrl": {
                                 "type": "string",
-                                "pattern": "^(https?|file):\/\/[^\\s$.?#].[^\\s]+\\.(rpm)$",
                                 "examples": ["https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm", "file:///var/config/rest/downloads/f5-declarative-onboarding-1.10.0-2.noarch.rpm"]
                             },
                             "extensionVerificationEndpoint": {

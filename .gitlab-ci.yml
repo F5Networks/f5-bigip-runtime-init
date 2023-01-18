@@ -116,6 +116,7 @@ unit_tests:
             - schedules
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
+    allow_failure: true
 
 # check for disallowed content in all files, this supplements
 # the native pre-receive push rules built into GitLab for secrets
@@ -191,8 +192,9 @@ build_package:
         - apt-get install -y rpm
         # install node dependencies
         - npm install --unsafe-perm
+        - if [ -n "$TEST_SUITE" ]; then export CLOUDS="-- --c $TEST_SUITE"; else export CLOUDS=""; fi
         # build package artifact
-        - npm run build
+        - npm run build ${CLOUDS}
     tags:
         - cm-official-docker-executor
     artifacts:
@@ -218,7 +220,7 @@ test_functional_init_vault:
         - cd ${VAULT_PATH}
         - terraform init
         - terraform apply -auto-approve
-        - sleep 3m
+        - sleep 5m
         - cd $current_dir
         - cat ${VAULT_PATH}/${VAULT_STATE_FILE}
     tags:
@@ -273,31 +275,36 @@ test_functional_init_vault:
         - export VAULT_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
         - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
         - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-2-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
+        - echo "VAULT_APP_ROLE is ${VAULT_APP_ROLE}"
+        - echo "VAULT_SECRET_ID is ${VAULT_SECRET_ID}"
+        - echo "VAULT_WRAPPED_SECRET_ID is ${VAULT_WRAPPED_SECRET_ID}"
+        - echo "VAULT_WRAPPED_SECRET_ID_2 is ${VAULT_WRAPPED_SECRET_ID_2}"
         # replace cloud plan defaults with vault variables
-        - sed -i "s \vault_server_public_http ${VAULT_SERVER_PUBLIC_HTTP} g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
-        - sed -i "s/\vault_app_role/${VAULT_APP_ROLE}/g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
-        - sed -i "s/\vault_secret_id/${VAULT_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
-        - sed -i "s/\vault_wrapped_secret_id/${VAULT_WRAPPED_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl
+        - sed -i "s \vault_server_public_http ${VAULT_SERVER_PUBLIC_HTTP} g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
+        - sed -i "s/\vault_app_role/${VAULT_APP_ROLE}/g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
+        - sed -i "s/\vault_secret_id/${VAULT_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
+        - sed -i "s/\vault_wrapped_secret_id/${VAULT_WRAPPED_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
         # install deployment tool requirements
         - pip install -r deployment-tool/dependencies/requirements.txt
+        # check my ip for troubleshooting security group issues
+        - my_ip=$(curl http://ipv4.icanhazip.com)
+        - echo "${my_ip}/32"
+        # gather package version and build
+        - export VERSION=$(cat package.json | jq -r ".version")
+        - export RELEASE=$(cat package.json | jq -r ".release")
         # deploy environment - required artifacts will be place in output folder
         - deployment-tool/deploy.sh --deployment-plan runtime_init_${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH} --skip-requirements "true"
         # collect deployment metadata
-        - grep "\-\-\-" deployment-tool/plans/runtime_init_${CLOUD}/user_data.tpl -A 1000 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
+        - grep "\-\-\-" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl -A 1000 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml 
         - export MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
         - export USERNAME=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
         - export PASSWORD=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
         - export DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .deploymentId -r)
         - export SECRET_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .secret_id -r)
         - export NAME=$(cat package.json | jq .name -r)
-        - export VERSION=$(cat package.json | jq -r ".version")
-        - export RELEASE=$(cat package.json | jq -r ".release")
         - echo "Verifying that BIGIP is ready to accept commands"
         - bash tests/scripts/verify_bash_available.sh
         - if [[ $? != 0 ]]; then exit 1; fi
-        - echo "Installing RPM and executing"
-        - ls -la dist/
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
         # workaround: copying over declaration to support bigip version with no user-data support
         - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml
         - sed "s/\${secret_id}/$SECRET_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
@@ -306,15 +313,18 @@ test_functional_init_vault:
         - mv env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
-        # end of workaround.
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash -c 'export TEEM_API_ENVIRONMENT=staging && f5-bigip-runtime-init -c /config/cloud/onboard_config'"
-        # attempt to re-run self-executable and runtime-init
-        # using updated config because wrapped Vault token can only be used once
+        # updating config because wrapped Vault token can only be used once
         - sed "s/${VAULT_WRAPPED_SECRET_ID}/${VAULT_WRAPPED_SECRET_ID_2}/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
         - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
         - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
+        # end of workaround.
+        - echo "Installing RPM and executing"
+        # upload self installer
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash -c 'export TEEM_API_ENVIRONMENT=staging && f5-bigip-runtime-init -c /config/cloud/onboard_config'"
+        # re-run with updated config
+        - sleep 30
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config_update --skip-telemetry"
     tags:
