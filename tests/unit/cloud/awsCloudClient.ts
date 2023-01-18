@@ -466,7 +466,6 @@ describe('CloudClient - AWS', () => {
             });
     });
 
-
     it('should validate getTagValue method call when no matching Tags', () => {
         cloudClient._ec2 = sinon.stub();
         cloudClient._ec2.describeTags = sinon.stub().callsFake(() => ({

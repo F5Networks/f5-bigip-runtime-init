@@ -37,7 +37,7 @@ describe('Provider: Azure', () => {
             } else {
                 credential = new DefaultAzureCredential({ authorityHost: 'https://login.microsoftonline.us' });
             }
-            keyVaultClient = new SecretClient(`https://testvault-${funcUtils.getEnvironmentInfo().deploymentId}.vault.${funcUtils.getEnvironmentInfo().domain}.net/`, credential);
+            keyVaultClient = new SecretClient(`https://${funcUtils.getEnvironmentInfo().deploymentId}.vault.${funcUtils.getEnvironmentInfo().domain}.net/`, credential);
         }
 
         return keyVaultClient.getSecret('test-azure-admin-secret')

@@ -1,3 +1,4 @@
+---
 controls:
   logLevel: silly
   logFilename: "/var/log/cloud/bigIpRuntimeInit.log"
@@ -6,31 +7,31 @@ pre_onboard_enabled:
 - name: provision_rest
   type: inline
   commands:
-    - "/usr/bin/setdb provision.extramb 500"
-    - "/usr/bin/setdb restjavad.useextramb true"
+  - "/usr/bin/setdb provision.extramb 500"
+  - "/usr/bin/setdb restjavad.useextramb true"
 bigip_ready_enabled:
 - name: provision_asm_module
   type: inline
   commands:
-    - tmsh modify sys provision asm level nominal
+  - tmsh modify sys provision asm level nominal
 - name: save_sys_config
   type: inline
   commands:
-    - tmsh save sys config
+  - tmsh save sys config
 extension_packages:
   install_operations:
   - extensionType: do
-    extensionVersion: 1.34.0
-    extensionUrl: file:///var/config/rest/downloads/f5-declarative-onboarding-1.34.0-5.noarch.rpm
-    extensionHash: 5e58bc15a4c436494599dfc509c87f02400339e6c0ce8275df259d5f1585146b
+    extensionVersion: 1.35.0
+    extensionUrl: file:///var/config/rest/downloads/f5-declarative-onboarding-1.35.0-6.noarch.rpm
+    extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
   - extensionType: as3
-    extensionVersion: 3.41.0
-    extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.41.0/f5-appsvcs-3.41.0-1.noarch.rpm
-    extensionHash: ced0948208f4dc29af7c0ea3a925a28bf8b8690a263588374e3c3d2689999490
+    extensionVersion: 3.42.0
+    extensionUrl: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v.3.42.0/f5-appsvcs-3.42.0-5.noarch.rpm
+    extensionHash: dcb869775f00b2d1a4c8a7600beeb596a8da469caa7ddb30df02c4cdc48c37e2
   - extensionType: fast
-    extensionVersion: 1.22.0
-    extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.22.0/f5-appsvcs-templates-1.22.0-1.noarch.rpm
-    extensionHash: 71a1c826aaf1f8a0c2ffc3c2f7f6b40c881f51e15da471411b423339b9e65030
+    extensionVersion: 1.23.0
+    extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.23.0/f5-appsvcs-templates-1.23.0-1.noarch.rpm
+    extensionHash: d2580309047ff379820460be09e5b7202fe287e7fc5ffaad65106233aeb6e845
   - extensionType: ilx
     extensionUrl: file:///var/config/rest/downloads/myIlxApp.rpm
     extensionVerificationEndpoint: "/mgmt/shared/myIlxApp/info"

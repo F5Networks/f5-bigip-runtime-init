@@ -279,4 +279,20 @@ describe('CloudClient - Azure', () => {
                 assert.strictEqual(result, 'ace:cab:deca:deee::4');
             });
     });
+
+    it('should validate getAuthHeaders method returns correct headers', () => {
+        nock('http://169.254.169.254')
+            .get('/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com%2F')
+            .reply(200, { "access_token" : "myToken" });
+        cloudClient.getAuthHeaders('https://storage.azure.com')
+            .then((response) => {
+                assert.strictEqual(response, {
+                    'Authorization': `Bearer myToken`,
+                    'x-ms-version': '2017-11-09'
+                })
+            })
+            .catch(() => {
+                assert.fail();
+            });
+    });
 });

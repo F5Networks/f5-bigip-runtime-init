@@ -300,6 +300,172 @@ describe('Resolver Client', () => {
             });
     });
 
+    it('should validate resolveRuntimeParameters for AWS storageProvider type', () => {
+        nock('http://169.254.169.254')
+            .get('/latest/meta-data/iam/security-credentials/')
+            .reply(200, 'test-instance-profile');
+        nock('http://169.254.169.254')
+            .get('/latest/meta-data/iam/security-credentials/test-instance-profile')
+            .reply(200, {
+                "AccessKeyId" : "SOME_KEY_ID",
+                "SecretAccessKey" : 'SOME_ACCESS_KEY',
+                "Token" : "SOME_TOKEN"
+            });
+        nock('https://mybucket.s3.amazonaws.com')
+            .get('/mykey/myfile')
+            .reply(200, 'myParameterValue');
+        runtimeParameters = [
+            {
+                name: 'AWS_PARAMETER',
+                type: 'storage',
+                storageProvider: {
+                    environment: 'aws',
+                    source: 'https://mybucket.s3.amazonaws.com/mykey/myfile',
+                    destination: '/var/tmp/myfile'
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getAuthHeaders: sinon.stub().resolves({
+                    "Authorization": "AWS SOME_KEY_ID:SOME_SIGNATURE"
+                }),
+            };
+            return Promise.resolve(cloudClient);
+        });
+        resolver.utilsRef.readFileContent = sinon.stub().returns('myParameterValue');
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.AWS_PARAMETER, 'myParameterValue');
+            });
+    });
+
+    it('should validate resolveRuntimeParameters for Azure storageProvider type', () => {
+        nock('https://169.254.169.254')
+            .get('/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com%2F')
+            .reply(200, {"access_token" : "myToken"});
+        nock('https://mystorageaccount.blob.core.windows.net')
+            .get('/mycontainer/myfile')
+            .reply(200, 'myParameterValue');
+        runtimeParameters = [
+            {
+                name: 'AZURE_PARAMETER',
+                type: 'storage',
+                storageProvider: {
+                    environment: 'azure',
+                    source: 'https://mystorageaccount.blob.core.windows.net/mycontainer/myfile',
+                    destination: '/var/tmp/myfile'
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getAuthHeaders: sinon.stub().resolves({
+                    'Authorization': `Bearer myToken`,
+                    'x-ms-version': '2017-11-09'
+                }),
+            };
+            return Promise.resolve(cloudClient);
+        });
+        resolver.utilsRef.readFileContent = sinon.stub().returns('myParameterValue');
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.AZURE_PARAMETER, 'myParameterValue');
+            });
+    });
+
+    it('should validate resolveRuntimeParameters for GCP storageProvider type', () => {
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/service-accounts/?recursive=true')
+            .reply(200, {"default" : {"email" : "mysaemail"}});
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/instance/service-accounts/mysaemail/token')
+            .reply(200, {"access_token" : "myToken"});
+        nock('https://storage.cloud.google.com')
+            .get('/mybucket/mykey/myfile')
+            .reply(200, 'myParameterValue');
+        runtimeParameters = [
+            {
+                name: 'GCP_PARAMETER',
+                type: 'storage',
+                storageProvider: {
+                    environment: 'gcp',
+                    source: 'https://storage.cloud.google.com/mybucket/mykey/myfile',
+                    destination: '/var/tmp/myfile'
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.getCloudProvider = sinon.stub().callsFake(() => {
+            const cloudClient = {
+                init: sinon.stub(),
+                getAuthHeaders: sinon.stub().resolves({
+                    'Authorization': `Bearer myToken`
+                }),
+            };
+            return Promise.resolve(cloudClient);
+        });
+        resolver.utilsRef.readFileContent = sinon.stub().returns('myParameterValue');
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.GCP_PARAMETER, 'myParameterValue');
+            });
+    });
+
+    it('should validate resolveRuntimeParameters for Private storageProvider type', () => {
+        nock('https://myserver')
+            .get('/myfile')
+            .reply(200, 'myParameterValue');
+        runtimeParameters = [
+            {
+                name: 'PRIVATE_PARAMETER',
+                type: 'storage',
+                storageProvider: {
+                    environment: 'private',
+                    source: 'https://myserver/myfile',
+                    destination: '/var/tmp/myfile'
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.utilsRef.readFileContent = sinon.stub().returns('myParameterValue');
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.PRIVATE_PARAMETER, 'myParameterValue');
+            });
+    });
+
+    it('should validate resolveRuntimeParameters for storageProvider type returning JSON', () => {
+        nock('https://myserver')
+            .get('/myfile')
+            .reply(200, {
+                "myKey1" : "myParameterValue1",
+                "myKey2" : "myParameterValue2"
+            });
+        runtimeParameters = [
+            {
+                name: 'PRIVATE_PARAMETER',
+                type: 'storage',
+                storageProvider: {
+                    environment: 'private',
+                    source: 'https://myserver/myfile',
+                    destination: '/var/tmp/myfile'
+                }
+            }
+        ];
+        const resolver = new ResolverClient();
+        resolver.utilsRef.readFileContent = sinon.stub().returns('{"myKey1": "myParameterValue1", "myKey2": "myParameterValue2"}');
+        return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
+            .then((results) => {
+                assert.strictEqual(results.PRIVATE_PARAMETER.myKey1, 'myParameterValue1');
+                assert.strictEqual(results.PRIVATE_PARAMETER.myKey2, 'myParameterValue2');
+            });
+    });
+
     it('should validate resolveRuntimeParameters for hashicorp case', () => {
         sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
         logger = Logger.getLogger();
@@ -445,7 +611,6 @@ describe('Resolver Client', () => {
                 assert.strictEqual(results['SECRET_FROM_HASHICORP_VAULT'].secret2, 'asdasfdar212@');
             });
     });
-
 
     it('should validate resolveRuntimeParameters no secret match', () => {
         const resolver = new ResolverClient();
