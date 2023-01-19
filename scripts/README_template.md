@@ -1042,7 +1042,7 @@ For more examples, see the [examples/runtime_configs](examples/runtime_configs/s
 
 Allowed extensionTypes are `do`, `as3`, `ts` and `cfe`.
 
-Allowed value types are `inline`, `file` and `url`.
+Allowed value types are `inline` and `url`.
 
 ***Examples:***
 
