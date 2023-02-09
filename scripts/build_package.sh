@@ -1,8 +1,22 @@
 #!/bin/bash
 
+# support building arbitrary clouds to speed up local development
+CLOUDS=()
+while getopts ":c:" opt; do
+    case $opt in
+        c) CLOUDS+=( "$OPTARG" );;
+    esac
+done
+shift $((OPTIND -1))
+
+if [[ -z $CLOUDS ]]; then
+    # add "all" to this list if building the full package
+    CLOUDS=(azure aws gcp base)
+fi
+echo "CLOUDS: ${CLOUDS[*]}"
+
 MAINDIR="$(dirname $0)/.."
 NAME=$(cat ${MAINDIR}/package.json | jq .name -r)
-CLOUDS=(azure aws gcp all base)
 COMMON_DEPENDENCIES=$(cat ${MAINDIR}/package.json | jq -r ".dependencyMap.common")
 VERSION=$(cat ${MAINDIR}/package.json | jq -r ".version")
 RELEASE=$(cat ${MAINDIR}/package.json | jq -r ".release")
@@ -38,7 +52,7 @@ for cloud in "${CLOUDS[@]}"; do
     fi
 
     echo "*** Install cloud-specific dependencies"
-    npm install --prefix ${MAINDIR}/dist/working/${cloud} --production
+    npm install --prefix ${MAINDIR}/dist/working/${cloud} --production --unsafe-perm
 
     echo "*** Copy source code to working"
     cp -r ${MAINDIR}/dist/src ${MAINDIR}/dist/working/${cloud}

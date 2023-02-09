@@ -59,7 +59,6 @@ export class GcpCloudClient extends AbstractCloudClient {
             .catch(err => Promise.reject(err))
     }
 
-
     /**
      * Gets secret from GCP Secrets Manager
      *
@@ -241,7 +240,6 @@ export class GcpCloudClient extends AbstractCloudClient {
      * @returns {Promise} A promise which is resolved with bearer auth token
      *
      */
-
     _getAuthToken(): Promise<any> {
         return this.google.auth.getClient({
             scopes: [
@@ -256,6 +254,36 @@ export class GcpCloudClient extends AbstractCloudClient {
             });
     }
 
+    /**
+     * Get auth headers
+     *
+     * @returns {object} A promise which is resolved with auth headers
+     *
+     */
+     async getAuthHeaders(): Promise<object> {
+        const serviceAccountResponse = await utils.makeRequest(
+            `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/?recursive=true`,
+            {
+                method: 'GET',
+                headers: {
+                    'Metadata-Flavor': 'Google'
+                }
+            }
+        );
+        const tokenResponse = await utils.makeRequest(
+            `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/${serviceAccountResponse.body.default.email}/token`,
+            {
+                method: 'GET',
+                headers: {
+                    'Metadata-Flavor': 'Google'
+                }
+            }
+        );
+        const headers = {
+            'Authorization': `Bearer ${tokenResponse.body.access_token}`
+        };
+        return Promise.resolve(headers);
+    }
 
      async _getRegion(): Promise<string> {
         const zone = await utils.makeRequest(
@@ -271,4 +299,3 @@ export class GcpCloudClient extends AbstractCloudClient {
         return zone.body.split('/')[zone.body.split('/').length - 1];
     }
 }
-

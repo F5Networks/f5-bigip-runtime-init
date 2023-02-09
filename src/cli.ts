@@ -107,7 +107,6 @@ export async function cli(): Promise<string> {
     }
     logger.info('Successfully validated declaration');
 
-
     const resolver = new ResolverClient();
 
     // pre onboard
@@ -131,7 +130,7 @@ export async function cli(): Promise<string> {
 
     let bigipReadyEnabled = config.bigip_ready_enabled || [];
     containsSecrets = utils.checkForSecrets(JSON.stringify(bigipReadyEnabled));
-    // rendering secrets if provided
+    // rendering parameters if provided
     if (resolvedRuntimeParams) {
         bigipReadyEnabled = JSON.parse(await utils.renderData(JSON.stringify(bigipReadyEnabled), resolvedRuntimeParams));
     }
@@ -140,13 +139,16 @@ export async function cli(): Promise<string> {
         await resolver.resolveOnboardActions(bigipReadyEnabled, containsSecrets);
     }
 
-    await mgmtClient.isReady();
-
     // perform install operations
+    await mgmtClient.isReady();
     const extensionPackages = config.extension_packages || {};
-    const installOperations = extensionPackages.install_operations || [];
+    let installOperations = extensionPackages.install_operations || [];
     const extensionsVersions = {};
     if (installOperations.length) {
+        // rendering parameters if provided
+        if (resolvedRuntimeParams) {
+            installOperations = JSON.parse(await utils.renderData(JSON.stringify(installOperations), resolvedRuntimeParams));
+        }
         logger.info('Executing install operations.');
         for (let i = 0; i < installOperations.length; i += 1) {
             installOperations[i]['maxRetries'] = constants.RETRY.TINY_COUNT;
@@ -232,7 +234,7 @@ export async function cli(): Promise<string> {
                     }
                 );
             }
-            // rendering secrets if provided
+            // rendering parameters if provided
             if (resolvedRuntimeParams) {
                 loadedConfig = JSON.parse(await utils.renderData(JSON.stringify(loadedConfig), resolvedRuntimeParams));
             }
@@ -245,7 +247,7 @@ export async function cli(): Promise<string> {
     await mgmtClient.isReady();
     let postOnboardEnabled = config.post_onboard_enabled || [];
     containsSecrets = utils.checkForSecrets(JSON.stringify(postOnboardEnabled));
-    // rendering secrets if provided
+    // rendering parameters if provided
     if (resolvedRuntimeParams) {
         postOnboardEnabled = JSON.parse(await utils.renderData(JSON.stringify(postOnboardEnabled), resolvedRuntimeParams));
     }
@@ -253,7 +255,6 @@ export async function cli(): Promise<string> {
         logger.info('Executing custom post_onboard_enabled commands');
         await resolver.resolveOnboardActions(postOnboardEnabled, containsSecrets);
     }
-
 
     // post hook
     const postHook = config.post_hook || [];

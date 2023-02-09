@@ -18,12 +18,14 @@
 
  import * as jmesPath from 'jmespath';
  import * as AWS from 'aws-sdk';
+ import * as aws4 from 'aws4';
  import * as constants from '../../../constants';
  import * as netmask from 'netmask';
  import { AbstractCloudClient } from '../abstract/cloudClient';
  import Logger from '../../logger';
  import where = require('lodash.where');
  import * as utils from '../../utils';
+ 
  export class AwsCloudClient extends AbstractCloudClient {
      _metadata: AWS.MetadataService;
      secretsManager: AWS.SecretsManager;
@@ -32,7 +34,6 @@
      customerId: string;
      _sessionToken: string;
      _ec2: AWS.EC2;
- 
      constructor(options?: {
          logger?: Logger;
      }) {
@@ -233,6 +234,7 @@
              }
          }
      }
+
      /**
       * Fetches provided AWS Metadata uri using AWS SDK Metadata client
       *
@@ -269,6 +271,7 @@
              });
          }
      }
+     
      /**
       * Fetches AWS IMDSv2 Session token
       *
@@ -309,6 +312,7 @@
              });
          });
      }
+     
      /**
       * Gets instance compute type metadata
       * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
@@ -331,6 +335,7 @@
              });
          });
      }
+     
      /**
       * Gets instance network type metadata
       * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
@@ -356,5 +361,38 @@
      getRegion(): string {
          return this.region;
      }
+
+     /**
+     * Get storage auth headers
+     * 
+     * @param source - Optional source URL for S3 objects
+     *
+     * @returns {object} A promise which is resolved with auth headers
+     *
+     */
+     async getAuthHeaders(source?: string): Promise<object> {
+        const host = source.split('/')[2];
+        const path = source.split(host + '/')[1];
+        const opts = { host: host, path: `/${path}` };
+        const instanceProfileResponse = await utils.makeRequest(
+            `http://169.254.169.254/latest/meta-data/iam/security-credentials/`,
+            {
+                method: 'GET',
+                headers: {
+                    "x-aws-ec2-metadata-token": this._sessionToken
+                }
+            }
+        );
+        const credentialsResponse = await utils.makeRequest(
+            `http://169.254.169.254/latest/meta-data/iam/security-credentials/${instanceProfileResponse.body}`,
+            {
+                method: 'GET',
+                headers: {
+                    "x-aws-ec2-metadata-token": this._sessionToken
+                }
+            }
+        );
+        const signed = aws4.sign(opts, { accessKeyId: credentialsResponse.body.AccessKeyId, secretAccessKey: credentialsResponse.body.SecretAccessKey, sessionToken: credentialsResponse.body.Token })
+        return Promise.resolve(signed.headers);
+    }
  }
- 

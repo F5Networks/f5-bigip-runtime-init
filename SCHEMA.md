@@ -78,6 +78,7 @@ Type: `array`
 			 3. _"metadata"_
 			 4. _"url"_
 			 5. _"tag"_
+			 6. _"storage"_
 	 - <b id="#/items/properties/returnType">returnType</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/returnType">path: #/items/properties/returnType</i>
@@ -257,9 +258,9 @@ Type: `array`
 				 - Type: `string`
 				 - <i id="#/items/properties/metadataProvider/properties/environment">path: #/items/properties/metadataProvider/properties/environment</i>
 				 - The value is restricted to the following: 
-					 1. _"gcp"_
-					 2. _"aws"_
-					 3. _"azure"_
+					 1. _"aws"_
+					 2. _"azure"_
+					 3. _"gcp"_
 			 - <b id="#/items/properties/metadataProvider/properties/type">type</b> `required`
 				 - Type: `string`
 				 - <i id="#/items/properties/metadataProvider/properties/type">path: #/items/properties/metadataProvider/properties/type</i>
@@ -327,6 +328,51 @@ Type: `array`
 					 1. _"hostname"_
 					 2. _"id"_
 					 3. _"date"_
+	 - <b id="#/items/properties/storageProvider">storageProvider</b>
+		 - Type: `object`
+		 - <i id="#/items/properties/storageProvider">path: #/items/properties/storageProvider</i>
+		 - This schema <u>does not</u> accept additional properties.
+		 - **_Properties_**
+			 - <b id="#/items/properties/storageProvider/properties/environment">environment</b> `required`
+				 - Type: `string`
+				 - <i id="#/items/properties/storageProvider/properties/environment">path: #/items/properties/storageProvider/properties/environment</i>
+				 - The value is restricted to the following: 
+					 1. _"aws"_
+					 2. _"azure"_
+					 3. _"gcp"_
+					 4. _"private"_
+			 - <b id="#/items/properties/storageProvider/properties/source">source</b> `required`
+				 - _The URL of the AWS, Azure, Google Cloud Storage, or privately hosted source file_
+				 - Type: `string`
+				 - <i id="#/items/properties/storageProvider/properties/source">path: #/items/properties/storageProvider/properties/source</i>
+				 - Example values: 
+					 1. _"https://mybucket.s3.amazonaws.com/mykey/myfile"_
+					 2. _"https://mystorageaccount.blob.core.windows.net/mycontainer/myfile"_
+					 3. _"https://storage.cloud.google.com/mybucket/mykey/myfile"_
+					 4. _"https://myserver/myfile"_
+				 - The value must match this pattern: `^(https?|http?|s3?|gs?)://[^\s$.?#].[^\s]*$`
+			 - <b id="#/items/properties/storageProvider/properties/destination">destination</b> `required`
+				 - _The location where the downloaded file will be saved_
+				 - Type: `string`
+				 - <i id="#/items/properties/storageProvider/properties/destination">path: #/items/properties/storageProvider/properties/destination</i>
+				 - Example values: 
+					 1. _"/var/tmp/file1"_
+					 2. _"/var/config/rest/downloads/file1"_
+				 - The value must match this pattern: `^(/var/tmp/|/var/config/rest/downloads/)`
+			 - <b id="#/items/properties/storageProvider/properties/verifyTls">verifyTls</b>
+				 - _For enabling secure site verification_
+				 - Type: `boolean`
+				 - <i id="#/items/properties/storageProvider/properties/verifyTls">path: #/items/properties/storageProvider/properties/verifyTls</i>
+				 - Example values: 
+					 1. _true_
+					 2. _false_
+			 - <b id="#/items/properties/storageProvider/properties/trustedCertBundles">trustedCertBundles</b>
+				 - _List of paths to certificate bundles to use for all https requests_
+				 - Type: `array`
+				 - <i id="#/items/properties/storageProvider/properties/trustedCertBundles">path: #/items/properties/storageProvider/properties/trustedCertBundles</i>
+				 - Example values: 
+					 1. _"/path/to/cert.pem"_
+					 2. _"/path/to/another_cert.pem"_
 	 - <b id="#/items/properties/query">query</b>
 		 - Type: `string`
 		 - <i id="#/items/properties/query">path: #/items/properties/query</i>
@@ -380,6 +426,12 @@ aws:
         type: network
         field: subnet-ipv4-cidr-block
         index: 1
+    - name: AWS_FILE_1
+      type: storage
+      storageProvider:
+        environment: aws
+        source: 'https://mybucket.s3.amazonaws.com/mykey/myfile1'
+        destination: /var/tmp/myfile1
 azure:
   description: Azure Example
   controls:
@@ -413,6 +465,12 @@ azure:
         type: network
         field: ipv4
         index: 2
+    - name: AZURE_FILE_1
+      type: storage
+      storageProvider:
+        environment: azure
+        source: 'https://mystorageaccount.blob.core.windows.net/mycontainer/myfile1'
+        destination: /var/tmp/myfile1
 gcp:
   description: Google Example
   controls:
@@ -439,6 +497,12 @@ gcp:
         environment: gcp
         type: compute
         field: name
+    - name: GCP_FILE_1
+      type: storage
+      storageProvider:
+        environment: gcp
+        source: 'https://storage.cloud.google.com/mybucket/mykey/myfile1'
+        destination: /var/tmp/myfile1
 hashicorp:
   description: Hashicorp Vault Example
   controls:
@@ -782,7 +846,6 @@ This schema <u>does not</u> accept additional properties.
 				 - Example values: 
 					 1. _"https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.20.0/f5-appsvcs-3.20.0-3.noarch.rpm"_
 					 2. _"file:///var/config/rest/downloads/f5-declarative-onboarding-1.10.0-2.noarch.rpm"_
-				 - The value must match this pattern: `^(https?|file)://[^\s$.?#].[^\s]+\.(rpm)$`
 			 - <b id="#/properties/install_operations/items/properties/extensionVerificationEndpoint">extensionVerificationEndpoint</b>
 				 - Type: `string`
 				 - <i id="#/properties/install_operations/items/properties/extensionVerificationEndpoint">path: #/properties/install_operations/items/properties/extensionVerificationEndpoint</i>
@@ -797,58 +860,58 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.34.0
+        extensionVersion: 1.35.0
       - extensionType: as3
-        extensionVersion: 3.41.0
+        extensionVersion: 3.42.0
       - extensionType: fast
-        extensionVersion: 1.22.0
+        extensionVersion: 1.23.0
 versioned:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.34.0
+        extensionVersion: 1.35.0
       - extensionType: as3
-        extensionVersion: 3.41.0
+        extensionVersion: 3.42.0
       - extensionType: fast
-        extensionVersion: 1.22.0
+        extensionVersion: 1.23.0
 hashed:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.34.0
-        extensionHash: 5e58bc15a4c436494599dfc509c87f02400339e6c0ce8275df259d5f1585146b
+        extensionVersion: 1.35.0
+        extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
       - extensionType: as3
-        extensionVersion: 3.41.0
-        extensionHash: ced0948208f4dc29af7c0ea3a925a28bf8b8690a263588374e3c3d2689999490
+        extensionVersion: 3.42.0
+        extensionHash: dcb869775f00b2d1a4c8a7600beeb596a8da469caa7ddb30df02c4cdc48c37e2
       - extensionType: ts
         extensionVersion: 1.32.0
         extensionHash: a6bf242728a5ba1b8b8f26b59897765567db7e0f0267ba9973f822be3ab387b6
       - extensionType: fast
-        extensionVersion: 1.22.0
-        extensionHash: 71a1c826aaf1f8a0c2ffc3c2f7f6b40c881f51e15da471411b423339b9e65030
+        extensionVersion: 1.23.0
+        extensionHash: d2580309047ff379820460be09e5b7202fe287e7fc5ffaad65106233aeb6e845
 url:
   extension_packages:
     install_operations:
       - extensionType: do
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.34.0/f5-declarative-onboarding-1.34.0-5.noarch.rpm
-        extensionVersion: 1.34.0
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.35.0/f5-declarative-onboarding-1.35.0-6.noarch.rpm
+        extensionVersion: 1.35.0
       - extensionType: as3
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.41.0-1.noarch.rpm'
-        extensionVersion: 3.41.0
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm'
+        extensionVersion: 3.42.0
       - extensionType: fast
         extensionUrl: >-
-          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.22.0/f5-appsvcs-templates-1.22.0-1.noarch.rpm
-        extensionVersion: 1.22.0
+          https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.23.0/f5-appsvcs-templates-1.23.0-1.noarch.rpm
+        extensionVersion: 1.23.0
 ilx:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.34.0
+        extensionVersion: 1.35.0
       - extensionType: as3
-        extensionVersion: 3.41.0
+        extensionVersion: 3.42.0
       - extensionType: fast
-        extensionVersion: 1.22.0
+        extensionVersion: 1.23.0
       - extensionType: ilx
         extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
         extensionVersion: 1.0.0
@@ -1083,14 +1146,14 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
-          extensionHash: 5e58bc15a4c436494599dfc509c87f02400339e6c0ce8275df259d5f1585146b
+          extensionVersion: 1.35.0
+          extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
         - extensionType: as3
-          extensionVersion: 3.41.0
-          extensionHash: ced0948208f4dc29af7c0ea3a925a28bf8b8690a263588374e3c3d2689999490
+          extensionVersion: 3.42.0
+          extensionHash: dcb869775f00b2d1a4c8a7600beeb596a8da469caa7ddb30df02c4cdc48c37e2
         - extensionType: fast
-          extensionVersion: 1.22.0
-          extensionHash: 71a1c826aaf1f8a0c2ffc3c2f7f6b40c881f51e15da471411b423339b9e65030
+          extensionVersion: 1.23.0
+          extensionHash: d2580309047ff379820460be09e5b7202fe287e7fc5ffaad65106233aeb6e845
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1115,9 +1178,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.34.0-5.noarch.rpm
-          extensionHash: 5e58bc15a4c436494599dfc509c87f02400339e6c0ce8275df259d5f1585146b
-          extensionVersion: 1.34.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.35.0-6.noarch.rpm
+          extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
+          extensionVersion: 1.35.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -1153,11 +1216,11 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1200,11 +1263,11 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1242,11 +1305,11 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1307,11 +1370,11 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1338,11 +1401,11 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: as3
@@ -1398,11 +1461,11 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1510,11 +1573,11 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
 example_10:
   description: Sending a customized webhook on completion.
   runtime_config:
@@ -1530,11 +1593,11 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     post_hook:
       - name: example_webhook
         type: webhook
@@ -1556,12 +1619,12 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
-          extensionHash: 5e58bc15a4c436494599dfc509c87f02400339e6c0ce8275df259d5f1585146b
+          extensionVersion: 1.35.0
+          extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
         - extensionType: as3
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.41.0/f5-appsvcs-3.41.0-1.noarch.rpm
-          extensionVersion: 3.41.0
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v.3.42.0/f5-appsvcs-3.42.0-5.noarch.rpm
+          extensionVersion: 3.42.0
           verifyTls: false
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
@@ -1652,11 +1715,11 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do
@@ -1715,11 +1778,11 @@ example_13:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.34.0
+          extensionVersion: 1.35.0
         - extensionType: as3
-          extensionVersion: 3.41.0
+          extensionVersion: 3.42.0
         - extensionType: fast
-          extensionVersion: 1.22.0
+          extensionVersion: 1.23.0
     extension_services:
       service_operations:
         - extensionType: do

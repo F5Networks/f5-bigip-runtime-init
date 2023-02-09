@@ -38,6 +38,12 @@ aws:
         type: network
         field: subnet-ipv4-cidr-block
         index: 1
+    - name: AWS_FILE_1
+      type: storage
+      storageProvider:
+        environment: aws
+        source: https://mybucket.s3.amazonaws.com/mykey/myfile1
+        destination: /var/tmp/myfile1
 azure:
   description: Azure Example
   controls:
@@ -71,6 +77,12 @@ azure:
         type: network
         field: ipv4
         index: 2
+    - name: AZURE_FILE_1
+      type: storage
+      storageProvider:
+        environment: azure
+        source: https://mystorageaccount.blob.core.windows.net/mycontainer/myfile1
+        destination: /var/tmp/myfile1
 gcp:
   description: Google Example
   controls:
@@ -97,6 +109,12 @@ gcp:
         environment: gcp
         type: compute
         field: name
+  - name: GCP_FILE_1
+    type: storage
+    storageProvider:
+      environment: gcp
+      source: https://storage.cloud.google.com/mybucket/mykey/myfile1
+      destination: /var/tmp/myfile1
 hashicorp:
   description: Hashicorp Vault Example
   controls:
