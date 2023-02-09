@@ -59,8 +59,7 @@
      getCloudName(): string {
          return constants.CLOUDS.AZURE;
      }
- 
- 
+
      _getKeyVaultSecret(vaultUrl: string, secretId: string, version?: string): Promise<KeyVaultSecret> {
          this._keyVaultSecretClient = new this.SecretClient(vaultUrl, this._credentials);
          return this._keyVaultSecretClient.getSecret(secretId, { version: version || null });
@@ -96,6 +95,11 @@
              .catch(err => Promise.reject(err));
      }
  
+     /**
+      * Returns instance metadata
+      *
+      * @returns {String}
+      */
      async _getInstanceMetadata(): Promise<string> {
          const response = await utils.retrier(utils.makeRequest, [`http://169.254.169.254/metadata/instance?api-version=2017-08-01`, {
              method: 'GET',
@@ -117,7 +121,7 @@
       *
       * @returns {Promise}
       */
-     getTagValue(key: string):  Promise<string> {
+     getTagValue(key: string): Promise<string> {
          let tagValue = '';
          if (this._metadata.compute.tags && this._metadata.compute.tags.indexOf(key) !== - 1) {
              this._metadata.compute.tags.split(";").forEach((tag) => {
@@ -244,6 +248,33 @@
      getRegion(): string {
          return this._metadata.compute.location;
      }
- 
+
+    /**
+     * Get storage auth headers
+     * 
+     * @param resource - Optional resource scope for Azure
+     *
+     * @returns {object} A promise which is resolved with auth headers
+     *
+     */
+     async getAuthHeaders(resource?: string): Promise<object> {
+        const encodedResource = encodeURIComponent(resource);
+        const response = await utils.retrier(utils.makeRequest, [`http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=${encodedResource}`, {
+            method: 'GET',
+            headers: {
+                'Metadata': 'true',
+                'x-ms-version': '2017-11-09'
+            }
+        }], {
+            thisContext: this,
+            maxRetries: constants.RETRY.SHORT_COUNT,
+            retryInterval: constants.RETRY.DELAY_IN_MS
+        });
+        const headers = {
+            'Authorization': `Bearer ${response.body.access_token}`,
+            'x-ms-version': '2017-11-09'
+        };
+        return Promise.resolve(headers);
+    }
  }
  

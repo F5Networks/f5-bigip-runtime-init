@@ -45,7 +45,13 @@ export function stringify(data: object): string {
     }
 }
 
-
+/**
+ * Convert to type
+ *
+ * @param data data to convert
+ *
+ * @returns converted data
+ */
 export function convertTo(data, type): any {
     if (type === 'string') {
         return data.toString();
@@ -68,7 +74,6 @@ export function convertTo(data, type): any {
 export async function downloadToFile(url: string, file: string, options): Promise<void> {
     options = options || {};
     logger.silly(`Downloading File: ${url}`);
-    logger.silly(`Options: ${JSON.stringify(options)}`);
     const trustedCertBundles = [];
     if (options.trustedCertBundles) {
         for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
@@ -79,6 +84,9 @@ export async function downloadToFile(url: string, file: string, options): Promis
         request({
             url: url,
             method: 'GET',
+            headers: Object.assign(
+                options.headers || {}
+            ),
             ca: trustedCertBundles.length > 0 ? trustedCertBundles : undefined,
             strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
         })
@@ -93,8 +101,6 @@ export async function downloadToFile(url: string, file: string, options): Promis
     })
         .catch(err => Promise.reject(err));
 }
-
-
 
 /**
  * Verify file against provided hash
@@ -114,7 +120,6 @@ export function verifyHash(file: string, extensionHash: string): boolean {
     }
     return true;
 }
-
 
 /**
  * Read file content
@@ -309,7 +314,6 @@ export async function runShellCommand(command): Promise<string> {
     return stdout;
 }
 
-
 /**
  * Verifies that directory exists or create directory
  *
@@ -324,6 +328,34 @@ export async function verifyDirectory(directory): Promise<void> {
         return Promise.resolve();
     }
     return Promise.resolve();
+}
+
+/**
+ * Convert storage URL
+ *
+ * @param url   storage URL to convert
+ *
+ * @returns     returns converted storage URL as string
+ */
+ export function convertUrl(url: string): string {
+    let data = url;
+    let bucket = url.split('/')[2];
+    let path = url.split(bucket + '/')[1];
+    let encodedPath = '';
+    const storageProtocol = url.split(bucket)[0];
+
+    if (storageProtocol.startsWith('s3://')) {
+        data = 'https://' + bucket + '.s3.amazonaws.com/' + path;
+    } else if (storageProtocol.startsWith('gs://')) {
+        encodedPath = encodeURIComponent(path);
+        data = 'https://storage.googleapis.com/storage/v1/b/' + bucket + '/o/' + encodedPath + '?alt=media';
+    } else if (storageProtocol.startsWith('https://') && bucket.startsWith('storage.cloud.google.com')) {
+        bucket = path.split('/')[0];
+        path = path.substring(path.indexOf("/") + 1);
+        encodedPath = encodeURIComponent(path);
+        data = 'https://storage.googleapis.com/storage/v1/b/' + bucket + '/o/' + encodedPath + '?alt=media';
+    }
+    return data;
 }
 
 /**

@@ -21,7 +21,7 @@ describe('Cloud Client - Abstract', () => {
         });
     });
 
-    it('should instantiate cloudClient', () => {
+    it('should instantiate cloudClient - AWS', () => {
         const logger = sinon.stub();
         const cloudClient = new AbstractCloudClient('aws', logger);
 
@@ -33,7 +33,8 @@ describe('Cloud Client - Abstract', () => {
             'init',
             'getCustomerId',
             'getCloudName',
-            'getRegion'
+            'getRegion',
+            'getAuthHeaders'
         ];
         methods.forEach((func) => {
             assert.throws(
@@ -51,7 +52,38 @@ describe('Cloud Client - Abstract', () => {
         });
     });
 
-    it('should instantiate cloudClient without provided logger', () => {
+    it('should instantiate cloudClient - Azure', () => {
+        const logger = sinon.stub();
+        const cloudClient = new AbstractCloudClient('azure', logger);
+
+        // check abstract methods that should throw
+        const methods = [
+            'getSecret',
+            'getMetadata',
+            'getTagValue',
+            'init',
+            'getCustomerId',
+            'getCloudName',
+            'getRegion',
+            'getAuthHeaders'
+        ];
+        methods.forEach((func) => {
+            assert.throws(
+                () => {
+                    cloudClient[func]();
+                },
+                (err) => {
+                    if (err.message.includes('must be implemented in child class')) {
+                        return true;
+                    }
+                    return false;
+                },
+                'unexpected error'
+            );
+        });
+    });
+
+    it('should instantiate cloudClient without provided logger - AWS', () => {
         const cloudClient = new AbstractCloudClient('aws', null);
         // check abstract methods that should throw
         const methods = [

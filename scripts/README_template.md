@@ -319,13 +319,166 @@ Allowed types are `inline`, `file` and `url`.
 
 *Description:* A list of parameters discovered at run (or deploy) time which are substituted *(using mustache handlebars)* in subsequent eligible runtime attributes: 
 * bigip_ready_enabled *(commands)*
+* extension_packages
 * extension_services *(declarations sent to the Tool Chain endpoints)* 
 * post_onboard_enabled: *(commands)*
 * post_hook
 
 Parameters can be dependent on each other, so one parameter value can be used within another parameter (see examples below for more details).
 
-Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
+Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
+
+- **storage**
+
+    *Description:* fetches a file from cloud or other storage and renders the result as a parameter value. Storage parameter files are downloaded before other runtime parameters are processed.
+    
+    The example below demonstrates how to fetch the values for the downloads from Amazon S3, Azure Blob Storage, Google Cloud Storage, or another location.
+
+    *NOTE*: Storage provider destinations may ***only*** start with either */var/config/rest/downloads* or */var/tmp*. Large files such as RPMs must be saved in /var/config/rest/downloads. When a file saved in /var/config/rest/downloads is referenced by its parameter name, the parameter value will be rendered as a local file path on the BIG-IP instance. Files saved to /var/tmp will be rendered as a string or JSON, depending on the format of the response.
+
+    ***Examples:***
+
+    {{=<% %>=}}
+    ```yaml
+    runtime_parameters:
+      - name: AWS_TO_FILE
+        type: storage
+        storageProvider:
+          environment: aws
+          source: https://mybucket.s3.amazonaws.com/mykey/f5-appsvcs-3.42.0-5.noarch.rpm
+          destination: "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"
+      - name: AWS_TO_FILE_2
+        type: storage
+        storageProvider:
+          environment: aws
+          source: s3://mybucket/mykey/asm-policy-v0.0.1.xml
+          destination: /var/config/rest/downloads/asm-policy-v0.0.1.xml
+      - name: AWS_TO_PARAMETER
+        type: storage
+        storageProvider:
+          environment: aws
+          source: s3://mybucket/mykey/myfile
+          destination: "/var/tmp/myfile"
+      - name: AZURE_TO_FILE
+        type: storage
+        storageProvider:
+          environment: azure
+          source: https://mystorageaccount.blob.core.windows.net/mycontainer/f5-appsvcs-3.42.0-5.noarch.rpm
+          destination: "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"
+      - name: AZURE_TO_PARAMETER
+        type: storage
+        storageProvider:
+          environment: azure
+          source: https://mystorageaccount.blob.core.windows.net/mycontainer/myfile
+          destination: "/var/tmp/myfile"
+      - name: GCP_TO_FILE
+        type: storage
+        storageProvider:
+          environment: gcp
+          source: https://storage.cloud.google.com/mybucket/mykey/f5-appsvcs-3.42.0-5.noarch.rpm
+          destination: "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"
+      - name: GCP_TO_PARAMETER
+        type: storage
+        storageProvider:
+          environment: gcp
+          source: gs://mybucket/mykey/myfile
+          destination: "/var/tmp/myfile"
+      - name: PRIVATE_TO_FILE
+        type: storage
+        storageProvider:
+          environment: private
+          source: https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v.3.42.0/f5-appsvcs-3.42.0-5.noarch.rpm
+          destination: "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"
+      - name: PRIVATE_TO_PARAMETER
+        type: storage
+        storageProvider:
+          environment: private
+          source: https://myserver/myfile
+          destination: "/var/tmp/myfile"
+    ```
+
+    **Referencing storage provider parameter values - S3**
+    
+    In this example, the AWS_TO_FILE parameter is renderered as "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"; to reference this as a local file URL you must prepend "file://" to the parameter name:
+    ```yaml
+    extension_packages:
+      install_operations:
+        - extensionType: as3
+          extensionVersion: 3.42.0
+          extensionUrl: 'file://{{{AWS_TO_FILE}}}'
+    ```
+
+    In this example, the AWS_TO_FILE_2 parameter is renderered as "/var/config/rest/downloads/asm-policy-v0.0.1.xml":
+    ```yaml
+    extension_services:
+      service_operations:
+        - extensionType: as3
+          type: inline
+          value:
+            class: ADC
+            schemaVersion: 3.0.0
+            label: Quickstart
+            remark: Quickstart
+            Tenant_1:
+              class: Tenant
+              Shared:
+                class: Application
+                template: shared
+                shared_pool:
+                  class: Pool
+                  remark: Service 1 shared pool
+                  members:
+                    - serverAddresses:
+                        - 10.0.3.4
+                      servicePort: 80
+                  monitors:
+                    - http
+                Custom_HTTP_Profile:
+                  class: HTTP_Profile
+                  xForwardedFor: true
+                Custom_WAF_Policy:
+                  class: WAF_Policy
+                  file: >-
+                    '{{{AWS_TO_FILE_2}}}'
+                  enforcementMode: blocking
+                  ignoreChanges: false
+    ```
+
+    In this example, the AWS_TO_PARAMETER parameter is renderered as either a string or JSON object, depending on the original file format:
+    ```yaml
+    post_onboard_enabled:
+      - name: echo_downloaded_file
+        type: inline
+        commands:
+          - echo "Downloaded file parameter is {{{AWS_TO_PARAMETER}}}" # renders content of s3://mybucket/mykey/myfile
+          - echo "Downloaded JSON parameter is {{{AWS_TO_PARAMETER.key}}}" # renders value of "key" key in s3://mybucket/mykey/myfile
+    ```
+    <%={{ }}=%>
+
+    *NOTE:*
+    - In AWS and GCP, both https:// and **global** s3:// and gs:// source URLs are supported.
+    - In Azure, only blob storage URLs are supported.
+    - The IAM roles/RBAC permissions required for downloading objects from cloud provider storage are listed below. Minimally, these permissions must be scoped to the storage resource.
+
+      * AWS:
+        ```text
+          "s3:ListBucket"
+          "s3:GetObject"
+        ```
+      * Azure:
+        ```text
+          "Microsoft.Authorization/*/read"
+          "Microsoft.Storage/storageAccounts/read"
+          "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"
+          "Microsoft.Storage/storageAccounts/listKeys/action"
+        ```
+      * GCP (Labels):
+        ```text
+          "storage.buckets.get"
+          "storage.buckets.list"
+          "storage.objects.get"
+          "storage.objects.list"
+        ```    
 
 - **secret** 
   
@@ -373,7 +526,12 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
     secret_permissions = ["get","list"]
     storage_permissions = ["get"]
     ```
-    *For more information, see [Azure documentation](https://docs.microsoft.com/en-us/azure/key-vault/secrets/about-secrets#secret-access-control).*
+    *For more information, see [Azure KeyVault access control policy documentation](https://docs.microsoft.com/en-us/azure/key-vault/secrets/about-secrets#secret-access-control).*
+
+    **KeyVault Firewall:**
+    If Azure KeyVault Firewall is enabled and the default firewall action is Deny, you must explicitly add either the Azure public management IP address of the BIG-IP instance, or the Azure virtual network and management subnet, to the KeyVault Firewall allow list.
+
+    *For more information, see [Azure KeyVault network security documentation](https://learn.microsoft.com/en-us/azure/key-vault/general/network-security).*
     </br>
 
     **GCP:**
@@ -469,9 +627,6 @@ Allowed types are `secret`, `tag`, `metadata`, `url` and `static`.
     *For more information, see [HashiCorp documentation](https://www.vaultproject.io/docs/concepts/policies#policy-syntax).*
     <br>
 
-
-
-  
     ##### Security - Masking Secrets
 
     By default, runtime will mask out (ex. \"password\":\"******\") the following common fields in declarations when logging:
@@ -887,7 +1042,7 @@ For more examples, see the [examples/runtime_configs](examples/runtime_configs/s
 
 Allowed extensionTypes are `do`, `as3`, `ts` and `cfe`.
 
-Allowed value types are `inline`, `file` and `url`.
+Allowed value types are `inline` and `url`.
 
 ***Examples:***
 

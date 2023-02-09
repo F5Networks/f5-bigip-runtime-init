@@ -23,6 +23,8 @@ describe('System tests', () => {
     let installedExtDeclarations = [];
     let customOnboardResultsCount;
     let logFileSize = 0;
+    let downloadedFileContent;
+    let downloadedJSONContent;
 
     before(function () {
         this.timeout(80000);
@@ -68,10 +70,17 @@ describe('System tests', () => {
             .then((response) => {
                 customOnboardResultsCount = response.trim();
                 return funcUtils.runShellCommand(`sshpass -p ${firstDut.password} ssh -o StrictHostKeyChecking=no ${firstDut.username}@${firstDut.ip} "bash -c 'du -k /var/log/cloud/bigIpRuntimeInit.log | cut -f1'"`);
-
             })
             .then((response) => {
                 logFileSize = parseInt(response.trim());
+                return funcUtils.runShellCommand(`sshpass -p ${firstDut.password} ssh -o StrictHostKeyChecking=no ${firstDut.username}@${firstDut.ip} "bash -c 'cat /var/tmp/hostname.txt'"`);
+            })
+            .then((response) => {
+                downloadedFileContent = response;
+                return funcUtils.runShellCommand(`sshpass -p ${firstDut.password} ssh -o StrictHostKeyChecking=no ${firstDut.username}@${firstDut.ip} "bash -c 'cat /var/tmp/parameters.json | jq -r .key1'"`);
+            })
+            .then((response) => {
+                downloadedJSONContent = response;
                 return Promise.resolve();
             })
             .catch(err => Promise.reject(err));
@@ -122,5 +131,13 @@ describe('System tests', () => {
 
     it('should validate log file created and written', () => {
         assert.ok(logFileSize > 0);
+    });
+
+    it('should verify successful secure file download', () => {
+        assert.strictEqual(downloadedFileContent, 'bigip01.local');
+    });
+
+    it('should verify successful secure JSON file download using s3 and gs URLs', () => {
+        assert.strictEqual(downloadedJSONContent, 'foo\n');
     });
 });

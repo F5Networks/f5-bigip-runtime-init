@@ -48,6 +48,11 @@ interface RuntimeParameter {
         environment: string;
         key: string;
     };
+    storageProvider: {
+        environment: string;
+        source: string;
+        destination: string;
+    };
 }
 
 interface OnboardActions {
@@ -79,6 +84,7 @@ export class ResolverClient {
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     async resolveRuntimeParameters(parameters: RuntimeParameter[], previousResults, controlNumber): Promise<any> {
         const results = {};
+        const downloads = [];
         const promises = [];
         const requiredOtherParameters = [];
         await this._preProcessParametersValues(parameters);
@@ -122,10 +128,25 @@ export class ResolverClient {
                     parameters[i].name,
                     this._resolveTagValue(parameters[i])
                 ));
+            } else if (parameters[i].type === 'storage') {
+                downloads.push(this._resolveHelper(
+                    parameters[i].name,
+                    this._resolveStorage(parameters[i])
+                ));
             } else {
-                    throw new Error('Runtime parameter type is unknown. Must be one of [ secret, static ]');
-                }
+                throw new Error('Runtime parameter type is unknown. Must be one of [ static, secret, metadata, url, tag, storage ]');
             }
+        }
+
+        if (downloads.length > 0) {
+            const resolvedDownloads = await Promise.all(downloads);
+            resolvedDownloads.forEach((item) => {
+                if (item.value && item.value !== '') {
+                    results[item.name] = item.value;
+                }
+            });
+        }
+
         if (promises.length > 0) {
             const resolvedParams = await Promise.all(promises);
             resolvedParams.forEach((item) => {
@@ -239,6 +260,69 @@ export class ResolverClient {
     }
 
     /**
+     * Resolves storage action
+     *
+     * @param storageMetadata         - download action to be performed on BIGIP device
+     *
+     * @returns                       - resolves when download complete
+     */
+     async _resolveStorage(storageMetadata): Promise<any> {
+        logger.info(`Executing download action: ${storageMetadata.name}`);
+
+        const source = this.utilsRef.convertUrl(storageMetadata.storageProvider.source);
+        const destination = storageMetadata.storageProvider.destination;
+        logger.silly(`Converting ${storageMetadata.storageProvider.source} to ${source} and saving to ${destination}`);
+
+        let headers = {};
+        if (storageMetadata.storageProvider.environment === 'private') {
+            logger.silly('Private environment, you must supply any required headers');
+            if (storageMetadata.storageProvider.headers !== undefined && storageMetadata.storageProvider.headers.length > 0) {
+                storageMetadata.storageProvider.headers.forEach((header) => {
+                    headers[header.name] = header.value;
+                });
+            }
+        } else {
+            if (!(storageMetadata.storageProvider.environment in this.cloudClients)) {
+                const _cloudClient = await this.getCloudProvider(
+                    storageMetadata.storageProvider.environment,
+                    { logger }
+                );
+                await _cloudClient.init();
+                this.cloudClients[storageMetadata.storageProvider.environment] = _cloudClient;
+            }
+            const _cloudClient = this.cloudClients[storageMetadata.storageProvider.environment];
+            switch(storageMetadata.storageProvider.environment) {
+                case 'aws':
+                    headers = await _cloudClient.getAuthHeaders(source);
+                    break;
+                case 'azure':
+                    headers = await _cloudClient.getAuthHeaders('https://storage.azure.com/');
+                    break;
+                default:
+                    headers = await _cloudClient.getAuthHeaders();
+            }
+        }
+                      
+        await this.utilsRef.downloadToFile(source, destination, {
+            headers: headers,
+            verifyTls: 'verifyTls' in storageMetadata.storageProvider ? storageMetadata.storageProvider.verifyTls : true,
+            trustedCertBundles: 'trustedCertBundles' in storageMetadata.storageProvider ? storageMetadata.storageProvider.trustedCertBundles : undefined
+        });
+
+        if (destination.startsWith('/var/tmp')) {
+            const data = await this.utilsRef.readFileContent(destination);
+            // rehydrate JSON string if response was an object
+            if (data.indexOf('{') !== -1 && data.indexOf('}') !== -1) {
+                return JSON.parse(data);
+            } else {
+                return data;
+            }
+        } else {
+            return destination;
+        }
+    }
+
+    /**
      * Resolves secret using cloud client
      *
      * @param secretMetadata       - list of runtime parameters
@@ -300,20 +384,27 @@ export class ResolverClient {
         return utils.convertTo(metadataValue, metadata.returnType);
     }
 
-
     /**
      * Reads file content to resolve parameter
      *
      * @param metadata     - list of runtime parameters
      *
      *
-     * @returns                    - resolves with metadata value
+     * @returns            - resolves with metadata value
      */
     async _resolveFileContent(metadata): Promise<string> {
         const fileLocation = metadata.value.replace('file://', '');
         return this.utilsRef.readFileContent(fileLocation);
     }
 
+    /**
+     * Reads URL response to resolve parameter
+     *
+     * @param metadata     - list of runtime parameters
+     *
+     *
+     * @returns            - resolves with URL response value
+     */
     async _resolveUrl(metadata): Promise<string> {
         const options: {
             method: string;

@@ -76,7 +76,13 @@ export const LOGGER = {
         "client_token",
         "roleId",
         "secretId",
-        "secret_id"
+        "secret_id",
+        "access_token",
+        "Authorization",
+        "AccessKeyId",
+        "SecretAccessKey",
+        "Token",
+        "X-Amz-Security-Token"
     ],
     ENDPOINTS_TO_HIDE_RESPONSE: [
         "/v1/auth/approle/login"
