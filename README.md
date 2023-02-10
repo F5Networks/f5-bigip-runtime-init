@@ -208,13 +208,13 @@ controls:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.35.0
+      extensionVersion: 1.36.0
     - extensionType: as3
-      extensionVersion: 3.42.0
+      extensionVersion: 3.43.0
     - extensionType: ts
       extensionVersion: 1.32.0
     - extensionType: fast
-      extensionVersion: 1.23.0
+      extensionVersion: 1.24.0
 ```
 
 See [SCHEMA.md](https://github.com/F5Networks/f5-bigip-runtime-init/blob/main/SCHEMA.md) for complete schema documentation and [/examples/runtime_configs](examples/runtime_configs/) for additional examples.
@@ -980,13 +980,13 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.35.0
+          extensionVersion: 1.36.0
         - extensionType: as3
-          extensionVersion: 3.42.0
+          extensionVersion: 3.43.0
         - extensionType: ts
           extensionVersion: 1.32.0
         - extensionType: fast
-          extensionVersion: 1.23.0
+          extensionVersion: 1.24.0
     ```
 
  - *with hash checking*
@@ -995,17 +995,17 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.35.0
-          extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
+          extensionVersion: 1.36.0
+          extensionHash: 6f94718afcbf7743b9c260ab341f33987d2d442ab1f5076410ebd557be7d2ff0
         - extensionType: as3
-          extensionVersion: 3.42.0
-          extensionHash: dcb869775f00b2d1a4c8a7600beeb596a8da469caa7ddb30df02c4cdc48c37e2
+          extensionVersion: 3.43.0
+          extensionHash: 6e50f828292c3e9417136693b7fba232ca4c004187ae1499e83e39210b500e7a
         - extensionType: ts
           extensionVersion: 1.32.0
           extensionHash: a6bf242728a5ba1b8b8f26b59897765567db7e0f0267ba9973f822be3ab387b6
         - extensionType: fast
-          extensionVersion: 1.23.0
-          extensionHash: d2580309047ff379820460be09e5b7202fe287e7fc5ffaad65106233aeb6e845
+          extensionVersion: 1.24.0
+          extensionHash: 7f1c8080b6712915d18caaf3410d8ed21c0454f53bfc8999f294bd958231b47f
     ```
 
  - *custom from URL*
@@ -1014,14 +1014,14 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
       - extensionType: do
-        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.35.0/f5-declarative-onboarding-1.35.0-6.noarch.rpm
-        extensionVersion: 1.35.0
+        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.36.0/f5-declarative-onboarding-1.36.0-4.noarch.rpm
+        extensionVersion: 1.36.0
       - extensionType: as3
-        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm
-        extensionVersion: 3.42.0
+        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.43.0-2.noarch.rpm
+        extensionVersion: 3.43.0
       - extensionType: fast
-        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.23.0/f5-appsvcs-templates-1.23.0-1.noarch.rpm
-        extensionVersion: 1.23.0     
+        extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.24.0/f5-appsvcs-templates-1.24.0-1.noarch.rpm
+        extensionVersion: 1.24.0     
     ```
 
     *NOTE: ```extensionVersion``` is not required when used with the ```extensionUrl``` field.*
@@ -1339,17 +1339,17 @@ bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.35.0
-      extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
+      extensionVersion: 1.36.0
+      extensionHash: 6f94718afcbf7743b9c260ab341f33987d2d442ab1f5076410ebd557be7d2ff0
     - extensionType: as3
-      extensionVersion: 3.42.0
-      extensionHash: dcb869775f00b2d1a4c8a7600beeb596a8da469caa7ddb30df02c4cdc48c37e2
+      extensionVersion: 3.43.0
+      extensionHash: 6e50f828292c3e9417136693b7fba232ca4c004187ae1499e83e39210b500e7a
     - extensionType: ts
       extensionVersion: 1.32.0
       extensionHash: a6bf242728a5ba1b8b8f26b59897765567db7e0f0267ba9973f822be3ab387b6
     - extensionType: fast
-      extensionVersion: 1.23.0
-      extensionHash: d2580309047ff379820460be09e5b7202fe287e7fc5ffaad65106233aeb6e845
+      extensionVersion: 1.24.0
+      extensionHash: 7f1c8080b6712915d18caaf3410d8ed21c0454f53bfc8999f294bd958231b47f
 extension_services:
   service_operations:
     - extensionType: do

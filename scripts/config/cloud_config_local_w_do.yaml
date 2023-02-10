@@ -40,7 +40,7 @@ bigip_ready_enabled:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.35.0
+      extensionVersion: 1.36.0
 extension_services:
   service_operations:
     - extensionType: do
