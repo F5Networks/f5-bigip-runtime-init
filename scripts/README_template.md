@@ -123,9 +123,9 @@ F5 BIG-IP Runtime Init has been tested and validated with the following versions
 
 | BIG-IP Version | Build Number |
 | --- | --- |
-| 16.1.3.1 | 0.0.11 |
-| 15.1.5.1 | 0.0.14 |
-| 14.1.4.6 | 0.0.8 |
+| 16.1.3.3 | 0.0.3 |
+| 15.1.8.1 | 0.0.3 |
+| 14.1.5.3 | 0.0.5 |
 
 Newer versions are expected to work but have not been specifically tested. 
 ## Installer
