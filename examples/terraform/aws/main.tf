@@ -120,7 +120,7 @@ resource "aws_security_group" "sg_mgmt" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.AllowedIPs
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = merge(var.global_tags, { Name="sg-${module.utils.env_unique_id}-bigip-mgmt" })

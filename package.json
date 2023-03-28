@@ -10,7 +10,7 @@
         "url": "git+https://github.com/F5Networks/f5-bigip-runtime-init.git"
     },
     "scripts": {
-        "audit": "npm audit --json > .auditReport.json; node scripts/auditProcessor.js",
+        "audit": "npm audit --production --json > .auditReport.json; node scripts/auditProcessor.js",
         "sync-at-components-metadata": "bash scripts/sync_at_components_metadata.sh",
         "generate-readmes": "node ./scripts/render.js",
         "cli": "node ./src/cli.js",
@@ -142,29 +142,9 @@
     },
     "auditProcessor": {
         "whitelist": [
-            "1067480",
-            "1084901",
-            "1085248",
-            "1085250",
-            "1085251",
-            "1085261",
-            "1085291",
-            "1085292",
-            "1085307",
-            "1085321",
-            "1085322",
-            "1085403",
-            "1087848",
-            "1085814",
-            "1087903",
-            "1088370",
-            "1091087",
-            "1091170",
-            "1089153",
-            "1089434",
-            "1090162",
             "1089556",
-            "1090179"
+            "1090179",
+            "1091459"
         ]
     },
     "keywords": [
