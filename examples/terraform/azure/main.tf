@@ -296,13 +296,13 @@ resource "azurerm_key_vault" "key_vault" {
     object_id  = azurerm_user_assigned_identity.user_identity.principal_id
 
     key_permissions = [
-      "get"
+      "Get"
     ]
 
-    secret_permissions = ["get","list"]
+    secret_permissions = ["Get","List"]
 
     storage_permissions = [
-      "get"
+      "Get"
     ]
   }
 
@@ -312,13 +312,13 @@ resource "azurerm_key_vault" "key_vault" {
     object_id = data.azurerm_client_config.current.object_id
 
     key_permissions = [
-      "get"
+      "Get"
     ]
 
-    secret_permissions = ["get","list","set","delete","recover","backup","restore","purge"]
+    secret_permissions = ["Get","List","Set","Delete","Recover","Backup","Restore","Purge"]
 
     storage_permissions = [
-      "get"
+      "Get"
     ]
   }
 

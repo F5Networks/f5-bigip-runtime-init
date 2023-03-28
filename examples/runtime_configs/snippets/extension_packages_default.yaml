@@ -1,8 +1,8 @@
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.36.0
+      extensionVersion: 1.37.0
     - extensionType: as3
-      extensionVersion: 3.43.0
+      extensionVersion: 3.44.0
     - extensionType: fast
       extensionVersion: 1.24.0

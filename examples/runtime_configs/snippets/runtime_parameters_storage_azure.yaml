@@ -1,97 +1,145 @@
----
-runtime_parameters:
-- name: AZURE_TO_FILE_1
-  type: storage
-  storageProvider:
-    environment: azure
-    source: https://mystorageaccount.blob.core.windows.net/mycontainer/f5-appsvcs-3.42.0-5.noarch.rpm
-    destination: "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"
-- name: AZURE_TO_FILE_2
-  type: storage
-  storageProvider:
-    environment: azure
-    source: https://mystorageaccount.blob.core.windows.net/mycontainer/asm-policy-v0.0.1.xml
-    destination: "/var/config/rest/downloads/asm-policy-v0.0.1.xml"
-- name: AZURE_PARAMETER_TO_STRING
-  type: storage
-  storageProvider:
-    environment: azure
-    source: https://mystorageaccount.blob.core.windows.net/mycontainer/myfile.txt
-    destination: "/var/tmp/myfile.txt"
-- name: AZURE_PARAMETER_TO_JSON
-  type: storage
-  storageProvider:
-    environment: azure
-    source: https://mystorageaccount.blob.core.windows.net/mycontainer/myfile.json
-    destination: "/var/tmp/myfile.json"
-extension_packages:
-  install_operations:
-  - extensionType: as3
-    extensionVersion: 3.43.0
-    extensionUrl: file://f5-appsvcs-3.43.0-2.noarch.rpm
-extension_services:
-  service_operations:
-  - extensionType: as3
-    type: inline
-    value:
-      class: ADC
-      schemaVersion: 3.0.0
-      label: Quickstart
-      remark: Quickstart
-      Tenant_1:
-        class: Tenant
-        Shared:
-          class: Application
-          template: shared
-          shared_pool:
-            class: Pool
-            remark: Service 1 shared pool
-            members:
-            - serverAddresses:
-              - 10.0.3.4
-              servicePort: 80
-            monitors:
-            - http
-          Custom_HTTP_Profile:
-            class: HTTP_Profile
-            xForwardedFor: true
-          Custom_WAF_Policy:
-            class: WAF_Policy
-            url: "'{{{AZURE_TO_FILE_2}}}'"
-            enforcementMode: blocking
-            ignoreChanges: false
-        HTTP_Service:
-          class: Application
-          template: http
-          serviceMain:
-            class: Service_HTTP
-            virtualAddresses:
-            - 10.0.0.101
-            snat: auto
-            profileHTTP:
-              use: "/Tenant_1/Shared/Custom_HTTP_Profile"
-            policyWAF:
-              use: "/Tenant_1/Shared/Custom_WAF_Policy"
-            pool: "/Tenant_1/Shared/shared_pool"
-        HTTPS_Service:
-          class: Application
-          template: https
-          serviceMain:
-            class: Service_HTTPS
-            virtualAddresses:
-            - 10.0.0.101
-            snat: auto
-            profileHTTP:
-              use: "/Tenant_1/Shared/Custom_HTTP_Profile"
-            policyWAF:
-              use: "/Tenant_1/Shared/Custom_WAF_Policy"
-            pool: "/Tenant_1/Shared/shared_pool"
-            serverTLS:
-              bigip: "/Common/clientssl"
-            redirect80: false
-post_onboard_enabled:
-- name: echo_downloaded_file
-  type: inline
-  commands:
-  - echo "Downloaded file parameter is {{{AZURE_PARAMETER_TO_STRING}}}"
-  - echo "Downloaded JSON parameter is {{{AZURE_PARAMETER_TO_STRING.key}}}"
+{
+  "runtime_parameters": [
+    {
+      "name": "AZURE_TO_FILE_1",
+      "type": "storage",
+      "storageProvider": {
+        "environment": "azure",
+        "source": "https://mystorageaccount.blob.core.windows.net/mycontainer/f5-appsvcs-3.42.0-5.noarch.rpm",
+        "destination": "/var/config/rest/downloads/f5-appsvcs-3.42.0-5.noarch.rpm"
+      }
+    },
+    {
+      "name": "AZURE_TO_FILE_2",
+      "type": "storage",
+      "storageProvider": {
+        "environment": "azure",
+        "source": "https://mystorageaccount.blob.core.windows.net/mycontainer/asm-policy-v0.0.1.xml",
+        "destination": "/var/config/rest/downloads/asm-policy-v0.0.1.xml"
+      }
+    },
+    {
+      "name": "AZURE_PARAMETER_TO_STRING",
+      "type": "storage",
+      "storageProvider": {
+        "environment": "azure",
+        "source": "https://mystorageaccount.blob.core.windows.net/mycontainer/myfile.txt",
+        "destination": "/var/tmp/myfile.txt"
+      }
+    },
+    {
+      "name": "AZURE_PARAMETER_TO_JSON",
+      "type": "storage",
+      "storageProvider": {
+        "environment": "azure",
+        "source": "https://mystorageaccount.blob.core.windows.net/mycontainer/myfile.json",
+        "destination": "/var/tmp/myfile.json"
+      }
+    }
+  ],
+  "extension_packages": {
+    "install_operations": [
+      {
+        "extensionType": "as3",
+        "extensionVersion": "3.44.0",
+        "extensionUrl": "file://f5-appsvcs-3.44.0-3.noarch.rpm"
+      }
+    ]
+  },
+  "extension_services": {
+    "service_operations": [
+      {
+        "extensionType": "as3",
+        "type": "inline",
+        "value": {
+          "class": "ADC",
+          "schemaVersion": "3.0.0",
+          "label": "Quickstart",
+          "remark": "Quickstart",
+          "Tenant_1": {
+            "class": "Tenant",
+            "Shared": {
+              "class": "Application",
+              "template": "shared",
+              "shared_pool": {
+                "class": "Pool",
+                "remark": "Service 1 shared pool",
+                "members": [
+                  {
+                    "serverAddresses": [
+                      "10.0.3.4"
+                    ],
+                    "servicePort": 80
+                  }
+                ],
+                "monitors": [
+                  "http"
+                ]
+              },
+              "Custom_HTTP_Profile": {
+                "class": "HTTP_Profile",
+                "xForwardedFor": true
+              },
+              "Custom_WAF_Policy": {
+                "class": "WAF_Policy",
+                "url": "'{{{AZURE_TO_FILE_2}}}'",
+                "enforcementMode": "blocking",
+                "ignoreChanges": false
+              }
+            },
+            "HTTP_Service": {
+              "class": "Application",
+              "template": "http",
+              "serviceMain": {
+                "class": "Service_HTTP",
+                "virtualAddresses": [
+                  "10.0.0.101"
+                ],
+                "snat": "auto",
+                "profileHTTP": {
+                  "use": "/Tenant_1/Shared/Custom_HTTP_Profile"
+                },
+                "policyWAF": {
+                  "use": "/Tenant_1/Shared/Custom_WAF_Policy"
+                },
+                "pool": "/Tenant_1/Shared/shared_pool"
+              }
+            },
+            "HTTPS_Service": {
+              "class": "Application",
+              "template": "https",
+              "serviceMain": {
+                "class": "Service_HTTPS",
+                "virtualAddresses": [
+                  "10.0.0.101"
+                ],
+                "snat": "auto",
+                "profileHTTP": {
+                  "use": "/Tenant_1/Shared/Custom_HTTP_Profile"
+                },
+                "policyWAF": {
+                  "use": "/Tenant_1/Shared/Custom_WAF_Policy"
+                },
+                "pool": "/Tenant_1/Shared/shared_pool",
+                "serverTLS": {
+                  "bigip": "/Common/clientssl"
+                },
+                "redirect80": false
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "post_onboard_enabled": [
+    {
+      "name": "echo_downloaded_file",
+      "type": "inline",
+      "commands": [
+        "echo \"Downloaded file parameter is {{{AZURE_PARAMETER_TO_STRING}}}\"",
+        "echo \"Downloaded JSON parameter is {{{AZURE_PARAMETER_TO_STRING.key}}}\""
+      ]
+    }
+  ]
+}

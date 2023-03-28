@@ -80,6 +80,7 @@ resource "google_compute_firewall" "fw_external" {
     ports    = ["443", "80"]
   }
 
+  source_ranges = var.AllowedIPs
 }
 
 resource "google_compute_firewall" "fw_internal" {
