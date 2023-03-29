@@ -242,13 +242,15 @@ build_package:
         - export RELEASE=$(cat package.json | jq -r ".release")
         # deploy environment - required artifacts will be place in output folder
         - deployment-tool/deploy.sh --deployment-plan runtime_init_${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH} --skip-requirements "true"
+        # give vault server a few minutes to finish deploying
+        - sleep 5m
         # inhale the vault variables
         - export VAULT_MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .vault_server_public_ip -r) && echo "VAULT_MGMT_IP is ${VAULT_MGMT_IP}"
         - export VAULT_SERVER_PUBLIC_HTTP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .vault_server_public_http -r) && echo "VAULT_SERVER_PUBLIC_HTTP is ${VAULT_SERVER_PUBLIC_HTTP}"
-        - export VAULT_APP_ROLE=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id')
-        - export VAULT_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
-        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
-        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-2-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
+        - export VAULT_APP_ROLE=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id' | jq -r .data.role_id)
+        - export VAULT_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id' | jq -r .data.secret_id)
+        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-${CLOUD}-${BIGIP_VERSION}" | jq -r .wrap_info.token)
+        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-2-${CLOUD}-${BIGIP_VERSION}" | jq -r .wrap_info.token)
         - echo "VAULT_APP_ROLE is ${VAULT_APP_ROLE}"
         - echo "VAULT_SECRET_ID is ${VAULT_SECRET_ID}"
         - echo "VAULT_WRAPPED_SECRET_ID is ${VAULT_WRAPPED_SECRET_ID}"
