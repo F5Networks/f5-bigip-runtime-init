@@ -24,8 +24,12 @@ if [ ! -f /config/first_run_flag ]; then
     echo "/config/startup-script.sh" >> /config/startup
 
     /usr/bin/setdb provision.managementeth eth1
-    /usr/bin/setdb provision.extramb 1000
-    /usr/bin/setdb restjavad.useextramb true
+    /usr/bin/setdb provision.extramb 1000 || true
+    /usr/bin/setdb restjavad.useextramb true || true
+    /usr/bin/setdb iapplxrpm.timeout 300 || true
+    /usr/bin/setdb icrd.timeout 180 || true
+    /usr/bin/setdb restjavad.timeout 180 || true
+    /usr/bin/setdb restnoded.timeout 180 || true
     reboot
 fi
 EOF
@@ -158,9 +162,6 @@ extension_packages:
     - extensionType: ts
       extensionVersion: {{TS_VERSION}}
       extensionHash: {{TS_HASH}}
-    - extensionType: fast
-      extensionVersion: {{FAST_VERSION}}
-      extensionHash: {{FAST_HASH}}
 extension_services:
   service_operations:
     - extensionType: do

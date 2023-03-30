@@ -56,19 +56,19 @@ variable "sku" {
 variable "bigip_version" {
   description = "The BIG-IP version for the virtual machine"
   type        = string
-  default     = "latest"
+  default     = "16.1.303000"
 }
 
 variable "bigip_runtime_init_package_url" {
   description = "The delivery url for BIGIP Runtime Init package"
   type        = string
-  default =  "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.5.2/dist/f5-bigip-runtime-init-1.5.2-1.gz.run"
+  default =  "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.1/dist/f5-bigip-runtime-init-1.6.1-1.gz.run"
 }
 
 variable "instance_size" {
   description = "The instance size for the virtual machine"
   type        = string
-  default     = "Standard_DS3_v2"
+  default     = "Standard_D8s_v4"
 }
 
 variable "boot_diagnostics" {

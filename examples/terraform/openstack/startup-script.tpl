@@ -21,8 +21,8 @@ exec 1>$npipe
 exec 2>&1
 
 # Run Immediately Before MCPD starts
-/usr/bin/setdb provision.extramb 1000
-/usr/bin/setdb restjavad.useextramb true
+/usr/bin/setdb provision.extramb 1000 || true
+/usr/bin/setdb restjavad.useextramb true || true
 /usr/bin/setdb iapplxrpm.timeout 300 || true
 /usr/bin/setdb icrd.timeout 180 || true
 /usr/bin/setdb restjavad.timeout 180 || true
@@ -67,11 +67,14 @@ bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.35.0
-      extensionHash: 44df23fab10547d5cb0999689b2f9b2a01d7a82e616898b5ccd57172876d2793
+      extensionVersion: 1.37.0
+      extensionHash: 25dd5256f9fa563e9b2ef9df228d5b01df1aef6b143d7e1c7b9daac822fb91ef
     - extensionType: as3
-      extensionVersion: 3.42.0
-      extensionHash: dcb869775f00b2d1a4c8a7600beeb596a8da469caa7ddb30df02c4cdc48c37e2
+      extensionVersion: 3.44.0
+      extensionHash: 78ecc5a0d3d6410dabb8cc2a80d3a7287a524b6f7ad4c8ff2c83f11947f597db
+    - extensionType: ts
+      extensionVersion: 1.33.0
+      extensionHash: 573d8cf589d545b272250ea19c9c124cf8ad5bcdd169dbe2139e82ce4d51a449
 extension_services:
   service_operations:
     - extensionType: do
