@@ -269,7 +269,7 @@ controls:
 
 ### pre_onboard_enabled
 
-*Description:* A list of commands to run that do NOT check if BIG-IP and MCPD are up and running. However, execution of before or after BIG-IP is ready depends on cloud agent/download times/etc. For instance, when Runtime-Init and/or files are baked directly into the BIG-IP Image using the [BIG-IP Image Generator](https://github.com/f5devcentral/f5-bigip-image-generator/).
+*Description:* A list of commands that run without checking if BIG-IP and MCPD are up and running. Whether these commands are executed before or after BIG-IP is ready depends on external factors like cloud agent status, network latency, etc. For instance, when the Runtime-Init installer and/or other required files are baked directly into the BIG-IP image using the [BIG-IP Image Generator](https://github.com/f5devcentral/f5-bigip-image-generator/), pre_onboard_enabled commands can run sufficiently early. However, in some clouds or scenarios, the files may take too long to download. In that case, these commands may need to be run earlier in the startup script itself to ensure they are applied before BIG-IP is ready.
 
 
 Allowed types are `inline`, `file` and `url`.
