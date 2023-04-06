@@ -20,27 +20,23 @@ before_script:
     - *helpers
 
 variables:
+    AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+    AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
     ARM_CLIENT_ID: "$AZURE_COMMERCIAL_CLIENT_ID"
     ARM_CLIENT_SECRET: "$AZURE_COMMERCIAL_CLIENT_SECRET"
     ARM_SUBSCRIPTION_ID: "$AZURE_COMMERCIAL_SUBSCRIPTION_ID"
     ARM_TENANT_ID: "$AZURE_COMMERCIAL_TENANT_ID"
-    TF_VAR_AZURE_TENANT_ID: "$AZURE_COMMERCIAL_TENANT_ID"
-    TF_VAR_location: $AZURE_LOCATION
-    TF_VAR_AZURE_OBJECT_ID: "$AZURE_COMMERCIAL_OBJECT_ID"
-    AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
-    AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
-    TF_VAR_AWS_DEFAULT_DOMAIN: "$AWS_DEFAULT_DOMAIN"
-    TF_VAR_AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
-    TF_VAR_AZURE_OFFER: "$AZURE_OFFER"
-    TF_VAR_AZURE_SKU: "$AZURE_SKU"
-    TF_VAR_DOMAIN: 'us'
-    TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION"
+    ARM_CLIENT_ID_GOV: "$AZURE_GOV_CLIENT_ID"
+    ARM_CLIENT_SECRET_GOV: "$AZURE_GOV_CLIENT_SECRET"
+    ARM_SUBSCRIPTION_ID_GOV: "$AZURE_GOV_SUBSCRIPTION_ID"
+    ARM_TENANT_ID_GOV: "$AZURE_GOV_TENANT_ID"
+    GOOGLE_PROJECT_ID: "$GOOGLE_PROJECT_ID"
+    GOOGLE_CREDENTIALS: "$GOOGLE_CREDENTIALS"
     GIT_SECRETS_VERSION: '1.3.0'
     GIT_SECRETS_PKG_URL: "https://github.com/awslabs/git-secrets/archive/${GIT_SECRETS_VERSION}.tar.gz"
-    GIT_SUBMODULE_STRATEGY: recursive
-    VAULT_PATH: 'deployment-tool/plans/runtime_init_vault/aws'
-    VAULT_STATE_FILE: 'terraform.tfstate'
-    TERRAFORM_VERSION: '0.12.31'
+    DOCKER_AUTH_CONFIG: ${DOCKER_AUTH_CONFIG}
+    DEPLOYMENT_TOOL_IMAGE_V2: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-v2:latest
+    MONGODB_IMAGE: ${ARTIFACTORY_SERVER}/dockerhub-remote/mongo:4.0-xenial
 
 # Cleanup development RPM's on CDN when branch no longer present on gitlab
 cleanup_publish_rpms_dev_cdn:
@@ -212,89 +208,26 @@ build_package:
 # Functional Tests - Initialization phase
 .test_functional_init_generic: &test_functional_init_generic
     stage: functional_test_init
-    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/hashicorp/terraform:${TERRAFORM_VERSION}
-    needs:
-      - build_package
-    dependencies:
-      - build_package
+    image: ${DEPLOYMENT_TOOL_IMAGE_V2}
     retry:
-        max: 0
+        max: 1
+    before_script:
+        - mkdir ~/.docker
+        - echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json
     script:
-        # deploy prereqs
-        - apk add --update
-        - apk add bash curl jq build-base openssl-dev libffi-dev git
-        - apk add jq openssh-client sshpass python3 python3-dev
-        - ln -sf python3 /usr/bin/python
-        - python -m ensurepip
-        - ln -s pip3 /usr/bin/pip
-        - pip install --upgrade pip
-        - apk add npm
-        # create ssh key
-        - echo "*** Configuring SSH"
-        - eval $(ssh-agent -s)
-        - echo "$SSH_KEY" | sed 's/\\n/\n/g' | ssh-add -
-        - mkdir -p ~/.ssh
-        - chmod 700 ~/.ssh
-        # install deployment tool requirements
-        - pip install -r deployment-tool/dependencies/requirements.txt
-        # gather package version and build
-        - export VERSION=$(cat package.json | jq -r ".version")
-        - export RELEASE=$(cat package.json | jq -r ".release")
-        # deploy environment - required artifacts will be place in output folder
-        - deployment-tool/deploy.sh --deployment-plan runtime_init_${CLOUD} --action create --output-folder env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH} --skip-requirements "true"
-        # give vault server a few minutes to finish deploying
-        - sleep 5m
-        # inhale the vault variables
-        - export VAULT_MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .vault_server_public_ip -r) && echo "VAULT_MGMT_IP is ${VAULT_MGMT_IP}"
-        - export VAULT_SERVER_PUBLIC_HTTP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .vault_server_public_http -r) && echo "VAULT_SERVER_PUBLIC_HTTP is ${VAULT_SERVER_PUBLIC_HTTP}"
-        - export VAULT_APP_ROLE=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id')
-        - export VAULT_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id')
-        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
-        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-2-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token")
-        - echo "VAULT_APP_ROLE is ${VAULT_APP_ROLE}"
-        - echo "VAULT_SECRET_ID is ${VAULT_SECRET_ID}"
-        - echo "VAULT_WRAPPED_SECRET_ID is ${VAULT_WRAPPED_SECRET_ID}"
-        - echo "VAULT_WRAPPED_SECRET_ID_2 is ${VAULT_WRAPPED_SECRET_ID_2}"
-        # replace cloud plan defaults with vault variables
-        - sed -i "s \vault_server_public_http ${VAULT_SERVER_PUBLIC_HTTP} g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
-        - sed -i "s/\vault_app_role/${VAULT_APP_ROLE}/g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
-        - sed -i "s/\vault_secret_id/${VAULT_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
-        - sed -i "s/\vault_wrapped_secret_id/${VAULT_WRAPPED_SECRET_ID}/g" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl
-        # collect deployment metadata
-        - grep "\-\-\-" deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl -A 1000 > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml 
-        - export MGMT_IP=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].mgmt_address -r)
-        - export USERNAME=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_username -r)
-        - export PASSWORD=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .instances[].admin_password -r)
-        - export DEPLOYMENT_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .deploymentId -r)
-        - export SECRET_ID=$(cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/deployment_info.json | jq .secret_id -r)
-        - export NAME=$(cat package.json | jq .name -r)
-        - echo "Verifying that BIGIP is ready to accept commands"
-        - bash tests/scripts/verify_bash_available.sh
-        - if [[ $? != 0 ]]; then exit 1; fi
-        # workaround: copying over declaration to support bigip version with no user-data support
-        - sed "s/\${deployment_id}/$DEPLOYMENT_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml
-        - sed "s/\${secret_id}/$SECRET_ID/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
-        - sed "s/\${domain}/$TF_VAR_DOMAIN/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml
-        - rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml && rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced01.yaml && rm env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced02.yaml
-        - mv env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration_replaced03.yaml env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
-        - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config
-        # updating config because wrapped Vault token can only be used once
-        - if [[ "${CLOUD}" != "base" ]]; then sed "s/${VAULT_WRAPPED_SECRET_ID}/${VAULT_WRAPPED_SECRET_ID_2}/g" env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml > env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml; else cp env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration.yaml env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml; fi
-        - cat env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/f5-bigip-runtime-declaration-update.yaml $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
-        # end of workaround.
-        - echo "Installing RPM and executing"
-        # upload self installer
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash -c 'export TEEM_API_ENVIRONMENT=staging && f5-bigip-runtime-init -c /config/cloud/onboard_config'"
-        # re-run with updated config
-        - sleep 30
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
-        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config_update --skip-telemetry"
+        - SOURCE_IP=$(curl ifconfig.me) && echo "Source IP of job is $SOURCE_IP"
+        # deploy environment - required artifacts will be placed in ./deployment folder
+        - echo "Deployment parameters are ${DEPLOYMENT_PARAMS}"
+        - cd /deployment-tool && ./deployment_tool.sh --command info --plan runtime_init_${CLOUD} --name ci-$CI_JOB_ID --parameters "${DEPLOYMENT_PARAMS}" && cd -
+        - cd /deployment-tool && ./deployment_tool.sh --command create --plan runtime_init_${CLOUD} --name ci-$CI_JOB_ID --database export --parameters "${DEPLOYMENT_PARAMS}" && cd -
+        - cp -a /deployment-tool/deployment .
+        - echo "ci-$CI_JOB_ID" > deployment_name
+        # save runtime config for use in test execute stage
+        - grep "\-\-\-" /deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl -A 1000 > f5-bigip-runtime-declaration.yaml
+        # sleeping a while here to give the vault server time to finish onboarding
+        - sleep 2m
     tags:
-        - cm-official-docker-executor
+        - azure-autoscale-runner
     only:
         variables:
             - $CI_COMMIT_REF_NAME == "main"
@@ -307,13 +240,18 @@ build_package:
             - $PUBLISH_RPM == "true"
     artifacts:
         paths:
-            - env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}
+            - ./deployment
+            - deployment_name
+            - f5-bigip-runtime-declaration.yaml
         when: always
         expire_in: 1 week
 
 # run functional tests: azure and BIGIPv16
 test_functional_init_azure_v16:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
@@ -321,9 +259,10 @@ test_functional_init_azure_v16:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v16"
-        VERSION_PATH: "v16"
+        DOMAIN: ${CLOUD}
+        DEPLOYMENT_PARAMS: "location=${AZURE_LOCATION} bigip_version=${AZURE_BIGIP_VERSION_v16} object_id=${AZURE_COMMERCIAL_OBJECT_ID} tenant_id=${ARM_TENANT_ID}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -334,15 +273,19 @@ test_functional_init_azure_v16:
 # run functional tests: azure and BIGIPv15
 test_functional_init_azure_v15:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
+        DOMAIN: ${CLOUD}
+        DEPLOYMENT_PARAMS: "location=${AZURE_LOCATION} bigip_version=${AZURE_BIGIP_VERSION_v15} object_id=${AZURE_COMMERCIAL_OBJECT_ID} tenant_id=${ARM_TENANT_ID}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -353,6 +296,9 @@ test_functional_init_azure_v15:
 # run functional tests: azure and BIGIPv14
 test_functional_init_azure_v14:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
@@ -360,9 +306,10 @@ test_functional_init_azure_v14:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v14"
-        VERSION_PATH: "v14"
+        DOMAIN: ${CLOUD}
+        DEPLOYMENT_PARAMS: "location=${AZURE_LOCATION} bigip_version=${AZURE_BIGIP_VERSION_v14} object_id=${AZURE_COMMERCIAL_OBJECT_ID} tenant_id=${ARM_TENANT_ID}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -373,22 +320,22 @@ test_functional_init_azure_v14:
 # run functional tests: azure and BIGIPv16
 test_functional_init_azure_gov_v16:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v16"
-        VERSION_PATH: "v16"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_location: "usgovvirginia"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
-        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        DOMAIN: "usgovcloudapi"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
+        DEPLOYMENT_PARAMS: "location=usgovvirginia bigip_version=${AZURE_BIGIP_VERSION_v16} object_id=${AZURE_GOV_OBJECT_ID} tenant_id=${ARM_TENANT_ID_GOV} environment=usgovernment domain=${DOMAIN}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -399,22 +346,22 @@ test_functional_init_azure_gov_v16:
 # run functional tests: azure and BIGIPv15
 test_functional_init_azure_gov_v15:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_location: "usgovvirginia"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
-        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        DOMAIN: "usgovcloudapi"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
+        DEPLOYMENT_PARAMS: "location=usgovvirginia bigip_version=${AZURE_BIGIP_VERSION_v15} object_id=${AZURE_GOV_OBJECT_ID} tenant_id=${ARM_TENANT_ID_GOV} environment=usgovernment domain=${DOMAIN}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -425,22 +372,22 @@ test_functional_init_azure_gov_v15:
 # run functional tests: azure and BIGIPv14
 test_functional_init_azure_gov_v14:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v14"
-        VERSION_PATH: "v14"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_location: "usgovvirginia"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
-        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        DOMAIN: "usgovcloudapi"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
+        DEPLOYMENT_PARAMS: "location=usgovvirginia bigip_version=${AZURE_BIGIP_VERSION_v14} object_id=${AZURE_GOV_OBJECT_ID} tenant_id=${ARM_TENANT_ID_GOV} environment=usgovernment domain=${DOMAIN}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -451,6 +398,9 @@ test_functional_init_azure_gov_v14:
 # run functional tests: aws and BIGIPv16
 test_functional_init_aws_v16:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
@@ -458,8 +408,9 @@ test_functional_init_aws_v16:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "aws"
-        TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID_v16"
-        VERSION_PATH: "v16"
+        DEPLOYMENT_PARAMS: "aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v16} region=${AWS_DEFAULT_REGION}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -470,14 +421,18 @@ test_functional_init_aws_v16:
 # run functional tests: aws and BIGIPv15
 test_functional_init_aws_v15:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
-        TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID_v15"
-        VERSION_PATH: "v15"
+        DEPLOYMENT_PARAMS: "aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v15} region=${AWS_DEFAULT_REGION}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -488,6 +443,9 @@ test_functional_init_aws_v15:
 # run functional tests: aws and BIGIPv14
 test_functional_init_aws_v14:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
@@ -495,8 +453,9 @@ test_functional_init_aws_v14:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "aws"
-        TF_VAR_AWS_BIGIP_AMI_ID: "$AWS_BIGIP_AMI_ID_v14"
-        VERSION_PATH: "v14"
+        DEPLOYMENT_PARAMS: "aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v14} region=${AWS_DEFAULT_REGION}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -507,6 +466,9 @@ test_functional_init_aws_v14:
 # run functional tests: gcp and BIGIPv16
 test_functional_init_gcp_v16:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
@@ -514,8 +476,9 @@ test_functional_init_gcp_v16:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "gcp"
-        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v16"
-        VERSION_PATH: "v16"
+        DEPLOYMENT_PARAMS: "bigip_version=${GOOGLE_BIGIP_VERSION_v16}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -526,14 +489,18 @@ test_functional_init_gcp_v16:
 # run functional tests: gcp and BIGIPv15
 test_functional_init_gcp_v15:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
-        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
+        DEPLOYMENT_PARAMS: "bigip_version=${GOOGLE_BIGIP_VERSION_v15}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -544,6 +511,9 @@ test_functional_init_gcp_v15:
 # run functional tests: gcp and BIGIPv14
 test_functional_init_gcp_v14:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
@@ -551,8 +521,9 @@ test_functional_init_gcp_v14:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "gcp"
-        TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v14"
-        VERSION_PATH: "v14"
+        DEPLOYMENT_PARAMS: "bigip_version=${GOOGLE_BIGIP_VERSION_v14}"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -563,13 +534,17 @@ test_functional_init_gcp_v14:
 # run functional tests: base package and BIGIPv16
 test_functional_init_base_v16:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "base"
         TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v16"
-        VERSION_PATH: "v16"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -580,13 +555,17 @@ test_functional_init_base_v16:
 # run functional tests: base package and BIGIPv15
 test_functional_init_base_v15:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
         TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -597,13 +576,17 @@ test_functional_init_base_v15:
 # run functional tests: base package and BIGIPv15
 test_functional_init_base_v14:
     <<: *test_functional_init_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "base"
         TF_VAR_bigip_version: "$GOOGLE_BIGIP_VERSION_v14"
-        VERSION_PATH: "v14"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -615,17 +598,76 @@ test_functional_init_base_v14:
 .test_functional_execute_generic: &test_functional_execute_generic
     stage: functional_test_execute
     image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
+    retry:
+        max: 1
     script:
-        # install jq
+        - SOURCE_IP=$(curl ifconfig.me) && echo "Source IP of job is $SOURCE_IP"
+        # install jq and sshpass
         - apt-get update
-        - apt-get install -y jq
-        # install sshpass
-        - apt-get install sshpass
-        # install node (and package dependencies )
+        - apt-get install -y jq openssh-client sshpass
+        # create ssh key
+        - echo "*** Configuring SSH"
+        - eval $(ssh-agent -s)
+        - echo "$SSH_KEY" | sed 's/\\n/\n/g' | ssh-add -
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        # gather package version and build
+        - export VERSION=$(cat package.json | jq -r ".version")
+        - export RELEASE=$(cat package.json | jq -r ".release")
+        # copying artifacts inherited from functional_test_init target to root directory
+        - cp -a ./deployment/. .
+        - cp f5-bigip-runtime-declaration.yaml onboard_config
+        # inhale the vault variables
+        - export VAULT_MGMT_IP=$(cat deployment_info.json | jq .vault_server_public_ip -r) && echo "VAULT_MGMT_IP is ${VAULT_MGMT_IP}"
+        - export VAULT_SERVER_PUBLIC_HTTP=$(cat deployment_info.json | jq .vault_server_public_http -r) && echo "VAULT_SERVER_PUBLIC_HTTP is ${VAULT_SERVER_PUBLIC_HTTP}"
+        - export VAULT_APP_ROLE=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/role-id | jq -r .data.role_id') && echo "VAULT_APP_ROLE is ${VAULT_APP_ROLE}"
+        - export VAULT_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' 'cat /tmp/secret-id | jq -r .data.secret_id') && echo "VAULT_SECRET_ID is ${VAULT_SECRET_ID}"
+        - export VAULT_WRAPPED_SECRET_ID=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token") && echo "VAULT_WRAPPED_SECRET_ID is ${VAULT_WRAPPED_SECRET_ID}"
+        - export VAULT_WRAPPED_SECRET_ID_2=$(ssh -l ubuntu ${VAULT_MGMT_IP} -o 'StrictHostKeyChecking=no' "cat /tmp/wrapped-secret-id-2-${CLOUD}-${BIGIP_VERSION} | jq -r .wrap_info.token") && echo "VAULT_WRAPPED_SECRET_ID_2 is ${VAULT_WRAPPED_SECRET_ID_2}"
+        # inhale deployment variables
+        - export MGMT_IP=$(cat deployment_info.json | jq .instances[].mgmt_address -r) && echo "MGMT_IP is ${MGMT_IP}"
+        - export USERNAME=$(cat deployment_info.json | jq .instances[].admin_username -r) && echo "USERNAME is ${USERNAME}"
+        - export PASSWORD=$(cat deployment_info.json | jq .instances[].admin_password -r) && echo "PASSWORD is ${PASSWORD}"
+        - export DEPLOYMENT_ID=$(cat deployment_info.json | jq .deploymentId -r) && echo "DEPLOYMENT_ID is ${DEPLOYMENT_ID}"
+        - export SECRET_ID=$(cat deployment_info.json | jq .secret_id -r) && echo "SECRET_ID is ${SECRET_ID}"
+        - echo "DOMAIN is ${DOMAIN}"
+        # modify runtime init config
+        # replace cloud plan defaults with vault variables
+        - sed -i "s@vault_server_public_http@${VAULT_SERVER_PUBLIC_HTTP}@g" onboard_config
+        - sed -i "s/vault_app_role/${VAULT_APP_ROLE}/g" onboard_config
+        - sed -i "s/vault_secret_id/${VAULT_SECRET_ID}/g" onboard_config
+        - sed -i "s/vault_wrapped_secret_id/${VAULT_WRAPPED_SECRET_ID}/g" onboard_config
+        # update runtime config with deployment variables
+        - sed "s/\${deployment_id}/${DEPLOYMENT_ID}/g" onboard_config > onboard_config_replaced01
+        - sed "s/\${secret_id}/${SECRET_ID}/g" onboard_config_replaced01 > onboard_config_replaced02
+        - sed "s/\${domain}/${DOMAIN}/g" onboard_config_replaced02 > onboard_config_replaced03
+        - rm onboard_config && rm onboard_config_replaced01 && rm onboard_config_replaced02
+        - mv onboard_config_replaced03 onboard_config
+        - echo "Initial onboard config is" && cat onboard_config
+        # updating config because wrapped vault token can only be used once
+        - if [[ "${CLOUD}" != "base" ]]; then sed "s/${VAULT_WRAPPED_SECRET_ID}/${VAULT_WRAPPED_SECRET_ID_2}/g" onboard_config > onboard_config_update; else cp onboard_config onboard_config_update; fi
+        - echo "Updated onboard config is" && cat onboard_config_update
+        # upload config files and self installer
+        - echo "Verifying that BIGIP is ready to accept commands"
+        - bash tests/scripts/verify_bash_available.sh
+        - if [[ $? != 0 ]]; then exit 1; fi
+        - echo "Uploading runtime init config files"
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no onboard_config $USERNAME@$MGMT_IP:/config/cloud/onboard_config
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no onboard_config_update $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
+        # install RPM and execute
+        - echo "Installing RPM and executing"
+        - pwd
+        - ls -la
+        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash -c 'export TEEM_API_ENVIRONMENT=staging && f5-bigip-runtime-init -c /config/cloud/onboard_config'"
+        # re-run with updated config
+        - sleep 30
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
+        - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config_update --skip-telemetry"
+        # install node and dependencies for functional tests
         - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get -y install nodejs
         - npm install --unsafe-perm
-        # copying artifacts inherited from functional_test_init target to root directory
-        - cp -a env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/. .
         # executing fuctional test
         - validate npm run functional-test
     tags:
@@ -656,12 +698,7 @@ test_functional_execute_azure_v16:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        VERSION_PATH: "v16"
-        AZURE_CLIENT_ID: "$AZURE_COMMERCIAL_CLIENT_ID"
-        AZURE_CLIENT_SECRET: "$AZURE_COMMERCIAL_CLIENT_SECRET"
-        AZURE_TENANT_ID: "$AZURE_COMMERCIAL_TENANT_ID"
-        AZURE_SUBSCRIPTION_ID: "$AZURE_COMMERCIAL_SUBSCRIPTION_ID"
+        DOMAIN: ${CLOUD}
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -669,8 +706,10 @@ test_functional_execute_azure_v16:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_azure_v16
     needs:
+        - build_package
         - test_functional_init_azure_v16
 
 # run functional tests: azure
@@ -682,12 +721,7 @@ test_functional_execute_azure_v15:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        VERSION_PATH: "v15"
-        AZURE_CLIENT_ID: "$AZURE_COMMERCIAL_CLIENT_ID"
-        AZURE_CLIENT_SECRET: "$AZURE_COMMERCIAL_CLIENT_SECRET"
-        AZURE_TENANT_ID: "$AZURE_COMMERCIAL_TENANT_ID"
-        AZURE_SUBSCRIPTION_ID: "$AZURE_COMMERCIAL_SUBSCRIPTION_ID"
+        DOMAIN: ${CLOUD}
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -695,8 +729,10 @@ test_functional_execute_azure_v15:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_azure_v15
     needs:
+        - build_package
         - test_functional_init_azure_v15
 
 # run functional tests: azure
@@ -709,12 +745,7 @@ test_functional_execute_azure_v14:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        VERSION_PATH: "v14"
-        AZURE_CLIENT_ID: "$AZURE_COMMERCIAL_CLIENT_ID"
-        AZURE_CLIENT_SECRET: "$AZURE_COMMERCIAL_CLIENT_SECRET"
-        AZURE_TENANT_ID: "$AZURE_COMMERCIAL_TENANT_ID"
-        AZURE_SUBSCRIPTION_ID: "$AZURE_COMMERCIAL_SUBSCRIPTION_ID"
+        DOMAIN: ${CLOUD}
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -722,8 +753,10 @@ test_functional_execute_azure_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_azure_v14
     needs:
+        - build_package
         - test_functional_init_azure_v14
 
 # run functional tests: azure goverment
@@ -734,15 +767,11 @@ test_functional_execute_azure_gov_v16:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
-        VERSION_PATH: "v16"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        AZURE_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        AZURE_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        AZURE_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
+        DOMAIN: "usgovcloudapi"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -750,8 +779,10 @@ test_functional_execute_azure_gov_v16:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_azure_gov_v16
     needs:
+        - build_package
         - test_functional_init_azure_gov_v16
 
 # run functional tests: azure goverment
@@ -762,15 +793,11 @@ test_functional_execute_azure_gov_v15:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
-        VERSION_PATH: "v15"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        AZURE_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        AZURE_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        AZURE_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
+        DOMAIN: "usgovcloudapi"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -778,8 +805,10 @@ test_functional_execute_azure_gov_v15:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_azure_gov_v15
     needs:
+        - build_package
         - test_functional_init_azure_gov_v15
 
 # run functional tests: azure
@@ -790,15 +819,11 @@ test_functional_execute_azure_gov_v14:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        VERSION_PATH: "v14"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        AZURE_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        AZURE_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        AZURE_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
+        DOMAIN: "usgovcloudapi"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -806,8 +831,10 @@ test_functional_execute_azure_gov_v14:
             - $TEST_SUITE == "azure"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_azure_gov_v14
     needs:
+        - build_package
         - test_functional_init_azure_gov_v14
 
 # run functional tests: aws
@@ -820,7 +847,6 @@ test_functional_execute_aws_v16:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "aws"
-        VERSION_PATH: "v16"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -828,8 +854,10 @@ test_functional_execute_aws_v16:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_aws_v16
     needs:
+        - build_package
         - test_functional_init_aws_v16
 
 # run functional tests: aws
@@ -841,7 +869,6 @@ test_functional_execute_aws_v15:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
-        VERSION_PATH: "v15"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -849,8 +876,10 @@ test_functional_execute_aws_v15:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_aws_v15
     needs:
+        - build_package
         - test_functional_init_aws_v15
 
 test_functional_execute_aws_v14:
@@ -862,7 +891,6 @@ test_functional_execute_aws_v14:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "aws"
-        VERSION_PATH: "v14"
     except:
         variables:
             - $TEST_SUITE == "gcp"
@@ -870,8 +898,10 @@ test_functional_execute_aws_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_aws_v14
     needs:
+        - build_package
         - test_functional_init_aws_v14
 
 # run functional tests: gcp
@@ -884,7 +914,6 @@ test_functional_execute_gcp_v16:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "gcp"
-        VERSION_PATH: "v16"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -892,8 +921,10 @@ test_functional_execute_gcp_v16:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_gcp_v16
     needs:
+        - build_package
         - test_functional_init_gcp_v16
 
 test_functional_execute_gcp_v15:
@@ -904,7 +935,6 @@ test_functional_execute_gcp_v15:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
-        VERSION_PATH: "v15"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -912,8 +942,10 @@ test_functional_execute_gcp_v15:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_gcp_v15
     needs:
+        - build_package
         - test_functional_init_gcp_v15
 
 test_functional_execute_gcp_v14:
@@ -925,7 +957,6 @@ test_functional_execute_gcp_v14:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "gcp"
-        VERSION_PATH: "v14"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -933,8 +964,10 @@ test_functional_execute_gcp_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "base"
     dependencies:
+        - build_package
         - test_functional_init_gcp_v14
     needs:
+        - build_package
         - test_functional_init_gcp_v14
 
 # run base package tests
@@ -945,7 +978,6 @@ test_functional_execute_base_v16:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "base"
-        VERSION_PATH: "v16"
         ENV_PROVIDER_TESTS: "ignore"
     except:
         variables:
@@ -954,8 +986,10 @@ test_functional_execute_base_v16:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "gcp"
     dependencies:
+        - build_package
         - test_functional_init_base_v16
     needs:
+        - build_package
         - test_functional_init_base_v16
 
 test_functional_execute_base_v15:
@@ -965,7 +999,6 @@ test_functional_execute_base_v15:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
-        VERSION_PATH: "v15"
         ENV_PROVIDER_TESTS: "ignore"
     except:
         variables:
@@ -974,8 +1007,10 @@ test_functional_execute_base_v15:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "gcp"
     dependencies:
+        - build_package
         - test_functional_init_base_v15
     needs:
+        - build_package
         - test_functional_init_base_v15
 
 test_functional_execute_base_v14:
@@ -985,7 +1020,6 @@ test_functional_execute_base_v14:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "base"
-        VERSION_PATH: "v14"
         ENV_PROVIDER_TESTS: "ignore"
     except:
         variables:
@@ -994,34 +1028,28 @@ test_functional_execute_base_v14:
             - $TEST_SUITE == "azure_gov"
             - $TEST_SUITE == "gcp"
     dependencies:
+        - build_package
         - test_functional_init_base_v14
     needs:
+        - build_package
         - test_functional_init_base_v14
 
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
     stage: functional_test_cleanup
-    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/hashicorp/terraform:${TERRAFORM_VERSION}
+    image: ${DEPLOYMENT_TOOL_IMAGE_V2}
     retry:
         max: 1
     when: always
+    before_script:
+        - mkdir ~/.docker
+        - echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json
     script:
-        # deploy environment
-        - apk add --update
-        - apk add bash curl jq build-base openssl-dev libffi-dev git
-        - apk add jq openssh-client sshpass python3 python3-dev
-        - ln -sf python3 /usr/bin/python
-        - python -m ensurepip
-        - ln -s pip3 /usr/bin/pip
-        - pip install --upgrade pip
-        - apk add npm
-        - pip install -r deployment-tool/dependencies/requirements.txt
-        # copying artifacts inherited from functional_test_init target to root directory
-        - cp -a env_metadata/${CLOUD}_${TF_VAR_DOMAIN}/${VERSION_PATH}/. .
-        # teardown environment
-        - deployment-tool/deploy.sh --deployment-plan runtime_init_${CLOUD} --action delete --skip-requirements "true"
+        - DEPLOYMENT_NAME=$(cat deployment_name)
+        - mkdir -p /deployment-tool/deployment && cp -a ./deployment/. /deployment-tool/deployment
+        - cd /deployment-tool && ./deployment_tool.sh --command delete --plan runtime_init_${CLOUD} --name ${DEPLOYMENT_NAME} --database import
     tags:
-        - cm-official-docker-executor
+        - azure-autoscale-runner
     only:
         variables:
             - $CI_COMMIT_REF_NAME == "main"
@@ -1037,6 +1065,9 @@ test_functional_execute_base_v14:
 # run functional tests: azure
 test_functional_cleanup_azure_v16:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
@@ -1044,8 +1075,8 @@ test_functional_cleanup_azure_v16:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        VERSION_PATH: "v16"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -1061,14 +1092,17 @@ test_functional_cleanup_azure_v16:
 
 test_functional_cleanup_azure_v15:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        VERSION_PATH: "v15"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -1084,6 +1118,9 @@ test_functional_cleanup_azure_v15:
 
 test_functional_cleanup_azure_v14:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
@@ -1091,8 +1128,8 @@ test_functional_cleanup_azure_v14:
             - $TEST_SUITE == "azure" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_DOMAIN: "$CLOUD"
-        VERSION_PATH: "v14"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -1109,22 +1146,20 @@ test_functional_cleanup_azure_v14:
 # run functional tests: azure gov
 test_functional_cleanup_azure_gov_v16:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v16"
-        VERSION_PATH: "v16"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_location: "usgovvirginia"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
-        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -1140,22 +1175,20 @@ test_functional_cleanup_azure_gov_v16:
 
 test_functional_cleanup_azure_gov_v15:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v15"
-        VERSION_PATH: "v15"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_location: "usgovvirginia"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
-        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -1171,22 +1204,20 @@ test_functional_cleanup_azure_gov_v15:
 
 test_functional_cleanup_azure_gov_v14:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "azure_gov" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "azure"
-        TF_VAR_AZURE_BIGIP_VERSION: "$AZURE_BIGIP_VERSION_v14"
-        VERSION_PATH: "v14"
-        TF_VAR_DOMAIN: "usgovcloudapi"
-        TF_VAR_location: "usgovvirginia"
-        TF_VAR_AZURE_ENVIROMENT: "usgovernment"
-        TF_VAR_AZURE_OBJECT_ID: "$AZURE_GOV_OBJECT_ID"
-        TF_VAR_AZURE_TENANT_ID: "$AZURE_GOV_TENANT_ID"
-        ARM_CLIENT_ID: "$AZURE_GOV_CLIENT_ID"
-        ARM_CLIENT_SECRET: "$AZURE_GOV_CLIENT_SECRET"
-        ARM_SUBSCRIPTION_ID: "$AZURE_GOV_SUBSCRIPTION_ID"
-        ARM_TENANT_ID: "$AZURE_GOV_TENANT_ID"
+        ARM_CLIENT_ID: "$ARM_CLIENT_ID_GOV"
+        ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
+        ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
+        ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "aws"
@@ -1203,6 +1234,9 @@ test_functional_cleanup_azure_gov_v14:
 # run functional tests: aws
 test_functional_cleanup_aws_v16:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
@@ -1210,7 +1244,8 @@ test_functional_cleanup_aws_v16:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "aws"
-        VERSION_PATH: "v16"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1226,13 +1261,17 @@ test_functional_cleanup_aws_v16:
 
 test_functional_cleanup_aws_v15:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
-        VERSION_PATH: "v15"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1248,6 +1287,9 @@ test_functional_cleanup_aws_v15:
 
 test_functional_cleanup_aws_v14:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
@@ -1255,7 +1297,8 @@ test_functional_cleanup_aws_v14:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "aws"
-        VERSION_PATH: "v14"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1272,6 +1315,9 @@ test_functional_cleanup_aws_v14:
 # run functional tests: gcp
 test_functional_cleanup_gcp_v16:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "16"
@@ -1279,7 +1325,8 @@ test_functional_cleanup_gcp_v16:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "gcp"
-        VERSION_PATH: "v16"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1295,13 +1342,17 @@ test_functional_cleanup_gcp_v16:
 
 test_functional_cleanup_gcp_v15:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "15"
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
-        VERSION_PATH: "v15"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1317,6 +1368,9 @@ test_functional_cleanup_gcp_v15:
 
 test_functional_cleanup_gcp_v14:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "all" && $BIGIP_VERSION == "14"
@@ -1324,7 +1378,8 @@ test_functional_cleanup_gcp_v14:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "gcp"
-        VERSION_PATH: "v14"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1341,12 +1396,16 @@ test_functional_cleanup_gcp_v14:
 # run functional tests: base
 test_functional_cleanup_base_v16:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "base"
-        VERSION_PATH: "v16"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1362,12 +1421,16 @@ test_functional_cleanup_base_v16:
 
 test_functional_cleanup_base_v15:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "base"
-        VERSION_PATH: "v15"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
@@ -1383,12 +1446,16 @@ test_functional_cleanup_base_v15:
 
 test_functional_cleanup_base_v14:
     <<: *test_functional_cleanup_generic
+    services:
+      - alias: mongo
+        name: ${MONGODB_IMAGE}
     only:
         variables:
             - $TEST_SUITE == "base" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "base"
-        VERSION_PATH: "v14"
+        MONGO_INITDB_ROOT_PASSWORD: "root"
+        MONGO_INITDB_ROOT_USERNAME: "root"
     except:
         variables:
             - $TEST_SUITE == "azure"
