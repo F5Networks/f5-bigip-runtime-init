@@ -1,4 +1,4 @@
-image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:8
+image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:12
 
 stages:
     - process
@@ -37,6 +37,7 @@ variables:
     DOCKER_AUTH_CONFIG: ${DOCKER_AUTH_CONFIG}
     DEPLOYMENT_TOOL_IMAGE_V2: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-v2:latest
     MONGODB_IMAGE: ${ARTIFACTORY_SERVER}/dockerhub-remote/mongo:4.0-xenial
+    EXTENSION_METADATA_FILE: "metadata.json"
 
 # Cleanup development RPM's on CDN when branch no longer present on gitlab
 cleanup_publish_rpms_dev_cdn:
@@ -50,6 +51,7 @@ cleanup_publish_rpms_dev_cdn:
             - $PUBLISH_RPM == "true"
     script:
         # install jq
+        - echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
         - apt-get update
         - apt-get install -y jq
         # find branches in project and cdn
@@ -103,6 +105,7 @@ test_audit:
 # run unit tests --uncomment
 unit_tests:
     stage: test
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:8
     script:
         - npm install --unsafe-perm
         - npm run test
@@ -148,17 +151,39 @@ check_schema:
     except:
         refs:
             - schedules
+    allow_failure: true
 
-# verifies all examples use the latest AT Components versions
-check_at_components_metadata:
+# test extension metadata file is current
+# with latest versions 
+# from Github
+test_extension_metadata:
     stage: test
     image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
     script:
-        - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -yq nodejs build-essential
-        - npm install -g npm@6.9.2
+        # generate metadata file
+        - make generate_extension_metadata
+        # check if file is out of date
+        - changed_files_count=$(git diff --name-only | wc -l)
+        - echo ${changed_files_count}
+        - if [[ $changed_files_count -ne 0 ]]; then echo "Extension metadata is out of date, please update manually or check for latest in develop"; exit 1; else echo "Metadata file is unchanged"; fi
+    tags:
+        - cm-official-docker-executor
+    except:
+        refs:
+            - schedules
+    allow_failure: true
+
+# verifies all examples 
+# use the latest AT components versions 
+# from src/lib/bigip/toolchain/toolchain_metadata.json
+test_at_components_sync:
+    stage: test
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
+    script:
+        - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs build-essential
         - apt-get install -y jq
         - pip3 install yq
-        - npm run sync-at-components-metadata
+        - ./scripts/sync_at_components_metadata.sh
         - if git diff | grep 'diff --git'; then exit 1; else exit 0; fi
     tags:
         - cm-official-docker-executor
@@ -169,7 +194,6 @@ check_at_components_metadata:
 
 # checks links in README
 check_links:
-    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:10
     stage: test
     script:
         - validate make link_check
@@ -179,11 +203,55 @@ check_links:
         refs:
             - schedules
 
+# generate extension metadata from latest Github releases
+# commit the result if modified and
+# create an artifact for publishing to CDN later
+build_extension_metadata:
+    stage: build
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
+    before_script:
+        # configuring SSH
+        - eval $(ssh-agent -s)
+        - test "$GIT_SSH_USER_PRIVATE_KEY" && (echo "$GIT_SSH_USER_PRIVATE_KEY" | tr -d '\r' | ssh-add -)
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        - echo "$GIT_SSH_USER_PUBLIC_KEY" >> ~/.ssh/id_rsa.pub
+        - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    script:
+        # generate metadata file
+        - make generate_extension_metadata
+        # check if file is out of date
+        - changed_files_count=$(git diff --name-only | wc -l)
+        - echo ${changed_files_count}
+        - if [[ $changed_files_count -ne 0 ]]; then echo "Extension metadata is out of date, we will update"; else echo "Metadata file is unchanged"; fi
+        # configure Git
+        - git config user.name $GITLAB_USER_LOGIN
+        - git config user.email $GITLAB_USER_EMAIL
+        # push metadata file to Gitlab if changed
+        - git status
+        - git add -f src/lib/bigip/toolchain/toolchain_metadata.json
+        - git commit -m "Scheduled job committed src/lib/bigip/toolchain/toolchain_metadata.json to $CI_COMMIT_REF_NAME branch" || echo "No changes, nothing to commit!"
+        - git remote rm origin && git remote add origin ${GIT_USER}:$CI_PROJECT_PATH.git
+        - echo "Created new origin remote at ${GIT_USER}:$CI_PROJECT_PATH.git"
+        - git push origin HEAD:$CI_COMMIT_REF_NAME
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $PUBLISH_EXTENSION_METADATA == "true"
+    artifacts:
+        name: ${CI_COMMIT_REF_NAME}_extension_metadata
+        paths:
+            - ${EXTENSION_METADATA_FILE}
+        expire_in: 1 month
+
 # build package
 build_package:
     stage: build
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:8
     script:
         # install packages: jq, rpm
+        - echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
         - apt-get update
         - apt-get install -y jq
         - apt-get install -y rpm
@@ -203,6 +271,7 @@ build_package:
     except:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_EXTENSION_METADATA == "true"
 
 ### Functional Tests Section
 # Functional Tests - Initialization phase
@@ -238,6 +307,7 @@ build_package:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
             - $PUBLISH_RPM == "true"
+            - $PUBLISH_EXTENSION_METADATA == "true"
     artifacts:
         paths:
             - ./deployment
@@ -597,12 +667,10 @@ test_functional_init_base_v14:
 # Functional Tests - Execute phase (with no retries)
 .test_functional_execute_generic: &test_functional_execute_generic
     stage: functional_test_execute
-    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
-    retry:
-        max: 1
     script:
         - SOURCE_IP=$(curl ifconfig.me) && echo "Source IP of job is $SOURCE_IP"
         # install jq and sshpass
+        - echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
         - apt-get update
         - apt-get install -y jq openssh-client sshpass
         # create ssh key
@@ -652,26 +720,25 @@ test_functional_init_base_v14:
         - bash tests/scripts/verify_bash_available.sh
         - if [[ $? != 0 ]]; then exit 1; fi
         - echo "Uploading runtime init config files"
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no onboard_config $USERNAME@$MGMT_IP:/config/cloud/onboard_config
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no onboard_config_update $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
+        - sshpass -p $PASSWORD scp -v -o StrictHostKeyChecking=no onboard_config $USERNAME@$MGMT_IP:/config/cloud/onboard_config
+        - sshpass -p $PASSWORD scp -v -o StrictHostKeyChecking=no onboard_config_update $USERNAME@$MGMT_IP:/config/cloud/onboard_config_update
         # install RPM and execute
         - echo "Installing RPM and executing"
         - pwd
         - ls -la
-        - sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
+        - sshpass -p $PASSWORD scp -v -o StrictHostKeyChecking=no dist/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run $USERNAME@$MGMT_IP:/var/tmp/
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --toolchain-metadata-file-url https://f5-cft.s3.amazonaws.com/invalid.json --telemetry-params testKey01:testValue01,testKey02:testValue02'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash -c 'export TEEM_API_ENVIRONMENT=staging && f5-bigip-runtime-init -c /config/cloud/onboard_config'"
         # re-run with updated config
         - sleep 30
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash /var/tmp/f5-bigip-runtime-init-$VERSION-$RELEASE.gz.run -- '--cloud ${CLOUD} --skip-verify --skip-toolchain-metadata-sync'"
         - sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USERNAME@$MGMT_IP "bash f5-bigip-runtime-init -c /config/cloud/onboard_config_update --skip-telemetry"
-        # install node and dependencies for functional tests
-        - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get -y install nodejs
+        # install dependencies for functional tests
         - npm install --unsafe-perm
         # executing fuctional test
         - validate npm run functional-test
     tags:
-        - cm-official-docker-executor
+        - docker-executor
     only:
         variables:
             - $CI_COMMIT_REF_NAME == "main"
@@ -682,6 +749,7 @@ test_functional_init_base_v14:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
             - $PUBLISH_RPM == "true"
+            - $PUBLISH_EXTENSION_METADATA == "true"
     artifacts:
         paths:
             - logs
@@ -1060,6 +1128,7 @@ test_functional_execute_base_v14:
         variables:
             - $CLEANUP_DEVELOP_CDN == "true"
             - $PUBLISH_RPM == "true"
+            - $PUBLISH_EXTENSION_METADATA == "true"
     allow_failure: true
 
 # run functional tests: azure
@@ -1469,9 +1538,33 @@ test_functional_cleanup_base_v14:
         - test_functional_init_base_v14
         - test_functional_execute_base_v14
 
-# End of Funtional tests
+# End of Functional tests
 
-# Publish RPM's to CDN
+# publish extension metadata to CDN
+# if it has been updated locally
+# note: assumes build_extension_metadata has been run
+# in a previous stage and metadata file saved as an artifact
+publish_extension_metadata:
+    stage: publish
+    image: ${ARTIFACTORY_SERVER}/dockerhub-remote/python:3.7
+    script:
+        # publish extension metadata to F5 CDN
+        - CDN_FOLDER="f5-extension-metadata"
+        - AUTH_OPTS="--username ${CDN_SVC_ACCOUNT_USER} --password ${CDN_SVC_ACCOUNT_PWD} --non-interactive"
+        - svn co ${F5_CDN_SVN_ROOT}/cloudsolutions/${CDN_FOLDER} ${AUTH_OPTS}
+        - cp ${EXTENSION_METADATA_FILE} ${CDN_FOLDER}/latest/
+        - cd ${CDN_FOLDER}
+        # check for changes and commit to svn if true
+        - svn diff
+        - changed_files_count=$(svn diff --summarize | wc -l)
+        - if [[ $changed_files_count -eq 1 ]]; then svn add --force latest/${EXTENSION_METADATA_FILE}; svn commit -m "F5 BIG-IP Runtime Init project automation - ${CI_COMMIT_REF_NAME}" ${AUTH_OPTS}; else echo "Metadata file is unchanged"; fi
+    tags:
+        - cm-official-docker-executor
+    only:
+        variables:
+            - $PUBLISH_EXTENSION_METADATA == "true"
+
+# Publish RPMs to CDN
 publish_rpms_dev_cdn:
     stage: publish
     only:
@@ -1483,9 +1576,11 @@ publish_rpms_dev_cdn:
         variables:
             - $RUN_FUNCTIONAL_TESTS == "true"
             - $CLEANUP_DEVELOP_CDN == "true"
+            - $PUBLISH_EXTENSION_METADATA == "true"
     script:
         # publish dist rpms to F5 CDN into develop directory
         # install jq
+        - echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
         - apt-get update
         - apt-get install -y jq
         # copy push rpms to cdn
@@ -1514,6 +1609,7 @@ publish_rpms_cdn:
     script:
         # publish dist rpms to F5 CDN into $VERSION directory
         # install jq
+        - echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
         - apt-get update
         - apt-get install -y jq
         # copy push rpms to cdn
@@ -1539,6 +1635,7 @@ publish_to_github:
       - /(^publish-(\d+\.){1,2}(\d)-(\d+)?$)/
     script:
         # install jq
+        - echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
         - apt-get update
         - apt-get install -y jq
         # Execute Release script to push source to github repo

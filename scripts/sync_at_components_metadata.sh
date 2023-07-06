@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
 # This script is intended to update all AT Components defined under the followings:
-#       1. Toolchain config file src/lib/bigip/toolchain/toolchain_metadata.json
-#       2. Config examples
-#       3. Test plans
+#       1. Config examples
+#       2. Test plans
 
-echo "***** Phase 1. Fetching most recent AT Components metadata from the following location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json"
-remote_toolChain_metadata=$(curl --retry 3 --retry-max-time 15 --max-time 5 --location https://cdn.f5.com/product/cloudsolutions/f5-extension-metadata/latest/metadata.json | yq .)
+echo "***** Phase 1. Fetching AT Components metadata from the following location: src/lib/bigip/toolchain/toolchain_metadata.json"
+remote_toolChain_metadata=$(cat src/lib/bigip/toolchain/toolchain_metadata.json | yq .)
 
 update_config_file()
 {
@@ -86,10 +85,7 @@ done
 
 echo ">>>>> Generated package to latest version map: ${component_version_map[@]}"
 
-echo "***** Phase 3. Syncing local config to match remote"
-echo $remote_toolChain_metadata | yq . > src/lib/bigip/toolchain/toolchain_metadata.json
-
-echo "***** Phase 4. Syncing all config examples to use lastest version"
+echo "***** Phase 3. Syncing all config examples to use lastest version"
 config_files=$(ls examples/runtime_configs/)
 for filename in $config_files; do
     echo ">>>> Processing file: examples/runtime_configs/$filename"
@@ -149,24 +145,3 @@ for filename in $config_files; do
         echo ">>>>> WARNING: Found config file without install_operations defined  - ${filename}"
     fi
 done
-
-## need to revisit this since configs have moved to deployment-tool
-# echo "***** Phase 5. Checking all configs used by functional tests"
-# SUPPORTED_CLOUDS=(aws azure gcp base)
-
-# for cloud in ${SUPPORTED_CLOUDS[@]}; do
-#     echo ">>>>> Verifying user-data used for $cloud functional tests"
-#     grep "\-\-\-" deployment-tool/plans/runtime_init_${cloud}/templates/user_data.tpl -A 1000 > temp_$cloud.yaml
-#     for item in ${component_version_map[@]}; do
-#         latestVersion=${item##*:}
-#         extensionType=${item%:*}
-#         currUsedVersion=$(cat temp_$cloud.yaml | yq ".extension_packages.install_operations[] | select (.extensionType == $extensionType) | .extensionVersion")
-#         if [[ ! -z $currUsedVersion ]]; then
-#           if [[ $currUsedVersion != $latestVersion ]]; then
-#                 echo ">>>> WARNING: Update user-data, used for $cloud functional tests, with new version ($latestVersion) of AT Component: $extensionType"
-#                 touch $cloud.update
-#           fi
-#         fi
-#     done
-#     rm temp_$cloud.yaml
-# done
