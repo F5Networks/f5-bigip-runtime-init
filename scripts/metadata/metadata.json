@@ -671,10 +671,15 @@
                 }
             },
             "versions": {
+                "1.25.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.25.0/f5-appsvcs-templates-1.25.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.25.0-1.noarch",
+                    "latest": true
+                },
                 "1.24.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.24.0/f5-appsvcs-templates-1.24.0-1.noarch.rpm",
                     "packageName": "f5-appsvcs-templates-1.24.0-1.noarch",
-                    "latest": true
+                    "latest": false
                 },
                 "1.23.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.23.0/f5-appsvcs-templates-1.23.0-1.noarch.rpm",
