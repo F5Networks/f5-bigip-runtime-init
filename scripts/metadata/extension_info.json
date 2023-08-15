@@ -1,0 +1,106 @@
+{
+    "do": {
+        "repository": "F5Networks/f5-declarative-onboarding",
+        "endpoints": {
+            "configure": {
+                "uri": "/mgmt/shared/declarative-onboarding",
+                "methods": ["GET", "POST"]
+            },
+            "info": {
+                "uri": "/mgmt/shared/declarative-onboarding/info",
+                "methods": ["GET"]
+            },
+            "inspect": {
+                "uri": "/mgmt/shared/declarative-onboarding/inspect",
+                "methods": [
+                    "GET"
+                ]
+            }
+        },
+        "componentDependencies": {}
+    },
+    "as3": {
+        "repository": "F5Networks/f5-appsvcs-extension",
+        "endpoints": {
+            "configure": {
+                "uri": "/mgmt/shared/appsvcs/declare",
+                "methods": ["GET", "POST", "DELETE"]
+            },
+            "info": {
+                "uri": "/mgmt/shared/appsvcs/info",
+                "methods": ["GET"]
+            }
+        },
+        "componentDependencies": {
+            "f5-service-discovery": {
+                "dependencyType": "LX",
+                "versions": [
+                    {
+                        "operation": "greaterThanOrEqual",
+                        "version": "3.3.0"
+                    }
+                ],
+                "uninstallDocumentation": "https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest/userguide/installation.html#uninstalling-as3"
+            }
+        }
+    },
+    "ts": {
+        "repository": "F5Networks/f5-telemetry-streaming",
+        "endpoints": {
+            "configure": {
+                "uri": "/mgmt/shared/telemetry/declare",
+                "methods": ["GET", "POST"]
+            },
+            "info": {
+                "uri": "/mgmt/shared/telemetry/info",
+                "methods": ["GET"]
+            }
+        },
+        "componentDependencies": {}
+    },
+    "cf": {
+        "repository": "F5Networks/f5-cloud-failover-extension",
+        "endpoints": {
+            "configure": {
+                "uri": "/mgmt/shared/cloud-failover/declare",
+                "methods": ["GET", "POST"]
+            },
+            "info": {
+                "uri": "/mgmt/shared/cloud-failover/info",
+                "methods": ["GET"]
+            },
+            "inspect": {
+                "uri": "/mgmt/shared/cloud-failover/inspect",
+                "methods": [
+                    "GET"
+                ]
+            },
+            "trigger": {
+                "uri": "/mgmt/shared/cloud-failover/trigger",
+                "methods": [
+                    "GET",
+                    "POST"
+                ],
+                "defaultPostBody": "{}"
+            },
+            "reset": {
+                "uri": "/mgmt/shared/cloud-failover/reset",
+                "methods": [
+                    "POST"
+                ],
+                "defaultPostBody": {"resetStateFile": true}
+            }
+        },
+        "componentDependencies": {}
+    },
+    "fast": {
+        "repository": "F5Networks/f5-appsvcs-templates",
+        "endpoints": {
+            "info": {
+                "uri": "/mgmt/shared/fast/info",
+                "methods": ["GET"]
+            }
+        },
+        "componentDependencies": {}
+    }
+}
