@@ -31,7 +31,7 @@ import urllib3
 EXTENSION_INFO = 'extension_info.json'
 GITHUB_API_ENDPOINT = 'api.github.com'
 VERSION_REGEX = '[0-9]+.[0-9]+.[0-9]+'
-VERSION = '1.6.1'
+VERSION = '1.6.2'
 USER_AGENT = 'f5-bigip-runtime-init/%s' % (VERSION)
 HTTP_TIMEOUT = {
     'DFL': 60

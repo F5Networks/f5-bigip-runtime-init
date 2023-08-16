@@ -3,18 +3,18 @@
     "install_operations": [
       {
         "extensionType": "do",
-        "extensionUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.37.0/f5-declarative-onboarding-1.37.0-3.noarch.rpm",
-        "extensionVersion": "1.37.0"
+        "extensionUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.39.0/f5-declarative-onboarding-1.39.0-4.noarch.rpm",
+        "extensionVersion": "1.39.0"
       },
       {
         "extensionType": "as3",
-        "extensionUrl": "file:///var/config/rest/downloads/f5-appsvcs-3.44.0-3.noarch.rpm",
-        "extensionVersion": "3.44.0"
+        "extensionUrl": "file:///var/config/rest/downloads/f5-appsvcs-3.46.0-5.noarch.rpm",
+        "extensionVersion": "3.46.0"
       },
       {
         "extensionType": "fast",
-        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.24.0/f5-appsvcs-templates-1.24.0-1.noarch.rpm",
-        "extensionVersion": "1.24.0"
+        "extensionUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.25.0/f5-appsvcs-templates-1.25.0-1.noarch.rpm",
+        "extensionVersion": "1.25.0"
       }
     ]
   }
