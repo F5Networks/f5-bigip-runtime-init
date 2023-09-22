@@ -2,6 +2,7 @@ image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:12
 
 stages:
     - process
+    - atg-shared-checks
     - test
     - build
     - functional_test_init
@@ -9,6 +10,10 @@ stages:
     - functional_test_cleanup
     - publish
     - release_publish
+
+include:
+  - project: automation-toolchain/atg-shared-templates
+    file: security/base.gitlab-ci.yml
 
 .helpers: &helpers |
     function validate () {
@@ -34,6 +39,7 @@ variables:
     GOOGLE_CREDENTIALS: "$GOOGLE_CREDENTIALS"
     GIT_SECRETS_VERSION: '1.3.0'
     GIT_SECRETS_PKG_URL: "https://github.com/awslabs/git-secrets/archive/${GIT_SECRETS_VERSION}.tar.gz"
+    ATG_IMG_REGISTRY_URL: ${ARTIFACTORY_SERVER}/dockerhub-remote
     DOCKER_AUTH_CONFIG: ${DOCKER_AUTH_CONFIG}
     DEPLOYMENT_TOOL_IMAGE_V2: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-v2:latest
     MONGODB_IMAGE: ${ARTIFACTORY_SERVER}/dockerhub-remote/mongo:4.0-xenial
