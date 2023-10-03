@@ -12,8 +12,8 @@ stages:
     - release_publish
 
 include:
-  - project: automation-toolchain/atg-shared-templates
-    file: security/base.gitlab-ci.yml
+    - project: automation-toolchain/atg-shared-templates
+      file: security/base.gitlab-ci.yml
 
 .helpers: &helpers |
     function validate () {
@@ -44,6 +44,7 @@ variables:
     DEPLOYMENT_TOOL_IMAGE_V2: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-v2:latest
     MONGODB_IMAGE: ${ARTIFACTORY_SERVER}/dockerhub-remote/mongo:4.0-xenial
     EXTENSION_METADATA_FILE: "metadata.json"
+    SEC_TOML_BRANCH: main
 
 # Cleanup development RPM's on CDN when branch no longer present on gitlab
 cleanup_publish_rpms_dev_cdn:
