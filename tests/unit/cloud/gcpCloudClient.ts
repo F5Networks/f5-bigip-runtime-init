@@ -275,6 +275,33 @@ describe('CloudClient - GCP', () => {
             });
     });
 
+    it('should validate getSecret when fully-qualified secret is provided', () => {
+        cloudClient.secretmanager.projects.secrets.versions.access = sinon.stub().resolves({
+            data: {
+                payload: {
+                    data: 'U3Ryb25nUGFzc3dvcmQh'
+                }
+            }
+        });
+        return cloudClient.getSecret(
+            'projects/123456789/secrets/the-secret-name/versions/latest'
+        )
+            .then((secret) => {
+                assert.strictEqual(secret, 'StrongPassword!');
+            });
+    });
+
+    it('should validate getSecret throws error when wrong secret format is provided', () => {
+        assert.throws(() => {
+            cloudClient.getSecret('projects/123456789/secrets/the-secret-name/versions/latest!');
+        }, (err) => {
+            if (err.message.includes('wrong format')) {
+                return true;
+            }
+            return false;
+        }, 'unexpected error');
+    });
+
     it('should validate getMetadata returns compute name field value', () => {
         nock('http://metadata.google.internal')
             .get('/computeMetadata/v1/instance/name')

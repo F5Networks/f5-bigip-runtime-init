@@ -540,6 +540,7 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
 
     **GCP:**
 
+    *Provide secret name (assumes secret is in same project as BIG-IP instance):*
     ```yaml
     runtime_parameters:
       - name: ADMIN_PASS
@@ -549,6 +550,17 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
           environment: gcp
           version: latest
           secretId: mysecret
+    ```
+
+    *Provide fully-qualified secret identifier, including project number and version:*
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: SecretsManager
+          environment: gcp
+          secretId: projects/123456789/secrets/mysecret/versions/latest
     ```
 
     **IAM Permissions:**
