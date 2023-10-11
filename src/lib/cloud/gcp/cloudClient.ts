@@ -74,10 +74,22 @@ export class GcpCloudClient extends AbstractCloudClient {
         if (!secretId) {
             throw new Error('GCP Cloud Client secret id is missing');
         }
+
+        const fullyQualifiedSecret = new RegExp('^projects/[0-9]{6,30}/secrets/[a-z0-9-_]{1,255}/versions/([0-9]{1,255}|latest)$');
+        const secret = new RegExp('^[a-z0-9-_]{1,255}$');
         const version = (options ? options.version : undefined) || 'latest';
+        let secretName: string;
+        if (fullyQualifiedSecret.test(secretId)) {
+            secretName = secretId;
+        } else if (secret.test(secretId)) {
+            secretName = `projects/${this.projectId}/secrets/${secretId}/versions/${version}`;
+        } else {
+            throw new Error(`GCP Cloud Client secret id ${secretId} is the wrong format`);
+        }
+
         const params = {
             auth: this.authToken,
-            name: `projects/${this.projectId}/secrets/${secretId}/versions/${version}`
+            name: secretName
         };
         return this.secretmanager.projects.secrets.versions.access(params)
             .then((response) => {
