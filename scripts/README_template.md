@@ -493,6 +493,8 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
     ***Examples:***
 
     **AWS:**
+
+    *Provide secret name (assumes secret is in same region as BIG-IP instance):*
     ```yaml
     runtime_parameters:
       - name: ADMIN_PASS
@@ -502,6 +504,18 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
           environment: aws
           version: AWSCURRENT
           secretId: mysecret
+    ```
+
+    *Provide secret ARN, including 12 digit account ID and region:*
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: SecretsManager
+          environment: aws
+          version: AWSCURRENT
+          secretId: arn:aws:secretsmanager:us-east-1:123456789012:secret:mySecretId-a0BCDE
     ```
     
     **IAM Permissions:**

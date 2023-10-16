@@ -211,6 +211,14 @@ describe('CloudClient - AWS', () => {
         });
     });
 
+    it('should validate getSecret throws error when secret id fails regex', () => {
+        cloudClient.getSecret('incorrect-secret-name!').catch((err) => {
+            if (err.message.includes('wrong format')) {
+                assert.ok(true);
+            }
+        });
+    });
+
     it('should fail getMetadata when field is missing', () => {
         cloudClient.getMetadata('', { type: 'compute' })
             .then(() => {
