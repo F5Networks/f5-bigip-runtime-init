@@ -45,6 +45,7 @@ variables:
     MONGODB_IMAGE: ${ARTIFACTORY_SERVER}/dockerhub-remote/mongo:4.0-xenial
     EXTENSION_METADATA_FILE: "metadata.json"
     SEC_TOML_BRANCH: main
+    SECRET_DETECTION_EXCLUDED_PATHS: 'README.md'
 
 # Cleanup development RPM's on CDN when branch no longer present on gitlab
 cleanup_publish_rpms_dev_cdn:
