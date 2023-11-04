@@ -22,7 +22,158 @@
                     ]
                 }
             },
-            "versions": {},
+            "versions": {
+                "1.40.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.40.0/f5-declarative-onboarding-1.40.0-8.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.40.0-8.noarch",
+                    "latest": true
+                },
+                "1.39.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.39.1/f5-declarative-onboarding-1.39.1-2.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.39.1-2.noarch",
+                    "latest": false
+                },
+                "1.39.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.39.0/f5-declarative-onboarding-1.39.0-4.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.39.0-4.noarch",
+                    "latest": false
+                },
+                "1.38.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.38.0/f5-declarative-onboarding-1.38.0-7.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.38.0-7.noarch",
+                    "latest": false
+                },
+                "1.37.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.37.0/f5-declarative-onboarding-1.37.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.37.0-3.noarch",
+                    "latest": false
+                },
+                "1.36.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.36.1/f5-declarative-onboarding-1.36.1-1.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.36.1-1.noarch",
+                    "latest": false
+                },
+                "1.36.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.36.0/f5-declarative-onboarding-1.36.0-4.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.36.0-4.noarch",
+                    "latest": false
+                },
+                "1.35.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.35.0/f5-declarative-onboarding-1.35.0-6.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.35.0-6.noarch",
+                    "latest": false
+                },
+                "1.34.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.34.0/f5-declarative-onboarding-1.34.0-5.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.34.0-5.noarch",
+                    "latest": false
+                },
+                "1.33.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.33.0/f5-declarative-onboarding-1.33.0-7.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.33.0-7.noarch",
+                    "latest": false
+                },
+                "1.32.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.32.0/f5-declarative-onboarding-1.32.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.32.0-3.noarch",
+                    "latest": false
+                },
+                "1.31.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.31.0/f5-declarative-onboarding-1.31.0-6.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.31.0-6.noarch",
+                    "latest": false
+                },
+                "1.30.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.30.0/f5-declarative-onboarding-1.30.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.30.0-3.noarch",
+                    "latest": false
+                },
+                "1.29.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.29.0/f5-declarative-onboarding-1.29.0-8.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.29.0-8.noarch",
+                    "latest": false
+                },
+                "1.28.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.28.0/f5-declarative-onboarding-1.28.0-4.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.28.0-4.noarch",
+                    "latest": false
+                },
+                "1.27.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.27.1/f5-declarative-onboarding-1.27.1-2.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.27.1-2.noarch",
+                    "latest": false
+                },
+                "1.27.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.27.0/f5-declarative-onboarding-1.27.0-6.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.27.0-6.noarch",
+                    "latest": false
+                },
+                "1.26.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.26.0/f5-declarative-onboarding-1.26.0-5.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.26.0-5.noarch",
+                    "latest": false
+                },
+                "1.25.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.25.0/f5-declarative-onboarding-1.25.0-7.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.25.0-7.noarch",
+                    "latest": false
+                },
+                "1.24.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.24.0/f5-declarative-onboarding-1.24.0-6.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.24.0-6.noarch",
+                    "latest": false
+                },
+                "1.23.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.23.0/f5-declarative-onboarding-1.23.0-4.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.23.0-4.noarch",
+                    "latest": false
+                },
+                "1.22.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.22.0/f5-declarative-onboarding-1.22.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.22.0-3.noarch",
+                    "latest": false
+                },
+                "1.21.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.1/f5-declarative-onboarding-1.21.1-2.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.21.1-2.noarch",
+                    "latest": false
+                },
+                "1.21.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.21.0/f5-declarative-onboarding-1.21.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.21.0-3.noarch",
+                    "latest": false
+                },
+                "1.20.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.20.0/f5-declarative-onboarding-1.20.0-2.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.20.0-2.noarch",
+                    "latest": false
+                },
+                "1.19.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.19.0/f5-declarative-onboarding-1.19.0-2.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.19.0-2.noarch",
+                    "latest": false
+                },
+                "1.18.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.18.0/f5-declarative-onboarding-1.18.0-4.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.18.0-4.noarch",
+                    "latest": false
+                },
+                "1.17.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.17.0/f5-declarative-onboarding-1.17.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.17.0-3.noarch",
+                    "latest": false
+                },
+                "1.16.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.16.0-8.noarch",
+                    "latest": false
+                },
+                "1.15.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.15.0/f5-declarative-onboarding-1.15.0-3.noarch.rpm",
+                    "packageName": "f5-declarative-onboarding-1.15.0-3.noarch",
+                    "latest": false
+                }
+            },
             "componentDependencies": {}
         },
         "as3": {
@@ -42,7 +193,158 @@
                     ]
                 }
             },
-            "versions": {},
+            "versions": {
+                "3.47.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.47.0/f5-appsvcs-3.47.0-8.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.47.0-8.noarch",
+                    "latest": true
+                },
+                "3.46.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.46.1/f5-appsvcs-3.46.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.46.1-1.noarch",
+                    "latest": false
+                },
+                "3.46.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.46.0/f5-appsvcs-3.46.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.46.0-5.noarch",
+                    "latest": false
+                },
+                "3.45.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.45.0/f5-appsvcs-3.45.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.45.0-5.noarch",
+                    "latest": false
+                },
+                "3.44.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.44.0/f5-appsvcs-3.44.0-3.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.44.0-3.noarch",
+                    "latest": false
+                },
+                "3.43.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.43.0/f5-appsvcs-3.43.0-2.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.43.0-2.noarch",
+                    "latest": false
+                },
+                "3.42.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v.3.42.0/f5-appsvcs-3.42.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.42.0-5.noarch",
+                    "latest": false
+                },
+                "3.41.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.41.0/f5-appsvcs-3.41.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.41.0-1.noarch",
+                    "latest": false
+                },
+                "3.40.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.40.0/f5-appsvcs-3.40.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.40.0-5.noarch",
+                    "latest": false
+                },
+                "3.39.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.39.0/f5-appsvcs-3.39.0-7.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.39.0-7.noarch",
+                    "latest": false
+                },
+                "3.38.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.38.0/f5-appsvcs-3.38.0-4.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.38.0-4.noarch",
+                    "latest": false
+                },
+                "3.36.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.36.1/f5-appsvcs-3.36.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.36.1-1.noarch",
+                    "latest": false
+                },
+                "3.37.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.37.0/f5-appsvcs-3.37.0-4.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.37.0-4.noarch",
+                    "latest": false
+                },
+                "3.36.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.36.0/f5-appsvcs-3.36.0-6.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.36.0-6.noarch",
+                    "latest": false
+                },
+                "3.35.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.35.0/f5-appsvcs-3.35.0-4.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.35.0-4.noarch",
+                    "latest": false
+                },
+                "3.34.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.34.0/f5-appsvcs-3.34.0-4.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.34.0-4.noarch",
+                    "latest": false
+                },
+                "3.33.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.33.0/f5-appsvcs-3.33.0-4.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.33.0-4.noarch",
+                    "latest": false
+                },
+                "3.32.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.32.1/f5-appsvcs-3.32.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.32.1-1.noarch",
+                    "latest": false
+                },
+                "3.32.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.32.0/f5-appsvcs-3.32.0-4.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.32.0-4.noarch",
+                    "latest": false
+                },
+                "3.31.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.31.0/f5-appsvcs-3.31.0-6.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.31.0-6.noarch",
+                    "latest": false
+                },
+                "3.30.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.30.0/f5-appsvcs-3.30.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.30.0-5.noarch",
+                    "latest": false
+                },
+                "3.29.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.29.0/f5-appsvcs-3.29.0-3.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.29.0-3.noarch",
+                    "latest": false
+                },
+                "3.28.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.28.0/f5-appsvcs-3.28.0-3.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.28.0-3.noarch",
+                    "latest": false
+                },
+                "3.26.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.1/f5-appsvcs-3.26.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.26.1-1.noarch",
+                    "latest": false
+                },
+                "3.27.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.27.0/f5-appsvcs-3.27.0-3.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.27.0-3.noarch",
+                    "latest": false
+                },
+                "3.26.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.26.0/f5-appsvcs-3.26.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.26.0-5.noarch",
+                    "latest": false
+                },
+                "3.25.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.25.0/f5-appsvcs-3.25.0-3.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.25.0-3.noarch",
+                    "latest": false
+                },
+                "3.24.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.24.0/f5-appsvcs-3.24.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.24.0-5.noarch",
+                    "latest": false
+                },
+                "3.23.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.23.0-5.noarch",
+                    "latest": false
+                },
+                "3.22.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.22.1/f5-appsvcs-3.22.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-3.22.1-1.noarch",
+                    "latest": false
+                }
+            },
             "componentDependencies": {
                 "f5-service-discovery": {
                     "dependencyType": "LX",
@@ -81,6 +383,146 @@
                 "1.32.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.32.0/f5-telemetry-1.32.0-2.noarch.rpm",
                     "packageName": "f5-telemetry-1.32.0-2.noarch",
+                    "latest": false
+                },
+                "1.31.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.31.0/f5-telemetry-1.31.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.31.0-2.noarch",
+                    "latest": false
+                },
+                "1.30.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.30.0/f5-telemetry-1.30.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.30.0-1.noarch",
+                    "latest": false
+                },
+                "1.29.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.29.0/f5-telemetry-1.29.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.29.0-1.noarch",
+                    "latest": false
+                },
+                "1.28.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.28.0/f5-telemetry-1.28.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.28.0-2.noarch",
+                    "latest": false
+                },
+                "1.27.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.27.1/f5-telemetry-1.27.1-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.27.1-1.noarch",
+                    "latest": false
+                },
+                "1.27.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.27.0/f5-telemetry-1.27.0-3.noarch.rpm",
+                    "packageName": "f5-telemetry-1.27.0-3.noarch",
+                    "latest": false
+                },
+                "1.26.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.26.0/f5-telemetry-1.26.0-3.noarch.rpm",
+                    "packageName": "f5-telemetry-1.26.0-3.noarch",
+                    "latest": false
+                },
+                "1.25.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.25.0/f5-telemetry-1.25.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.25.0-2.noarch",
+                    "latest": false
+                },
+                "1.24.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.24.0/f5-telemetry-1.24.0-3.noarch.rpm",
+                    "packageName": "f5-telemetry-1.24.0-3.noarch",
+                    "latest": false
+                },
+                "1.23.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.23.0/f5-telemetry-1.23.0-4.noarch.rpm",
+                    "packageName": "f5-telemetry-1.23.0-4.noarch",
+                    "latest": false
+                },
+                "1.22.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.22.0/f5-telemetry-1.22.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.22.0-1.noarch",
+                    "latest": false
+                },
+                "1.20.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.1/f5-telemetry-1.20.1-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.20.1-1.noarch",
+                    "latest": false
+                },
+                "1.21.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.21.0/f5-telemetry-1.21.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.21.0-1.noarch",
+                    "latest": false
+                },
+                "1.20.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.20.0/f5-telemetry-1.20.0-3.noarch.rpm",
+                    "packageName": "f5-telemetry-1.20.0-3.noarch",
+                    "latest": false
+                },
+                "1.19.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.19.0/f5-telemetry-1.19.0-3.noarch.rpm",
+                    "packageName": "f5-telemetry-1.19.0-3.noarch",
+                    "latest": false
+                },
+                "1.18.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.18.0/f5-telemetry-1.18.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.18.0-2.noarch",
+                    "latest": false
+                },
+                "1.17.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.17.0/f5-telemetry-1.17.0-4.noarch.rpm",
+                    "packageName": "f5-telemetry-1.17.0-4.noarch",
+                    "latest": false
+                },
+                "1.16.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.16.0/f5-telemetry-1.16.0-4.noarch.rpm",
+                    "packageName": "f5-telemetry-1.16.0-4.noarch",
+                    "latest": false
+                },
+                "1.15.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.15.0/f5-telemetry-1.15.0-4.noarch.rpm",
+                    "packageName": "f5-telemetry-1.15.0-4.noarch",
+                    "latest": false
+                },
+                "1.14.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.14.0/f5-telemetry-1.14.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.14.0-2.noarch",
+                    "latest": false
+                },
+                "1.13.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.13.0/f5-telemetry-1.13.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.13.0-2.noarch",
+                    "latest": false
+                },
+                "1.12.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.12.0/f5-telemetry-1.12.0-3.noarch.rpm",
+                    "packageName": "f5-telemetry-1.12.0-3.noarch",
+                    "latest": false
+                },
+                "1.11.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.11.0/f5-telemetry-1.11.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.11.0-1.noarch",
+                    "latest": false
+                },
+                "1.10.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.10.0/f5-telemetry-1.10.0-2.noarch.rpm",
+                    "packageName": "f5-telemetry-1.10.0-2.noarch",
+                    "latest": false
+                },
+                "1.9.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.9.0/f5-telemetry-1.9.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.9.0-1.noarch",
+                    "latest": false
+                },
+                "1.8.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.8.0/f5-telemetry-1.8.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.8.0-1.noarch",
+                    "latest": false
+                },
+                "1.7.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.7.0/f5-telemetry-1.7.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.7.0-1.noarch",
+                    "latest": false
+                },
+                "1.6.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.6.0/f5-telemetry-1.6.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.6.0-1.noarch",
                     "latest": false
                 }
             },
@@ -125,7 +567,103 @@
                     }
                 }
             },
-            "versions": {},
+            "versions": {
+                "1.15.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.15.0/f5-cloud-failover-1.15.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.15.0-0.noarch",
+                    "latest": true
+                },
+                "1.14.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.14.0/f5-cloud-failover-1.14.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.14.0-0.noarch",
+                    "latest": false
+                },
+                "1.13.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.13.0/f5-cloud-failover-1.13.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.13.0-0.noarch",
+                    "latest": false
+                },
+                "1.12.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.12.0/f5-cloud-failover-1.12.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.12.0-0.noarch",
+                    "latest": false
+                },
+                "1.11.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.11.0/f5-cloud-failover-1.11.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.11.0-0.noarch",
+                    "latest": false
+                },
+                "1.10.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.10.0/f5-cloud-failover-1.10.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.10.0-0.noarch",
+                    "latest": false
+                },
+                "1.9.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.9.0/f5-cloud-failover-1.9.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.9.0-0.noarch",
+                    "latest": false
+                },
+                "1.8.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.8.0/f5-cloud-failover-1.8.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.8.0-0.noarch",
+                    "latest": false
+                },
+                "1.7.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.7.1/f5-cloud-failover-1.7.1-1.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.7.1-1.noarch",
+                    "latest": false
+                },
+                "1.7.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.7.0/f5-cloud-failover-1.7.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.7.0-0.noarch",
+                    "latest": false
+                },
+                "1.6.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.6.1/f5-cloud-failover-1.6.1-1.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.6.1-1.noarch",
+                    "latest": false
+                },
+                "1.6.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.6.0/f5-cloud-failover-1.6.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.6.0-0.noarch",
+                    "latest": false
+                },
+                "1.5.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.5.0/f5-cloud-failover-1.5.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.5.0-0.noarch",
+                    "latest": false
+                },
+                "1.4.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.4.0/f5-cloud-failover-1.4.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.4.0-0.noarch",
+                    "latest": false
+                },
+                "1.3.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.3.0/f5-cloud-failover-1.3.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.3.0-0.noarch",
+                    "latest": false
+                },
+                "1.2.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.2.0/f5-cloud-failover-1.2.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.2.0-0.noarch",
+                    "latest": false
+                },
+                "1.1.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.1.0/f5-cloud-failover-1.1.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.1.0-0.noarch",
+                    "latest": false
+                },
+                "1.0.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.0.0/f5-cloud-failover-1.0.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-1.0.0-0.noarch",
+                    "latest": false
+                },
+                "0.9.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v0.9.1/f5-cloud-failover-0.9.1-1.noarch.rpm",
+                    "packageName": "f5-cloud-failover-0.9.1-1.noarch",
+                    "latest": false
+                }
+            },
             "componentDependencies": {}
         },
         "fast": {
@@ -137,7 +675,153 @@
                     ]
                 }
             },
-            "versions": {},
+            "versions": {
+                "1.25.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.25.0/f5-appsvcs-templates-1.25.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.25.0-1.noarch",
+                    "latest": true
+                },
+                "1.24.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.24.0/f5-appsvcs-templates-1.24.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.24.0-1.noarch",
+                    "latest": false
+                },
+                "1.23.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.23.0/f5-appsvcs-templates-1.23.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.23.0-1.noarch",
+                    "latest": false
+                },
+                "1.22.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.22.0/f5-appsvcs-templates-1.22.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.22.0-1.noarch",
+                    "latest": false
+                },
+                "1.21.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.21.0/f5-appsvcs-templates-1.21.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.21.0-1.noarch",
+                    "latest": false
+                },
+                "1.20.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.20.0/f5-appsvcs-templates-1.20.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.20.0-1.noarch",
+                    "latest": false
+                },
+                "1.19.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.19.0/f5-appsvcs-templates-1.19.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.19.0-1.noarch",
+                    "latest": false
+                },
+                "1.18.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.18.0/f5-appsvcs-templates-1.18.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.18.0-1.noarch",
+                    "latest": false
+                },
+                "1.17.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.17.0/f5-appsvcs-templates-1.17.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.17.0-1.noarch",
+                    "latest": false
+                },
+                "1.16.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.16.0/f5-appsvcs-templates-1.16.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.16.0-1.noarch",
+                    "latest": false
+                },
+                "1.15.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.15.0/f5-appsvcs-templates-1.15.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.15.0-1.noarch",
+                    "latest": false
+                },
+                "1.14.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.14.0/f5-appsvcs-templates-1.14.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.14.0-1.noarch",
+                    "latest": false
+                },
+                "1.13.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.13.0/f5-appsvcs-templates-1.13.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.13.0-1.noarch",
+                    "latest": false
+                },
+                "1.12.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.12.0/f5-appsvcs-templates-1.12.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.12.0-1.noarch",
+                    "latest": false
+                },
+                "1.11.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.11.0/f5-appsvcs-templates-1.11.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.11.0-1.noarch",
+                    "latest": false
+                },
+                "1.10.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.10.0/f5-appsvcs-templates-1.10.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.10.0-1.noarch",
+                    "latest": false
+                },
+                "1.9.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.9.0/f5-appsvcs-templates-1.9.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.9.0-1.noarch",
+                    "latest": false
+                },
+                "1.8.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.8.1/f5-appsvcs-templates-1.8.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.8.1-1.noarch",
+                    "latest": false
+                },
+                "1.8.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.8.0/f5-appsvcs-templates-1.8.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.8.0-1.noarch",
+                    "latest": false
+                },
+                "1.7.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.7.1/f5-appsvcs-templates-1.7.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.7.1-1.noarch",
+                    "latest": false
+                },
+                "1.7.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.7.0/f5-appsvcs-templates-1.7.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.7.0-1.noarch",
+                    "latest": false
+                },
+                "1.6.1": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.6.1/f5-appsvcs-templates-1.6.1-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.6.1-1.noarch",
+                    "latest": false
+                },
+                "1.6.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.6.0/f5-appsvcs-templates-1.6.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.6.0-1.noarch",
+                    "latest": false
+                },
+                "1.5.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.5.0/f5-appsvcs-templates-1.5.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.5.0-1.noarch",
+                    "latest": false
+                },
+                "1.4.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.4.0/f5-appsvcs-templates-1.4.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.4.0-1.noarch",
+                    "latest": false
+                },
+                "1.3.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.3.0/f5-appsvcs-templates-1.3.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.3.0-1.noarch",
+                    "latest": false
+                },
+                "1.2.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.2.0/f5-appsvcs-templates-1.2.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.2.0-1.noarch",
+                    "latest": false
+                },
+                "1.1.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.1.0/f5-appsvcs-templates-1.1.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.1.0-1.noarch",
+                    "latest": false
+                },
+                "1.0.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.0.0/f5-appsvcs-templates-1.0.0-1.noarch.rpm",
+                    "packageName": "f5-appsvcs-templates-1.0.0-1.noarch",
+                    "latest": false
+                }
+            },
             "componentDependencies": {}
         }
     }
