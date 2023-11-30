@@ -275,7 +275,6 @@ describe('BIG-IP Package Client', () => {
         return packageClient.install()
             .then(() => {
                 assert.fail();
-                nock.cleanAll();
             })
             .catch((err) => {
                 assert.ok(err.message.indexOf('ECONNRESET') !== -1 );
@@ -307,7 +306,7 @@ describe('BIG-IP Package Client', () => {
     it('should validate install failure with via URL', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const tempStandardToolchainOptions = standardToolchainOptions;
-        tempStandardToolchainOptions.trustedCertBundles = undefined;
+        tempStandardToolchainOptions.trustedCertBundles = [];
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const packageClient = toolChainClient.package;
         nock('http://localhost:8100')
@@ -578,7 +577,7 @@ describe('BIG-IP Service Client', () => {
             .catch(err => Promise.reject(err));
     });
 
-    it('should validate  failure for isAvailable method', () => {
+    it('should validate failure for isAvailable method', () => {
         const mgmtClient = new ManagementClient(standardMgmtOptions);
         const toolChainClient = new ToolChainClient(mgmtClient, 'as3', standardToolchainOptions);
         const serviceClient = toolChainClient.service;

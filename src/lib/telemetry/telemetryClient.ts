@@ -19,6 +19,7 @@
 
 import Logger from '../logger';
 import * as fs from 'fs';
+import * as url from 'url';
 import { ManagementClient } from '../bigip/managementClient';
 import * as F5Teem from '@f5devcentral/f5-teem';
 import * as utils from '../utils';
@@ -290,7 +291,10 @@ export class TelemetryClient {
         return result;
     }
 
-    _getTemplateInfo(): any {
+    _getTemplateInfo(): {
+        name: string;
+        version: string;
+     } {
         const results = {
             name: 'UNDEFINED',
             version: 'UNDEFINED'
@@ -491,21 +495,29 @@ export class TelemetryClient {
             nodeVersion = await this.utils.runShellCommand('node --version');
             sshVersion = await this.utils.runShellCommand('ssh -V');
 
-            const sysHardware = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/hardware`,
+            const sysHardware = await this.utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/hardware',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (sysHardware.body.entries !== undefined) {
                 id = sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/system-info'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/system-info/0'].nestedStats.entries.bigipChassisSerialNum.description;
                 cpuCount = this._getCpuCount(sysHardware.body.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version']
                     .nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardware-version/cpus'].nestedStats.entries['https://localhost/mgmt/tm/sys/hardware/hardwareVersion/cpus/versions'].nestedStats.entries);
-                const sysSoftware = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/software/volume`,
+                const sysSoftware = await this.utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/software/volume',
                     {
+                        method: 'GET',
+                        port: this._mgmtClient.port,
+                        protocol: this._mgmtClient._protocol,
                         headers: {
                             Authorization: this.authHeader
-                        }
+                        },
+                        advancedReturn: true
                     });
 
                 product = sysSoftware.body.items[0].product;
@@ -515,11 +527,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/tm/sys/hardware endpoint. Leaving Product, Version and PlatformId with defaul values');
             }
 
-            const globalSettings = await this.utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/global-settings`,
+            const globalSettings = await this.utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/global-settings',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (globalSettings.body.hostname !== undefined) {
                 hostname = globalSettings.body.hostname;
@@ -527,11 +543,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/tm/sys/global-settings endpoint. Leaving hostname with default value');
             }
 
-            const managementIp = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/management-ip`,
+            const managementIp = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/management-ip',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (managementIp.body.items !== undefined) {
                 management = managementIp.body.items[0].name;
@@ -539,11 +559,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/tm/sys/management-ip endpoint. Leaving Management with default value');
             }
 
-            const modules = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/provision`,
+            const modules = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/provision',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (modules.body.items !== undefined) {
                 modules.body.items.forEach(item => {
@@ -555,11 +579,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/tm/sys/provision endpoint. Not able to get provision modules');
             }
 
-            const logicalDisk = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/disk/logical-disk`,
+            const logicalDisk = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/disk/logical-disk',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (logicalDisk.body.items !== undefined) {
                 diskSize = this._getDiskSize(logicalDisk.body.items);
@@ -567,11 +595,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/tm/sys/disk/logical-disk. Leaving diskSize with default value');
             }
 
-            const packages = await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/installed-packages`,
+            const packages = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/shared/iapp/installed-packages',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (packages.body.items !== undefined) {
                 packages.body.items.forEach(item => {
@@ -581,11 +613,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/shared/iapp/installed-packages. Not able to get installed extensions');
             }
 
-            const memory = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/memory`,
+            const memory = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/memory',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (memory.body.entries !== undefined) {
                 if ('https://localhost/mgmt/tm/sys/memory/memory-host' in memory.body.entries) {
@@ -597,11 +633,15 @@ export class TelemetryClient {
             } else {
                 logger.warn('Problem with getting data from /mgmt/tm/sys/memory endpoint. Leaving memoryInMb with default value');
             }
-            const interfaces = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/net/interface`,
+            const interfaces = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/net/interface',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
             if (interfaces.body.items !== undefined) {
                 nicCount = interfaces.body.items.length;
@@ -609,11 +649,15 @@ export class TelemetryClient {
                 logger.warn('Problem with getting data from /mgmt/tm/net/interface endpoint. Leaving nicCount with default value');
             }
 
-            const license = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/license`,
+            const license = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/tm/sys/license',
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
-                    }
+                    },
+                    advancedReturn: true
                 });
 
             if (license.body.entries !== undefined) {
@@ -711,15 +755,19 @@ export class TelemetryClient {
         logger.debug(`Webhook payload: ${utils.stringify(systemInfo)}`);
 
         // make a request to the hook target
-        const response = await utils.makeRequest(`${postHookConfig.url}`,
+        const urlObject = url.parse(postHookConfig.url);
+        const response = await utils.makeRequest(`${urlObject.hostname}`, `${urlObject.path}`,
             {
                 method: 'POST',
+                port: Number(urlObject.port),
+                protocol: urlObject.protocol,
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 verifyTls: 'verifyTls' in postHookConfig ? postHookConfig.verifyTls : true,
                 trustedCertBundles: 'trustedCertBundles' in postHookConfig ? postHookConfig.trustedCertBundles : undefined,
-                body: systemInfo
+                body: systemInfo,
+                advancedReturn: true
             }
         );
 

@@ -17,17 +17,19 @@
 
 'use strict';
 
+import * as https from 'https';
 import * as fs from 'fs';
+import * as url from 'url';
 import * as nodeUtil from 'util';
 import * as childProcess from 'child_process';
 import * as crypto from 'crypto';
-import * as URL from 'url';
-import request from 'request';
+import * as FormData from 'form-data';
 import Mustache from 'mustache';
 import * as yaml from 'js-yaml';
 import * as constants from '../constants';
 import Logger from './logger';
 
+const axios = require('axios').default;
 const logger = Logger.getLogger();
 
 /**
@@ -52,7 +54,7 @@ export function stringify(data: object): string {
  *
  * @returns converted data
  */
-export function convertTo(data, type): any {
+export function convertTo(data, type): any { /* eslint-disable-line @typescript-eslint/no-explicit-any */
     if (type === 'string') {
         return data.toString();
     } else if (type === 'number') {
@@ -61,45 +63,6 @@ export function convertTo(data, type): any {
         return !!data;
     }
     return data;
-}
-
-/**
- * Download HTTP payload to file
- *
- * @param url  - url
- * @param file - file where data should end up
- *
- * @returns Resolved on download completion
- */
-export async function downloadToFile(url: string, file: string, options): Promise<void> {
-    options = options || {};
-    logger.silly(`Downloading File: ${url}`);
-    const trustedCertBundles = [];
-    if (options.trustedCertBundles) {
-        for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
-            trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
-        }
-    }
-    await new Promise((resolve, reject) => {
-        request({
-            url: url,
-            method: 'GET',
-            headers: Object.assign(
-                options.headers || {}
-            ),
-            ca: trustedCertBundles.length > 0 ? trustedCertBundles : undefined,
-            strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
-        })
-            .on('error', (err) => {
-                reject(err);
-            })
-            .pipe(fs.createWriteStream(file))
-            .on('error', (err) => {
-                reject(err);
-            })
-            .on('finish', resolve);
-    })
-        .catch(err => Promise.reject(err));
 }
 
 /**
@@ -207,6 +170,170 @@ export async function retrier(
 }
 
 /**
+* Sends HTTP request
+*
+* @param {String}  host                         - HTTP host
+* @param {String}  uri                          - HTTP uri
+* @param {Object}  options                      - function options
+* @param {String}  [options.method]             - HTTP method
+* @param {String}  [options.auth]               - HTTP auth
+* @param {String}  [options.protocol]           - HTTP protocol
+* @param {Integer} [options.port]               - HTTP port
+* @param {Object}  [options.queryParams]        - HTTP query parameters
+* @param {String}  [options.body]               - HTTP body
+* @param {Object}  [options.formData]           - HTTP form data
+* @param {Object}  [options.headers]            - HTTP headers
+* @param {Object}  [options.httpsAgent]         - HTTPS Client or Proxy object
+* @param {Boolean} [options.continueOnError]    - continue on error (return info even if response contains error code)
+* @param {Boolean} [options.advancedReturn]     - advanced return (return status code AND response body)
+* @param {Boolean} [options.responseType]       - expected type of the response
+* @param {Boolean} [options.validateStatus]     - validate response status codes
+* @param {String}  [options.bodyType]           - HTTP body type
+* @param {Boolean} [options.verifyTls]          - HTTP verifyTls
+* @param {Object}  [options.trustedCertBundles] - Request trusted cert bundles
+*
+* @returns {Promise} Resolves on successful response - { code: 200, body: '', headers: {} }
+*/
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export async function makeRequest(host: string, uri: string, options?: {
+    method?: string;
+    auth?: object;
+    protocol?: string;
+    port?: number;
+    queryParams?: object;
+    body?: unknown;
+    formData?: Array<unknown>;
+    headers?: object;
+    httpsAgent?: object;
+    continueOnError?: boolean;
+    advancedReturn?: boolean;
+    responseType?: string;
+    validateStatus?: boolean;
+    bodyType?: string;
+    verifyTls?: boolean;
+    trustedCertBundles?: Array<string>;
+    proxy?: object;
+}): Promise<{
+    code?: number;
+    body?: any;
+    headers?: object;
+    data?: any;
+}> {
+    options.protocol = options.protocol ? options.protocol.replace(/:/g, "") : 'https';
+    options.port = options.port || 443;
+    options.body = options.body || '';
+    options.headers = options.headers || {};
+    let formData;
+    if (options.formData) {
+        formData = new FormData.default();
+        options.formData.forEach((el: any) => {
+            formData.append(
+                el.name,
+                el.data,
+                {
+                    filename: el.fileName || null,
+                    contentType: el.contentType || null
+                }
+            );
+        });
+        Object.assign(options.headers, formData.getHeaders());
+    }
+
+    const trustedCertBundles = [];
+    const agentOpts = {
+        rejectUnauthorized: true,
+    };
+    if (options.trustedCertBundles && options.trustedCertBundles.length > 0) {
+        for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
+            trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
+        }
+        agentOpts['ca'] = trustedCertBundles;
+    } else {
+        agentOpts.rejectUnauthorized = options.verifyTls !== undefined ? options.verifyTls : true;
+    }
+    const httpsAgent = new https.Agent(agentOpts);
+
+    const requestOptions = {
+        url: uri,
+        baseURL: `${options.protocol}://${host}:${options.port}`,
+        method: options.method || 'GET',
+        auth: options.auth || null,
+        withCredentials: options.auth !== null,
+        headers: options.headers,
+        responseType: options.responseType || 'json',
+        data: options.formData ? formData : options.body,
+        httpsAgent: httpsAgent,
+        proxy: options.proxy || null,
+        validateStatus: options.validateStatus || false
+    };
+
+    return Promise.resolve()
+        .then(() => axios.request(requestOptions))
+        .then((response) => {
+            // check for HTTP errors
+            if (response.status > 300 && !options.continueOnError) {
+                return Promise.reject(new Error(
+                    `HTTP request failed: ${response.status}}`
+                ));
+            } else {
+                if (new RegExp(constants.LOGGER.ENDPOINTS_TO_HIDE_RESPONSE.join("|")).test(uri)) {
+                    logger.silly(`Request response: ${response.status}`);
+                } else {
+                    logger.silly(`Request response: ${response.status} ${response.data}`);
+                }
+            }
+            // check for advanced return
+            if (options.advancedReturn === true) {
+                return {
+                    code: response.status,
+                    body: response.data,
+                    headers: response.headers
+                };
+            }
+            return response.data;
+        })
+        .catch((err) => Promise.reject(new Error(JSON.stringify(err.message) || err)));
+}
+
+/**
+ * Download HTTP payload to file
+ *
+ * @param url  - url
+ * @param file - file where data should end up
+ *
+ * @returns Resolved on download completion
+ */
+export async function downloadToFile(location: string, file: string, options): Promise<void> {
+    options = options || {};
+    logger.silly(`Downloading File: ${location}`);
+    const urlObject = url.parse(location);
+    const trustedCertBundles = options.trustedCertBundles || undefined;
+
+    const stream = fs.createWriteStream(file)
+
+    const response = await makeRequest(urlObject.hostname, urlObject.path, {
+        method: 'GET',
+        port: Number(urlObject.port),
+        protocol: urlObject.protocol,
+        headers: Object.assign(
+            options.headers || {}
+        ),
+        trustedCertBundles: trustedCertBundles,
+        verifyTls: options.verifyTls !== undefined ? options.verifyTls : true,
+        responseType: 'stream',
+        advancedReturn: true,
+        continueOnError: false
+    })
+
+    response.body.pipe(stream)
+
+    return new Promise((resolve, reject) => {
+        stream.on('finish', resolve)
+        stream.on('error', reject)
+    })
+}
+
+/**
  * Load data
  *
  * @param location              - data location
@@ -215,57 +342,40 @@ export async function retrier(
  *
  * @returns Returns loaded data
  */
-export function loadData(location: string, options?: {
+export async function loadData(location: string, options?: {
     locationType?: string;
     verifyTls?: boolean;
     trustedCertBundles?: Array<string>;
 }): Promise<object> {
     options = options || {};
     const locationType = options.locationType;
-    const urlObject = URL.parse(location);
-
-    const trustedCertBundles = [];
-    if (options.trustedCertBundles) {
-        for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
-            trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
-        }
-    }
+    const urlObject = url.parse(location);
+    const trustedCertBundles = options.trustedCertBundles || undefined;
 
     if (urlObject.protocol === 'file:') {
         return Promise.resolve(JSON.parse(fs.readFileSync(urlObject.path, 'utf8')));
     } else if ((urlObject.protocol === 'http:' || urlObject.protocol === 'https:') && locationType === 'url') {
         logger.silly(`Loading file via url - options: ${JSON.stringify(options)} `);
-        return new Promise<object>((resolve, reject) => {
-            retrier(request, [{
-                url: location,
-                method: 'GET',
-                ca: trustedCertBundles.length > 0 ? trustedCertBundles : undefined,
-                strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
-            }, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
-                if (error) {
-                    reject(error);
-                } else {
-                    let parsedData = "";
-                    try {
-                        parsedData = JSON.parse(body);
-                    } catch (e) {
-                        parsedData = yaml.load(body);
-                    }
-                    if (typeof parsedData === 'object'){
-                        resolve(parsedData);
-                    }
-                    else{
-                        reject(new Error('The config loaded from the URL is not valid JSON or YAML.'));
-                    }
-                }
-            }],{
-                thisContext: this,
-                maxRetries: this.maxRetries,
-                retryInterval: this.retryInterval
-            });
-        })
-            .catch(err => Promise.reject(err));
 
+        const response = await makeRequest(urlObject.hostname, urlObject.path, {
+            method: 'GET',
+            port: Number(urlObject.port),
+            protocol: urlObject.protocol,
+            trustedCertBundles: trustedCertBundles,
+            verifyTls: options.verifyTls !== undefined ? options.verifyTls : true,
+            advancedReturn: true
+        })
+
+        if (typeof response.body === 'object') {
+            return Promise.resolve(response.body);
+        } else {
+            try {
+                const parsedData = yaml.load(response.body);
+                return Promise.resolve(parsedData);
+            } catch (e) {
+                return Promise.reject(new Error('The config loaded from the URL is not valid JSON or YAML.'));
+            }
+        }
     }
     return Promise.reject(new Error(`Unknown url type: ${urlObject.protocol}`));
 }
@@ -356,90 +466,4 @@ export async function verifyDirectory(directory): Promise<void> {
         data = 'https://storage.googleapis.com/storage/v1/b/' + bucket + '/o/' + encodedPath + '?alt=media';
     }
     return data;
-}
-
-/**
- * Make request (HTTP)
- *
- * @param uri                   [uri]
- * @param options               [function options]
- * @param [options.method]      [HTTP method, defaults to 'GET']
- * @param [options.headers]     [HTTP headers]
- * @param [options.body] [HTTP body]
- * @param [options.bodyType]    [body type, such as 'raw']
- *
- * @returns {Promise} Resolves on successful response - { code: 200, data: '' }
- */
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-export async function makeRequest(uri: string, options?: {
-    method?: string;
-    headers?: object;
-    verifyTls?: boolean;
-    trustedCertBundles?: Array<string>;
-    body?: unknown;
-    bodyType?: string;
-}): Promise<{
-    code: number;
-    body?: any;
-}> {
-    options = options || {};
-
-    if (options.bodyType === 'raw') {
-        // continue
-    } else {
-        options.body = JSON.stringify(options.body);
-    }
-
-    const trustedCertBundles = [];
-    if (options.trustedCertBundles) {
-        for (let i = 0; i < options.trustedCertBundles.length; i += 1) {
-            trustedCertBundles.push(fs.readFileSync(options.trustedCertBundles[i]));
-        }
-    }
-
-    const requestOptions = {
-        url: uri,
-        method: options.method || 'GET',
-        headers: Object.assign(
-            options.headers || {}
-        ),
-        body: options.body || null,
-        ca: trustedCertBundles.length > 0 ?  trustedCertBundles : undefined,
-        strictSSL: options.verifyTls !== undefined ? options.verifyTls : true
-    };
-
-    logger.silly(`Making request: ${requestOptions.method} ${uri} verifyTls: ${requestOptions.strictSSL}`);
-
-    const response: {
-        code: number;
-        body: any;
-    } = await new Promise((resolve, reject) => {
-        retrier(request, [requestOptions, (error, resp, body) => { /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
-            if (error) {
-                reject(error);
-            } else {
-                try {
-                    if (body.indexOf('{') !== -1 && body.indexOf('}') !== -1) {
-                        resolve({ code: resp.statusCode, body: JSON.parse(body) });
-                    } else {
-                        resolve({ code: resp.statusCode, body: body });
-                    }
-                } catch (e) {
-                    resolve({ code: resp.statusCode, body: body });
-                }
-            }
-        }], {
-            thisContext: this,
-            maxRetries: this.maxRetries,
-            retryInterval: this.retryInterval
-        });
-    });
-
-    if (new RegExp(constants.LOGGER.ENDPOINTS_TO_HIDE_RESPONSE.join("|")).test(uri)) {
-        logger.silly(`Request response: ${response.code}`);
-    } else {
-        logger.silly(`Request response: ${response.code} ${stringify(response.body)}`);
-    }
-
-    return { code: response.code, body: response.body };
 }

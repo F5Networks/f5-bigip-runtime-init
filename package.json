@@ -19,7 +19,7 @@
         "build-code-docs": "jsdoc -r src/lib -d ./code-docs/",
         "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{ts,tsx}'",
         "unit-tests": "mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
-        "test": "nyc mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
+        "test": "nyc --reporter=lcov mocha -r ts-node/register \"./tests/unit/**/*.ts\"",
         "functional-test": "mocha --recursive \"./tests/functional/testRunner.js\" --opts ./tests/functional/.mocha.opts",
         "check-test-coverage": "nyc check-coverage"
     },
@@ -33,19 +33,15 @@
         "jsonwebtoken": "^9.0.0"
     },
     "dependencies": {
-        "@azure/identity": "^1.0.2",
-        "@azure/keyvault-secrets": "^4.0.2",
-        "@azure/core-util": "<=1.2.0",
         "@f5devcentral/f5-teem": "^1.5.0",
-        "@google-cloud/compute": "^1.2.0",
         "@types/es6-promise": "^3.3.0",
         "ajv": "^6.12.2",
-        "aws-sdk": "^2.610.0",
         "aws4": "^1.12.0",
+        "axios": "^0.21.4",
         "commander": "^4.1.0",
+        "form-data": "^4.0.0",
         "get-user-locale": "^1.4.0",
-        "google-auth-library": "^6.1.1",
-        "googleapis": "^61.0.0",
+        "https-proxy-agent": "^3.0.1",
         "icrdk": "git+https://github.com/f5devcentral/f5-icontrollx-dev-kit#master",
         "jmespath": "^0.15.0",
         "js-yaml": "^3.13.1",
@@ -53,45 +49,45 @@
         "lodash.where": "^3.1.0",
         "mustache": "^4.0.0",
         "netmask": "^2.0.2",
-        "request": "^2.88.2",
         "uuid": "^8.2.0",
         "winston": "^3.3.3",
+        "xml2js": "^0.6.2",
         "xmldom": ">= 0.5.x",
         "y18n": "4.0.1"
     },
     "dependencyMap": {
         "common": {
-            "commander": "^4.1.0",
-            "winston": "^3.3.3",
-            "get-user-locale": "^1.4.0",
-            "uuid": "^8.2.0",
             "@f5devcentral/f5-teem": "^1.4.6",
+            "ajv": "^6.12.2",
+            "axios": "^0.21.4",
+            "commander": "^4.1.0",
+            "form-data": "^4.0.0",
+            "get-user-locale": "^1.4.0",
+            "https-proxy-agent": "^3.0.1",
+            "jmespath": "^0.15.0",
             "js-yaml": "^3.13.1",
             "mustache": "^4.0.0",
-            "request": "^2.88.0",
-            "jmespath": "^0.15.0",
-            "netmask": "^2.0.2"
+            "netmask": "^2.0.2",
+            "uuid": "^8.2.0",
+            "winston": "^3.3.3"
         },
-        "gcp": {
-            "google-auth-library": "^5.6.1",
-            "googleapis": "^48.0.0",
-            "@google-cloud/compute": "^1.2.0"
-        },
+        "gcp": {},
         "aws": {
-            "aws-sdk": "^2.610.0",
             "aws4": "^1.12.0",
-            "lodash.where": "^3.1.0"
+            "lodash.where": "^3.1.0",
+            "xml2js": "^0.6.2"
         },
         "azure": {
-            "@azure/keyvault-secrets": "4.3.0",
-            "@azure/identity": "1.4.0",
-            "@azure/core-util": "<=1.2.0",
             "lodash.where": "^3.1.0"
         }
     },
     "devDependencies": {
+        "@azure/core-util": "<=1.2.0",
+        "@azure/identity": "1.4.0",
+        "@azure/keyvault-secrets": "4.3.0",
         "@azure/ms-rest-nodeauth": "^3.0.1",
         "@f5devcentral/eslint-config-f5-atg": "^0.1.4",
+        "@google-cloud/compute": "^1.2.0",
         "@types/assert": "^1.4.6",
         "@types/memory-cache": "^0.2.1",
         "@types/mocha": "^7.0.2",
@@ -99,9 +95,12 @@
         "@types/sinon": "^9.0.0",
         "@typescript-eslint/eslint-plugin": "^2.27.0",
         "@typescript-eslint/parser": "^2.27.0",
+        "aws-sdk": "^2.610.0",
         "eslint": "^6.8.0",
         "eslint-config-airbnb-base": "^14.0.0",
         "eslint-plugin-import": "^2.20.0",
+        "google-auth-library": "^6.1.1",
+        "googleapis": "^61.0.0",
         "jsdoc": "^3.6.10",
         "json-schema-md-doc": "^0.1.7",
         "mocha": "^7.1.2",
@@ -109,6 +108,7 @@
         "nock": "^11.7.2",
         "nyc": "^14.1.1",
         "q": "^1.5.1",
+        "request": "^2.88.2",
         "sinon": "^8.1.1",
         "ts-node": "^8.8.2",
         "typescript": "^3.8.3"
@@ -144,27 +144,9 @@
     },
     "auditProcessor": {
         "allowlist": [
+            "1094889",
             "1089556",
-            "1090179",
-            "1091459",
-            "1091573",
-            "1092301",
-            "1092310",
-            "1091725",
-            "1092459",
-            "1092470",
-            "1092972",
-            "1093262",
-            "1092301",
-            "1092470",
-            "1093262",
-            "1089556",
-            "1091573",
-            "1092470",
-            "1092972",
-            "1094762",
-            "1094554",
-            "1094596"
+            "1091573"
         ]
     },
     "keywords": [

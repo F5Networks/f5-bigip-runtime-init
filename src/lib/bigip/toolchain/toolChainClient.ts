@@ -169,7 +169,6 @@ class PackageClient {
     _metadataClient: MetadataClient;
     component: string;
     version: string;
-    uriPrefix: string;
     authHeader: string;
     maxRetries: number;
     retryInterval: number;
@@ -178,10 +177,9 @@ class PackageClient {
      *
      * @param mgmtClient     [management client]
      * @param metadataClient [metadata client]
-     * @param  uriPrefix     [request prefix]
      * @param  authHeader    [request auth header]
-     * @param  maxRetries         [number of retries]
-     * @param  retryInterval      [delay between retries in ms];
+     * @param  maxRetries    [number of retries]
+     * @param  retryInterval [delay between retries in ms];
      *
      * @returns
      */
@@ -191,7 +189,6 @@ class PackageClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
-        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
@@ -200,9 +197,7 @@ class PackageClient {
     async _uploadRpm(file: string, options?: {
         deleteFile?: boolean;
     }): Promise<void> {
-        /* eslint-disable no-await-in-loop, no-loop-func */
         options = options || {};
-
         const deleteFile = options.deleteFile || true;
         const fileStats = fs.statSync(file);
         const chunkSize = 1024 * 1024;
@@ -213,9 +208,11 @@ class PackageClient {
             logger.silly(`Sending chunk: ${start}-${end}/${fileStats.size}`);
 
             await utils.makeRequest(
-                `${this.uriPrefix}/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
+                `${this._mgmtClient.host}`, `/mgmt/shared/file-transfer/uploads/${file.split('/')[file.split('/').length - 1]}`,
                 {
                     method: 'POST',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader,
                         'Content-Type': 'application/octet-stream',
@@ -225,7 +222,8 @@ class PackageClient {
                     body: fs.createReadStream(file, { start, end }),
                     bodyType: 'raw',
                     verifyTls: this._metadataClient._getVerifyTls(),
-                    trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                    trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                    advancedReturn: true
                 }
             );
 
@@ -249,13 +247,17 @@ class PackageClient {
         const maxCount = this.maxRetries ? this.maxRetries : constants.RETRY.DEFAULT_COUNT;
         let response;
         while (true) {
-            response = await utils.makeRequest(`${this.uriPrefix}${PKG_MGMT_URI}/${taskId}`,
+            response = await utils.makeRequest(`${this._mgmtClient.host}`, `${PKG_MGMT_URI}/${taskId}`,
                 {
+                    method: 'GET',
+                    port: this._mgmtClient.port,
+                    protocol: this._mgmtClient._protocol,
                     headers: {
                         Authorization: this.authHeader
                     },
                     verifyTls: this._metadataClient._getVerifyTls(),
-                    trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                    trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                    advancedReturn: true
                 });
 
             if (response.body.status === 'FINISHED') {
@@ -274,9 +276,11 @@ class PackageClient {
 
     async _installRpm(packagePath: string): Promise<void> {
         const response = await utils.makeRequest(
-            `${this.uriPrefix}${PKG_MGMT_URI}`,
+            `${this._mgmtClient.host}`, `${PKG_MGMT_URI}`,
             {
                 method: 'POST',
+                port: this._mgmtClient.port,
+                protocol: this._mgmtClient._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
@@ -285,7 +289,8 @@ class PackageClient {
                     packageFilePath: packagePath
                 },
                 verifyTls: this._metadataClient._getVerifyTls(),
-                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                advancedReturn: true
             }
         );
 
@@ -372,15 +377,18 @@ class PackageClient {
         const packageName = path.parse(this._metadataClient.getDownloadPackageName()).name;
         logger.silly(`Uninstalling package name: ${packageName}`);
         const payload = {'operation': 'UNINSTALL','packageName': packageName};
-        await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/package-management-tasks`,
+        await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/shared/iapp/package-management-tasks',
             {
                 method: 'POST',
+                port: this._mgmtClient.port,
+                protocol: this._mgmtClient._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
                 verifyTls: this._metadataClient._getVerifyTls(),
                 trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
-                body: payload
+                body: payload,
+                advancedReturn: true
             });
     }
 
@@ -394,13 +402,17 @@ class PackageClient {
         reinstallRequired: boolean;
     }> {
         const state =  { isInstalled: false, reinstallRequired: false };
-        const installedPackages = await utils.makeRequest(`${this.uriPrefix}/mgmt/shared/iapp/global-installed-packages`,
+        const installedPackages = await utils.makeRequest(`${this._mgmtClient.host}`, '/mgmt/shared/iapp/global-installed-packages',
             {
+                method: 'GET',
+                port: this._mgmtClient.port,
+                protocol: this._mgmtClient._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
                 verifyTls: this._metadataClient._getVerifyTls(),
-                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                advancedReturn: true
             });
         if ('items' in installedPackages.body && installedPackages.body.items) {
             installedPackages.body.items.forEach((item) => {
@@ -422,7 +434,6 @@ class ServiceClient {
     _metadataClient: MetadataClient;
     component: string;
     version: string;
-    uriPrefix: string;
     authHeader: string;
     maxRetries: number;
     retryInterval: number;
@@ -430,7 +441,6 @@ class ServiceClient {
      *
      * @param  component          [toolchain component]
      * @param  version            [toolchain component version]
-     * @param  uriPrefix          [request prefix]
      * @param  authHeader         [request auth header]
      * @param  maxRetries         [number of retries]
      * @param  retryInterval      [delay between retries in ms];
@@ -442,7 +452,6 @@ class ServiceClient {
 
         this.component = this._metadataClient.getComponentName();
         this.version = this._metadataClient.getComponentVersion();
-        this.uriPrefix = `${this._mgmtClient._protocol}://${this._mgmtClient.host}:${this._mgmtClient.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this._mgmtClient.user}:${this._mgmtClient.password}`)}`;
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
@@ -456,16 +465,21 @@ class ServiceClient {
      * @returns Task response
      */
     async _checkTaskState(taskUri: string): Promise<{
-        code: number;
+        code?: number;
         body?: any;
     }> {
-        const taskResponse = await utils.makeRequest(`${this.uriPrefix}${taskUri}`,
+        const taskResponse = await utils.makeRequest(`${this._mgmtClient.host}`, `${taskUri}`,
             {
+                method: 'GET',
+                port: this._mgmtClient.port,
+                protocol: this._mgmtClient._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
                 verifyTls: this._metadataClient._getVerifyTls(),
-                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                advancedReturn: true,
+                continueOnError: true
             });
 
         if (taskResponse.code === constants.HTTP_STATUS_CODES.OK) {
@@ -508,13 +522,18 @@ class ServiceClient {
      */
     async _isAvailableCheck(): Promise<boolean> {
         const response = await utils.makeRequest(
-            `${this.uriPrefix}${this._metadataClient.getInfoEndpoint().endpoint}`,
+            `${this._mgmtClient.host}`, `${this._metadataClient.getInfoEndpoint().endpoint}`,
             {
+                method: 'GET',
+                port: this._mgmtClient.port,
+                protocol: this._mgmtClient._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
                 verifyTls: this._metadataClient._getVerifyTls(),
-                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                advancedReturn: true,
+                continueOnError: true
             }
         );
 
@@ -547,7 +566,7 @@ class ServiceClient {
     async create(options?: {
         config?: object;
     }): Promise<{
-        code: number;
+        code?: number;
         body?: any;
     }> {
         options = options || {};
@@ -555,15 +574,19 @@ class ServiceClient {
 
         logger.info(`Creating - ${this.component} ${this.version} ${utils.stringify(config)}`);
         const response = await utils.makeRequest(
-            `${this.uriPrefix}${this._metadataClient.getConfigurationEndpoint().endpoint}`,
+            `${this._mgmtClient.host}`, `${this._metadataClient.getConfigurationEndpoint().endpoint}`,
             {
                 method: 'POST',
+                port: this._mgmtClient.port,
+                protocol: this._mgmtClient._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
                 body: config,
                 verifyTls: this._metadataClient._getVerifyTls(),
-                trustedCertBundles: this._metadataClient._getTrustedCertBundles()
+                trustedCertBundles: this._metadataClient._getTrustedCertBundles(),
+                advancedReturn: true,
+                continueOnError: true
             }
         );
         if (response.code === constants.HTTP_STATUS_CODES.ACCEPTED) {

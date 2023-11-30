@@ -17,26 +17,31 @@
 
 'use strict';
 
-import {google, GoogleApis} from 'googleapis';
-import Compute from '@google-cloud/compute';
 import * as constants from '../../../constants'
 import { AbstractCloudClient } from '../abstract/cloudClient'
 import * as utils from "../../utils";
+import Logger from "../../logger";
+
+const metadataRequestOptions: object = {
+    method: 'GET',
+    port: 80,
+    protocol: 'http',
+    headers: {
+        'Metadata-Flavor': 'Google'
+    },
+    advancedReturn: true,
+    continueOnError: true
+ }
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 export class GcpCloudClient extends AbstractCloudClient {
-    secretmanager: any;
-    google: GoogleApis;
     projectId: string;
     region: string;
-    authToken: any;
-    compute: any;
-    constructor(options?: any) {
-        const secretmanager = google.secretmanager('v1');
+    authHeaders: any;
+    constructor(options?: {
+        logger?: Logger;
+    }) {
         super(constants.CLOUDS.GCP, options);
-        this.google = google;
-        this.compute = new Compute();
-        this.secretmanager = secretmanager;
     }
 
     /**
@@ -44,12 +49,12 @@ export class GcpCloudClient extends AbstractCloudClient {
      */
     init(): Promise<void> {
         return this._getProjectId()
-            .then((result) => {
-                this.projectId = result;
-                return this._getAuthToken();
+            .then((projectId) => {
+                this.projectId = projectId;
+                return this.getAuthHeaders();
             })
-            .then((result) => {
-                this.authToken = result;
+            .then((authHeaders) => {
+                this.authHeaders = authHeaders;
                 return this._getRegion();
             })
             .then((region) => {
@@ -68,11 +73,11 @@ export class GcpCloudClient extends AbstractCloudClient {
      *
      * @returns
      */
-    getSecret(secretId: string, options?: {
+    async getSecret(secretId: string, options?: {
         version?: string;
     }): Promise<string> {
         if (!secretId) {
-            throw new Error('GCP Cloud Client secret id is missing');
+            return Promise.reject(new Error('GCP Cloud Client secret id is missing'));
         }
 
         const fullyQualifiedSecret = new RegExp('^projects/[0-9]{6,30}/secrets/[a-z0-9-_]{1,255}/versions/([0-9]{1,255}|latest)$');
@@ -84,23 +89,26 @@ export class GcpCloudClient extends AbstractCloudClient {
         } else if (secret.test(secretId)) {
             secretName = `projects/${this.projectId}/secrets/${secretId}/versions/${version}`;
         } else {
-            throw new Error(`GCP Cloud Client secret id ${secretId} is the wrong format`);
+            return Promise.reject(new Error(`GCP Cloud Client secret id ${secretId} is the wrong format`));
         }
 
-        const params = {
-            auth: this.authToken,
-            name: secretName
-        };
-        return this.secretmanager.projects.secrets.versions.access(params)
-            .then((response) => {
-                const buff = Buffer.from(response.data.payload.data, 'base64');
-                const secret = buff.toString('ascii');
-                return Promise.resolve(secret);
-            })
-            .catch((err) => {
-                const message = `Error getting secret from ${secretId} ${err.message}`;
-                return Promise.reject(new Error(message));
-            });
+        const authHeaders = this.authHeaders || await this.getAuthHeaders();
+        const response =  await utils.retrier(utils.makeRequest, ['secretmanager.googleapis.com', '/v1/' + secretName + ':access', {
+            method: 'GET',
+            port: 443,
+            protocol: 'https',
+            headers: authHeaders,
+            advancedReturn: true,
+            continueOnError: true
+        }])
+
+        if (!response.body || response.code !== 200) {
+            return Promise.reject(new Error(`Error getting secret from ${secretId} ${response.code}`));
+        }
+
+        const buff = Buffer.from(response.body.payload.data, 'base64');
+        const secretValue = buff.toString('ascii');
+        return Promise.resolve(secretValue);
     }
 
     /**
@@ -139,19 +147,23 @@ export class GcpCloudClient extends AbstractCloudClient {
      * @returns {Promise}
      */
     async getTagValue(key: string):  Promise<string> {
-        const responseVmName = await utils.makeRequest(
-            `http://metadata.google.internal/computeMetadata/v1/instance/name`,
-            {
-                method: 'GET',
-                headers: {
-                    'Metadata-Flavor': 'Google'
-                }
-            }
+        const responseVmName = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.GCP, '/computeMetadata/v1/instance/name', metadataRequestOptions]
         );
-        const computeZone = this.compute.zone(this.region);
-        const vm = computeZone.vm(responseVmName.body);
-        const vmData = await vm.getMetadata();
-        return vmData[0].labels[key] || '';
+        const responseVmZone = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.GCP, '/computeMetadata/v1/instance/zone', metadataRequestOptions]
+        );
+        const authHeaders = this.authHeaders || await this.getAuthHeaders();
+        const vmData = await utils.retrier(utils.makeRequest,
+            ['compute.googleapis.com', `/compute/v1/${responseVmZone.body}/instances/${responseVmName.body}`, {
+                method: 'GET',
+                port: 443,
+                protocol: 'https',
+                headers: authHeaders,
+                advancedReturn: true
+            }]
+        );
+        return vmData.body.labels[key] || '';
     }
 
     /**
@@ -189,36 +201,18 @@ export class GcpCloudClient extends AbstractCloudClient {
         let result: string;
 
         if (type == 'compute') {
-            const response = await utils.makeRequest(
-                `http://metadata.google.internal/computeMetadata/v1/instance/${field}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Metadata-Flavor': 'Google'
-                    }
-                }
+            const response = await utils.retrier(utils.makeRequest,
+                [constants.METADATA_HOST.GCP, `/computeMetadata/v1/instance/${field}`, metadataRequestOptions]
             );
 
             result = response.body.replace(/_/g, '-');
         } else if(type === 'network') {
-            const responseIp = await utils.makeRequest(
-                `http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/${index}/${field}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Metadata-Flavor': 'Google'
-                    }
-                }
+            const responseIp = await utils.retrier(utils.makeRequest,
+                [constants.METADATA_HOST.GCP, `/computeMetadata/v1/instance/network-interfaces/${index}/${field}`, metadataRequestOptions]
             );
 
-            const responseMask = await utils.makeRequest(
-                `http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/${index}/subnetmask`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Metadata-Flavor': 'Google'
-                    }
-                }
+            const responseMask = await utils.retrier(utils.makeRequest,
+                [constants.METADATA_HOST.GCP, `/computeMetadata/v1/instance/network-interfaces/${index}/subnetmask`, metadataRequestOptions]
             );
 
             const maskNodes = responseMask.body.match(/(\d+)/g);
@@ -237,33 +231,14 @@ export class GcpCloudClient extends AbstractCloudClient {
      * @returns {Promise} A promise which is resolved with the projectId requested
      *
      */
-    _getProjectId(): Promise<string> {
-        return this.google.auth.getProjectId()
-            .then((projectId) => Promise.resolve(projectId)) /* eslint-disable-line */
-            .catch((err) => {
-                const message = `Error getting project id ${err.message}`;
-                return Promise.reject(new Error(message));
-            });
-    }
-
-    /**
-     * Get bearer auth token
-     *
-     * @returns {Promise} A promise which is resolved with bearer auth token
-     *
-     */
-    _getAuthToken(): Promise<any> {
-        return this.google.auth.getClient({
-            scopes: [
-                'https://www.googleapis.com/auth/cloud-platform',
-                'https://www.googleapis.com/auth/secretmanager'
-            ]
-        })
-            .then((authToken) => Promise.resolve(authToken)) /* eslint-disable-line */
-            .catch((err) => {
-                const message = `Error getting auth token ${err.message}`;
-                return Promise.reject(new Error(message));
-            });
+    async _getProjectId(): Promise<string> {
+        const response = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.GCP, '/computeMetadata/v1/project/project-id', metadataRequestOptions]
+        );
+        if (!response.body || response.code !== 200) {
+            return Promise.reject(new Error(`Error getting project id ${response.code}`));
+        }
+        return Promise.resolve(response.body);
     }
 
     /**
@@ -273,23 +248,11 @@ export class GcpCloudClient extends AbstractCloudClient {
      *
      */
      async getAuthHeaders(): Promise<object> {
-        const serviceAccountResponse = await utils.makeRequest(
-            `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/?recursive=true`,
-            {
-                method: 'GET',
-                headers: {
-                    'Metadata-Flavor': 'Google'
-                }
-            }
+        const serviceAccountResponse = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.GCP, '/computeMetadata/v1/instance/service-accounts/?recursive=true', metadataRequestOptions]
         );
-        const tokenResponse = await utils.makeRequest(
-            `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/${serviceAccountResponse.body.default.email}/token`,
-            {
-                method: 'GET',
-                headers: {
-                    'Metadata-Flavor': 'Google'
-                }
-            }
+        const tokenResponse = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.GCP, `/computeMetadata/v1/instance/service-accounts/${serviceAccountResponse.body.default.email}/token`, metadataRequestOptions]
         );
         const headers = {
             'Authorization': `Bearer ${tokenResponse.body.access_token}`
@@ -298,16 +261,9 @@ export class GcpCloudClient extends AbstractCloudClient {
     }
 
      async _getRegion(): Promise<string> {
-        const zone = await utils.makeRequest(
-            `http://metadata.google.internal/computeMetadata/v1/instance/zone`,
-            {
-                method: 'GET',
-                headers: {
-                    'Metadata-Flavor': 'Google'
-                }
-            }
+        const zone = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.GCP, '/computeMetadata/v1/instance/zone', metadataRequestOptions]
         );
-
         return zone.body.split('/')[zone.body.split('/').length - 1];
     }
 }

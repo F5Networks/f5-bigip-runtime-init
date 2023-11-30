@@ -13,6 +13,7 @@ import sinon from 'sinon';
 import nock from 'nock';
 import { GcpCloudClient } from '../../../src/lib/cloud/gcp/cloudClient';
 const cloud = 'gcp';
+sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
 
 describe('CloudClient - GCP', () => {
     let cloudClient;
@@ -24,6 +25,7 @@ describe('CloudClient - GCP', () => {
     });
 
     beforeEach(() => {
+        nock.cleanAll();
         cloudClient = new GcpCloudClient();
         cloudClient.logger = sinon.stub();
         cloudClient.logger.info = sinon.stub();
@@ -39,43 +41,49 @@ describe('CloudClient - GCP', () => {
 
     it('should validate init', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
-        cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient.getAuthHeaders = sinon.stub().resolves({
+            Authorization: 'Bearer my-token'
+        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
-            .then(() => {
-                assert.strictEqual(cloudClient.projectId, 'my-project');
-            })
-            .then(() => {
-                assert.strictEqual(cloudClient.authToken, 'my-token');
-            })
-            .then(() => {
-                assert.strictEqual(cloudClient.region, 'my-region');
-            })
-            .catch(err => Promise.reject(err));
+        .then(() => {
+            assert.strictEqual(cloudClient.projectId, 'my-project');
+        })
+        .then(() => {
+            assert.deepStrictEqual(cloudClient.authHeaders, {
+                Authorization: 'Bearer my-token'
+            });
+        })
+        .then(() => {
+            assert.strictEqual(cloudClient.region, 'my-region');
+        })
+        .catch(err => Promise.reject(err));
     });
 
     it('should validate init metadata request promise rejection _getProjectId', () => {
         cloudClient._getProjectId = sinon.stub().rejects(new Error('Test Rejection'));
-        cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient.getAuthHeaders = sinon.stub().resolves({
+            Authorization: 'Bearer my-token'
+        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
-            .then(() => {
-                assert.ok(false);
-            }).catch((err) => {
-                assert.ok(err.message.includes('Test Rejection'));
-            });
+        .then(() => {
+            assert.ok(false);
+        }).catch((err) => {
+            assert.ok(err.message.includes('Test Rejection'));
+        });
     });
 
-    it('should validate init metadata request promise rejection _getAuthToken', () => {
-        cloudClient._getAuthToken = sinon.stub().rejects(new Error('Test Rejection'));
+    it('should validate init metadata request promise rejection getAuthHeaders', () => {
+        cloudClient.getAuthHeaders = sinon.stub().rejects(new Error('Test Rejection'));
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
-            .then(() => {
-                assert.ok(false);
-            }).catch((err) => {
-                assert.ok(err.message.includes('Test Rejection'));
-            });
+        .then(() => {
+            assert.ok(false);
+        }).catch((err) => {
+            assert.ok(err.message.includes('Test Rejection'));
+        });
     });
 
     it('should validate getCloudName', () => {
@@ -84,25 +92,29 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getCustomerId', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
-        cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient.getAuthHeaders = sinon.stub().resolves({
+            Authorization: 'Bearer my-token'
+        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
-            .then(() => {
-                assert.strictEqual(cloudClient.getCustomerId(), 'my-project');
-            })
-            .catch(err => Promise.reject(err));
+        .then(() => {
+            assert.strictEqual(cloudClient.getCustomerId(), 'my-project');
+        })
+        .catch(err => Promise.reject(err));
 
     });
 
     it('should validate getRegion', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
-        cloudClient._getAuthToken = sinon.stub().resolves('my-token');
+        cloudClient.getAuthHeaders = sinon.stub().resolves({
+            Authorization: 'Bearer my-token'
+        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
-            .then(() => {
-                assert.strictEqual(cloudClient.getRegion(), 'my-region');
-            })
-            .catch(err => Promise.reject(err));
+        .then(() => {
+            assert.strictEqual(cloudClient.getRegion(), 'my-region');
+        })
+        .catch(err => Promise.reject(err));
 
     });
 
@@ -111,57 +123,34 @@ describe('CloudClient - GCP', () => {
             .get('/computeMetadata/v1/instance/zone')
             .reply(200, 'projects/121231/zones/us-west-2');
         return cloudClient._getRegion()
-            .then((region) => {
-                assert.strictEqual(region, 'us-west-2');
-            })
-            .catch(err => Promise.reject(err));
+        .then((region) => {
+            assert.strictEqual(region, 'us-west-2');
+        })
+        .catch(err => Promise.reject(err));
 
     });
 
     it('should validate _getProject', () => {
-        cloudClient.google = sinon.stub();
-        cloudClient.google.auth = sinon.stub();
-        cloudClient.google.auth.getProjectId = sinon.stub().resolves('my-project');
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/project/project-id')
+            .reply(200, 'my-project');
         return cloudClient._getProjectId()
-            .then((projectId) => {
-                assert.strictEqual(projectId, 'my-project');
-            });
+        .then((projectId) => {
+            assert.strictEqual(projectId, 'my-project');
+        });
     });
 
     it('should validate _getProject promise rejection', () => {
-        cloudClient.google = sinon.stub();
-        cloudClient.google.auth = sinon.stub();
-        cloudClient.google.auth.getProjectId = sinon.stub().rejects();
+        nock('http://metadata.google.internal')
+            .get('/computeMetadata/v1/project/project-id')
+            .reply(400, 'foo');
         return cloudClient._getProjectId()
-            .then(() => {
-                assert.ok(false);
-            })
-            .catch((err) => {
-                assert.ok(err.message.includes('Error getting project id'));
-            });
-    });
-
-    it('should validate _getAuthToken', () => {
-        cloudClient.google = sinon.stub();
-        cloudClient.google.auth = sinon.stub();
-        cloudClient.google.auth.getClient = sinon.stub().resolves('my-token');
-        return cloudClient._getAuthToken()
-            .then((authToken) => {
-                assert.strictEqual(authToken, 'my-token');
-            });
-    });
-
-    it('should validate _getAuthToken promise rejection', () => {
-        cloudClient.google = sinon.stub();
-        cloudClient.google.auth = sinon.stub();
-        cloudClient.google.auth.getClient = sinon.stub().rejects();
-        return cloudClient._getAuthToken()
-            .then(() => {
-                assert.ok(false);
-            })
-            .catch((err) => {
-                assert.ok(err.message.includes('Error getting auth token'));
-            });
+        .then(() => {
+            assert.ok(false);
+        })
+        .catch((err) => {
+            assert.ok(err.message.includes('Error getting project id'));
+        });
     });
 
     it('should validate getTagValue method returns tagValue', () => {
@@ -175,12 +164,12 @@ describe('CloudClient - GCP', () => {
             })
         });
         cloudClient.getTagValue('myTestKeyName')
-            .then((tagValue) => {
-                assert.strictEqual(tagValue, 'testValue');
-            })
-            .catch(() => {
-                assert.fail();
-            });
+        .then((tagValue) => {
+            assert.strictEqual(tagValue, 'testValue');
+        })
+        .catch(() => {
+            assert.fail();
+        });
     });
 
     it('should validate getTagValue method when no tag matching', () => {
@@ -194,12 +183,12 @@ describe('CloudClient - GCP', () => {
             })
         });
         cloudClient.getTagValue('myTestKeyName')
-            .then((tagValue) => {
-                assert.strictEqual(tagValue, '');
-            })
-            .catch((err) => {
-                assert.fail();
-            });
+        .then((tagValue) => {
+            assert.strictEqual(tagValue, '');
+        })
+        .catch(() => {
+            assert.fail();
+        });
     });
 
     it('should validate getTagValue method call', () => {
@@ -209,97 +198,111 @@ describe('CloudClient - GCP', () => {
                 callback(true, null);
             });
         cloudClient.getTagValue('myTestKeyName', { })
-            .then(() => {
-                assert.fail();
-            })
-            .catch(() => {
-                assert.ok(true);
-            });
+        .then(() => {
+            assert.fail();
+        })
+        .catch(() => {
+            assert.ok(true);
+        });
     });
 
     it('should validate getSecret promise rejection', () => {
-        cloudClient.secretmanager.projects.secrets.versions.access = sinon.stub().rejects();
+        cloudClient.projectId = '123456789';
+        cloudClient.authHeaders = {
+            Authorization: 'Bearer my-token'
+        };
+        cloudClient.region = 'my-region';
+        nock('https://secretmanager.googleapis.com')
+            .get('/v1/projects/123456789/secrets/incorrect-secret-name/versions/latest:access')
+            .reply(404, { "message": "Secret not found" });
         return cloudClient.getSecret(
-            'incorrect-secret-name',
-            'some-version'
+            'incorrect-secret-name'
         )
-            .then(() => {
-                assert.ok(false);
-            })
-            .catch((err) => {
-                assert.ok(err.message.includes('Error getting secret from'));
-            });
+        .then(() => {
+            assert.ok(false);
+        })
+        .catch((err) => {
+            assert.ok(err.message.includes('Error getting secret from'));
+        });
     });
 
     it('should validate getSecret throws error when secret metadata is not provided', () => {
-        assert.throws(() => {
-            cloudClient.getSecret();
-        }, (err) => {
-            if (err.message.includes('GCP Cloud Client secret id is missing')) {
-                return true;
-            }
-            return false;
-        }, 'unexpected error');
+        cloudClient.projectId = '123456789';
+        cloudClient.authHeaders = {
+            Authorization: 'Bearer my-token'
+        };
+        cloudClient.region = 'my-region';
+        return cloudClient.getSecret()
+        .then(() => {
+            assert.ok(false);
+        })
+        .catch((err) => {
+            assert.ok(err.message.includes('GCP Cloud Client secret id is missing'));
+        });
     });
 
     it('should validate getSecret when secret exists', () => {
-        cloudClient.secretmanager.projects.secrets.versions.access = sinon.stub().resolves({
-            data: {
-                payload: {
-                    data: 'U3Ryb25nUGFzc3dvcmQh'
-                }
-            }
-        });
+        cloudClient.projectId = '123456789';
+        cloudClient.authHeaders = {
+            Authorization: 'Bearer my-token'
+        };
+        cloudClient.region = 'my-region';
+        nock('https://secretmanager.googleapis.com')
+            .get('/v1/projects/123456789/secrets/the-secret-name/versions/some-version:access')
+            .reply(200, { "payload": { "data": "U3Ryb25nUGFzc3dvcmQh" } });
         return cloudClient.getSecret(
             'the-secret-name',
-            'some-version'
+            {
+                version: 'some-version'
+            }
         )
-            .then((secret) => {
-                assert.strictEqual(secret, 'StrongPassword!');
-            });
+        .then((secret) => {
+            assert.strictEqual(secret, 'StrongPassword!');
+        });
     });
 
     it('should validate getSecret when secret exists no version included', () => {
-        cloudClient.secretmanager.projects.secrets.versions.access = sinon.stub().resolves({
-            data: {
-                payload: {
-                    data: 'U3Ryb25nUGFzc3dvcmQh'
-                }
-            }
-        });
+        cloudClient.projectId = '123456789';
+        cloudClient.authHeaders = {
+            Authorization: 'Bearer my-token'
+        };
+        cloudClient.region = 'my-region';
+        nock('https://secretmanager.googleapis.com')
+            .get('/v1/projects/123456789/secrets/the-secret-name/versions/latest:access')
+            .reply(200, { "payload": { "data": "U3Ryb25nUGFzc3dvcmQh" } });
         return cloudClient.getSecret(
             'the-secret-name'
         )
-            .then((secret) => {
-                assert.strictEqual(secret, 'StrongPassword!');
-            });
+        .then((secret) => {
+            assert.strictEqual(secret, 'StrongPassword!');
+        });
     });
 
     it('should validate getSecret when fully-qualified secret is provided', () => {
-        cloudClient.secretmanager.projects.secrets.versions.access = sinon.stub().resolves({
-            data: {
-                payload: {
-                    data: 'U3Ryb25nUGFzc3dvcmQh'
-                }
-            }
-        });
+        cloudClient.projectId = '123456789';
+        cloudClient.authHeaders = {
+            Authorization: 'Bearer my-token'
+        };
+        cloudClient.region = 'my-region';
+        nock('https://secretmanager.googleapis.com')
+            .get('/v1/projects/123456789/secrets/the-secret-name/versions/latest:access')
+            .reply(200, { "payload": { "data": "U3Ryb25nUGFzc3dvcmQh" } });
         return cloudClient.getSecret(
             'projects/123456789/secrets/the-secret-name/versions/latest'
         )
-            .then((secret) => {
-                assert.strictEqual(secret, 'StrongPassword!');
-            });
+        .then((secret) => {
+            assert.strictEqual(secret, 'StrongPassword!');
+        });
     });
 
     it('should validate getSecret throws error when wrong secret format is provided', () => {
-        assert.throws(() => {
-            cloudClient.getSecret('projects/123456789/secrets/the-secret-name/versions/latest!');
-        }, (err) => {
-            if (err.message.includes('wrong format')) {
-                return true;
-            }
-            return false;
-        }, 'unexpected error');
+        return cloudClient.getSecret('projects/123456789/secrets/the-secret-name/versions/latest!')
+        .then(() => {
+            assert.ok(false);
+        })
+        .catch((err) => {
+            assert.ok(err.message.includes('wrong format'));
+        });
     });
 
     it('should validate getMetadata returns compute name field value', () => {
@@ -307,10 +310,10 @@ describe('CloudClient - GCP', () => {
             .get('/computeMetadata/v1/instance/name')
             .reply(200, 'test_vm_name-01');
         cloudClient.getMetadata('name', { type: 'compute' })
-            .then((response) => {
-                assert.strictEqual(response, 'test-vm-name-01');
-            })
-            .catch(err => Promise.reject(err));
+        .then((response) => {
+            assert.strictEqual(response, 'test-vm-name-01');
+        })
+        .catch(err => Promise.reject(err));
     });
 
     it('should validate getMetadata returns network ip field value', () => {
@@ -321,49 +324,49 @@ describe('CloudClient - GCP', () => {
             .get('/computeMetadata/v1/instance/network-interfaces/0/subnetmask')
             .reply(200, '255.255.255.0');
         cloudClient.getMetadata('ip', { type: 'network', index: 0 })
-            .then((response) => {
-                assert.strictEqual(response, '10.0.3.2/24');
-            })
-            .catch(err => Promise.reject(err));
+        .then((response) => {
+            assert.strictEqual(response, '10.0.3.2/24');
+        })
+        .catch(err => Promise.reject(err));
     });
 
     it('should fail getMetadata when field is missing', () => {
         cloudClient.getMetadata('', { type: 'compute' })
-            .then(() => {
-                assert.fail();
-            })
-            .catch((error) => {
-                assert.ok(error.message.includes('metadata field is missing'));
-            });
+        .then(() => {
+            assert.fail();
+        })
+        .catch((error) => {
+            assert.ok(error.message.includes('metadata field is missing'));
+        });
     });
 
     it('should fail getMetadata when type is missing', () => {
         cloudClient.getMetadata('name')
-            .then(() => {
-                assert.fail();
-            })
-            .catch((error) => {
-                assert.ok(error.message.includes('metadata type is missing'));
-            });
+        .then(() => {
+            assert.fail();
+        })
+        .catch((error) => {
+            assert.ok(error.message.includes('metadata type is missing'));
+        });
     });
 
     it('should fail getMetadata when index is missing', () => {
         cloudClient.getMetadata('ipv4', { type: 'network' })
-            .then(() => {
-                assert.fail();
-            })
-            .catch((error) => {
-                assert.ok(error.message.includes('metadata index is missing'));
-            });
+        .then(() => {
+            assert.fail();
+        })
+        .catch((error) => {
+            assert.ok(error.message.includes('metadata index is missing'));
+        });
     });
 
     it('should fail getMetadata when wrong type is provided', () => {
         cloudClient.getMetadata('name', { type: 'bar' })
-            .then(() => {
-                assert.fail();
-            })
-            .catch((error) => {
-                assert.ok(error.message.includes('metadata type is unknown'));
-            });
+        .then(() => {
+            assert.fail();
+        })
+        .catch((error) => {
+            assert.ok(error.message.includes('metadata type is unknown'));
+        });
     });
 });
