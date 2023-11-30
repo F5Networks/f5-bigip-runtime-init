@@ -73,7 +73,7 @@ describe('Logger', function() {
         setTimeout(() => {
             assert.ok(fs.existsSync('tmp/test.log'));
             fs.unlinkSync('tmp/test.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });
@@ -89,7 +89,7 @@ describe('Logger', function() {
             const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
             assert.strictEqual(logMessage.split("********").length, 3);
             fs.unlinkSync('tmp/test_sensitive_default_format.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });
@@ -105,7 +105,7 @@ describe('Logger', function() {
             const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
             assert.strictEqual(logMessage.split("********").length, 3);
             fs.unlinkSync('tmp/test_sensitive_default_format.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });
@@ -121,7 +121,7 @@ describe('Logger', function() {
             const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
             assert.strictEqual(logMessage.split("********").length, 3);
             fs.unlinkSync('tmp/test_sensitive_default_format.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });
@@ -137,7 +137,7 @@ describe('Logger', function() {
             const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
             assert.strictEqual(logMessage.split("********").length, 3);
             fs.unlinkSync('tmp/test_sensitive_default_format.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });
@@ -153,7 +153,7 @@ describe('Logger', function() {
             const logMessage = fs.readFileSync('tmp/test_sensitive_default_format.log').toString('utf8');
             assert.strictEqual(logMessage.split("********").length, 3);
             fs.unlinkSync('tmp/test_sensitive_default_format.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });
@@ -169,7 +169,7 @@ describe('Logger', function() {
             const logMessage = fs.readFileSync('tmp/test_sensitive_json_format.log').toString('utf8');
             assert.strictEqual(logMessage.split("********").length, 3);
             fs.unlinkSync('tmp/test_sensitive_json_format.log');
-            fs.rmdirSync('tmp/');
+            fs.rmdirSync('tmp/', { recursive: true });
             done();
         }, 5000);
     });

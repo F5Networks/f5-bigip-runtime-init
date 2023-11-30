@@ -95,5 +95,10 @@ export const CLOUDS = {
   GCP: 'gcp'
 };
 
+export const METADATA_HOST = {
+  AWS: '169.254.169.254',
+  AZURE: '169.254.169.254',
+  GCP: 'metadata.google.internal'
+};
 
 export const CUSTOM_ONBOARD_CONFIG_DIR = '/config/cloud/custom_commands/';

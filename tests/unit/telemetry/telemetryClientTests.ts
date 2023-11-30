@@ -115,7 +115,7 @@ describe('Telemetry Client', () => {
 
     it('should validate constructor', () => {
         assert.strictEqual(telemetryClient._mgmtClient, mgmtClient);
-        assert.strictEqual(telemetryClient.uriPrefix, mgmtClient.uriPrefix);
+        assert.strictEqual(telemetryClient.uriPrefix, `${mgmtClient._protocol}://${mgmtClient.host}:${mgmtClient.port}`);
         assert.strictEqual(telemetryClient.authHeader, mgmtClient.authHeader);
         assert.strictEqual(telemetryClient.telemetryType, `${pkgjson.name}-data`);
         assert.strictEqual(telemetryClient.teemAssetInfo.name, `${pkgjson.name}`);

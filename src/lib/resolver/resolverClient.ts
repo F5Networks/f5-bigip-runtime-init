@@ -19,6 +19,7 @@
 
 import * as jmesPath from 'jmespath';
 import * as netmask from 'netmask';
+import * as url from 'url';
 import Logger from '../logger';
 import { getCloudProvider } from '../cloud/cloudFactory';
 import * as utils from '../utils';
@@ -406,17 +407,31 @@ export class ResolverClient {
      * @returns            - resolves with URL response value
      */
     async _resolveUrl(metadata): Promise<string> {
+        const urlObject = url.parse(metadata.value);
         const options: {
             method: string;
+            port?: number;
+            protocol?: string;
             headers?: any;
             verifyTls?: boolean;
             trustedCertBundles?: Array<string>;
+            advancedReturn?: boolean;
         } = {
             method: 'GET',
+            port: Number(urlObject.port),
+            protocol: urlObject.protocol,
             headers: {},
             verifyTls: metadata.verifyTls !== undefined ? metadata.verifyTls : true,
-            trustedCertBundles: metadata.trustedCertBundles !== undefined ? metadata.trustedCertBundles : undefined
+            trustedCertBundles: metadata.trustedCertBundles !== undefined ? metadata.trustedCertBundles : undefined,
+            advancedReturn: true
         };
+        if (!options.port || options.port === 0) {
+            if (options.protocol == 'https:') {
+                options.port = 443;
+            } else {
+                options.port = 80;
+            }
+        }
         if (metadata.headers !== undefined && metadata.headers.length > 0) {
             metadata.headers.forEach((header) => {
                 if (header.name === 'method') {
@@ -426,12 +441,12 @@ export class ResolverClient {
                 }
             });
         }
-        const response = await utils.retrier(utils.makeRequest, [metadata.value, options], {
+        const response = await utils.retrier(utils.makeRequest, [`${urlObject.hostname}`, `${urlObject.path}`, options], {
             thisContext: this,
             maxRetries: constants.RETRY.SHORT_COUNT,
             retryInterval: constants.RETRY.SHORT_DELAY_IN_MS
         });
-        if ( metadata.query !== undefined ) {
+        if (metadata.query !== undefined) {
             try {
                 const searchResult = jmesPath.search(response.body, metadata.query);
 
@@ -443,8 +458,8 @@ export class ResolverClient {
                 throw new Error(`Error caught while searching json using jmesPath; Json Document: ${JSON.stringify(response.body)} - Query: ${metadata.query} - Error ${error.message}`);
             }
         } else {
-            if (metadata.ipcalc !== undefined && response.split('.').length === 4 ){
-                return this._resolveIpcalc(metadata.ipcalc, response, metadata.returnType);
+            if (metadata.ipcalc !== undefined && response.body.split('.').length === 4 ){
+                return this._resolveIpcalc(metadata.ipcalc, response.body, metadata.returnType);
             }
             return utils.convertTo(response.body, metadata.returnType);
         }

@@ -1625,7 +1625,6 @@ Here is an example of the payload that is sent by F5 TEEM
                             "request": "^2.88.0",
                             "jmespath": "^0.15.0",
                             "netmask": "^2.0.2",
-                            "aws-sdk": "^2.610.0",
                             "lodash.where": "^3.1.0"
                         }
                     },
