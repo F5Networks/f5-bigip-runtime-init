@@ -67,7 +67,7 @@ From a high-level, using this tool involves three steps:
 
 - **Step 1**: Download and Install BIG-IP Runtime Init using the self-extracting installer: 
   ```sh
-  curl -o /tmp/f5-bigip-runtime-init-1.6.2-1.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/f5-bigip-runtime-init-1.6.2-1.gz.run && bash /tmp/f5-bigip-runtime-init-1.6.2-1.gz.run -- '--cloud [aws|azure|gcp]'
+  curl -o /tmp/f5-bigip-runtime-init-2.0.0-1.gz.run https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/f5-bigip-runtime-init-2.0.0-1.gz.run && bash /tmp/f5-bigip-runtime-init-2.0.0-1.gz.run -- '--cloud [aws|azure|gcp]'
   ```
   - See [installer](#installer) details and [downloads](#downloads) below.
 
@@ -159,7 +159,7 @@ The installer also allows you to configure request retries to make the installat
 
 Using `--cloud` parameter for basic Azure install:
 ```
- curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/f5-bigip-runtime-init-1.6.2-1.gz.run -o f5-bigip-runtime-init-1.6.2-1.gz.run && bash f5-bigip-runtime-init-1.6.2-1.gz.run -- '--cloud azure'
+ curl https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/f5-bigip-runtime-init-2.0.0-1.gz.run -o f5-bigip-runtime-init-2.0.0-1.gz.run && bash f5-bigip-runtime-init-2.0.0-1.gz.run -- '--cloud azure'
 ```
 
 See [Private Environments](#private-environments) section below for more install examples.
@@ -169,18 +169,18 @@ Self-extracting installer, RPMs, and file hashes are available from the followin
 
 | Cloud | Type | Location |
 | --- | --- | --- |
-| All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/f5-bigip-runtime-init-1.6.2-1.gz.run |
-| All | SHA256 | https://github.com/f5networks/f5-bigip-runtime-init/releases/download/1.6.2/f5-bigip-runtime-init-1.6.2-1.gz.run.sha256 |
-| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-all-1.6.2-1-signed.noarch.rpm |
-| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-all-1.6.2-1-signed.noarch.rpm.sha256 |
-| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-aws-1.6.2-1-signed.noarch.rpm |
-| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-aws-1.6.2-1-signed.noarch.rpm.sha256 |
-| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-azure-1.6.2-1-signed.noarch.rpm |
-| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-azure-1.6.2-1-signed.noarch.rpm.sha256 |
-| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-gcp-1.6.2-1-signed.noarch.rpm |
-| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-gcp-1.6.2-1-signed.noarch.rpm.sha256 |
-| None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-base-1.6.2-1-signed.noarch.rpm |
-| None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/rpms/f5-bigip-runtime-init-base-1.6.2-1-signed.noarch.rpm.sha256 |
+| All | Self-extracting installer | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/f5-bigip-runtime-init-2.0.0-1.gz.run |
+| All | SHA256 | https://github.com/f5networks/f5-bigip-runtime-init/releases/download/2.0.0/f5-bigip-runtime-init-2.0.0-1.gz.run.sha256 |
+| All | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-all-2.0.0-1-signed.noarch.rpm |
+| All | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-all-2.0.0-1-signed.noarch.rpm.sha256 |
+| AWS | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-aws-2.0.0-1-signed.noarch.rpm |
+| AWS | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-aws-2.0.0-1-signed.noarch.rpm.sha256 |
+| Azure | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-azure-2.0.0-1-signed.noarch.rpm |
+| Azure | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-azure-2.0.0-1-signed.noarch.rpm.sha256 |
+| GCP | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-gcp-2.0.0-1-signed.noarch.rpm |
+| GCP | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-gcp-2.0.0-1-signed.noarch.rpm.sha256 |
+| None | RPM | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-base-2.0.0-1-signed.noarch.rpm |
+| None | SHA256 | https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/rpms/f5-bigip-runtime-init-base-2.0.0-1-signed.noarch.rpm.sha256 |
 
 
 ## Configuration
@@ -209,9 +209,9 @@ controls:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.39.0
+      extensionVersion: 1.41.0
     - extensionType: as3
-      extensionVersion: 3.46.0
+      extensionVersion: 3.48.0
     - extensionType: ts
       extensionVersion: 1.33.0
     - extensionType: fast
@@ -1010,9 +1010,9 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.39.0
+          extensionVersion: 1.41.0
         - extensionType: as3
-          extensionVersion: 3.46.0
+          extensionVersion: 3.48.0
         - extensionType: ts
           extensionVersion: 1.33.0
         - extensionType: fast
@@ -1025,11 +1025,11 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.39.0
-          extensionHash: 4a67449195a53683a159b42857edd49a757da1a5a2029ccf94c4d6aa11ae4cda
+          extensionVersion: 1.41.0
+          extensionHash: 3044e7ea1c8d7e10f51ec14a895374a956b3cbe3251dd6916f4f97da65d0a8e6
         - extensionType: as3
-          extensionVersion: 3.46.0
-          extensionHash: 9550bcdcd1ffe1f002fa5e3c71b8818877d9c7e161f5c68027c82ad85e56e924
+          extensionVersion: 3.48.0
+          extensionHash: d732b0e5e462bd5a7b253022ed13dd72afcc30696f0606f4acef47ec02dc31bb
         - extensionType: ts
           extensionVersion: 1.33.0
           extensionHash: 573d8cf589d545b272250ea19c9c124cf8ad5bcdd169dbe2139e82ce4d51a449
@@ -1044,11 +1044,11 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
       - extensionType: do
-        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.39.0/f5-declarative-onboarding-1.39.0-4.noarch.rpm
-        extensionVersion: 1.39.0
+        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.41.0/f5-declarative-onboarding-1.41.0-8.noarch.rpm
+        extensionVersion: 1.41.0
       - extensionType: as3
-        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.46.0-5.noarch.rpm
-        extensionVersion: 3.46.0
+        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.48.0-10.noarch.rpm
+        extensionVersion: 3.48.0
       - extensionType: fast
         extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.25.0/f5-appsvcs-templates-1.25.0-1.noarch.rpm
         extensionVersion: 1.25.0     
@@ -1369,11 +1369,11 @@ bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.39.0
-      extensionHash: 4a67449195a53683a159b42857edd49a757da1a5a2029ccf94c4d6aa11ae4cda
+      extensionVersion: 1.41.0
+      extensionHash: 3044e7ea1c8d7e10f51ec14a895374a956b3cbe3251dd6916f4f97da65d0a8e6
     - extensionType: as3
-      extensionVersion: 3.46.0
-      extensionHash: 9550bcdcd1ffe1f002fa5e3c71b8818877d9c7e161f5c68027c82ad85e56e924
+      extensionVersion: 3.48.0
+      extensionHash: d732b0e5e462bd5a7b253022ed13dd72afcc30696f0606f4acef47ec02dc31bb
     - extensionType: ts
       extensionVersion: 1.33.0
       extensionHash: 573d8cf589d545b272250ea19c9c124cf8ad5bcdd169dbe2139e82ce4d51a449
@@ -1523,14 +1523,14 @@ For similar **AWS** and **GCP** examples, see the [examples/terraform](examples/
 ### Azure (ARM Template) snippet
 #### Download BIG-IP Runtime Config from URL
 ```json
-"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/f5-bigip-runtime-init-1.6.2-1.gz.run -o f5-bigip-runtime-init-1.6.2-1.gz.run && bash f5-bigip-runtime-init-1.6.2-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
+"commandToExecute": "concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; cp $(ls -v | tail -n1)/runtime-init-conf.yaml /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/f5-bigip-runtime-init-2.0.0-1.gz.run -o f5-bigip-runtime-init-2.0.0-1.gz.run && bash f5-bigip-runtime-init-2.0.0-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1')",
 "fileUris": [
   "https://example.com/runtime-init-conf.yaml"
 ]
 ```
 #### Inline BIG-IP Runtime Config
 ```json
-"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v1.6.2/dist/f5-bigip-runtime-init-1.6.2-1.gz.run -o f5-bigip-runtime-init-1.6.2-1.gz.run; bash f5-bigip-runtime-init-1.6.2-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
+"commandToExecute": "[concat('mkdir -p /config/cloud; mkdir -p /var/log/cloud/azure; echo -e ', variables('singleQuote'), parameters('runtimeConfig'), variables('singleQuote'), ' > /config/cloud/runtime-init-conf.yaml; curl -L https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.0/dist/f5-bigip-runtime-init-2.0.0-1.gz.run -o f5-bigip-runtime-init-2.0.0-1.gz.run; bash f5-bigip-runtime-init-2.0.0-1.gz.run -- ', variables('singleQuote'), '--cloud azure', variables('singleQuote'), ' 2>&1; f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml 2>&1')]"
 ```
 
 ### Native Template Examples
@@ -1550,12 +1550,12 @@ Some environments may not allow BIG-IPs to have any access to the Internet. In t
 
 Example (secure) of hosting the GPG key locally and disabling checking for latest Automation Tool Chain packages.
 ```
- curl https://myprivatehost/f5-bigip-runtime-init-1.6.2-1.gz.run -o f5-bigip-runtime-init-1.6.2-1.gz.run && bash f5-bigip-runtime-init-1.6.2-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key --skip-toolchain-metadata-sync'
+ curl https://myprivatehost/f5-bigip-runtime-init-2.0.0-1.gz.run -o f5-bigip-runtime-init-2.0.0-1.gz.run && bash f5-bigip-runtime-init-2.0.0-1.gz.run -- '--cloud aws --key https://mylocalhost/gpg.key --skip-toolchain-metadata-sync'
 ```
 
 Example (thisisinsecure) of skipping downloading the GPG key entirely and checking for latest Automation Tool Chain packages, using a local copy of the metadata instead. 
 ```
-curl https://myprivatehost/f5-bigip-runtime-init-1.6.2-1.gz.run -o f5-bigip-runtime-init-1.6.2-1.gz.run -o f5-bigip-runtime-init-1.6.2-1.gz.run && bash f5-bigip-runtime-init-1.6.2-1.gz.run -- '--cloud aws --skip-verify --skip-toolchain-metadata-sync'
+curl https://myprivatehost/f5-bigip-runtime-init-2.0.0-1.gz.run -o f5-bigip-runtime-init-2.0.0-1.gz.run -o f5-bigip-runtime-init-2.0.0-1.gz.run && bash f5-bigip-runtime-init-2.0.0-1.gz.run -- '--cloud aws --skip-verify --skip-toolchain-metadata-sync'
 ```
 
 #### Disable Internet Calls from the Command

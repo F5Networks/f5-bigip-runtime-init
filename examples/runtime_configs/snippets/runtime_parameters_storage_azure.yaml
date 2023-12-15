@@ -41,8 +41,8 @@
     "install_operations": [
       {
         "extensionType": "as3",
-        "extensionVersion": "3.46.0",
-        "extensionUrl": "file://f5-appsvcs-3.46.0-5.noarch.rpm"
+        "extensionVersion": "3.48.0",
+        "extensionUrl": "file://f5-appsvcs-3.48.0-10.noarch.rpm"
       }
     ]
   },
