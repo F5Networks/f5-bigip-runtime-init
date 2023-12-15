@@ -568,10 +568,15 @@
                 }
             },
             "versions": {
+                "2.0.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v2.0.0/f5-cloud-failover-2.0.0-0.noarch.rpm",
+                    "packageName": "f5-cloud-failover-2.0.0-0.noarch",
+                    "latest": true
+                },
                 "1.15.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.15.0/f5-cloud-failover-1.15.0-0.noarch.rpm",
                     "packageName": "f5-cloud-failover-1.15.0-0.noarch",
-                    "latest": true
+                    "latest": false
                 },
                 "1.14.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v1.14.0/f5-cloud-failover-1.14.0-0.noarch.rpm",
