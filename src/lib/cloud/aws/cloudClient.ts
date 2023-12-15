@@ -14,385 +14,406 @@
  * limitations under the License.
  */
 
- 'use strict';
+'use strict';
 
- import * as jmesPath from 'jmespath';
- import * as AWS from 'aws-sdk';
- import * as aws4 from 'aws4';
- import * as constants from '../../../constants';
- import * as netmask from 'netmask';
- import { AbstractCloudClient } from '../abstract/cloudClient';
- import Logger from '../../logger';
- import where = require('lodash.where');
- import * as utils from '../../utils';
- 
- export class AwsCloudClient extends AbstractCloudClient {
-     _metadata: AWS.MetadataService;
-     secretsManager: AWS.SecretsManager;
-     region: string;
-     instanceId: string;
-     customerId: string;
-     _sessionToken: string;
-     _ec2: AWS.EC2;
-     constructor(options?: {
-         logger?: Logger;
-     }) {
-         super(constants.CLOUDS.AWS, options);
-         this._metadata = new AWS.MetadataService();
-     }
- 
-     /**
-      * See the parent class method for details
-      */
-     init(): Promise<void> {
-         return this._fetchMetadataSessionToken()
-             .then(() => {
-                 return this._getInstanceIdentityDoc()
-             })
-             .then((metadata: {
-                 region: string;
-                 instanceId: string;
-                 accountId: string;
-             }) => {
-                 this.customerId = metadata.accountId;
-                 this.region = metadata.region;
-                 this.instanceId = metadata.instanceId;
-                 AWS.config.update({ region: this.region });
-                 this._ec2 = new AWS.EC2();
-                 this.secretsManager = new AWS.SecretsManager();
-                 return Promise.resolve();
-             })
-             .catch(err => Promise.reject(err));
-     }
- 
-     getCustomerId(): string {
-         return this.customerId;
-     }
- 
-     getCloudName(): string {
-         return constants.CLOUDS.AWS;
-     }
- 
-     /**
-      * Get secret from AWS Secrets Manager
-      *
-      * @param secret                        - secret name
-      * @param [options]                     - cloud specific metadata for getting secret value
-      * @param [options.version]             - version stage value for secret
-      *
-      * @returns                             - secret value
-      */
-     async getSecret(secretId: string, options?: {
-         version?: string;
-     }): Promise<string> {
-         if (!secretId) {
-             throw new Error('AWS Cloud Client secret id is missing');
-         }
- 
-         const version = options ? options.version : undefined;
-         const params = {
-             SecretId: secretId,
-             VersionStage: version || 'AWSCURRENT'
-         };
- 
-         const secret = await this.secretsManager.getSecretValue(params).promise().catch((e) => {
-             throw new Error(`AWS Cloud returned error: ${e}`);
-         });
- 
-         if (secret) {
-             if (secret.SecretString) {
-                 return secret.SecretString
-             }
-         }
- 
-         return '';
-     }
- 
-     /**
-      * Gets value for AWS EC2 Tag
-      *
-      * @param key                           - Tag key name
-      *
-      * @returns {Promise}
-      */
-     async getTagValue(key: string):  Promise<string> {
-         const params = {
-             Filters: [
-                 {
-                     Name: 'resource-id',
-                     Values: [this.instanceId]
-                 },
-                 {
-                     Name: 'key',
-                     Values: [key]
-                 }
-             ]
-         };
-         const response = await this._ec2.describeTags(params).promise();
-         if (response.Tags && response.Tags.length) {
-             return response.Tags[0].Value;
-         }
-         return  '';
-     }
- 
-     /**
-      * Gets value from AWS metadata
-      *
-      * @param field                         - metadata property to fetch
-      * @param [options]                     - function options
-      *
-      * @returns {Promise}
-      */
-     async getMetadata(field: string, options?: {
-         type?: string;
-         index?: number;
-         query?: string;
-     }):  Promise<string> {
-         const type = options ? options.type : undefined;
-         const uriQuery = options ? options.query : undefined;
-         const index = options ? options.index : undefined;
-         const logger = Logger.getLogger();
-         if (!field) {
-             throw new Error('AWS Cloud Client metadata field is missing');
-         }
-         if (!type) {
-             throw new Error('AWS Cloud Client metadata type is missing');
-         }
- 
-         if (type !== 'compute' && type !== 'network' && type !== 'uri') {
-             throw new Error('AWS Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
-         }
- 
-         if (type === 'network' && index === undefined) {
-             throw new Error('AWS Cloud Client network metadata index is missing');
-         }
-         if (type === 'compute') {
-             return this._getInstanceCompute(field)
-                 .catch(err => Promise.reject(err));
-         }
-         if (type === 'uri'){
-             return this._fetchUri(field, uriQuery)
-                 .catch(err => Promise.reject(err));
-         }
-         if (type === 'network') {
-             /** grab big-ip interface info */
-             let mac;
-             let retries = 0;
-             const timer = ms => new Promise(res => setTimeout(res, ms)); /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
-             while (true) {
-                 const interfaceResponse = await utils.makeRequest(
-                     `http://localhost:8100/mgmt/tm/net/interface`,
-                     {
-                         method: 'GET',
-                         headers: {
-                             Authorization: `Basic ${utils.base64('encode', 'admin:admin')}`
-                         },
-                         verifyTls: false
-                     }
-                 );
-                 logger.silly(`Interface Response:  ${utils.stringify(interfaceResponse)}`);
-                 const interfaceName = index === 0 ? 'mgmt' : `1.${index}`;
-                 logger.info('Interface:' + interfaceName );
-                 const interfaces = interfaceResponse.body.items;
-                 const filtered = where(interfaces, { "name": interfaceName });
-                 logger.silly(`filtered:  ${utils.stringify(filtered)}`);
-                 mac = filtered[0]["macAddress"];
-                 if (mac !== 'none') {
-                     logger.info('MAC address found for ' + interfaceName + ': ' + mac);
-                     break;
-                 } else {
-                     retries++;
-                     if (retries > constants.RETRY.DEFAULT_COUNT) {
-                         return Promise.reject(new Error(`Failed to fetch MAC address for BIGIP interface ${interfaceName}.`))
-                     }
-                     logger.info(`MAC adddress is not populated on ${interfaceName} BIGIP interface. Trying to re-fetch interface data. Left attempts: ${constants.RETRY.DEFAULT_COUNT - retries}`);
-                     await timer(constants.RETRY.DELAY_IN_MS);
-                 }
-             }
-             /** manipulate returned data into ip/mask when field eq local-ipv4s */
-             if (field === 'local-ipv4s') {
-                 const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
-                 .catch(err => Promise.reject(err));
-                 const primaryIp = getInstanceNetwork.split('\n')[0];
-                 logger.info('Primary IP for ' + mac + ': ' + primaryIp);
-                 const cidr = await this._getInstanceNetwork('subnet-ipv4-cidr-block', type, mac)
-                 .catch(err => Promise.reject(err));
-                 logger.debug('CIDR block for ' + mac + ': ' + cidr);
-                 const ipMask = primaryIp + cidr.match(/(\/([0-9]{1,2}))/g);
-                 logger.info('ip and mask for ' + mac + ': ' + ipMask);
-                 return ipMask;
-             } else if (field === 'subnet-ipv4-cidr-block') {
-                 const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
-                     .catch(err => Promise.reject(err));
-                 logger.debug('CIDR block for ' + mac + ': ' + getInstanceNetwork);
-                 return new netmask.Netmask(getInstanceNetwork)['first'];
-             } else {
-                 const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
-                 .catch(err => Promise.reject(err));
-                 logger.info('Field:' + field + 'for' + mac + ':' + getInstanceNetwork);
-                 return getInstanceNetwork;
-             }
-         }
-     }
+import * as jmesPath from 'jmespath';
+import * as aws4 from 'aws4';
+import * as constants from '../../../constants';
+import * as netmask from 'netmask';
+import { AbstractCloudClient } from '../abstract/cloudClient';
+import Logger from '../../logger';
+import where = require('lodash.where');
+import * as utils from '../../utils';
+import * as xml2js from 'xml2js';
 
-     /**
-      * Fetches provided AWS Metadata uri using AWS SDK Metadata client
-      *
-      * @param uri                         - uri value (i.e. /latest/document/instances/version)
-      * @param query                       - query options to filter JSON response using jmesPath
-      *
-      * @returns   - A Promise resolved with AWS Metadata
-      */
-     _fetchUri(uri, query): Promise<any> {
-         if (typeof uri !== 'string' || (uri.split("/").length - 1) < 2) {
-             throw new Error('AWS Cloud Client expects uri string for _fetchUri method.')
-         } else {
-             return new Promise((resolve, reject) => {
-                 this._metadata.request(uri, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } },(err, data) => {
-                     if (err) {
-                         reject(err);
-                     }
- 
-                     if (query !== undefined) {
-                         try {
-                             let searchResult;
-                             if (typeof data === 'string') {
-                                 searchResult = jmesPath.search(JSON.parse(data), query);
-                             } else {
-                                 searchResult = jmesPath.search(data, query);
-                             }
-                             resolve(searchResult);
-                         } catch (error) {
-                             throw new Error(`Error caught while searching json using jmesPath - Query: ${query} - Error ${error.message}`);
-                         }
-                     }
-                     resolve(data);
-                 });
-             });
-         }
-     }
-     
-     /**
-      * Fetches AWS IMDSv2 Session token
-      *
-      * @returns   - A Promise resolved after token successfully fetched
-      */
-     _fetchMetadataSessionToken(): Promise<void> {
-         return new Promise((resolve, reject) => {
-             const sessionTokenPath = '/latest/api/token';
-             this._metadata.request(sessionTokenPath, { method: 'PUT', headers: { "X-aws-ec2-metadata-token-ttl-seconds": '3600' }},(err, data) => {
-                 if (err) {
-                     reject(err);
-                 }
-                 this._sessionToken = data;
-                 resolve();
-             });
-         });
-     }
- 
-     /**
-      * Gets instance identity document
-      *
-      * @returns   - A Promise that will be resolved with the Instance Identity document or
-      *                          rejected if an error occurs
-      */
-     _getInstanceIdentityDoc(): Promise<{
-         region: string;
-         instanceId: string;
-     }> {
-         return new Promise((resolve, reject) => {
-             const iidPath = '/latest/dynamic/instance-identity/document';
-             this._metadata.request(iidPath, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } },(err, data) => {
-                 if (err) {
-                     reject(err);
-                 }
-                 resolve(
-                     JSON.parse(data)
-                 );
-             });
-         });
-     }
-     
-     /**
-      * Gets instance compute type metadata
-      * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
-      * Type compute supports all categories with base uri + /field
-      *
-      * @returns   - A Promise that will be resolved with metadata for the supplied field or
-      *                          rejected if an error occurs
-      */
-     _getInstanceCompute(field: string): Promise<string> {
-         return new Promise((resolve, reject) => {
-             const iidPath = '/latest/meta-data/' + field;
-             this._metadata.request(iidPath, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } }, (err, data) => {
-                 if (err) {
-                     reject(err);
-                 }
-                 const result = data.replace(/_/g, '-');
-                 resolve(
-                     result
-                 );
-             });
-         });
-     }
-     
-     /**
-      * Gets instance network type metadata
-      * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
-      * Type network supports all categories with base uri + /network/interfaces/macs/<mac>/ where <mac> is determined by $index
-      *
-      * @returns   - A Promise that will be resolved with metadata for the supplied network field or
-      *                          rejected if an error occurs
-      */
-     _getInstanceNetwork(field: string, type: string, mac: string): Promise<string> {
-         return new Promise((resolve, reject) => {
-             const iidPath = '/latest/meta-data/' + type + '/interfaces/macs/' + mac + '/' + field;
-             this._metadata.request(iidPath, { headers: { "x-aws-ec2-metadata-token": this._sessionToken } }, (err, data) => {
-                 if (err) {
-                     reject(err);
-                 }
-                 resolve(
-                     data
-                 );
-             });
-         });
-     }
- 
-     getRegion(): string {
-         return this.region;
-     }
+const metadataRequestOptions: object = {
+    method: 'GET',
+    port: 80,
+    protocol: 'http',
+    headers: {},
+    verifyTls: false,
+    advancedReturn: true,
+    continueOnError: true
+}
+export class AwsCloudClient extends AbstractCloudClient {
+    region: string;
+    instanceId: string;
+    customerId: string;
+    _sessionToken: string;
+    constructor(options?: {
+        logger?: Logger;
+    }) {
+        super(constants.CLOUDS.AWS, options);
+    }
 
-     /**
-     * Get storage auth headers
-     * 
-     * @param source - Optional source URL for S3 objects
-     *
-     * @returns {object} A promise which is resolved with auth headers
-     *
+    /**
+     * See the parent class method for details
      */
-     async getAuthHeaders(source?: string): Promise<object> {
+    init(): Promise<void> {
+        return this._fetchMetadataSessionToken()
+            .then((token) => {
+                this._sessionToken = token;
+                metadataRequestOptions['headers']['x-aws-ec2-metadata-token'] = this._sessionToken;
+                return this._getInstanceIdentityDoc()
+            })
+            .then((metadata: {
+                region: string;
+                instanceId: string;
+                accountId: string;
+            }) => {
+                this.customerId = metadata.accountId;
+                this.region = metadata.region;
+                this.instanceId = metadata.instanceId;
+                return Promise.resolve();
+            })
+            .catch(err => Promise.reject(err));
+    }
+
+    getCustomerId(): string {
+        return this.customerId;
+    }
+
+    getCloudName(): string {
+        return constants.CLOUDS.AWS;
+    }
+
+    /**
+     * Get secret from AWS Secrets Manager
+     *
+     * @param secret                        - secret name
+     * @param [options]                     - cloud specific metadata for getting secret value
+     * @param [options.version]             - version stage value for secret
+     *
+     * @returns                             - secret value
+     */
+    async getSecret(secretId: string, options?: {
+        version?: string;
+    }): Promise<string> {
+        if (!secretId) {
+            throw new Error('AWS Cloud Client secret id is missing');
+        }
+
+        const fullyQualifiedSecret = new RegExp('^arn:(aws|aws-cn|aws-us-gov):secretsmanager:(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\\d:\\d{12}:secret:[a-zA-Z0-9/_+=.@-]{1,512}$');
+        const simpleSecret = new RegExp('^[a-z0-9-_]{1,255}$');
+        const version = options ? options.version : undefined;
+
+        if (!fullyQualifiedSecret.test(secretId) && !simpleSecret.test(secretId)) {
+            throw new Error(`AWS Cloud Client secret id ${secretId} is the wrong format`);
+        }
+
+        const requestBody = {
+            SecretId: secretId,
+            VersionStage: version || 'AWSCURRENT'
+        };
+        const authHeaders = await this.getAuthHeaders(`https://secretsmanager.${this.region}.amazonaws.com:443/`, requestBody);
+
+        const secret = await utils.retrier(utils.makeRequest, [`secretsmanager.${this.region}.amazonaws.com`, '/', {
+            method: 'POST',
+            port: 443,
+            protocol: 'https',
+            headers: authHeaders,
+            body: requestBody,
+            advancedReturn: true
+        }]);
+
+        if (secret) {
+            if (secret.body.SecretString) {
+                return secret.body.SecretString
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Gets value for AWS EC2 Tag
+     *
+     * @param key                           - Tag key name
+     *
+     * @returns {Promise}
+     */
+    async getTagValue(key: string): Promise<string> {
+        // need to parse this XML
+        const tagPath = `/?Action=DescribeTags&Filter.1.Name=resource-id&Filter.1.Value.1=${this.instanceId}&Filter.2.Name=key&Filter.2.Value.1=${key}&Version=2016-11-15`;
+        const authHeaders = await this.getAuthHeaders(`https://ec2.${this.region}.amazonaws.com${tagPath}`);
+        const apiResponse = await utils.retrier(utils.makeRequest, [`ec2.${this.region}.amazonaws.com`, tagPath, {
+            method: 'GET',
+            port: 443,
+            headers: authHeaders,
+            protocol: 'https',
+            advancedReturn: true
+        }]);
+        
+        const tagResponse = await xml2js.parseStringPromise(apiResponse.body);
+        if (tagResponse.DescribeTagsResponse) {
+            if (tagResponse.DescribeTagsResponse.tagSet.length) {
+                return Promise.resolve(tagResponse.DescribeTagsResponse.tagSet[0].item[0].value[0]);
+            } else {
+                return Promise.resolve('');
+            }
+        } else {
+            return Promise.reject('Error getting tags on instance.');
+        }
+    }
+
+    /**
+     * Gets value from AWS metadata
+     *
+     * @param field                         - metadata property to fetch
+     * @param [options]                     - function options
+     *
+     * @returns {Promise}
+     */
+    async getMetadata(field: string, options?: {
+        type?: string;
+        index?: number;
+        query?: string;
+    }): Promise<string> {
+        const type = options ? options.type : undefined;
+        const uriQuery = options ? options.query : undefined;
+        const index = options ? options.index : undefined;
+        const logger = Logger.getLogger();
+        if (!field) {
+            throw new Error('AWS Cloud Client metadata field is missing');
+        }
+        if (!type) {
+            throw new Error('AWS Cloud Client metadata type is missing');
+        }
+
+        if (type !== 'compute' && type !== 'network' && type !== 'uri') {
+            throw new Error('AWS Cloud Client metadata type is unknown. Must be one of [ compute, network ]');
+        }
+
+        if (type === 'network' && index === undefined) {
+            throw new Error('AWS Cloud Client network metadata index is missing');
+        }
+        if (type === 'compute') {
+            return this._getInstanceCompute(field)
+                .catch(err => Promise.reject(err));
+        }
+        if (type === 'uri') {
+            return this._fetchUri(field, uriQuery)
+                .catch(err => Promise.reject(err));
+        }
+        if (type === 'network') {
+            /** grab big-ip interface info */
+            let mac;
+            let retries = 0;
+            const timer = ms => new Promise(res => setTimeout(res, ms)); /* eslint-disable-line @typescript-eslint/explicit-function-return-type */
+            while (true) {
+                const interfaceResponse = await utils.makeRequest(
+                    'localhost', '/mgmt/tm/net/interface',
+                    {
+                        method: 'GET',
+                        port: 80,
+                        protocol: 'http',
+                        headers: {
+                            Authorization: `Basic ${utils.base64('encode', 'admin:admin')}`
+                        },
+                        verifyTls: false,
+                        advancedReturn: true
+                    }
+                );
+                logger.silly(`Interface Response:  ${utils.stringify(interfaceResponse)}`);
+                const interfaceName = index === 0 ? 'mgmt' : `1.${index}`;
+                logger.info('Interface:' + interfaceName);
+                const interfaces = interfaceResponse.body.items;
+                const filtered = where(interfaces, { "name": interfaceName });
+                logger.silly(`filtered:  ${utils.stringify(filtered)}`);
+                mac = filtered[0]["macAddress"];
+                if (mac !== 'none') {
+                    logger.info('MAC address found for ' + interfaceName + ': ' + mac);
+                    break;
+                } else {
+                    retries++;
+                    if (retries > constants.RETRY.DEFAULT_COUNT) {
+                        return Promise.reject(new Error(`Failed to fetch MAC address for BIGIP interface ${interfaceName}.`))
+                    }
+                    logger.info(`MAC adddress is not populated on ${interfaceName} BIGIP interface. Trying to re-fetch interface data. Left attempts: ${constants.RETRY.DEFAULT_COUNT - retries}`);
+                    await timer(constants.RETRY.DELAY_IN_MS);
+                }
+            }
+            /** manipulate returned data into ip/mask when field eq local-ipv4s */
+            if (field === 'local-ipv4s') {
+                const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
+                    .catch(err => Promise.reject(err));
+                const primaryIp = getInstanceNetwork.split('\n')[0];
+                logger.info('Primary IP for ' + mac + ': ' + primaryIp);
+                const cidr = await this._getInstanceNetwork('subnet-ipv4-cidr-block', type, mac)
+                    .catch(err => Promise.reject(err));
+                logger.debug('CIDR block for ' + mac + ': ' + cidr);
+                const ipMask = primaryIp + cidr.match(/(\/([0-9]{1,2}))/g);
+                logger.info('ip and mask for ' + mac + ': ' + ipMask);
+                return ipMask;
+            } else if (field === 'subnet-ipv4-cidr-block') {
+                const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
+                    .catch(err => Promise.reject(err));
+                logger.debug('CIDR block for ' + mac + ': ' + getInstanceNetwork);
+                return new netmask.Netmask(getInstanceNetwork)['first'];
+            } else {
+                const getInstanceNetwork = await this._getInstanceNetwork(field, type, mac)
+                    .catch(err => Promise.reject(err));
+                logger.info('Field:' + field + 'for' + mac + ':' + getInstanceNetwork);
+                return getInstanceNetwork;
+            }
+        }
+    }
+
+    /**
+     * Fetches provided AWS Metadata uri using AWS SDK Metadata client
+     *
+     * @param uri                         - uri value (i.e. /latest/document/instances/version)
+     * @param query                       - query options to filter JSON response using jmesPath
+     *
+     * @returns                           - A Promise resolved with AWS Metadata
+     */
+    async _fetchUri(uri, query): Promise<string> {
+        if (typeof uri !== 'string' || (uri.split("/").length - 1) < 2) {
+            throw new Error('AWS Cloud Client expects uri string for _fetchUri method.')
+        } else {
+            const response = await utils.retrier(utils.makeRequest,
+                [constants.METADATA_HOST.AWS, uri, metadataRequestOptions]
+            );
+            if (query !== undefined) {
+                try {
+                    let searchResult;
+                    if (typeof response.body === 'string') {
+                        searchResult = jmesPath.search(JSON.parse(response.body), query);
+                    } else {
+                        searchResult = jmesPath.search(response.body, query);
+                    }
+                    return Promise.resolve(searchResult);
+                } catch (error) {
+                    throw new Error(`Error caught while searching json using jmesPath - Query: ${query} - Error ${error.message}`);
+                }
+            }
+            return Promise.resolve(response.body);
+        }
+    }
+
+    /**
+     * Fetches AWS IMDSv2 Session token
+     *
+     * @returns   - A Promise resolved with token value
+     */
+    async _fetchMetadataSessionToken(): Promise<string> {
+        const response = await utils.retrier(utils.makeRequest,
+            [
+                constants.METADATA_HOST.AWS,
+                '/latest/api/token', 
+                {
+                    method: 'PUT',
+                    port: 80,
+                    protocol: 'http',
+                    headers: {
+                        "X-aws-ec2-metadata-token-ttl-seconds": '3600'
+                    },
+                    verifyTls: false,
+                    advancedReturn: true
+                }
+            ]
+        );
+        if (!response.body || response.code !== 200) {
+            return Promise.reject(new Error(`Error getting session token ${response.code}`));
+        }
+        return Promise.resolve(response.body);
+    }
+
+    /**
+     * Gets instance identity document
+     *
+     * @returns   - A Promise that will be resolved with the Instance Identity document or
+     *                          rejected if an error occurs
+     */
+    async _getInstanceIdentityDoc(): Promise<{
+        region: string;
+        instanceId: string;
+    }> {
+        const response = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.AWS, '/latest/dynamic/instance-identity/document', metadataRequestOptions]
+        );
+        if (!response.body || response.code !== 200) {
+            return Promise.reject(new Error(`Error getting instance identity doc ${response.code}`));
+        }
+        return Promise.resolve(response.body);
+    }
+
+    /**
+     * Gets instance compute type metadata
+     * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
+     * Type compute supports all categories with base uri + /field
+     *
+     * @returns   - A Promise that will be resolved with metadata for the supplied field or
+     *                          rejected if an error occurs
+     */
+    async _getInstanceCompute(field: string): Promise<string> {
+        const response = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.AWS, '/latest/meta-data/' + field, metadataRequestOptions]
+        );
+        if (!response.body || response.code !== 200) {
+            return Promise.reject(new Error(`Error getting instance compute ${response.code}`));
+        }
+        return Promise.resolve(response.body.replace(/_/g, '-'));
+    }
+
+    /**
+     * Gets instance network type metadata
+     * See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html for available fields
+     * Type network supports all categories with base uri + /network/interfaces/macs/<mac>/ where <mac> is determined by $index
+     *
+     * @returns   - A Promise that will be resolved with metadata for the supplied network field or
+     *                          rejected if an error occurs
+     */
+    async _getInstanceNetwork(field: string, type: string, mac: string): Promise<string> {
+        const response = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.AWS, '/latest/meta-data/' + type + '/interfaces/macs/' + mac + '/' + field, metadataRequestOptions]
+        );
+        return Promise.resolve(response.body);
+    }
+
+    getRegion(): string {
+        return this.region;
+    }
+
+    /**
+    * Get auth headers
+    * 
+    * @param source - Optional source URL for AWS objects
+    *
+    * @returns {object} A promise which is resolved with auth headers
+    *
+    */
+    async getAuthHeaders(source?: string, resource?: any): Promise<object> { /* eslint-disable-line @typescript-eslint/no-explicit-any */
         const host = source.split('/')[2];
         const path = source.split(host + '/')[1];
-        const opts = { host: host, path: `/${path}` };
-        const instanceProfileResponse = await utils.makeRequest(
-            `http://169.254.169.254/latest/meta-data/iam/security-credentials/`,
-            {
-                method: 'GET',
+        let opts;
+        if (resource && resource.SecretId) {
+            opts = { 
+                host: host, 
+                path: '/',
+                method: 'POST',
                 headers: {
-                    "x-aws-ec2-metadata-token": this._sessionToken
-                }
-            }
+                    'Accept-Encoding': 'identity',
+                    'X-Amz-Target': 'secretsmanager.GetSecretValue',
+                    'Content-Type': 'application/x-amz-json-1.1'
+                },
+                body: JSON.stringify(resource),
+                region: this.region,
+                service: 'secretsmanager'
+            };
+        } else {
+            opts = { host: host, path: `/${path}` }
+        }
+        
+        const instanceProfileResponse = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.AWS, '/latest/meta-data/iam/security-credentials/', metadataRequestOptions]
         );
-        const credentialsResponse = await utils.makeRequest(
-            `http://169.254.169.254/latest/meta-data/iam/security-credentials/${instanceProfileResponse.body}`,
-            {
-                method: 'GET',
-                headers: {
-                    "x-aws-ec2-metadata-token": this._sessionToken
-                }
-            }
+        const credentialsResponse = await utils.retrier(utils.makeRequest,
+            [constants.METADATA_HOST.AWS, `/latest/meta-data/iam/security-credentials/${instanceProfileResponse.body}`, metadataRequestOptions]
         );
         const signed = aws4.sign(opts, { accessKeyId: credentialsResponse.body.AccessKeyId, secretAccessKey: credentialsResponse.body.SecretAccessKey, sessionToken: credentialsResponse.body.Token })
         return Promise.resolve(signed.headers);
     }
- }
+}
+
+

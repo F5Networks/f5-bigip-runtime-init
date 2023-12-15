@@ -119,12 +119,13 @@ describe('Util', () => {
                 .get('/')
                 .reply(200, { foo: 'bar' });
 
-            const response = await util.makeRequest('https://192.0.2.1/');
-            assert.deepStrictEqual(response, { code: 200, body: { foo: 'bar' } });
+            const response = await util.makeRequest('192.0.2.1', '/', { advancedReturn: true});
+            assert.deepStrictEqual(response.code, 200);
+            assert.deepStrictEqual(response.body.foo, 'bar');
         });
 
         it('should fail request (FTP)', async () => {
-            util.makeRequest('ftp://192.0.2.1/')
+            util.makeRequest('192.0.2.1', '/', { protocol: 'ftp' })
                 .then(() => assert.fail())
                 .catch((error) => assert.ok(error.message.includes('Invalid protocol')));
         });
@@ -301,7 +302,7 @@ describe('Util', () => {
         it('should validate loadData failed for bad config via URL', () => {
             nock('https://fakedomain.com')
                 .get('/bad_file.yaml')
-                .reply(200, `runtime_parameters`);
+                .reply(200, `{runtime_parameters`);
             mock({
                 '/config/fake-ssl': {
                     'cert.pem': '12345'

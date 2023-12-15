@@ -74,18 +74,34 @@ describe('HashiCorp Vault Client', () => {
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
             .reply(200,
-                {"request_id":"89527902-256d-0bd0-328b-8288549b991c","lease_id":"",
-                    "renewable":false,"lease_duration":0,"data":null,
-                    "wrap_info":null,"warnings":null,
-                    "auth":{"client_token":"this-is-test-token-value",
+                {
+                    "request_id":"89527902-256d-0bd0-328b-8288549b991c",
+                    "lease_id":"",
+                    "renewable":false,
+                    "lease_duration":0,
+                    "data":null,
+                    "wrap_info":null,
+                    "warnings":null,
+                    "auth":{
+                        "client_token":"this-is-test-token-value",
                         "accessor":"DR8vhrYNUK7CrkRvextEn4CN",
-                        "policies":["default","test"],
-                        "token_policies":["default","test"],
-                        "metadata":{"role_name":"runtime-init-role"},
-                        "lease_duration":3600,"renewable":true,
+                        "policies":[
+                            "default",
+                            "test"
+                        ],
+                        "token_policies":[
+                            "default",
+                            "test"
+                        ],
+                        "metadata":{
+                            "role_name":"runtime-init-role"
+                        },
+                        "lease_duration":3600,
+                        "renewable":true,
                         "entity_id":"8b693540-35da-99b9-22fe-70b9eabbd159",
                         "token_type":"service",
-                        "orphan":true}
+                        "orphan":true
+                    }
                 });
     });
 
@@ -164,21 +180,7 @@ describe('HashiCorp Vault Client', () => {
         secretMetadata.secretProvider.authBackend.secretId.value = 'https://somedomain.com/document.foo';
         nock('https://somedomain.com')
             .get('/document.foo')
-            .reply(200, { role_id: 'secretId-test-value' });
-        return hashicorpClient.login(secretMetadata)
-            .then(() => {
-                assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');
-            });
-    });
-
-    /* eslint-disable  @typescript-eslint/camelcase */
-    it('should validate failure for login method when invalid type', () => {
-        const hashicorpClient = new HashicorpVaultClient();
-        secretMetadata.secretProvider.authBackend.secretId.type = 'url';
-        secretMetadata.secretProvider.authBackend.secretId.value = 'https://somedomain.com/document.foo';
-        nock('https://somedomain.com')
-            .get('/document.foo')
-            .reply(200, { role_id: 'secretId-test-value' });
+            .reply(200, { secret_id: 'secretId-test-value' });
         return hashicorpClient.login(secretMetadata)
             .then(() => {
                 assert.strictEqual(hashicorpClient.clientToken, 'this-is-test-token-value');

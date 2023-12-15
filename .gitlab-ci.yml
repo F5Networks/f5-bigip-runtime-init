@@ -2,6 +2,7 @@ image: ${ARTIFACTORY_SERVER}/dockerhub-remote/node:12
 
 stages:
     - process
+    - atg-shared-checks
     - test
     - build
     - functional_test_init
@@ -9,6 +10,10 @@ stages:
     - functional_test_cleanup
     - publish
     - release_publish
+
+include:
+    - project: automation-toolchain/atg-shared-templates
+      file: security/base.gitlab-ci.yml
 
 .helpers: &helpers |
     function validate () {
@@ -34,10 +39,13 @@ variables:
     GOOGLE_CREDENTIALS: "$GOOGLE_CREDENTIALS"
     GIT_SECRETS_VERSION: '1.3.0'
     GIT_SECRETS_PKG_URL: "https://github.com/awslabs/git-secrets/archive/${GIT_SECRETS_VERSION}.tar.gz"
+    ATG_IMG_REGISTRY_URL: ${ARTIFACTORY_SERVER}/dockerhub-remote
     DOCKER_AUTH_CONFIG: ${DOCKER_AUTH_CONFIG}
-    DEPLOYMENT_TOOL_IMAGE_V2: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-v2:latest
+    DEPLOYMENT_TOOL_IMAGE_V3: ${ARTIFACTORY_SERVER}/ecosystems-cloudsolutions-docker-dev/deployment-tool-v3:latest
     MONGODB_IMAGE: ${ARTIFACTORY_SERVER}/dockerhub-remote/mongo:4.0-xenial
     EXTENSION_METADATA_FILE: "metadata.json"
+    SEC_TOML_BRANCH: main
+    SECRET_DETECTION_EXCLUDED_PATHS: 'README.md'
 
 # Cleanup development RPM's on CDN when branch no longer present on gitlab
 cleanup_publish_rpms_dev_cdn:
@@ -278,7 +286,7 @@ build_package:
 # Functional Tests - Initialization phase
 .test_functional_init_generic: &test_functional_init_generic
     stage: functional_test_init
-    image: ${DEPLOYMENT_TOOL_IMAGE_V2}
+    image: ${DEPLOYMENT_TOOL_IMAGE_V3}
     retry:
         max: 1
     before_script:
@@ -286,14 +294,16 @@ build_package:
         - echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json
     script:
         - SOURCE_IP=$(curl ifconfig.me) && echo "Source IP of job is $SOURCE_IP"
-        # deploy environment - required artifacts will be placed in ./deployment folder
-        - echo "Deployment parameters are ${DEPLOYMENT_PARAMS}"
-        - cd /deployment-tool && ./deployment_tool.sh --command info --plan runtime_init_${CLOUD} --name ci-$CI_JOB_ID --parameters "${DEPLOYMENT_PARAMS}" && cd -
-        - cd /deployment-tool && ./deployment_tool.sh --command create --plan runtime_init_${CLOUD} --name ci-$CI_JOB_ID --database export --parameters "${DEPLOYMENT_PARAMS}" && cd -
-        - cp -a /deployment-tool/deployment .
-        - echo "ci-$CI_JOB_ID" > deployment_name
         # save runtime config for use in test execute stage
         - grep "\-\-\-" /deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl -A 1000 > f5-bigip-runtime-declaration.yaml
+        # deploy environment - required artifacts will be placed in ./deployment folder
+        - echo "Deployment parameters are $DEPLOYMENT_PARAMS"
+        - deployment-tool create ci-$CI_JOB_ID --plan runtime_init_${CLOUD} $DEPLOYMENT_PARAMS
+        - deployment-tool database export --uri "mongodb://root:root@mongo:27017/porter?authSource=admin" --destination ./deployment/
+        - deployment-tool describe ci-$CI_JOB_ID
+        - deployment-tool get ci-$CI_JOB_ID --output-format json | jq > ./deployment/deployment_info.json
+        - cat ./deployment/deployment_info.json | jq
+        - echo "ci-$CI_JOB_ID" > ./deployment/name.txt
         # sleeping a while here to give the vault server time to finish onboarding
         - sleep 2m
     tags:
@@ -312,7 +322,6 @@ build_package:
     artifacts:
         paths:
             - ./deployment
-            - deployment_name
             - f5-bigip-runtime-declaration.yaml
         when: always
         expire_in: 1 week
@@ -331,7 +340,7 @@ test_functional_init_azure_v16:
     variables:
         CLOUD: "azure"
         DOMAIN: ${CLOUD}
-        DEPLOYMENT_PARAMS: "location=${AZURE_LOCATION} bigip_version=${AZURE_BIGIP_VERSION_v16} object_id=${AZURE_COMMERCIAL_OBJECT_ID} tenant_id=${ARM_TENANT_ID}"
+        DEPLOYMENT_PARAMS: "--param location=${AZURE_LOCATION} --param bigip_version=${AZURE_BIGIP_VERSION_v16} --param object_id=${AZURE_COMMERCIAL_OBJECT_ID} --param tenant_id=${ARM_TENANT_ID}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -354,7 +363,7 @@ test_functional_init_azure_v15:
     variables:
         CLOUD: "azure"
         DOMAIN: ${CLOUD}
-        DEPLOYMENT_PARAMS: "location=${AZURE_LOCATION} bigip_version=${AZURE_BIGIP_VERSION_v15} object_id=${AZURE_COMMERCIAL_OBJECT_ID} tenant_id=${ARM_TENANT_ID}"
+        DEPLOYMENT_PARAMS: "--param location=${AZURE_LOCATION} --param bigip_version=${AZURE_BIGIP_VERSION_v15} --param object_id=${AZURE_COMMERCIAL_OBJECT_ID} --param tenant_id=${ARM_TENANT_ID}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -378,7 +387,7 @@ test_functional_init_azure_v14:
     variables:
         CLOUD: "azure"
         DOMAIN: ${CLOUD}
-        DEPLOYMENT_PARAMS: "location=${AZURE_LOCATION} bigip_version=${AZURE_BIGIP_VERSION_v14} object_id=${AZURE_COMMERCIAL_OBJECT_ID} tenant_id=${ARM_TENANT_ID}"
+        DEPLOYMENT_PARAMS: "--param location=${AZURE_LOCATION} --param bigip_version=${AZURE_BIGIP_VERSION_v14} --param object_id=${AZURE_COMMERCIAL_OBJECT_ID} --param tenant_id=${ARM_TENANT_ID}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -404,7 +413,7 @@ test_functional_init_azure_gov_v16:
         ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
         ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
         ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
-        DEPLOYMENT_PARAMS: "location=usgovvirginia bigip_version=${AZURE_BIGIP_VERSION_v16} object_id=${AZURE_GOV_OBJECT_ID} tenant_id=${ARM_TENANT_ID_GOV} environment=usgovernment domain=${DOMAIN}"
+        DEPLOYMENT_PARAMS: "--param location=usgovvirginia --param bigip_version=${AZURE_BIGIP_VERSION_v16} --param object_id=${AZURE_GOV_OBJECT_ID} --param tenant_id=${ARM_TENANT_ID_GOV} --param environment=usgovernment --param domain=${DOMAIN}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -430,7 +439,7 @@ test_functional_init_azure_gov_v15:
         ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
         ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
         ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
-        DEPLOYMENT_PARAMS: "location=usgovvirginia bigip_version=${AZURE_BIGIP_VERSION_v15} object_id=${AZURE_GOV_OBJECT_ID} tenant_id=${ARM_TENANT_ID_GOV} environment=usgovernment domain=${DOMAIN}"
+        DEPLOYMENT_PARAMS: "--param location=usgovvirginia --param bigip_version=${AZURE_BIGIP_VERSION_v15} --param object_id=${AZURE_GOV_OBJECT_ID} --param tenant_id=${ARM_TENANT_ID_GOV} --param environment=usgovernment --param domain=${DOMAIN}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -456,7 +465,7 @@ test_functional_init_azure_gov_v14:
         ARM_CLIENT_SECRET: "$ARM_CLIENT_SECRET_GOV"
         ARM_SUBSCRIPTION_ID: "$ARM_SUBSCRIPTION_ID_GOV"
         ARM_TENANT_ID: "$ARM_TENANT_ID_GOV"
-        DEPLOYMENT_PARAMS: "location=usgovvirginia bigip_version=${AZURE_BIGIP_VERSION_v14} object_id=${AZURE_GOV_OBJECT_ID} tenant_id=${ARM_TENANT_ID_GOV} environment=usgovernment domain=${DOMAIN}"
+        DEPLOYMENT_PARAMS: "--param location=usgovvirginia --param bigip_version=${AZURE_BIGIP_VERSION_v14} --param object_id=${AZURE_GOV_OBJECT_ID} --param tenant_id=${ARM_TENANT_ID_GOV} --param environment=usgovernment --param domain=${DOMAIN}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -479,7 +488,7 @@ test_functional_init_aws_v16:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "aws"
-        DEPLOYMENT_PARAMS: "aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v16} region=${AWS_DEFAULT_REGION}"
+        DEPLOYMENT_PARAMS: "--param aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v16} --param region=${AWS_DEFAULT_REGION}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -501,7 +510,7 @@ test_functional_init_aws_v15:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "aws"
-        DEPLOYMENT_PARAMS: "aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v15} region=${AWS_DEFAULT_REGION}"
+        DEPLOYMENT_PARAMS: "--param aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v15} --param region=${AWS_DEFAULT_REGION}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -524,7 +533,7 @@ test_functional_init_aws_v14:
             - $TEST_SUITE == "aws" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "aws"
-        DEPLOYMENT_PARAMS: "aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v14} region=${AWS_DEFAULT_REGION}"
+        DEPLOYMENT_PARAMS: "--param aws_bigip_ami_id=${AWS_BIGIP_AMI_ID_v14} --param region=${AWS_DEFAULT_REGION}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -547,7 +556,7 @@ test_functional_init_gcp_v16:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "16"
     variables:
         CLOUD: "gcp"
-        DEPLOYMENT_PARAMS: "bigip_version=${GOOGLE_BIGIP_VERSION_v16}"
+        DEPLOYMENT_PARAMS: "--param bigip_version=${GOOGLE_BIGIP_VERSION_v16}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -569,7 +578,7 @@ test_functional_init_gcp_v15:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "15"
     variables:
         CLOUD: "gcp"
-        DEPLOYMENT_PARAMS: "bigip_version=${GOOGLE_BIGIP_VERSION_v15}"
+        DEPLOYMENT_PARAMS: "--param bigip_version=${GOOGLE_BIGIP_VERSION_v15}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -592,7 +601,7 @@ test_functional_init_gcp_v14:
             - $TEST_SUITE == "gcp" && $BIGIP_VERSION == "14"
     variables:
         CLOUD: "gcp"
-        DEPLOYMENT_PARAMS: "bigip_version=${GOOGLE_BIGIP_VERSION_v14}"
+        DEPLOYMENT_PARAMS: "--param bigip_version=${GOOGLE_BIGIP_VERSION_v14}"
         MONGO_INITDB_ROOT_PASSWORD: "root"
         MONGO_INITDB_ROOT_USERNAME: "root"
     except:
@@ -1106,7 +1115,7 @@ test_functional_execute_base_v14:
 # Functional Tests - Cleanup phase (executes always with 1 retry in a case of any failures)
 .test_functional_cleanup_generic: &test_functional_cleanup_generic
     stage: functional_test_cleanup
-    image: ${DEPLOYMENT_TOOL_IMAGE_V2}
+    image: ${DEPLOYMENT_TOOL_IMAGE_V3}
     retry:
         max: 1
     when: always
@@ -1114,9 +1123,9 @@ test_functional_execute_base_v14:
         - mkdir ~/.docker
         - echo "${DOCKER_AUTH_CONFIG}" > ~/.docker/config.json
     script:
-        - DEPLOYMENT_NAME=$(cat deployment_name)
         - mkdir -p /deployment-tool/deployment && cp -a ./deployment/. /deployment-tool/deployment
-        - cd /deployment-tool && ./deployment_tool.sh --command delete --plan runtime_init_${CLOUD} --name ${DEPLOYMENT_NAME} --database import
+        - deployment-tool database import --uri "mongodb://root:root@mongo:27017/porter?authSource=admin" --backup-path ./deployment/porter
+        - deployment-tool delete $(cat ./deployment/name.txt)
     tags:
         - azure-autoscale-runner
     only:

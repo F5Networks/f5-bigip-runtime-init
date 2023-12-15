@@ -493,6 +493,8 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
     ***Examples:***
 
     **AWS:**
+
+    *Provide secret name (assumes secret is in same region as BIG-IP instance):*
     ```yaml
     runtime_parameters:
       - name: ADMIN_PASS
@@ -502,6 +504,18 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
           environment: aws
           version: AWSCURRENT
           secretId: mysecret
+    ```
+
+    *Provide secret ARN, including 12 digit account ID and region:*
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: SecretsManager
+          environment: aws
+          version: AWSCURRENT
+          secretId: arn:aws:secretsmanager:us-east-1:123456789012:secret:mySecretId-a0BCDE
     ```
     
     **IAM Permissions:**
@@ -540,6 +554,7 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
 
     **GCP:**
 
+    *Provide secret name (assumes secret is in same project as BIG-IP instance):*
     ```yaml
     runtime_parameters:
       - name: ADMIN_PASS
@@ -549,6 +564,17 @@ Allowed types are `storage`, `secret`, `tag`, `metadata`, `url` and `static`.
           environment: gcp
           version: latest
           secretId: mysecret
+    ```
+
+    *Provide fully-qualified secret identifier, including project number and version:*
+    ```yaml
+    runtime_parameters:
+      - name: ADMIN_PASS
+        type: secret
+        secretProvider:
+          type: SecretsManager
+          environment: gcp
+          secretId: projects/123456789/secrets/mysecret/versions/latest
     ```
 
     **IAM Permissions:**
@@ -1444,7 +1470,6 @@ Here is an example of the payload that is sent by F5 TEEM
                             "request": "^2.88.0",
                             "jmespath": "^0.15.0",
                             "netmask": "^2.0.2",
-                            "aws-sdk": "^2.610.0",
                             "lodash.where": "^3.1.0"
                         }
                     },

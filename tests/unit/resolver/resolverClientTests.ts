@@ -14,14 +14,12 @@ import sinon from 'sinon';
 import nock from 'nock';
 import mock from 'mock-fs';
 import { ResolverClient } from '../../../src/lib/resolver/resolverClient';
-import Logger from '../../../src/lib/logger';
 sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'info' });
 
 
 describe('Resolver Client', () => {
     let runtimeParameters;
     let onboardActions;
-    let logger: Logger;
     after(() => {
         Object.keys(require.cache)
             .forEach((key) => {
@@ -385,8 +383,8 @@ describe('Resolver Client', () => {
         nock('http://metadata.google.internal')
             .get('/computeMetadata/v1/instance/service-accounts/mysaemail/token')
             .reply(200, {"access_token" : "myToken"});
-        nock('https://storage.cloud.google.com')
-            .get('/mybucket/mykey/myfile')
+        nock('https://storage.googleapis.com')
+            .get('/storage/v1/b/mybucket/o/mykey%2Fmyfile?alt=media')
             .reply(200, 'myParameterValue');
         runtimeParameters = [
             {
@@ -468,7 +466,6 @@ describe('Resolver Client', () => {
 
     it('should validate resolveRuntimeParameters for hashicorp case', () => {
         sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
-        logger = Logger.getLogger();
         const resolver = new ResolverClient();
         nock('http://1.1.1.1:8200')
             .post('/v1/auth/approle/login')
@@ -566,7 +563,6 @@ describe('Resolver Client', () => {
 
     it('should validate resolveRuntimeParameters object for hashicorp case', () => {
         sinon.stub(process, 'env').value({ F5_BIGIP_RUNTIME_INIT_LOG_LEVEL: 'silly' });
-        logger = Logger.getLogger();
         const resolver = new ResolverClient();
         nock('http://1.1.1.1:8200')
             .post('/v1/sys/wrapping/unwrap')
@@ -616,6 +612,7 @@ describe('Resolver Client', () => {
         const resolver = new ResolverClient();
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('ru65wrde-vm0');
+        resolver._resolveTagValue = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.strictEqual(Object.keys(results).length, 12);
@@ -651,6 +648,7 @@ describe('Resolver Client', () => {
         resolver._resolveSecret = sinon.stub().resolves('');
         resolver._resolveMetadata = sinon.stub().resolves('');
         resolver._resolveUrl = sinon.stub().resolves('');
+        resolver._resolveTagValue = sinon.stub().resolves('');
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
             .then((results) => {
                 assert.strictEqual(Object.keys(results).length, 3);
@@ -762,7 +760,7 @@ describe('Resolver Client', () => {
             });
     });
 
-    it('should validate _resolveUrl throw error when invalida JSON', () => {
+    it('should validate _resolveUrl throw error when invalid JSON', () => {
         const resolver = new ResolverClient();
         nock.cleanAll();
         runtimeParameters = [
@@ -792,8 +790,8 @@ describe('Resolver Client', () => {
         ];
         nock('http://169.254.169.254')
             .get('/my-test-password')
-            .reply(200, '9058358705045800063');
+            .reply(200, { body: '9058358705045800063' });
         return resolver.resolveRuntimeParameters(runtimeParameters, {}, 0)
-            .then((results) => assert.strictEqual(results.TEST_PASSWORD, '9058358705045800063'))
+            .then((results) => assert.strictEqual(results.TEST_PASSWORD.body, '9058358705045800063'))
     });
 });

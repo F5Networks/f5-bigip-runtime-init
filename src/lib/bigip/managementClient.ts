@@ -40,7 +40,6 @@ export class ManagementClient {
     verifyTls: boolean;
     trustedCertBundles: Array<string>;
     _protocol: string;
-    uriPrefix: string;
     authHeader: string;
     maxRetries: number;
     retryInterval: number;
@@ -65,7 +64,6 @@ export class ManagementClient {
         this._protocol = this.verifyTls === true ? 'https' : 'http';
         this.maxRetries = options.maxRetries ? options.maxRetries : undefined;
         this.retryInterval = options.retryInterval ? options.retryInterval : undefined;
-        this.uriPrefix = `${this._protocol}://${this.host}:${this.port}`;
         this.authHeader = `Basic ${utils.base64('encode', `${this.user}:${this.password}`)}`;
     }
 
@@ -74,14 +72,17 @@ export class ManagementClient {
      *
      */
     async _isReadyCheck(): Promise<boolean>{
-        const readyResponse = await utils.makeRequest(`${this.uriPrefix}/mgmt/tm/sys/ready`,
+        const readyResponse = await utils.makeRequest(`${this.host}`, '/mgmt/tm/sys/ready',
             {
                 method: 'GET',
+                port: this.port,
+                protocol: this._protocol,
                 headers: {
                     Authorization: this.authHeader
                 },
                 verifyTls: this.verifyTls,
-                trustedCertBundles: this.trustedCertBundles
+                trustedCertBundles: this.trustedCertBundles,
+                advancedReturn: true
             });
 
         const entries = readyResponse.body.entries['https://localhost/mgmt/tm/sys/ready/0']
