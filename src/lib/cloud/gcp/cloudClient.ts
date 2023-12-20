@@ -37,7 +37,6 @@ const metadataRequestOptions: object = {
 export class GcpCloudClient extends AbstractCloudClient {
     projectId: string;
     region: string;
-    authHeaders: any;
     constructor(options?: {
         logger?: Logger;
     }) {
@@ -51,10 +50,6 @@ export class GcpCloudClient extends AbstractCloudClient {
         return this._getProjectId()
             .then((projectId) => {
                 this.projectId = projectId;
-                return this.getAuthHeaders();
-            })
-            .then((authHeaders) => {
-                this.authHeaders = authHeaders;
                 return this._getRegion();
             })
             .then((region) => {
@@ -92,7 +87,7 @@ export class GcpCloudClient extends AbstractCloudClient {
             return Promise.reject(new Error(`GCP Cloud Client secret id ${secretId} is the wrong format`));
         }
 
-        const authHeaders = this.authHeaders || await this.getAuthHeaders();
+        const authHeaders = await this.getAuthHeaders();
         const response =  await utils.retrier(utils.makeRequest, ['secretmanager.googleapis.com', '/v1/' + secretName + ':access', {
             method: 'GET',
             port: 443,
@@ -153,7 +148,7 @@ export class GcpCloudClient extends AbstractCloudClient {
         const responseVmZone = await utils.retrier(utils.makeRequest,
             [constants.METADATA_HOST.GCP, '/computeMetadata/v1/instance/zone', metadataRequestOptions]
         );
-        const authHeaders = this.authHeaders || await this.getAuthHeaders();
+        const authHeaders = await this.getAuthHeaders();
         const vmData = await utils.retrier(utils.makeRequest,
             ['compute.googleapis.com', `/compute/v1/${responseVmZone.body}/instances/${responseVmName.body}`, {
                 method: 'GET',
