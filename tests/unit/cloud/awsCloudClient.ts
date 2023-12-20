@@ -320,34 +320,6 @@ describe('CloudClient - AWS', () => {
         });
     });
 
-    // it('_metadata should reject upon error when using _getInstanceCompute', () => {
-    //     cloudClient._metadata = sinon.stub();
-    //     cloudClient._metadata.request = sinon.stub()
-    //         .callsFake((path, headers, callback) => {
-    //             metadataPathRequest = path;
-    //             callback(null, JSON.stringify({
-    //                 region: 'some-aws-region',
-    //                 instanceId: 'some-instance-id'
-    //             }));
-    //         });
-    //     const expectedError = 'cannot contact AWS metadata service';
-    //     return cloudClient.getMetadata('hostname', { type: 'compute'})
-    //     .then(() => {
-    //         // eslint-disable-next-line arrow-body-style
-    //         cloudClient._metadata.request = sinon.stub()
-    //             .callsFake((path, headers, callback) => {
-    //                 callback(new Error(expectedError));
-    //             });
-    //         return cloudClient._getInstanceCompute('hostname');
-    //     })
-    //     .then(() => {
-    //         assert.ok(false, 'should have rejected');
-    //     })
-    //     .catch((err) => {
-    //         assert.strictEqual(err.message, expectedError);
-    //     });
-    // });
-
     it('should validate getMetadata when network type is provided with local-ipv4s using index other than  0', () => {
         nock('https://169.254.169.254')
             .get('/latest/meta-data/network/interfaces/macs/fa:16:3e:c5:be:3d/local-ipv4s')
