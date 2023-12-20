@@ -41,18 +41,10 @@ describe('CloudClient - GCP', () => {
 
     it('should validate init', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
-        cloudClient.getAuthHeaders = sinon.stub().resolves({
-            Authorization: 'Bearer my-token'
-        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
         .then(() => {
             assert.strictEqual(cloudClient.projectId, 'my-project');
-        })
-        .then(() => {
-            assert.deepStrictEqual(cloudClient.authHeaders, {
-                Authorization: 'Bearer my-token'
-            });
         })
         .then(() => {
             assert.strictEqual(cloudClient.region, 'my-region');
@@ -62,21 +54,6 @@ describe('CloudClient - GCP', () => {
 
     it('should validate init metadata request promise rejection _getProjectId', () => {
         cloudClient._getProjectId = sinon.stub().rejects(new Error('Test Rejection'));
-        cloudClient.getAuthHeaders = sinon.stub().resolves({
-            Authorization: 'Bearer my-token'
-        });
-        cloudClient._getRegion = sinon.stub().resolves('my-region');
-        return cloudClient.init()
-        .then(() => {
-            assert.ok(false);
-        }).catch((err) => {
-            assert.ok(err.message.includes('Test Rejection'));
-        });
-    });
-
-    it('should validate init metadata request promise rejection getAuthHeaders', () => {
-        cloudClient.getAuthHeaders = sinon.stub().rejects(new Error('Test Rejection'));
-        cloudClient._getProjectId = sinon.stub().resolves('my-project');
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
         .then(() => {
@@ -92,9 +69,6 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getCustomerId', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
-        cloudClient.getAuthHeaders = sinon.stub().resolves({
-            Authorization: 'Bearer my-token'
-        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
         .then(() => {
@@ -106,9 +80,6 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getRegion', () => {
         cloudClient._getProjectId = sinon.stub().resolves('my-project');
-        cloudClient.getAuthHeaders = sinon.stub().resolves({
-            Authorization: 'Bearer my-token'
-        });
         cloudClient._getRegion = sinon.stub().resolves('my-region');
         return cloudClient.init()
         .then(() => {
@@ -208,10 +179,10 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getSecret promise rejection', () => {
         cloudClient.projectId = '123456789';
-        cloudClient.authHeaders = {
-            Authorization: 'Bearer my-token'
-        };
         cloudClient.region = 'my-region';
+        sinon.stub(cloudClient, 'getAuthHeaders').resolves({
+            Authorization: 'Bearer my-token'
+        });
         nock('https://secretmanager.googleapis.com')
             .get('/v1/projects/123456789/secrets/incorrect-secret-name/versions/latest:access')
             .reply(404, { "message": "Secret not found" });
@@ -228,10 +199,10 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getSecret throws error when secret metadata is not provided', () => {
         cloudClient.projectId = '123456789';
-        cloudClient.authHeaders = {
-            Authorization: 'Bearer my-token'
-        };
         cloudClient.region = 'my-region';
+        sinon.stub(cloudClient, 'getAuthHeaders').resolves({
+            Authorization: 'Bearer my-token'
+        });
         return cloudClient.getSecret()
         .then(() => {
             assert.ok(false);
@@ -243,10 +214,10 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getSecret when secret exists', () => {
         cloudClient.projectId = '123456789';
-        cloudClient.authHeaders = {
-            Authorization: 'Bearer my-token'
-        };
         cloudClient.region = 'my-region';
+        sinon.stub(cloudClient, 'getAuthHeaders').resolves({
+            Authorization: 'Bearer my-token'
+        });
         nock('https://secretmanager.googleapis.com')
             .get('/v1/projects/123456789/secrets/the-secret-name/versions/some-version:access')
             .reply(200, { "payload": { "data": "U3Ryb25nUGFzc3dvcmQh" } });
@@ -263,10 +234,10 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getSecret when secret exists no version included', () => {
         cloudClient.projectId = '123456789';
-        cloudClient.authHeaders = {
-            Authorization: 'Bearer my-token'
-        };
         cloudClient.region = 'my-region';
+        sinon.stub(cloudClient, 'getAuthHeaders').resolves({
+            Authorization: 'Bearer my-token'
+        });
         nock('https://secretmanager.googleapis.com')
             .get('/v1/projects/123456789/secrets/the-secret-name/versions/latest:access')
             .reply(200, { "payload": { "data": "U3Ryb25nUGFzc3dvcmQh" } });
@@ -280,10 +251,10 @@ describe('CloudClient - GCP', () => {
 
     it('should validate getSecret when fully-qualified secret is provided', () => {
         cloudClient.projectId = '123456789';
-        cloudClient.authHeaders = {
-            Authorization: 'Bearer my-token'
-        };
         cloudClient.region = 'my-region';
+        sinon.stub(cloudClient, 'getAuthHeaders').resolves({
+            Authorization: 'Bearer my-token'
+        });
         nock('https://secretmanager.googleapis.com')
             .get('/v1/projects/123456789/secrets/the-secret-name/versions/latest:access')
             .reply(200, { "payload": { "data": "U3Ryb25nUGFzc3dvcmQh" } });
