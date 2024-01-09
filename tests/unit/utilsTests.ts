@@ -119,7 +119,7 @@ describe('Util', () => {
                 .get('/')
                 .reply(200, { foo: 'bar' });
 
-            const response = await util.makeRequest('192.0.2.1', '/', { advancedReturn: true});
+            const response = await util.makeRequest('192.0.2.1', '/', { advancedReturn: true });
             assert.deepStrictEqual(response.code, 200);
             assert.deepStrictEqual(response.body.foo, 'bar');
         });

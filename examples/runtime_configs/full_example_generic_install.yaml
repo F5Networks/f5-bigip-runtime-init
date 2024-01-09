@@ -5,8 +5,12 @@ pre_onboard_enabled:
   - name: provision_rest
     type: inline
     commands:
-      - /usr/bin/setdb provision.extramb 1000
-      - /usr/bin/setdb restjavad.useextramb true
+      - /usr/bin/setdb provision.extramb 1000 || exit 0
+      - /usr/bin/setdb provision.restjavad.extramb 1384 || /usr/bin/setdb restjavad.useextramb true || exit 0
+      - /usr/bin/setdb iapplxrpm.timeout 300 || exit 0
+      - /usr/bin/setdb icrd.timeout 180 || exit 0
+      - /usr/bin/setdb restjavad.timeout 180 || exit 0
+      - /usr/bin/setdb restnoded.timeout 180 || exit 0
 bigip_ready_enabled: []
 extension_packages:
   install_operations:
