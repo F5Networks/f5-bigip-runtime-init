@@ -25,7 +25,7 @@ if [ ! -f /config/first_run_flag ]; then
 
     /usr/bin/setdb provision.managementeth eth1
     /usr/bin/setdb provision.extramb 1000 || true
-    /usr/bin/setdb restjavad.useextramb true || true
+    /usr/bin/setdb provision.restjavad.extramb 1384 || /usr/bin/setdb restjavad.useextramb true || true
     /usr/bin/setdb iapplxrpm.timeout 300 || true
     /usr/bin/setdb icrd.timeout 180 || true
     /usr/bin/setdb restjavad.timeout 180 || true
@@ -175,8 +175,6 @@ extension_services:
           class: Tenant
           My_DbVariables:
             class: DbVariables
-            provision.extramb: 1000
-            restjavad.useextramb: true
             ui.advisory.enabled: true
             ui.advisory.color: blue
             ui.advisory.text: BIG-IP VE Runtime Init Example

@@ -111,4 +111,63 @@ export class ManagementClient {
             retryInterval: this.retryInterval
         });
     }
+
+    /**
+     * Get proxy settings
+     *
+     */
+    async getProxySettings(): Promise<object>{
+        return utils.makeRequest(`${this.host}`, '/mgmt/tm/sys/db',
+            {
+                method: 'GET',
+                port: this.port,
+                protocol: this._protocol,
+                headers: {
+                    Authorization: this.authHeader
+                },
+                verifyTls: this.verifyTls,
+                trustedCertBundles: this.trustedCertBundles,
+                advancedReturn: true
+            })
+            .then((results) => {
+                const authOpts = {
+                    username: '',
+                    password: ''
+                };
+                const proxyOpts = {
+                    protocol: '',
+                    host: '',
+                    port: 0
+                };
+                results.body.items.forEach((element) => {
+                    switch (element.name) {
+                    case 'proxy.password':
+                        authOpts.password = element.value && element.value !== '<null>' ? element.value : '';
+                        break;
+                    case 'proxy.username':
+                        authOpts.username = element.value && element.value !== '<null>' ? element.value : '';
+                        break;
+                    case 'proxy.host':
+                        proxyOpts.host = element.value && element.value !== '<null>' ? element.value : '';
+                        break;
+                    case 'proxy.port':
+                        proxyOpts.port = element.value && element.value !== '<null>' ? parseInt(element.value) : 0;
+                        break;
+                    case 'proxy.protocol':
+                        proxyOpts.protocol = element.value && element.value !== '<null>' ? element.value : '';
+                        break;
+                    default:
+                        break;
+                    }
+                });
+                if (proxyOpts.host && proxyOpts.port) {
+                    if (authOpts.username && authOpts.password) {
+                        proxyOpts['auth'] = authOpts;
+                    }
+                    return Promise.resolve(proxyOpts);
+                }
+                return Promise.resolve({});
+            })
+            .catch((err) => Promise.reject(err));;
+    }
 }

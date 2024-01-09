@@ -55,7 +55,6 @@ describe('BIG-IP Management Client', () => {
         assert.strictEqual(mgmtClient.verifyTls, standardOptions.verifyTls);
     });
 
-
     it('should perform ready check', async () => {
         const mgmtClient = new ManagementClient(standardOptions);
 
@@ -104,4 +103,85 @@ describe('BIG-IP Management Client', () => {
             assert.ok(err.message.includes('Ready check failed'));
         }
     }).timeout(30000000);
+
+    it('getProxySettings should return proxy settings when configured', async () => {
+        const mgmtClient = new ManagementClient(standardOptions);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/db')
+            .reply(200, {
+                items: [
+                    {
+                        name: 'proxy.password',
+                        value: 'mypassword'
+                    },
+                    {
+                        name: 'proxy.username',
+                        value: 'myusername'
+                    },
+                    {
+                        name: 'proxy.host',
+                        value: 'myhost'
+                    },
+                    {
+                        name: 'proxy.port',
+                        value: 3128
+                    },
+                    {
+                        name: 'proxy.protocol',
+                        value: 'https'
+                    }
+                ]
+            });
+
+        const response = await mgmtClient.getProxySettings();
+        assert.deepStrictEqual(response, { auth: { password: 'mypassword', username: 'myusername' }, host: 'myhost', port: 3128, protocol: 'https' });
+    });
+
+    it('getProxySettings should return empty object when not configured', async () => {
+        const mgmtClient = new ManagementClient(standardOptions);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/db')
+            .reply(200, {
+                items: [
+                    {
+                        name: 'proxy.password',
+                        value: '<null>'
+                    },
+                    {
+                        name: 'proxy.username',
+                        value: '<null>'
+                    },
+                    {
+                        name: 'proxy.host',
+                        value: '<null>'
+                    },
+                    {
+                        name: 'proxy.port',
+                        value: '<null>'
+                    },
+                    {
+                        name: 'proxy.protocol',
+                        value: '<null>'
+                    }
+                ]
+            });
+
+        const response = await mgmtClient.getProxySettings();
+        assert.deepStrictEqual(response, {});
+    });
+
+    it('getProxySettings should reject on error', async () => {
+        const mgmtClient = new ManagementClient(standardOptions);
+
+        nock('http://localhost:8100')
+            .get('/mgmt/tm/sys/db')
+            .reply(500);
+        try {
+            await mgmtClient.getProxySettings();
+        } catch (err) {
+            assert.ok(err);
+        }
+    });
 });

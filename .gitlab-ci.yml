@@ -295,10 +295,10 @@ build_package:
     script:
         - SOURCE_IP=$(curl ifconfig.me) && echo "Source IP of job is $SOURCE_IP"
         # save runtime config for use in test execute stage
-        - grep "\-\-\-" /deployment-tool/plans/runtime_init_${CLOUD}/templates/user_data.tpl -A 1000 > f5-bigip-runtime-declaration.yaml
+        - grep "\-\-\-" /deployment-tool/plans/${CLOUD}_bigip_classic/templates/user_data.tpl -A 1000 > f5-bigip-runtime-declaration.yaml
         # deploy environment - required artifacts will be placed in ./deployment folder
         - echo "Deployment parameters are $DEPLOYMENT_PARAMS"
-        - deployment-tool create ci-$CI_JOB_ID --plan runtime_init_${CLOUD} $DEPLOYMENT_PARAMS
+        - deployment-tool create ci-$CI_JOB_ID --plan ${CLOUD}_bigip_classic $DEPLOYMENT_PARAMS
         - deployment-tool database export --uri "mongodb://root:root@mongo:27017/porter?authSource=admin" --destination ./deployment/
         - deployment-tool describe ci-$CI_JOB_ID
         - deployment-tool get ci-$CI_JOB_ID --output-format json | jq > ./deployment/deployment_info.json

@@ -1016,8 +1016,6 @@ inline:
             class: Tenant
             My_DbVariables:
               class: DbVariables
-              provision.extramb: 1000
-              restjavad.useextramb: true
               ui.advisory.enabled: true
               ui.advisory.color: blue
               ui.advisory.text: BIG-IP Quickstart
