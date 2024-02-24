@@ -375,10 +375,15 @@
                 }
             },
             "versions": {
+                "1.35.0": {
+                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.35.0/f5-telemetry-1.35.0-1.noarch.rpm",
+                    "packageName": "f5-telemetry-1.35.0-1.noarch",
+                    "latest": true
+                },
                 "1.34.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.34.0/f5-telemetry-1.34.0-1.noarch.rpm",
                     "packageName": "f5-telemetry-1.34.0-1.noarch",
-                    "latest": true
+                    "latest": false
                 },
                 "1.33.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.33.0/f5-telemetry-1.33.0-1.noarch.rpm",
@@ -518,11 +523,6 @@
                 "1.8.0": {
                     "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.8.0/f5-telemetry-1.8.0-1.noarch.rpm",
                     "packageName": "f5-telemetry-1.8.0-1.noarch",
-                    "latest": false
-                },
-                "1.7.0": {
-                    "downloadUrl": "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.7.0/f5-telemetry-1.7.0-1.noarch.rpm",
-                    "packageName": "f5-telemetry-1.7.0-1.noarch",
                     "latest": false
                 }
             },
