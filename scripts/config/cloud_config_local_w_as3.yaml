@@ -67,10 +67,10 @@ post_onboard_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.41.0
-      extensionHash: 3044e7ea1c8d7e10f51ec14a895374a956b3cbe3251dd6916f4f97da65d0a8e6
+      extensionVersion: 1.43.0
+      extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
     - extensionType: as3
-      extensionVersion: 3.48.0
+      extensionVersion: 3.50.2
 extension_services:
   service_operations:
     - extensionType: do
