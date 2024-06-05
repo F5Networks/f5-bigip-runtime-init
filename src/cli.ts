@@ -119,10 +119,17 @@ export async function cli(): Promise<string> {
 
     // create management client
     const mgmtClient = new ManagementClient();
+
     // perform ready check
     await mgmtClient.isReady();
+
+    // get proxy settings
+    process.env['PROXY_ENV'] = JSON.stringify(await mgmtClient.getProxySettings());
+    logger.silly(`Found proxy settings: ${process.env['PROXY_ENV']}`);
+
+    // create telemetry client
     telemetryClient = new TelemetryClient(
-            mgmtClient
+        mgmtClient
     );
 
     logger.info('Resolving parameters');
