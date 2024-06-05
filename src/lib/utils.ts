@@ -18,6 +18,7 @@
 'use strict';
 
 import * as https from 'https';
+import HttpsProxyAgent = require('https-proxy-agent');
 import * as fs from 'fs';
 import * as url from 'url';
 import * as nodeUtil from 'util';
@@ -212,7 +213,6 @@ export async function makeRequest(host: string, uri: string, options?: {
     bodyType?: string;
     verifyTls?: boolean;
     trustedCertBundles?: Array<string>;
-    proxy?: object;
 }): Promise<{
     code?: number;
     body?: any;
@@ -251,7 +251,22 @@ export async function makeRequest(host: string, uri: string, options?: {
     } else {
         agentOpts.rejectUnauthorized = options.verifyTls !== undefined ? options.verifyTls : true;
     }
-    const httpsAgent = new https.Agent(agentOpts);
+    let httpsAgent = new https.Agent(agentOpts);
+
+    let proxy = null;  
+    const useProxy = (process.env['PROXY_ENV']) && 
+        (Object.keys(JSON.parse(process.env['PROXY_ENV'])).length !== 0) && 
+            (host !== 'localhost') && 
+                (Object.values(constants.METADATA_HOST).indexOf(host) === -1);
+
+    if (useProxy) {
+        proxy = JSON.parse(process.env['PROXY_ENV']);
+        if (options.protocol === 'https') {
+            const proxyAuth = proxy.auth ? `${proxy.auth.username}:${proxy.auth.password}@` : '';
+            const proxyUrl = `${proxy.protocol}://${proxyAuth}${proxy.host}:${proxy.port}`;
+            httpsAgent = new HttpsProxyAgent(proxyUrl);
+        }
+    }
 
     const requestOptions = {
         url: uri,
@@ -262,8 +277,8 @@ export async function makeRequest(host: string, uri: string, options?: {
         headers: options.headers,
         responseType: options.responseType || 'json',
         data: options.formData ? formData : options.body,
-        httpsAgent: httpsAgent,
-        proxy: options.proxy || null,
+        httpsAgent,
+        proxy: options.protocol === 'https' ? false : proxy,
         validateStatus: options.validateStatus || false
     };
 
@@ -447,7 +462,7 @@ export async function verifyDirectory(directory): Promise<void> {
  *
  * @returns     returns converted storage URL as string
  */
- export function convertUrl(url: string): string {
+export function convertUrl(url: string): string {
     let data = url;
     let bucket = url.split('/')[2];
     let path = url.split(bucket + '/')[1];

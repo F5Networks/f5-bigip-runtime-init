@@ -23,11 +23,6 @@
             "class": "Provision",
             "ltm": "nominal",
             "asm": "nominal"
-        },
-        "dbvars": {
-        	"class": "DbVariables",
-        	"provision.extramb": 500,
-        	"restjavad.useextramb": true
         }
     }
 }
