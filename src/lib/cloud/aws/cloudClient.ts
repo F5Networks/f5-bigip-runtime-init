@@ -93,8 +93,8 @@ export class AwsCloudClient extends AbstractCloudClient {
             throw new Error('AWS Cloud Client secret id is missing');
         }
 
-        const fullyQualifiedSecret = new RegExp('^arn:(aws|aws-cn|aws-us-gov):secretsmanager:(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\\d:\\d{12}:secret:[a-zA-Z0-9/_+=.@-]{1,512}$');
-        const simpleSecret = new RegExp('^[a-z0-9-_]{1,255}$');
+        const fullyQualifiedSecret = new RegExp('^arn:(aws|aws-cn|aws-us-gov):secretsmanager:(us(-gov)?|ap|ca|cn|eu|sa|il|me)-(central|(north|south)?(east|west)?(northeast|southeast)?)-\\d:\\d{12}:secret:[a-zA-Z0-9/_+=.@-]{1,512}$');
+        const simpleSecret = new RegExp('^[a-zA-Z0-9-_]{1,255}$');
         const version = options ? options.version : undefined;
 
         if (!fullyQualifiedSecret.test(secretId) && !simpleSecret.test(secretId)) {
