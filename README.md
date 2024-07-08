@@ -210,9 +210,9 @@ controls:
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.43.0
+      extensionVersion: 1.44.0
     - extensionType: as3
-      extensionVersion: 3.50.2
+      extensionVersion: 3.51.0
     - extensionType: ts
       extensionVersion: 1.35.0
     - extensionType: fast
@@ -1008,9 +1008,9 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: ts
           extensionVersion: 1.35.0
         - extensionType: fast
@@ -1023,11 +1023,11 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
-          extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
+          extensionVersion: 1.44.0
+          extensionHash: 3b05d9bcafbcf0b5b625ff81d6bab5ad26ed90c0dd202ded51756af3598a97ec
         - extensionType: as3
-          extensionVersion: 3.50.2
-          extensionHash: 620f441bebfdce0261045e34bc7c34f2793b05c0aca62c7ec8e22bbb3f4f35c3
+          extensionVersion: 3.51.0
+          extensionHash: e151a9ccd0fd60c359f31839dc3a70bfcf2b46b9fedb8e1c37e67255ee482c0f
         - extensionType: ts
           extensionVersion: 1.35.0
           extensionHash: 839698d98a8651a90b3d509cde4b382338461a253878c9fd00c894699ef0e844
@@ -1042,11 +1042,11 @@ Allowed extensionTypes are `do`, `as3`, `ts`, `fast` and `cfe`.
     extension_packages:
       install_operations:
       - extensionType: do
-        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.43.0/f5-declarative-onboarding-1.43.0-5.noarch.rpm
-        extensionVersion: 1.43.0
+        extensionUrl: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.44.0/f5-declarative-onboarding-1.44.0-5.noarch.rpm
+        extensionVersion: 1.44.0
       - extensionType: as3
-        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.50.2-3.noarch.rpm
-        extensionVersion: 3.50.2
+        extensionUrl: file:///var/config/rest/downloads/f5-appsvcs-3.51.0-5.noarch.rpm
+        extensionVersion: 3.51.0
       - extensionType: fast
         extensionUrl: https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.25.0/f5-appsvcs-templates-1.25.0-1.noarch.rpm
         extensionVersion: 1.25.0     
@@ -1364,11 +1364,11 @@ bigip_ready_enabled: []
 extension_packages:
   install_operations:
     - extensionType: do
-      extensionVersion: 1.43.0
-      extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
+      extensionVersion: 1.44.0
+      extensionHash: 3b05d9bcafbcf0b5b625ff81d6bab5ad26ed90c0dd202ded51756af3598a97ec
     - extensionType: as3
-      extensionVersion: 3.50.2
-      extensionHash: 620f441bebfdce0261045e34bc7c34f2793b05c0aca62c7ec8e22bbb3f4f35c3
+      extensionVersion: 3.51.0
+      extensionHash: e151a9ccd0fd60c359f31839dc3a70bfcf2b46b9fedb8e1c37e67255ee482c0f
     - extensionType: ts
       extensionVersion: 1.35.0
       extensionHash: 839698d98a8651a90b3d509cde4b382338461a253878c9fd00c894699ef0e844

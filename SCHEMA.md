@@ -860,29 +860,29 @@ default:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.43.0
+        extensionVersion: 1.44.0
       - extensionType: as3
-        extensionVersion: 3.50.2
+        extensionVersion: 3.51.0
       - extensionType: fast
         extensionVersion: 1.25.0
 versioned:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.43.0
+        extensionVersion: 1.44.0
       - extensionType: as3
-        extensionVersion: 3.50.2
+        extensionVersion: 3.51.0
       - extensionType: fast
         extensionVersion: 1.25.0
 hashed:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.43.0
-        extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
+        extensionVersion: 1.44.0
+        extensionHash: 3b05d9bcafbcf0b5b625ff81d6bab5ad26ed90c0dd202ded51756af3598a97ec
       - extensionType: as3
-        extensionVersion: 3.50.2
-        extensionHash: 620f441bebfdce0261045e34bc7c34f2793b05c0aca62c7ec8e22bbb3f4f35c3
+        extensionVersion: 3.51.0
+        extensionHash: e151a9ccd0fd60c359f31839dc3a70bfcf2b46b9fedb8e1c37e67255ee482c0f
       - extensionType: ts
         extensionVersion: 1.35.0
         extensionHash: 839698d98a8651a90b3d509cde4b382338461a253878c9fd00c894699ef0e844
@@ -894,11 +894,11 @@ url:
     install_operations:
       - extensionType: do
         extensionUrl: >-
-          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.43.0/f5-declarative-onboarding-1.43.0-5.noarch.rpm
-        extensionVersion: 1.43.0
+          https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.44.0/f5-declarative-onboarding-1.44.0-5.noarch.rpm
+        extensionVersion: 1.44.0
       - extensionType: as3
-        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.50.2-3.noarch.rpm'
-        extensionVersion: 3.50.2
+        extensionUrl: 'file:///var/config/rest/downloads/f5-appsvcs-3.51.0-5.noarch.rpm'
+        extensionVersion: 3.51.0
       - extensionType: fast
         extensionUrl: >-
           https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.25.0/f5-appsvcs-templates-1.25.0-1.noarch.rpm
@@ -907,9 +907,9 @@ ilx:
   extension_packages:
     install_operations:
       - extensionType: do
-        extensionVersion: 1.43.0
+        extensionVersion: 1.44.0
       - extensionType: as3
-        extensionVersion: 3.50.2
+        extensionVersion: 3.51.0
       - extensionType: fast
         extensionVersion: 1.25.0
       - extensionType: ilx
@@ -1144,11 +1144,11 @@ example_1:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
-          extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
+          extensionVersion: 1.44.0
+          extensionHash: 3b05d9bcafbcf0b5b625ff81d6bab5ad26ed90c0dd202ded51756af3598a97ec
         - extensionType: as3
-          extensionVersion: 3.50.2
-          extensionHash: 620f441bebfdce0261045e34bc7c34f2793b05c0aca62c7ec8e22bbb3f4f35c3
+          extensionVersion: 3.51.0
+          extensionHash: e151a9ccd0fd60c359f31839dc3a70bfcf2b46b9fedb8e1c37e67255ee482c0f
         - extensionType: fast
           extensionVersion: 1.25.0
           extensionHash: 434309179af405e6b663e255d4d3c0a1fd45cac9b561370e350bb8dd8b39761f
@@ -1176,9 +1176,9 @@ example_2:
       install_operations:
         - extensionType: do
           extensionUrl: >-
-            file:///var/config/rest/downloads/f5-declarative-onboarding-1.43.0-5.noarch.rpm
-          extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
-          extensionVersion: 1.43.0
+            file:///var/config/rest/downloads/f5-declarative-onboarding-1.44.0-5.noarch.rpm
+          extensionHash: 3b05d9bcafbcf0b5b625ff81d6bab5ad26ed90c0dd202ded51756af3598a97ec
+          extensionVersion: 1.44.0
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
           extensionVersion: 1.0.0
@@ -1214,9 +1214,9 @@ example_3:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1261,9 +1261,9 @@ example_4:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1303,9 +1303,9 @@ example_5:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1368,9 +1368,9 @@ example_6:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1399,9 +1399,9 @@ example_7:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1459,9 +1459,9 @@ example_8:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1571,9 +1571,9 @@ example_9:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
 example_10:
@@ -1591,9 +1591,9 @@ example_10:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     post_hook:
@@ -1617,12 +1617,12 @@ example_11:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
-          extensionHash: 394f6d97219d016e90016874acb09bd27f7907fda4f1730dea0276900b753a1d
+          extensionVersion: 1.44.0
+          extensionHash: 3b05d9bcafbcf0b5b625ff81d6bab5ad26ed90c0dd202ded51756af3598a97ec
         - extensionType: as3
           extensionUrl: >-
-            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.50.2/f5-appsvcs-3.50.2-3.noarch.rpm
-          extensionVersion: 3.50.2
+            https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.51.0/f5-appsvcs-3.51.0-5.noarch.rpm
+          extensionVersion: 3.51.0
           verifyTls: false
         - extensionType: ilx
           extensionUrl: 'file:///var/config/rest/downloads/myIlxApp.rpm'
@@ -1713,9 +1713,9 @@ example_12:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
@@ -1776,9 +1776,9 @@ example_13:
     extension_packages:
       install_operations:
         - extensionType: do
-          extensionVersion: 1.43.0
+          extensionVersion: 1.44.0
         - extensionType: as3
-          extensionVersion: 3.50.2
+          extensionVersion: 3.51.0
         - extensionType: fast
           extensionVersion: 1.25.0
     extension_services:
